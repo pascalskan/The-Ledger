@@ -210,7 +210,7 @@ export interface Job {
   }[];
 
   documents: { id: string; name: string; url: string; uploadedAt: string }[];
-  
+
   // Cost Breakdown
   costs: {
     labour: number;
