@@ -1,4 +1,17 @@
 import { useState, useEffect } from "react";
+import {
+  PermissionKey,
+  Role,
+  User,
+} from "@/types/auth";
+
+import { Job } from "@/types/job";
+
+import { Client } from "@/types/client";
+
+import { Worker } from "@/types/worker";
+
+import { ReviewItem } from "@/types/review";
 
 // Types
 export type WorkerRoleTag = "Owner" | "Admin" | "Manager" | "Supervisor" | "Crew Lead" | "Worker" | "Contractor" | "Driver";
@@ -15,82 +28,6 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   view_documents: "View documents",
   manage_settings: "Manage settings",
 };
-
-export type PermissionKey =
-  | "view_jobs"
-  | "edit_jobs"
-  | "manage_workers"
-  | "assign_roles"
-  | "view_audit_log"
-  | "manage_clients"
-  | "manage_equipment"
-  | "manage_invoicing"
-  | "view_documents"
-  | "manage_settings";
-
-export interface Role {
-  id: string;
-  name: string;
-  description: string;
-  permissions: PermissionKey[];
-  companyId: string;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  roleIds: string[];
-  companyId: string;
-}
-
-export interface Client {
-  id: string;
-  clientId: string;
-  name: string;
-  email: string;
-  phone: string;
-  billingAddress: string;
-  notes?: string;
-
-  // Relationship management
-  tags?: string[];
-  status?: "Active" | "On Hold" | "Do Not Serve";
-  paymentTermsDays?: number;
-
-  // Relationship documents
-  documents?: {
-    id: string;
-    name: string;
-    type:
-      | "contract"
-      | "purchase_order"
-      | "credit_application"
-      | "insurance"
-      | "site_induction"
-      | "access_requirements"
-      | "nda"
-      | "other";
-    url: string;
-    status?: "Required" | "Received" | "Approved" | "Expired";
-    expiryDate?: string;
-    uploadedAt?: string;
-  }[];
-
-  companyId: string;
-}
-
-export interface Worker {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phone: string;
-  roleIds: string[];
-  status: "Active" | "Inactive";
-  documents: { id: string; name: string; type: "passport" | "license" | "certificate"; url: string; uploadedAt: string }[];
-  companyId: string;
-}
 
 export interface StockItem {
   id: string;
@@ -142,20 +79,6 @@ export interface StockMovement {
   companyId: string;
 }
 
-export interface ReviewItem {
-  id: string;
-  type: "report" | "photo" | "log";
-  title: string;
-  submittedBy: string;
-  submittedAt: string;
-  status: "pending" | "approved" | "rejected";
-  content?: string;
-  notes?: string;
-  url?: string;
-  items?: { name: string; quantity: number }[];
-  jobId: string;
-  companyId: string;
-}
 
 export interface Equipment {
   id: string;
@@ -180,44 +103,6 @@ export interface Equipment {
     contact: string;
   };
   notes?: string;
-
-  companyId: string;
-}
-
-export interface Job {
-  id: string;
-  jobId: string;
-  clientId: string;
-  title: string;
-  description: string;
-  status: "Planned" | "Active" | "Completed" | "Cancelled";
-  priority: "Low" | "Medium" | "High" | "Critical";
-  startAt: string;
-  endAt: string;
-  locationAddress: string;
-  latitude?: number;
-  longitude?: number;
-  assignedWorkerIds: string[];
-  assignedEquipmentIds: string[];
-  managerId?: string;
-
-  // Equipment usage dataset (for accurate invoicing)
-  equipmentUsage?: {
-    equipmentId: string;
-    days: number;
-    dayRateAtTime: number;
-    note?: string;
-  }[];
-
-  documents: { id: string; name: string; url: string; uploadedAt: string }[];
-
-  // Cost Breakdown
-  costs: {
-    labour: number;
-    equipment: number;
-    materials: number;
-    other: number;
-  };
 
   companyId: string;
 }
@@ -628,6 +513,10 @@ const DEMO_JOBS: Job[] = [
       materials: 1385,
       other: 0,
     },
+
+    createdAt: "2025-01-01T00:00:00Z",
+    updatedAt: "2025-01-01T00:00:00Z",
+
     companyId: DEMO_COMPANY_ID,
   },
 
@@ -648,14 +537,32 @@ const DEMO_JOBS: Job[] = [
     longitude: -0.118,
     assignedWorkerIds: ["dw4", "du3"],
     assignedEquipmentIds: ["de11"],
-    equipmentUsage: [{ equipmentId: "de11", days: 1, dayRateAtTime: 120, note: "Travel + tools" }],
-    documents: [{ id: "dd-pm-1", name: "PM_Checklist.pdf", url: "#", uploadedAt: new Date().toISOString() }],
+    equipmentUsage: [
+      {
+        equipmentId: "de11",
+        days: 1,
+        dayRateAtTime: 120,
+        note: "Travel + tools",
+      },
+    ],
+    documents: [
+      {
+        id: "dd-pm-1",
+        name: "PM_Checklist.pdf",
+        url: "#",
+        uploadedAt: new Date().toISOString(),
+      },
+    ],
     costs: {
       labour: 420,
       equipment: 0,
       materials: 35,
       other: 0,
     },
+
+    createdAt: "2025-01-01T00:00:00Z",
+    updatedAt: "2025-01-01T00:00:00Z",
+
     companyId: DEMO_COMPANY_ID,
   },
 ];
@@ -1288,3 +1195,7 @@ export const useStore = () => {
     }
   };
 };
+export type { Job } from "@/types/job";
+export type { Worker } from "@/types/worker";
+export type { Client } from "@/types/client";
+export type { Role, PermissionKey } from "@/types/auth";

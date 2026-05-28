@@ -1,5 +1,3 @@
-import { FinancialSyncStatus, MutationType } from "./common";
-
 export interface FinancialMutationEvent {
   id: string;
 
@@ -15,3 +13,14 @@ export interface FinancialMutationEvent {
 
   syncedStatus: FinancialSyncStatus;
 }
+
+export type FinancialSyncStatus =
+  | "pending"
+  | "synced"
+  | "failed";
+
+export type MutationType =
+  | "invoice"
+  | "expense"
+  | "payroll"
+  | "adjustment";

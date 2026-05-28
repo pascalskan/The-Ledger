@@ -1,4 +1,4 @@
-import { useAuth, DEMO_COMPANY_ID } from "@/lib/mockData";
+import { useAuth, useStore, DEMO_COMPANY_ID } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { useLocation } from "wouter";
 
 export default function AuthPage() {
   const { login, seedUsers } = useAuth();
+  const { allRoles } = useStore();
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("ceo@ledger.com");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,6 +27,13 @@ export default function AuthPage() {
 
   const realUsers = seedUsers.filter(u => u.companyId !== DEMO_COMPANY_ID);
   const demoUsers = seedUsers.filter(u => u.companyId === DEMO_COMPANY_ID);
+
+  const getRoleNames = (roleIds: string[]) => {
+    return roleIds
+      .map(id => allRoles.find(r => r.id === id)?.name)
+      .filter(Boolean)
+      .join(", ") || "No Role";
+  };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-slate-100 dark:bg-slate-950 p-4">
@@ -54,7 +62,7 @@ export default function AuthPage() {
                   >
                     <div className="text-left w-full">
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-xs">{u.role}</span>
+                        <span className="font-bold text-xs">{getRoleNames(u.roleIds)}</span>
                         {email === u.email && <Badge variant="secondary" className="text-[10px] h-4">Selected</Badge>}
                       </div>
                       <div className="text-[10px] opacity-70">{u.email}</div>
@@ -83,7 +91,7 @@ export default function AuthPage() {
                   >
                     <div className="text-left w-full">
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-xs text-blue-600 dark:text-blue-400">{u.name}</span>
+                        <span className="font-bold text-xs text-blue-600 dark:text-blue-400">{u.name} ({getRoleNames(u.roleIds)})</span>
                         {email === u.email && <Badge variant="outline" className="text-[10px] h-4 border-blue-200 text-blue-600">Active</Badge>}
                       </div>
                       <div className="text-[10px] opacity-70">{u.email}</div>

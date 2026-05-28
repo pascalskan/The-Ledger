@@ -1,7 +1,17 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Truck, PoundSterling, Clock, Activity, AlertTriangle } from "lucide-react";
 
-export function WeeklyIntelligenceStrip({ metrics }) {
+interface WeeklyIntelligenceStripProps {
+  metrics: {
+    workforceUtil: number;
+    overtimeRisk: boolean;
+    scheduledRevenue: number;
+    forecastedLaborCost: number;
+    netForecastContribution: number;
+  };
+}
+
+export function WeeklyIntelligenceStrip({ metrics }: WeeklyIntelligenceStripProps) {
   const formatCur = (val: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(val);
 
   return (

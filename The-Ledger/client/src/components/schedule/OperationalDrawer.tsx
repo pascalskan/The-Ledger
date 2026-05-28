@@ -1,9 +1,39 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, PoundSterling, Clock, Users, Truck, AlertTriangle, FileText, CheckCircle2 } from "lucide-react";
+import { X, PoundSterling, Clock, Users, Truck, AlertTriangle, FileText, CheckCircle2, Activity } from "lucide-react";
 
-export function OperationalDrawer({ selectedItem, onClose, type }) {
-  if (!selectedItem) return null;
+interface JobData {
+  title: string;
+  contractValue: number;
+  costToDate: number;
+  marginStatus: 'Green' | 'Yellow' | 'Red';
+  forecastMarginPct: number;
+  remainingLaborHours: number;
+  crewCount: number;
+  equipmentCount?: number;
+  hasConflict: boolean;
+}
+
+interface DayData {
+  dateStr: string;
+  totalScheduledRevenue: number;
+  totalEstimatedLaborCost: number;
+  netContribution: number;
+  crewAllocationPct: number;
+}
+
+type OperationalDrawerProps = {
+  onClose: () => void;
+} & (
+  | { type: 'job'; selectedItem: JobData | null }
+  | { type: 'day'; selectedItem: DayData | null }
+);
+
+export function OperationalDrawer(props: OperationalDrawerProps) {
+  if (!props.selectedItem) return null;
+
+  const { onClose, type } = props;
+  const selectedItem = props.selectedItem as JobData & DayData;
 
   const formatCur = (val: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(val);
 

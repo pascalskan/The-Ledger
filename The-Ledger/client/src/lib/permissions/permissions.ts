@@ -1,21 +1,29 @@
-import { User, PermissionKey } from "../../types/auth";
+import { User, Role, PermissionKey } from "../../types/auth";
+
+export function getUserPermissions(
+  user: User,
+  roles: Role[]
+): PermissionKey[] {
+  const userRoleIds = new Set(user.roleIds);
+  const userRoles = roles.filter((role) => userRoleIds.has(role.id));
+  const permissions = userRoles.flatMap((role) => role.permissions);
+  return Array.from(new Set(permissions));
+}
 
 export function hasPermission(
   user: User,
+  roles: Role[],
   permission: PermissionKey
 ): boolean {
-  // Assuming user has a `permissions` array or we need to look it up from roles
-  // But based on the prompt, it assumes user.permissions exists.
-  // Wait, User interface in auth.ts only has roleIds: string[].
-  // Let me double check what User interface has right now.
-  return (user as any).permissions?.includes(permission) ?? false;
+  const userPermissions = getUserPermissions(user, roles);
+  return userPermissions.includes(permission);
 }
 
 export function hasAnyPermission(
   user: User,
+  roles: Role[],
   permissions: PermissionKey[]
 ): boolean {
-  return permissions.some((p) =>
-    (user as any).permissions?.includes(p)
-  );
+  const userPermissions = new Set(getUserPermissions(user, roles));
+  return permissions.some((p) => userPermissions.has(p));
 }

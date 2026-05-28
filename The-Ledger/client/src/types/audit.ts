@@ -1,5 +1,3 @@
-import { AuditEntityType } from "./common";
-
 export interface AuditLogEvent {
   id: string;
 
@@ -18,3 +16,12 @@ export interface AuditLogEvent {
 
   timestamp: string;
 }
+
+export type AuditEntityType =
+  | "Job"
+  | "Worker"
+  | "Client"
+  | "Invoice"
+  | "ReviewItem"
+  | "Role"
+  | "User";

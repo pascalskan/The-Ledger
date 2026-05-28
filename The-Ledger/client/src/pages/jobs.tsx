@@ -70,7 +70,9 @@ export default function JobsPage() {
             startAt: new Date(createForm.startAt).toISOString(),
             endAt: new Date(createForm.endAt).toISOString(),
             managerId: createForm.managerId || undefined,
-            costs: createForm.costs
+            costs: createForm.costs,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         });
         setIsCreateOpen(false);
         setCreateForm({

@@ -1,61 +1,35 @@
 import { ApprovalStatus } from "./common";
 
-export interface LaborEntry {
-  hours: number;
-  hourlyRate?: number;
-}
-
-export interface MaterialUsage {
-  stockItemId: string;
+export interface ReviewMaterialItem {
+  name: string;
   quantity: number;
-}
-
-export interface EquipmentUsage {
-  assetId: string;
-  hoursUsed: number;
-}
-
-export interface ExpenseEntry {
-  description: string;
-  amount: number;
-  receiptUrl?: string;
-}
-
-export interface WorkerReport {
-  id: string;
-
-  workerId: string;
-  jobId: string;
-
-  labor?: LaborEntry[];
-
-  materials?: MaterialUsage[];
-
-  equipment?: EquipmentUsage[];
-
-  expenses?: ExpenseEntry[];
-
-  notes?: string;
-
-  submittedAt: string;
 }
 
 export interface ReviewItem {
   id: string;
 
-  sourceReportId: string;
+  type:
+    | "report"
+    | "photo"
+    | "log";
 
-  jobId: string;
-  workerId: string;
+  title: string;
+
+  submittedBy: string;
+
+  submittedAt: string;
 
   status: ApprovalStatus;
 
-  rejectionNotes?: string;
+  content?: string;
 
-  reviewedBy?: string;
-  reviewedAt?: string;
+  notes?: string;
 
-  mutationEventIds?: string[];
+  url?: string;
 
-  submittedAt: string;
+  items?: ReviewMaterialItem[];
+
+  jobId: string;
+
+  companyId: string;
 }

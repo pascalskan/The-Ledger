@@ -1,7 +1,19 @@
 import { Badge } from "@/components/ui/badge";
 import { Users, AlertTriangle } from "lucide-react";
 
-export function JobScheduleCard({ job, onClick, isSelected }) {
+interface JobScheduleCardProps {
+  job: {
+    title: string;
+    scheduledHours: number;
+    crewCount: number;
+    marginStatus: 'Green' | 'Yellow' | 'Red';
+    hasConflict: boolean;
+  };
+  onClick: () => void;
+  isSelected: boolean;
+}
+
+export function JobScheduleCard({ job, onClick, isSelected }: JobScheduleCardProps) {
   const formatCur = (val: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(val);
 
   // Status styling logic

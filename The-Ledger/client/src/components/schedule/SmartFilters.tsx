@@ -1,7 +1,18 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Filter } from "lucide-react";
 
-export function SmartFilters({ filters, setFilters }) {
+interface SmartFiltersState {
+  margin: string;
+  crew: string;
+  client: string;
+}
+
+interface SmartFiltersProps {
+  filters: SmartFiltersState;
+  setFilters: (filters: SmartFiltersState) => void;
+}
+
+export function SmartFilters({ filters, setFilters }: SmartFiltersProps) {
   return (
     <div className="flex items-center gap-2 bg-white p-1 rounded-md border border-slate-200 shadow-sm">
       <div className="flex items-center pl-2 pr-1 text-slate-400">
