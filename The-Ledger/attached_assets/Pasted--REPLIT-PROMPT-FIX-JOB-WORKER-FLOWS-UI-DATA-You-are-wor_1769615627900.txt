@@ -1,0 +1,144 @@
+✅ REPLIT PROMPT — FIX JOB & WORKER FLOWS (UI + DATA)
+
+You are working on an existing web app called The Ledger.
+Use the current UI and modals shown in the screenshots as the baseline.
+Do not redesign the UI — fix functionality and flows.
+
+1. JOB CREATION — CLIENT & EQUIPMENT FIXES
+Client selection (Create Job modal)
+
+Current issue:
+If a client does not exist, the user must leave the job flow to create one.
+
+Required changes:
+
+In the Client dropdown on “Create New Job”:
+
+Add an option such as “+ Create new client”
+
+Selecting this option must:
+
+Open a Create Client modal on top of the Create Job modal
+
+NOT navigate away to the Clients page
+
+After creating the client:
+
+Automatically select the new client in the job form
+
+Keep all previously entered job data intact
+
+This must be a smooth inline flow.
+
+Equipment assignment to jobs
+
+Current issue:
+Equipment is added using a numeric value instead of selecting real equipment.
+
+Fix:
+
+Replace numeric equipment input with a selectable list of existing equipment
+
+Users must be able to:
+
+Select one or more equipment items
+
+See equipment name + status (available / unavailable)
+
+Only available equipment should be selectable
+
+Store the actual equipment IDs on the job, not numbers
+
+2. WORKERS — CREATION & EDITING FIXES
+Worker creation
+
+Current issue:
+Creating a worker does not persist or fails silently.
+
+Fix:
+
+Ensure “Create Worker”:
+
+Saves correctly
+
+Updates the workers list immediately
+
+Shows validation errors if required fields are missing
+
+Worker editing flow (IMPORTANT UX CHANGE)
+
+Current issue:
+Editing a worker opens a small modal.
+
+Required change:
+
+Clicking Edit on a worker must navigate to a dedicated Worker Detail page:
+
+Route example: /workers/:id
+
+This page must allow:
+
+Editing all worker attributes
+
+Only fields permitted by the user’s role should be editable
+
+Remove or stop using the edit popup modal for workers
+
+3. WORKER ROLES — MULTI-ROLE SUPPORT
+Assigning roles to workers
+
+Current state:
+Workers can only have one role.
+
+Required changes:
+
+Allow multiple roles per worker
+
+When creating or editing a worker:
+
+Show all available roles
+
+Allow multi-select
+
+Persist roles properly and display them clearly on:
+
+Worker list
+
+Worker detail page
+
+4. MANAGE ROLES PAGE — IMPROVEMENTS
+Add role search
+
+Add a search input to filter roles by name
+
+Improve role management (keep scope reasonable)
+
+Based on best practices, also ensure:
+
+Clear role name and description
+
+Visibility of what permissions each role grants
+
+Ability to edit roles if the user has permission
+
+Do not overbuild — keep it operational and simple.
+
+DONE CRITERIA
+
+Before finishing, verify:
+
+Job creation allows inline client creation without navigation
+
+Equipment is selected from real equipment records
+
+Worker creation actually saves
+
+Editing a worker opens a full worker page (not a modal)
+
+Workers can have multiple roles
+
+Manage Roles page has search and clearer role management
+
+IMPORTANT
+
+If any existing implementation conflicts with the above, replace it with this behavior.

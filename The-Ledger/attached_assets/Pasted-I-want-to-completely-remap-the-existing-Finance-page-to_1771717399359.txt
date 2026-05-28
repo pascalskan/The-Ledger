@@ -1,0 +1,200 @@
+I want to completely remap the existing Finance page to align with QuickBooks integration.
+
+Important:
+This page must NOT duplicate accounting functionality.
+QuickBooks is the source of truth for invoices, payments, tax, and ledger.
+
+This page must instead provide operational financial intelligence using:
+
+Revenue data from QuickBooks (read-only)
+
+Approved and pending expenses from our system
+
+Job and equipment relational data
+
+The page should be renamed:
+
+“Financial Insights”
+
+or
+
+“Operations Finance”
+
+Maintain clean enterprise styling using Tailwind.
+
+No flashy UI. No accounting-style reports.
+
+1️⃣ Top Summary Section – Operational Snapshot
+
+Create 5 cards at the top:
+
+Total Revenue (Synced from QuickBooks)
+
+Approved Operational Spend (System data)
+
+Gross Profit (Revenue – Approved Spend)
+
+Pending Expense Exposure
+
+Average Job Margin %
+
+Each card must:
+
+Be read-only
+
+Show data source (QuickBooks or System)
+
+Show last sync timestamp if QB-based
+
+Include subtle trend indicator if available
+
+Do NOT replicate accounting reports.
+
+2️⃣ Job Profitability Table (Primary Section)
+
+Create a main table titled:
+
+“Job Profitability”
+
+Columns:
+
+Job Name
+
+Revenue (QuickBooks)
+
+Approved Spend
+
+Pending Spend
+
+Gross Profit
+
+Margin %
+
+Status Badge (Healthy / Watch / Risk)
+
+Rules:
+
+Revenue pulled from QuickBooks (read-only)
+
+Spend pulled from internal approved expenses
+
+Margin calculated dynamically
+
+Risk if margin < 20%
+
+Watch if margin 20–35%
+
+Healthy if > 35%
+
+Sortable by margin and exposure.
+
+This table is the core of the page.
+
+3️⃣ Expense Risk Panel
+
+Create a side panel:
+
+Title: “Expense Exposure”
+
+Show:
+
+Total Pending Approvals
+
+Value of Pending Spend
+
+% of Revenue Pending
+
+Top 3 Jobs with Highest Pending Exposure
+
+This helps management control risk.
+
+4️⃣ Equipment Contribution Panel (If equipment exists)
+
+Title: “Equipment Contribution”
+
+Show:
+
+Equipment-linked Revenue
+
+Equipment-linked Spend
+
+Net Contribution
+
+Utilisation %
+
+Only show if equipment module enabled.
+
+5️⃣ QuickBooks Sync Panel
+
+Small section at bottom:
+
+Sync Status (Connected / Error)
+
+Last Sync Timestamp
+
+Manual Refresh Button
+
+Data Source Badge: “Powered by QuickBooks”
+
+No invoice editing.
+
+No payment recording.
+
+Read-only financial intake.
+
+6️⃣ Remove From Page
+
+Remove:
+
+Invoice creation forms
+
+Payment entry forms
+
+Accounting report duplication
+
+Tax calculations
+
+Mock income logic
+
+7️⃣ Technical Requirements
+
+Build reusable components
+
+Use mock QuickBooks API response for now
+
+Use clean Tailwind styling
+
+Responsive layout
+
+No backend connection required yet
+
+Structure code so QB API can plug in later
+
+Components to create:
+
+FinancialSnapshot.jsx
+
+JobProfitabilityTable.jsx
+
+ExpenseExposurePanel.jsx
+
+EquipmentContribution.jsx
+
+QuickBooksSyncStatus.jsx
+
+8️⃣ Overall Goal
+
+The page should feel like:
+
+A management intelligence layer sitting on top of QuickBooks.
+
+Not an accounting tool.
+
+🎯 Strategic Outcome
+
+After this change:
+
+QuickBooks handles accounting.
+Your system handles operational financial intelligence.
+
+That separation is clean, scalable, and defensible.

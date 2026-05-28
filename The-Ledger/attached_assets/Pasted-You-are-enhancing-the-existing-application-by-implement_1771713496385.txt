@@ -1,0 +1,262 @@
+You are enhancing the existing application by implementing a Job Intelligence UI Layer.
+
+⚠️ CRITICAL CONSTRAINTS:
+
+QuickBooks is already fully implemented and is the financial source of truth.
+
+DO NOT modify QuickBooks logic.
+
+DO NOT create accounting calculations that override QuickBooks.
+
+DO NOT build a separate ledger.
+
+This is a FRONT-END ONLY enhancement.
+
+Job Intelligence is a visualization + analytics layer that reads existing data.
+
+🎯 OBJECTIVE
+
+Create a Job Intelligence Dashboard and Job Detail Intelligence View that:
+
+Surfaces job-level financial insights
+
+Calculates job health indicators
+
+Displays performance vs budget
+
+Flags risks (over budget, late payment, margin erosion)
+
+Enhances decision-making without modifying financial records
+
+🧠 CORE CONCEPT
+
+QuickBooks = Accounting truth
+Job Intelligence = Operational intelligence layer
+
+The UI must:
+
+Pull financial data from existing QuickBooks-connected state
+
+Perform derived calculations for display only
+
+Never write financial changes back to QuickBooks
+
+📊 PART 1: JOB INTELLIGENCE DASHBOARD
+
+Create a new route:
+
+/dashboard/job-intelligence
+
+This page should include:
+
+1️⃣ Job Health Summary Cards
+
+For each active job display:
+
+Job Name
+
+Contract Value (from QuickBooks)
+
+Total Cost to Date
+
+Invoiced Amount
+
+Paid Amount
+
+Remaining Budget
+
+Estimated Final Margin
+
+Job Health Score (0–100)
+
+2️⃣ DERIVED CALCULATIONS (Display Only)
+
+Use front-end computed values only.
+
+Profit:
+profit = contract_value - total_cost
+
+Margin %:
+margin = (profit / contract_value) * 100
+
+Budget Burn %:
+burn = (total_cost / contract_value) * 100
+
+Remaining Budget:
+remaining = contract_value - total_cost
+
+Invoice Collection %:
+collection_rate = (paid_amount / invoiced_amount) * 100
+
+DO NOT persist these values to backend.
+They are UI-calculated only.
+
+3️⃣ JOB HEALTH SCORE (Display Only Logic)
+
+Create a scoring algorithm:
+
+Start at 100.
+
+Subtract:
+
+If burn > 85% and job < 85% complete → -20
+
+If margin < 15% → -15
+
+If unpaid invoices > 30 days → -15
+
+If job is behind schedule → -10
+
+If cost trend increasing week-over-week → -10
+
+Clamp between 0–100.
+
+Color code:
+
+80–100 → Green
+
+60–79 → Yellow
+
+Below 60 → Red
+
+📱 PART 2: JOB DETAIL INTELLIGENCE VIEW
+
+Enhance the existing Job Details page.
+
+Add a new section:
+
+"Job Intelligence"
+
+Include:
+
+Financial Snapshot
+
+Contract Value
+
+Total Costs
+
+Current Margin %
+
+Remaining Budget
+
+Invoices Outstanding
+
+Avg Days to Payment
+
+Performance Indicators
+
+Budget Burn Progress Bar
+
+Margin Trend (visual trend line)
+
+Cost Breakdown Pie Chart
+
+Payment Status Timeline
+
+🚨 PART 3: RISK FLAGS (UI ONLY)
+
+Add visual flags:
+
+🔴 Over Budget Risk
+
+🟡 Margin Compression Risk
+
+🔴 Payment Delay Risk
+
+🟡 Schedule Drift Risk
+
+Flags are calculated on front-end only.
+No backend updates.
+
+📈 PART 4: VISUALIZATION REQUIREMENTS
+
+Use:
+
+Progress bars for burn %
+
+Trend line for margin over time
+
+Status badges for risk
+
+Clear mobile-first layout
+
+Mobile-first constraints:
+
+Stacked cards
+
+Large tap targets
+
+No horizontal scrolling
+
+Collapse advanced metrics into accordions
+
+🔒 DATA PROTECTION RULE
+
+Job Intelligence:
+
+CAN:
+
+Read QuickBooks data from app state
+
+Perform UI calculations
+
+Render insights
+
+CANNOT:
+
+Modify invoice totals
+
+Modify payroll
+
+Modify expenses
+
+Create accounting records
+
+Override QuickBooks values
+
+🧩 STATE MANAGEMENT
+
+Use derived selectors where possible.
+Do not duplicate financial data.
+Do not create shadow financial storage.
+All derived values must compute from existing state.
+
+🧪 TESTING REQUIREMENTS
+
+Ensure:
+
+Calculations update reactively when financial data changes
+
+No performance lag when rendering 50+ jobs
+
+No mutation of QuickBooks data objects
+
+All derived values are memoized where appropriate
+
+🎨 UX PRINCIPLES
+
+Intelligence should feel proactive, not cluttered.
+
+Insights > Raw data.
+
+Use visual hierarchy.
+
+Make risk obvious.
+
+Make action clear.
+
+🚀 DELIVERABLE
+
+Implement:
+
+New Job Intelligence dashboard page
+
+Enhanced Job Details intelligence section
+
+Front-end scoring system
+
+Visual indicators
+
+Mobile-first responsive design
+
+No backend changes

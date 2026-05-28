@@ -1,0 +1,284 @@
+I want to upgrade my existing Client Portal Job Detail page to a more professional, enterprise-style layout.
+
+Do NOT redesign the entire system. Improve the current page by adding the following structured sections and maintaining a clean, modern UI using Tailwind.
+
+Use a two-column responsive layout:
+
+Left column: Main project information
+
+Right column: Contacts and operational info
+
+The page must remain calm, minimal, and professional.
+
+1️⃣ Add a Project Progress Tracker (Horizontal Step Indicator)
+
+Add a visual progress bar near the top of the page under the job title.
+
+Stages:
+
+Planned
+
+Scheduled
+
+In Progress
+
+Awaiting Client
+
+Completed
+
+Requirements:
+
+Highlight current stage
+
+Completed stages show checkmark
+
+Responsive
+
+Clean enterprise style (no flashy colors)
+
+Use a reusable component:
+<ProjectProgress status="In Progress" />
+
+2️⃣ Add Financial Overview Card (Read-Only Summary)
+
+Add a card in the LEFT column under Project Overview.
+
+Title: “Financial Overview”
+
+Include:
+
+Approved Quote: £X
+
+Variations: £X
+
+Invoices Issued: £X
+
+Payments Received: £X
+
+Balance Outstanding: £X
+
+Requirements:
+
+Styled as a professional summary
+
+No edit capability
+
+Subtle divider lines
+
+Currency formatting function
+
+Mock data is fine for now.
+
+3️⃣ Add Documents Section
+
+Below Financial Overview add a “Documents” section.
+
+Include:
+
+Signed Quote (PDF)
+
+RAMS (PDF)
+
+Insurance Certificate (PDF)
+
+Completion Certificate (if status = Completed)
+
+Each document should show:
+
+File icon
+
+Name
+
+Upload date
+
+Download button
+
+Use mock file URLs.
+
+Component:
+<ProjectDocuments documents={[]} />
+
+4️⃣ Add Project Contacts Card (RIGHT COLUMN – Very Important)
+
+At the top of the right column add a “Project Contacts” card.
+
+Include:
+
+Project Manager
+
+Name
+
+Email
+
+Phone
+
+Operations Contact
+
+Office Phone
+
+Email
+
+Accounts Contact
+
+Email
+
+Design:
+
+Clean card
+
+Clear hierarchy
+
+Clickable email and phone links
+
+Professional spacing
+
+This section must appear ABOVE Assigned Crew.
+
+5️⃣ Improve Assigned Crew Card
+
+Keep existing crew section but improve formatting:
+
+For each crew member show:
+
+Name
+
+Role
+
+Scheduled date
+
+Status (Confirmed / Pending)
+
+Add small status badges.
+
+6️⃣ Add “Next Visit” Card (Right Column)
+
+Under Assigned Crew, add:
+
+Title: “Next Scheduled Visit”
+
+Include:
+
+Date
+
+Time window (e.g., 08:00–12:00)
+
+Crew size
+
+Special notes
+
+If no upcoming visit, show:
+“No upcoming visits scheduled.”
+
+7️⃣ Add Activity Timeline (Optional but Preferred)
+
+Below Documents in LEFT column add a vertical activity timeline:
+
+Example entries:
+
+Job Created
+
+Scheduled
+
+Materials Ordered
+
+Work Started
+
+Inspection Passed
+
+Each entry shows:
+
+Date
+
+Short description
+
+Icon
+
+8️⃣ Layout Rules
+
+Use:
+
+Max width container
+
+2-column grid on desktop
+
+Single column on mobile
+
+Consistent card component
+
+Subtle shadow
+
+Rounded corners
+
+Neutral color palette (grays, subtle blues)
+
+No bright colors.
+No clutter.
+No unnecessary animations.
+
+9️⃣ Component Structure
+
+Create reusable components:
+
+ProjectProgress.jsx
+
+FinancialOverview.jsx
+
+ProjectDocuments.jsx
+
+ProjectContacts.jsx
+
+AssignedCrew.jsx
+
+NextVisit.jsx
+
+ActivityTimeline.jsx
+
+Keep logic simple.
+Use mock JSON data for now.
+Do not connect to backend.
+
+10️⃣ Keep These Existing Features
+
+Do NOT remove:
+
+Job ID
+
+Location
+
+Schedule Date
+
+Description
+
+Comment thread
+
+Integrate them cleanly into the new layout.
+
+11️⃣ UX Improvements
+
+Add:
+
+“Last Updated” timestamp in header
+
+Subtle section dividers
+
+Clear section titles
+
+Good vertical spacing
+
+🔧 Deliverable
+
+Update the existing Client Portal page with:
+
+Structured enterprise layout
+
+All new sections implemented
+
+Clean Tailwind styling
+
+Mock data
+
+Fully responsive
+
+No backend dependency
+
+The final page should feel like a premium commercial service portal suitable for industrial clients.

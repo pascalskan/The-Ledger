@@ -1,0 +1,338 @@
+🎯 OBJECTIVE
+
+Upgrade the current single-provider QuickBooks integration into a multi-provider financial integration system.
+
+Supported providers in this phase:
+
+QuickBooks (existing — keep intact)
+
+Xero
+
+FreshBooks
+
+Zoho Books
+
+The system must allow businesses to connect one financial provider at a time (for now), with future support for multiple.
+
+The Ledger is NOT an accounting system — it only syncs financial data.
+
+🧱 ARCHITECTURE REQUIREMENTS
+
+We need:
+
+A new Integrations page
+
+OAuth support for multiple providers
+
+Canonical internal financial data models
+
+A provider abstraction layer
+
+Sync mechanism
+
+Status indicators in UI
+
+DO NOT hardcode provider-specific logic throughout the app.
+Use an abstraction pattern.
+
+📁 1. CREATE NEW PAGE
+
+Create:
+
+/pages/Integrations.tsx
+
+Add to sidebar navigation:
+
+“Integrations”
+
+🖥 UI REQUIREMENTS
+
+Display integration cards for:
+
+QuickBooks
+
+Xero
+
+FreshBooks
+
+Zoho Books
+
+Each card should show:
+
+Provider logo (placeholder ok)
+
+Status:
+
+Connected (green badge)
+
+Not Connected (gray badge)
+
+Last Sync timestamp (if connected)
+
+Buttons:
+
+Connect
+
+Disconnect
+
+Sync Now
+
+Only one provider can be active at a time (for now).
+
+If a provider is connected, disable “Connect” buttons for others.
+
+🔐 2. BACKEND – PROVIDER ABSTRACTION LAYER
+
+Create a folder:
+
+/services/integrations/
+
+Inside, create:
+
+BaseFinancialProvider.ts
+QuickBooksProvider.ts
+XeroProvider.ts
+FreshBooksProvider.ts
+ZohoProvider.ts
+BaseFinancialProvider Interface
+
+Define a standard interface:
+
+export interface FinancialProvider {
+  connect(authCode: string): Promise<void>;
+  refreshToken(): Promise<void>;
+  fetchClients(): Promise<FinancialClient[]>;
+  fetchInvoices(): Promise<FinancialInvoice[]>;
+  fetchPayments(): Promise<FinancialPayment[]>;
+  fetchEstimates(): Promise<FinancialEstimate[]>;
+  disconnect(): Promise<void>;
+}
+
+All providers must implement this interface.
+
+📦 3. CREATE CANONICAL INTERNAL MODELS
+
+Create standardized models:
+
+FinancialClient
+FinancialInvoice
+FinancialPayment
+FinancialEstimate
+
+Example:
+
+export interface FinancialInvoice {
+  id: string;
+  externalId: string;
+  clientId: string;
+  totalAmount: number;
+  status: string;
+  dueDate?: string;
+  sourceSystem: "quickbooks" | "xero" | "freshbooks" | "zoho";
+}
+
+All provider data must map into this format.
+
+Do NOT expose provider-specific schemas to the rest of the app.
+
+🔄 4. OAUTH FLOW STRUCTURE
+
+For each provider:
+
+Create routes:
+
+GET /api/integrations/{provider}/connect
+GET /api/integrations/{provider}/callback
+POST /api/integrations/{provider}/sync
+POST /api/integrations/{provider}/disconnect
+
+Use OAuth 2.0 where supported.
+
+Store:
+
+Access token
+
+Refresh token
+
+Expiry
+
+Connected provider name
+
+Last sync timestamp
+
+Store these securely in database.
+
+🔄 5. SYNC MECHANISM
+
+When user clicks “Sync Now”:
+
+Backend should:
+
+Identify active provider
+
+Instantiate correct provider class
+
+Call:
+
+fetchClients()
+
+fetchInvoices()
+
+fetchPayments()
+
+fetchEstimates()
+
+Map results into canonical format
+
+Store or upsert into database
+
+Update lastSync timestamp
+
+🔎 6. DATABASE STRUCTURE
+
+Add table:
+
+financial_integrations
+
+Fields:
+
+id
+
+userId
+
+provider (string)
+
+accessToken
+
+refreshToken
+
+expiresAt
+
+lastSync
+
+createdAt
+
+Add tables:
+
+financial_clients
+financial_invoices
+financial_payments
+financial_estimates
+
+Each must include:
+
+sourceSystem field
+
+externalId field
+
+Ensure unique constraint on:
+(sourceSystem + externalId)
+
+🧠 7. PROVIDER IMPLEMENTATION NOTES
+Xero
+
+OAuth 2.0
+
+REST API
+
+Use invoices endpoint
+
+Use contacts endpoint
+
+FreshBooks
+
+OAuth 2.0
+
+Use accounting endpoints
+
+Zoho Books
+
+OAuth 2.0
+
+Region-specific base URL
+
+Use invoices and contacts endpoints
+
+Use placeholder API calls if credentials not configured yet.
+
+🎨 8. FRONTEND STATE MANAGEMENT
+
+On Integrations page:
+
+Fetch active integration on mount
+
+Show status per provider
+
+Show last sync
+
+Show error if sync fails
+
+Disable other providers if one is active
+
+🚨 9. EDGE CASES
+
+Token expiration → auto refresh
+
+Provider revoked → mark as disconnected
+
+API failure → show sync error state
+
+User disconnects → delete stored tokens
+
+📌 10. FUTURE-PROOFING
+
+Structure code so additional providers can be added by:
+
+Creating new Provider class
+
+Adding to provider factory
+
+Adding UI card
+
+📤 END RESULT
+
+When complete:
+
+User can:
+
+Go to Integrations page
+
+Connect Xero / FreshBooks / Zoho
+
+Sync financial data
+
+See invoices and payments reflected in Ledger
+
+Disconnect provider
+
+Reconnect later
+
+QuickBooks must continue functioning unchanged.
+
+🧼 CODE QUALITY RULES
+
+Clean separation of concerns
+
+No duplicated OAuth logic
+
+No provider-specific logic leaking into core app
+
+Modular provider factory pattern
+
+Strong TypeScript typing
+
+Secure token storage
+
+If anything is unclear, assume best practices and structure for scalability.
+
+Build professionally.
+
+If you'd like next, I can:
+
+Design the Provider Factory pattern explicitly
+
+Create a database schema SQL script
+
+Write sample Xero provider code
+
+Or create a monetization strategy for premium integrations

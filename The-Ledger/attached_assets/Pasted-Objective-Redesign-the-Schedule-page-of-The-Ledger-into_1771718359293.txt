@@ -1,0 +1,245 @@
+Objective:
+Redesign the Schedule page of The Ledger into an Operational Control Layer that overlays intelligence onto existing QuickBooks-connected data without modifying or duplicating accounting functionality.
+
+Core Rules
+
+The Ledger is connected to the QuickBooks API.
+
+All financial data must be READ-ONLY.
+
+Do NOT recreate accounting reports (no P&L, no balance sheet, no expense ledger views).
+
+Do NOT write financial data back to QuickBooks.
+
+Only compute forward-looking operational insights based on scheduled data + QuickBooks values.
+
+🧱 1. Page Layout Redesign
+
+Keep the left sidebar navigation unchanged.
+
+Replace the current empty calendar grid layout with:
+
+A. Top Summary Bar (Weekly Intelligence Strip)
+
+Add a horizontal metrics bar above the calendar grid containing:
+
+Workforce Utilization %
+
+Equipment Utilization %
+
+Total Scheduled Revenue (week)
+
+Forecasted Labor Cost (week)
+
+Net Forecast Contribution (week)
+
+Overtime Risk Indicator (if > 85% capacity)
+
+These are forward-looking projections only.
+
+B. Calendar Grid (Week View Default)
+
+Maintain week view structure but redesign job tiles:
+
+Each job card must display:
+
+Job Name
+
+Client Name
+
+Contract Value (read-only from QB)
+
+Invoiced-to-Date %
+
+Scheduled Labor Hours (that day)
+
+Crew Count
+
+Margin Status Indicator (Green / Yellow / Red)
+
+Color coding:
+
+Green: Healthy projected margin
+
+Yellow: Margin compression risk
+
+Red: Low/negative projected margin
+
+Margin status is computed internally using:
+(Projected Revenue - Estimated Total Cost) / Projected Revenue
+
+Do NOT store this value in QuickBooks.
+
+C. Right-Side Operational Drawer (Dynamic Panel)
+
+When a day or job is clicked, open a right-side drawer showing:
+
+For Selected Job:
+
+Contract Value (read-only)
+
+Cost to Date (read-only)
+
+Scheduled Remaining Labor
+
+Assigned Crew Breakdown
+
+Equipment Assigned
+
+Upcoming Invoice Milestone (if applicable)
+
+Internal Forecasted Margin %
+
+Risk Flags (if any)
+
+For Selected Day:
+
+Total Scheduled Revenue
+
+Total Estimated Labor Cost
+
+Crew Allocation %
+
+Equipment Allocation %
+
+Net Forecast Contribution (daily)
+
+This panel must be dynamic and not redirect away from the page.
+
+⚙️ 2. Operational Intelligence Layer
+
+Implement:
+
+Resource Conflict Detection
+
+Flag double-booked crew
+
+Flag equipment conflicts
+
+Flag overtime risk (>8 hours/day or >40 hours/week per worker)
+
+Display warning icons inside job cards.
+
+Capacity Awareness
+
+At week level:
+
+Total available crew hours
+
+Total scheduled crew hours
+
+Capacity Remaining %
+
+At equipment level:
+
+Utilization per equipment category
+
+Smart Filters (Top Right)
+
+Add dropdown filter options:
+
+View by Margin Status
+
+View by Crew
+
+View by Equipment
+
+Show Only High-Risk Jobs
+
+Show Underutilized Days
+
+View by Client
+
+Filtering should dynamically update the grid.
+
+🧮 3. Data Architecture Requirements
+
+Do NOT duplicate accounting tables.
+
+Create internal models for:
+
+Scheduled Labor Hours
+
+Crew Assignments
+
+Equipment Assignments
+
+Internal Labor Rates
+
+Internal Equipment Rates
+
+Forecast Calculation Engine
+
+Pull from QuickBooks API:
+
+Invoice totals
+
+Estimate values
+
+Cost-to-date
+
+Expense totals
+
+Payroll cost data (if available)
+
+All QuickBooks data must be cached locally but treated as read-only.
+
+📊 4. Forecast Logic Layer
+
+Create a calculation service that:
+
+For each job:
+
+Reads contract value from QB
+
+Reads cost-to-date from QB
+
+Adds projected remaining labor cost
+
+Adds projected equipment cost
+
+Outputs forecasted margin %
+
+For each day:
+
+Sums scheduled job revenue portions
+
+Sums projected daily labor cost
+
+Outputs projected daily contribution
+
+No financial records are written back.
+
+🎨 5. UI Improvements
+
+Compact job tiles (no large empty whitespace)
+
+Color-coded margin health
+
+Small icon indicators for warnings
+
+Smooth drawer slide animation
+
+Responsive week/month toggle
+
+Sticky top intelligence bar
+
+🚫 Explicitly Exclude
+
+No general ledger entries
+
+No tax reporting
+
+No reconciliation tools
+
+No expense categorization page
+
+No accounting-style reports
+
+This page must remain operational, not financial-reporting.
+
+🎯 Final Outcome
+
+The Schedule page becomes:
+
+A profit-aware operational planning system that enhances scheduling decisions using QuickBooks-connected financial context without replacing accounting.

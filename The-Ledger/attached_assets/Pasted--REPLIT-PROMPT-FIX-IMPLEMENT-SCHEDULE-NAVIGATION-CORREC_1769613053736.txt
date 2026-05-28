@@ -1,0 +1,168 @@
+🔧 REPLIT PROMPT — FIX & IMPLEMENT SCHEDULE NAVIGATION CORRECTLY
+
+You are working on an existing SaaS web application called The Ledger.
+
+The application has a persistent left-hand sidebar navigation with the following current structure (top to bottom):
+
+Dashboard
+
+Jobs
+
+Clients
+
+Workers
+
+Equipment
+
+Invoices
+
+Map
+
+Manage Roles
+
+Audit Log
+
+Settings
+
+There is a design requirement (from Figma) to add a new page called Schedule to this sidebar. This has not been implemented correctly so far.
+
+Your task is to add Schedule properly as a first-class navigation item, following the rules below exactly.
+
+1. SIDEBAR NAVIGATION — REQUIRED PLACEMENT (CRITICAL)
+Add a new sidebar item:
+
+Label: Schedule
+
+Route: /schedule
+
+Behavior: Navigates to a dedicated Schedule page
+
+Placement rules (MANDATORY):
+
+Schedule must NOT be placed under Settings
+
+Schedule must NOT be a submenu
+
+Schedule must NOT be grouped with configuration/admin pages
+
+Correct position in the sidebar:
+
+Place Schedule directly after Map and before any administrative pages.
+
+✅ Final correct order should be:
+
+Dashboard
+
+Jobs
+
+Clients
+
+Workers
+
+Equipment
+
+Invoices
+
+Map
+
+Schedule ← ADD HERE
+
+Manage Roles
+
+Audit Log
+
+Settings
+
+This ordering reflects:
+
+Operational pages first
+
+Administrative/configuration pages last
+
+2. SIDEBAR IMPLEMENTATION REQUIREMENTS
+
+Use the same component, styling, icon behavior, and active-state logic as other sidebar items.
+
+Schedule must:
+
+Highlight correctly when active
+
+Persist across reloads
+
+Respect role-based access rules (if applied to other main pages)
+
+Do not hardcode it differently from other items.
+
+3. ROUTING (DO NOT SKIP)
+
+Ensure /schedule is:
+
+Properly registered in the router
+
+Not nested under /settings
+
+Not a placeholder route
+
+Navigation to /schedule must not redirect elsewhere.
+
+4. SCHEDULE PAGE — BASE FUNCTIONALITY
+
+Create a dedicated Schedule page (even if minimal initially):
+
+Page title: Schedule
+
+Layout consistent with Jobs/Dashboard pages
+
+This page will later be expanded, so:
+
+Do NOT treat it as a modal
+
+Do NOT embed it inside another page
+
+Minimum functionality:
+
+Ability to display jobs by date
+
+Filters for:
+
+Active jobs
+
+Planned jobs
+
+Completed jobs
+
+Reuse existing job data and filtering logic where possible.
+
+5. IMPORTANT FAILURE MODES TO AVOID (EXPLICIT)
+
+Do not:
+
+Add Schedule under Settings
+
+Add Schedule as a collapsible child
+
+Add Schedule only visually without routing
+
+Add Schedule without sidebar active-state support
+
+Rename it (must be exactly Schedule)
+
+If Schedule already exists incorrectly, remove the incorrect implementation and replace it with this one.
+
+6. VALIDATION CHECKLIST (YOU MUST VERIFY)
+
+Before finishing, confirm:
+
+Sidebar shows Schedule between Map and Manage Roles
+
+Clicking Schedule loads /schedule
+
+Sidebar highlights Schedule when active
+
+Schedule persists after refresh
+
+Back/forward browser navigation works correctly
+
+FINAL NOTE
+
+This change must match the Figma sidebar design, not an inferred or guessed structure. Schedule is an operational core page, not a configuration screen.

@@ -1,0 +1,244 @@
+1. DASHBOARD – JOB NAVIGATION
+
+Current state:
+Dashboard shows Recent Job Activity and Schedule Priority cards.
+
+Required changes:
+
+Make every job listed in:
+
+Recent Job Activity
+
+Schedule Priority
+fully clickable.
+
+Clicking a job must navigate directly to that specific job detail page.
+
+Preserve correct routing and browser history.
+
+2. JOBS PAGE – SORTING & FILTERING
+
+Current state:
+Jobs are displayed as cards with status labels (Active / Planned / Completed).
+
+Sorting rules (mandatory):
+
+Active jobs first
+
+Completed jobs after Active
+
+Within each group, sort by job date
+
+Filtering:
+
+Add a filter bar above the jobs list with:
+
+Date filter (selectable range or quick buttons)
+
+Toggle button to:
+
+Show / Hide Completed Jobs
+
+These filters must:
+
+Update the list live
+
+Be reusable logic (used elsewhere)
+
+3. JOB DETAIL PAGE – DOCUMENT VISIBILITY
+
+Current state:
+Jobs show a “Documents” section with downloadable files.
+
+Required changes:
+
+Allow internal document viewing directly inside the app:
+
+PDFs preview in-app
+
+Images preview in-app
+
+Do not force external downloads unless unsupported.
+
+4. GLOBAL JOB FILTERS (CONSISTENT UX)
+
+On all pages where jobs appear (Dashboard, Jobs, Schedule):
+
+Add filter buttons to toggle visibility of:
+
+Active jobs
+
+Planned jobs
+
+Completed jobs
+
+Keep filter placement and styling consistent across pages.
+
+5. WORKERS – DOCUMENTS & DEMO DATA
+Workers List Page
+
+No layout changes required.
+
+Worker Detail Page
+
+Required additions:
+
+Add a Documents section showing:
+
+Passport (demo document)
+
+Other relevant worker documents if appropriate
+
+Add realistic demo email addresses to all demo workers.
+
+Documents must be viewable internally (same behavior as job documents).
+
+6. EQUIPMENT – FILTERING, DETAILS & MAINTENANCE DATA
+Equipment Main Page
+
+Add filter controls for:
+
+Maintenance equipment
+
+Available equipment
+
+Unavailable equipment
+
+Date-based filter (e.g. last serviced / maintenance date)
+
+Equipment Detail Page
+
+Expand the page significantly.
+
+Add a Maintenance & Asset Information section containing:
+
+Purchase location
+
+Supplier name
+
+Warranty information
+
+Last serviced date
+
+Service interval
+
+Maintenance provider:
+
+Business or individual name
+
+Contact details
+
+Notes field
+
+Important:
+
+This section must be customisable per equipment
+(users can add extra maintenance-related fields).
+
+Seed demo equipment with realistic example data.
+
+If additional fields make sense for real-world trade equipment (e.g. serial numbers, compliance checks, certifications), add and suggest them.
+
+7. SCHEDULE PAGE (NEW)
+
+Create a new Schedule page.
+
+Add it to the left-hand navigation menu.
+
+The Schedule page must support:
+
+Viewing jobs by date
+
+Filtering by job status
+
+Visibility of assigned workers and equipment (reuse existing logic where possible)
+
+8. INVOICES – MISSING INPUTS & COST BREAKDOWN
+Invoice Creation
+
+Current issue:
+Some required invoice information is missing input fields.
+
+Fix:
+
+Add missing inputs such as:
+
+Price
+
+Totals
+
+Any other required invoice fields
+
+Job Creation / Editing
+
+Add a Cost Breakdown section:
+
+Labour costs
+
+Equipment costs
+
+Additional costs
+
+This breakdown should:
+
+Be visible on the job
+
+Feed into invoice creation logically
+
+9. NAVIGATION HISTORY BUG (IMPORTANT)
+
+Current problem:
+When navigating:
+
+Job → Client → Back
+User is sent to the Client list, not the previous page.
+
+Fix:
+
+Preserve navigation history correctly.
+
+“Back” must always return the user to the actual previous page, not a default list page.
+
+Apply this fix across:
+
+Jobs
+
+Clients
+
+Workers
+
+Equipment
+
+10. SETTINGS – COMPANY INFORMATION EXPANSION
+
+Current state:
+Company settings are minimal.
+
+Required changes:
+Expand Settings → Company Information with realistic business fields:
+
+Company legal name
+
+Registration number
+
+Address
+
+Phone & email
+
+Invoice defaults
+
+Tax / VAT info
+
+Branding options (logo, display name)
+
+Seed demo tenant with realistic example data.
+
+FINAL REQUIREMENTS
+
+Keep UI consistent with screenshots.
+
+All features must work end-to-end.
+
+Demo data must feel real and intentional.
+
+Do not overbuild beyond operational scope.

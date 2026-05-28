@@ -1,0 +1,171 @@
+✅ REPLIT PROMPT — ENABLE EDITING ON OBJECT DETAIL PAGES
+
+You are working on The Ledger web application.
+
+Problem summary
+
+Currently:
+
+Workers cannot be edited at all (including roles)
+
+Jobs cannot be edited
+
+Equipment cannot be added to or edited on jobs
+
+Equipment itself cannot be edited
+
+This must be fixed.
+All core objects must be editable from their detail pages, subject to permissions.
+
+1. WORKER DETAIL PAGE — EDITING (CRITICAL)
+Required behavior
+
+When viewing a specific worker page (/workers/:id):
+
+Add an Edit mode (button or toggle)
+
+Allow editing of:
+
+Name
+
+Email (if present)
+
+Status (active/inactive)
+
+Roles (multi-select from all available roles)
+
+Changes must:
+
+Persist correctly
+
+Reflect immediately in:
+
+Workers list
+
+Manage Roles → User Assignments
+
+Permissions
+
+Only users with appropriate permissions can edit
+
+If no permission:
+
+Fields are read-only
+
+Edit controls are hidden or disabled
+
+2. JOB DETAIL PAGE — EDITING & ASSIGNMENTS
+Required behavior
+
+When viewing a specific job page (/jobs/:id):
+
+Add ability to edit the job, including:
+
+Editable fields
+
+Job title
+
+Client
+
+Status
+
+Priority
+
+Location
+
+Start date / End date
+
+Cost breakdown (Labour, Equipment, Materials, Other)
+
+Equipment assignment on jobs (FIX)
+
+Current issue:
+
+Equipment cannot be added or edited properly
+
+Required fix:
+
+On the Job detail page:
+
+Add an Equipment section
+
+Allow:
+
+Adding equipment by selecting from existing equipment
+
+Removing equipment
+
+Only available equipment should be selectable
+
+Persist real equipment IDs on the job
+
+Worker assignment on jobs
+
+If worker assignment exists:
+
+Ensure it is editable from the job page
+
+Add/remove workers as needed
+
+Persist changes correctly
+
+3. EQUIPMENT DETAIL PAGE — EDITING
+Required behavior
+
+When viewing a specific equipment page (/equipment/:id):
+
+Add an Edit mode
+
+Allow editing of:
+
+Name
+
+Status (available / unavailable / maintenance)
+
+Maintenance information
+
+Notes
+
+Any custom fields already defined
+
+Changes must save and reflect immediately across:
+
+Equipment list
+
+Job assignments
+
+Schedule views
+
+4. UI & FLOW RULES
+
+Do NOT use modal popups for editing detail pages
+
+Editing should happen on the detail page itself
+
+Use:
+
+Inline editing
+
+Or an explicit “Edit / Save / Cancel” flow
+
+Preserve navigation state
+
+Validate inputs and show errors if saving fails
+
+5. DONE CHECKLIST (ALL MUST PASS)
+
+Workers can be edited, including roles
+
+Jobs can be edited after creation
+
+Equipment can be added to and removed from jobs
+
+Equipment records themselves are editable
+
+Role changes reflect in Manage Roles → User Assignments
+
+No silent failures when saving
+
+IMPORTANT
+
+If any existing read-only logic blocks these changes, remove or replace it.

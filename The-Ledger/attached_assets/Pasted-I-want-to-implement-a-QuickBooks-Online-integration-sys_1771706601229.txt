@@ -1,0 +1,208 @@
+I want to implement a QuickBooks Online integration system in a way that is production-ready architecturally, but still frontend-mocked.
+
+IMPORTANT:
+Do NOT refactor the entire app.
+Do NOT add real backend logic.
+Do NOT introduce external servers.
+This must remain frontend-mocked but structured as if backend exists.
+
+OBJECTIVE
+
+Build a full "Accounting Integration" system for QuickBooks with the following structure:
+
+1️⃣ Integration Settings Page
+
+Create a new route:
+
+/settings/integrations/accounting
+
+Design a professional integration dashboard that includes:
+
+A. QuickBooks Integration Card
+
+QuickBooks logo
+
+Status badge:
+
+Not Connected
+
+Connected
+
+Syncing
+
+Error
+
+"Connect to QuickBooks" button
+
+"Disconnect" button (when connected)
+
+"Sync Now" button
+
+Last Sync Timestamp
+
+Last Sync Status
+
+Error Message (if failed)
+
+Use realistic mock states stored in the existing mock store.
+
+2️⃣ OAuth Simulation Flow
+
+Simulate OAuth flow:
+
+When user clicks "Connect to QuickBooks":
+
+Open modal
+
+Show "Redirecting to QuickBooks..."
+
+Show loading spinner
+
+After 2 seconds, mark integration as connected
+
+Store:
+
+accessToken (mock string)
+
+realmId (mock company ID)
+
+connectedAt timestamp
+
+Persist this in the mock store.
+
+3️⃣ Invoice Sync Behaviour
+
+Modify invoice system:
+
+Add new invoice states:
+
+Draft (Ledger Controlled)
+
+Exported (QuickBooks Controlled)
+
+Paid (Synced from QuickBooks)
+
+Overdue (Synced from QuickBooks)
+
+When invoice is marked "Export to QuickBooks":
+
+Change status to Exported
+
+Add quickbooksInvoiceId (mock string)
+
+Lock editing
+
+Show badge: "Managed via QuickBooks"
+
+4️⃣ Financial Authority Rules
+
+Once invoice is Exported:
+
+Disable editing
+
+Disable auto-regeneration
+
+Display subtle notice:
+"This invoice is managed in QuickBooks."
+
+Add UI distinction between:
+
+Ledger-managed invoices
+
+QuickBooks-managed invoices
+
+5️⃣ Sync Log Drawer
+
+Create a "View Sync History" drawer that shows:
+
+Timestamp
+
+Action (Export Invoice, Sync Payments, Manual Sync)
+
+Status (Success / Failed)
+
+Error message (if any)
+
+Use mock array in store.
+
+6️⃣ Sync Simulation
+
+When clicking "Sync Now":
+
+Set status to "Syncing"
+
+Show spinner
+
+After 2 seconds:
+
+Randomly succeed or fail
+
+Update Last Sync timestamp
+
+Add entry to Sync Log
+
+7️⃣ Architectural Requirements
+
+Structure code so that:
+
+There is an integrationService.ts file
+
+All QuickBooks logic is isolated
+
+UI reads from store
+
+No business logic buried in components
+
+Use clean separation of concerns
+
+Prepare for future backend by:
+
+Designing service methods like:
+connectQuickBooks()
+disconnectQuickBooks()
+exportInvoiceToQuickBooks()
+syncQuickBooksData()
+
+Even if they are mock functions.
+
+8️⃣ UI Standards
+
+Maintain existing Ledger design philosophy:
+
+Professional whitespace
+
+Subtle borders
+
+Status badges with proper color coding
+
+No clutter
+
+Clean typography hierarchy
+
+Use Shadcn components.
+
+9️⃣ Multi-Tenant Awareness
+
+Ensure integration status is scoped to the active business (Real Business vs Demo Business).
+
+Demo account should:
+
+Allow connection
+
+Display watermark "Demo Mode – Accounting Sync Simulated"
+
+10️⃣ DO NOT
+
+Add real QuickBooks SDK
+
+Add external backend server
+
+Break existing invoice logic
+
+Remove job auto-sync system
+
+Hardcode everything inside components
+
+The goal is to simulate a production-ready QuickBooks integration system architecturally while remaining frontend-only.
+
+Build this cleanly and modularly.

@@ -1,0 +1,59 @@
+You are being given a full product brief for a software product called **The Ledger**. You must first fully understand the idea, the purpose, the nuances, and the planned business scope as described below.
+
+### CORE IDEA
+The Ledger is a trade-business operations management tool built for small-to-medium businesses that organise work into **jobs/projects**, assign **workers** and **equipment**, track schedules, prevent conflicts, and maintain clear audit logs of all operational changes. It is built on a flexible, editable database core that lets businesses customise fields, input real-world operational data, and generate actionable views of what is going on. It is NOT a CRM, not full ERP, and not a marketplace. It is a **controlled, operational tool that prioritises clarity, simplicity, and control over complexity.** The product is delivered as a **hosted SaaS under the Omnisoftware brand**.
+
+### DETAILED FEATURES (per guidance document)
+1. Schema-driven database with editable fields and expandable entities  
+2. Core operational entities:
+   - Workers (with role tags and custom roles)
+   - Jobs / Projects with unique readable IDs  
+   - Equipment / Assets with status/availability  
+   - Clients linked to jobs  
+3. Role-based access control (RBAC) with tenant isolation (each company is a separate tenant)
+4. Conflict detection for overlapping worker/equipment assignments
+5. Saved operational views (daily/weekly schedules, idle equipment, unassigned jobs)
+6. Audit logging for all CRUD and assignments
+7. Map page that shows job markers with colour-coding per status
+8. Invoice creation tied to Jobs and Clients, with templates, editable fields, and send/print support
+9. Complete UI flows with working Create/Edit/Delete, role screens, and functional navigation
+10. Example Business tenant seeded with demo data while real accounts start bare-bones
+
+### GOALS FOR YOU (understanding + research)
+A) Confirm you understand the above product and its key components and constraints  
+   - The product must be operational, not a mock
+   - Every button and workflow must function
+   - Permissions must be enforced in UI and backend
+   - The demo tenant should be richly populated while real tenants start minimal
+
+B) Without changing any code yet, ANALYSE THE MARKET  
+   - Identify potential competitors that The Ledger should be compared against
+   - Visit their websites and research their features, positioning, pricing, strengths, and weaknesses
+
+C) Provide **at least five strong competitors** relevant to The Ledger’s positioning (trade and operational management systems or adjacent)
+
+D) For each competitor:
+   - Summarise what they do  
+   - Highlight where they are strong  
+   - Highlight where they are weak in comparison to The Ledger
+
+E) Summarise opportunities for The Ledger based on competitor gaps and suggest:
+   - potential improvements to the product idea (not code changes yet)
+   - unique value propositions
+   - potential target sub-niches within trade businesses
+
+F) Do NOT change, modify, or add any code yet. First provide a clear, analysed proposal, competitor comparison, and your recommendations.
+
+Once you have analysed and responded, prompt me to confirm before moving on to any code adjustments.
+
+---
+
+### REQUIRED OUTPUT FORMAT
+1. **Understanding Summary** — A concise but accurate explanation of The Ledger
+2. **Competitor List (5)** — names, websites, quick positioning
+3. **Competitor Feature Matrix** — comparison of key features
+4. **Strengths & Weaknesses vs Competitors**
+5. **Improvement & Opportunity Suggestions**
+6. **Proposed Next Steps (not code yet)**
+
+Begin with section 1 — do NOT modify or generate new code at this stage.

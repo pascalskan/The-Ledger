@@ -1,0 +1,282 @@
+I am building a React + TypeScript + Vite + Tailwind + Shadcn UI application called "The Ledger".
+
+QuickBooks integration is already implemented (frontend mocked).
+
+Now I want to build a dedicated Mobile-First Worker Experience.
+
+IMPORTANT:
+
+This is frontend-only.
+
+Do NOT add backend logic.
+
+Do NOT refactor the entire app.
+
+Do NOT break existing desktop layouts.
+
+Worker mode must be isolated and cleanly structured.
+
+Architecture must be production-ready for future backend + offline sync.
+
+OBJECTIVE
+
+Create a dedicated "Worker Mobile Mode" that activates when:
+
+User role = Worker
+
+Screen width is mobile (responsive breakpoint)
+
+This must feel like a native field app.
+
+1️⃣ Worker Layout System
+
+Create a new layout:
+
+WorkerMobileLayout.tsx
+
+Requirements:
+
+Full-screen mobile layout
+
+Bottom navigation bar
+
+Sticky top header
+
+Large touch-friendly spacing
+
+Minimal information density
+
+Clear typography hierarchy
+
+Safe-area padding (simulate native app feel)
+
+Bottom Nav Items:
+
+My Jobs
+
+Schedule
+
+Uploads
+
+Profile
+
+Use icons + labels.
+
+Do NOT reuse desktop sidebar.
+
+2️⃣ My Jobs (Mobile Optimised)
+
+Route: /worker/jobs
+
+Show only jobs assigned to logged-in worker.
+
+Each job card must show:
+
+Job Title
+
+Client Name
+
+Location
+
+Status badge
+
+Today’s scheduled time
+
+“Open” button
+
+Cards must be large and thumb-friendly.
+
+3️⃣ Job Detail Mobile View
+
+Route: /worker/jobs/:id
+
+Sections (stacked vertically):
+
+Job Overview
+
+Title
+
+Client
+
+Address
+
+Status badge
+
+Crew
+
+Assigned workers
+
+Highlight current worker
+
+Equipment
+
+Assigned assets
+
+Time Logging
+
+Start Shift button
+
+End Shift button
+
+Show current shift timer (mocked)
+
+Upload Section
+
+Upload Photo button
+
+Show thumbnails
+
+Tag type (Before / After / Issue)
+
+Safety Documents
+
+View documents
+
+Expiry warning badges
+
+Everything must be mobile-optimised.
+
+4️⃣ Offline UI Simulation
+
+Even though no real offline logic exists:
+
+Add visual offline system:
+
+Top persistent status bar:
+
+Online (Green dot)
+
+Syncing (Blue spinner)
+
+Offline (Red dot + “Changes will sync when reconnected”)
+
+Add to store:
+
+isOnline (boolean)
+
+pendingSyncCount (number)
+
+When uploading photo or logging time:
+
+If offline:
+
+Add to "Pending Sync" queue
+
+Show small badge on bottom nav
+
+Do NOT implement real sync.
+Just simulate queue behaviour.
+
+5️⃣ Upload Experience
+
+Photo upload must:
+
+Open modal
+
+Allow image selection (mock)
+
+Show preview
+
+Add caption
+
+Tag type (Before/After/Issue)
+
+Save locally to store
+
+If offline:
+
+Add “Pending” badge
+
+Display small cloud-off icon
+
+6️⃣ Time Logging UX
+
+When worker clicks “Start Shift”:
+
+Replace button with running timer
+
+Show “Shift Active” badge
+
+Allow pause / end
+
+Store shift data locally in mock store.
+
+If offline:
+
+Mark as “Pending Sync”
+
+7️⃣ PWA-Ready Foundations
+
+Without implementing real PWA:
+
+Add manifest.json file
+
+Add basic service worker placeholder file
+
+Add install prompt component (mock)
+
+Add "Install App" banner (mobile only)
+
+Do NOT implement real caching.
+Just scaffold structure cleanly.
+
+8️⃣ Architecture Rules
+
+Create workerStore.ts (isolated state)
+
+Do NOT mix worker mobile state into main store directly
+
+Use service layer:
+workerService.ts
+
+Keep UI logic separate from state logic
+
+9️⃣ Role-Based Routing
+
+If role = Worker:
+
+Redirect desktop routes to worker mobile dashboard
+
+Hide financials
+
+Hide admin panels
+
+Hide integration settings
+
+If screen > mobile width:
+
+Still show simplified worker dashboard (no sidebar)
+
+10️⃣ Design Standards
+
+Maintain Ledger design philosophy:
+
+Professional
+
+Minimal
+
+Elevated
+
+No cartoon UI
+
+Proper whitespace
+
+Status colors consistent with rest of app
+
+Make it feel like a serious field operations tool.
+
+11️⃣ DO NOT
+
+Refactor entire routing system
+
+Touch QuickBooks integration
+
+Remove desktop UI
+
+Add real backend
+
+Add heavy dependencies
+
+This must be a cleanly layered mobile worker system built on top of existing architecture.
+
+Build this cleanly and modularly.

@@ -1,0 +1,152 @@
+Objective
+
+Remove all redundant invoice management functionality now that QuickBooks Open API is connected and is the authoritative billing system.
+
+The Ledger must no longer create, edit, store, or manage invoices.
+
+QuickBooks remains the sole system of record for:
+
+Invoices
+
+Payments
+
+Invoice status
+
+Tax calculation
+
+Revenue recognition
+
+1️⃣ Remove Invoice Creation Logic
+
+Delete:
+
+"Create Invoice" button
+
+Invoice creation form
+
+Invoice draft storage
+
+Invoice number generation
+
+Invoice delete functionality
+
+Any POST/PUT routes related to invoices
+
+Any internal invoice database tables
+
+2️⃣ Convert Invoices Page to Read-Only (Optional)
+
+If retaining the tab, convert it to:
+
+“Billing Overview” (Read-Only)
+
+Display:
+
+Invoice Number (from QB)
+
+Client Name
+
+Total
+
+Status (Sent, Paid, Overdue)
+
+Due Date
+
+View in QuickBooks button (deep link)
+
+Remove:
+
+Delete icon
+
+Edit capability
+
+Draft creation
+
+All data must be fetched from QuickBooks API in real time or via sync cache.
+
+3️⃣ Remove Redundant Financial Storage
+
+Audit backend and remove:
+
+Local invoice table (if QB now stores all invoices)
+
+Payment tracking logic
+
+Invoice status flags
+
+Tax calculations
+
+Invoice total calculations
+
+Replace with:
+
+QB invoice sync service
+
+4️⃣ Update Financial Insights Page
+
+Ensure:
+
+Revenue figures are pulled from QuickBooks invoice totals
+
+Do not compute revenue independently
+
+Do not maintain separate revenue totals in Ledger DB
+
+Gross profit calculations must reference QB revenue
+
+Remove any hard-coded or internal revenue tracking logic.
+
+5️⃣ Update Navigation
+
+Option A (Recommended):
+
+Remove "Invoices" from sidebar entirely.
+
+Option B:
+
+Rename to "Billing (QuickBooks)"
+
+Add notice:
+“Billing is managed in QuickBooks. Data shown here is synced.”
+
+6️⃣ Update Data Model
+
+Remove:
+
+invoice_number
+
+invoice_status
+
+invoice_total
+
+invoice_due_date
+
+payment_received fields
+
+Replace with:
+
+qb_invoice_id
+
+qb_sync_timestamp
+
+7️⃣ System Integrity Rules
+
+Enforce:
+
+No invoice data can be created unless originated from QuickBooks.
+
+No financial edits allowed in Ledger.
+
+All billing changes must happen in QuickBooks.
+
+Final Architecture Outcome
+
+The Ledger becomes:
+
+Operational Intelligence Layer
++
+QuickBooks as Financial Backbone
+
+No duplication.
+No dual entry.
+No reconciliation risk.
