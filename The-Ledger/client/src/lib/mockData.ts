@@ -130,7 +130,7 @@ export interface Invoice {
 export interface AuditLog {
   id: string;
   actorName: string;
-  action: "CREATE" | "UPDATE" | "DELETE" | "ASSIGN" | "LOGIN" | "VIOLATION" | "OVERRIDE" | "SEND";
+  action: "CREATE" | "UPDATE" | "DELETE" | "ASSIGN" | "LOGIN" | "VIOLATION" | "OVERRIDE" | "SEND" | "APPROVE";
   entity: string;
   details: string;
   timestamp: string;
@@ -197,6 +197,138 @@ export interface AutomationLog {
 // Constants
 export const REAL_COMPANY_ID = "comp-1";
 export const DEMO_COMPANY_ID = "comp-demo";
+
+// ======================================================
+// OPERATIONAL PAYLOAD TYPES
+// Phase 2 Refactor Foundation
+// ======================================================
+
+export interface MaterialUsagePayload {
+  stockItemId: string;
+  stockItemName: string;
+
+  quantity: number;
+  unit?: string;
+
+  // informational only until approval
+  unitCost?: number;
+  markupPrice?: number;
+}
+
+export interface LaborPayload {
+  workerId: string;
+  workerName: string;
+
+  hours: number;
+  hourlyRate?: number;
+
+  shiftStart?: string;
+  shiftEnd?: string;
+}
+
+export interface EquipmentUsagePayload {
+  assetId: string;
+  assetName: string;
+
+  hoursUsed?: number;
+  usageNotes?: string;
+}
+
+export interface ExpensePayload {
+  id: string;
+
+  category: string;
+  amount: number;
+
+  notes?: string;
+
+  receiptUrl?: string;
+}
+
+export interface UploadPayload {
+  id: string;
+
+  type:
+    | "qa-photo"
+    | "receipt"
+    | "safety-report"
+    | "before-photo"
+    | "after-photo"
+    | "general";
+
+  fileName: string;
+
+  uploadedAt: string;
+
+  requiresReview?: boolean;
+
+url?: string;
+
+// ============================================
+// UPLOAD REPLAY ARCHITECTURE
+// ============================================
+
+syncStatus?:
+  | "pending"
+  | "uploading"
+  | "uploaded"
+  | "failed"
+  | "conflict"
+  | "needs_correction"
+  | "under_review"
+  | "resubmitted"
+
+uploadProgress?: number;
+
+retryCount?: number;
+
+lastAttemptAt?: string;
+
+uploadId?: string;
+
+conflictReason?: string;
+
+requiresManualReview?: boolean;
+
+}
+
+export interface ReviewItem {
+  id: string;
+
+  type: string;
+
+  status:
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "needs-correction";
+
+  workerId: string;
+
+  jobId: string;
+
+  notes?: string;
+
+  materialsUsed?: MaterialUsagePayload[];
+
+  laborEntries?: LaborPayload[];
+
+  equipmentUsage?: EquipmentUsagePayload[];
+
+  expenses?: ExpensePayload[];
+
+  uploads?: UploadPayload[];
+
+  submittedAt?: string;
+
+  reviewedAt?: string;
+
+  reviewedBy?: string;
+
+  correctionNotes?: string;
+
+  resubmissionCount?: number;
+}
 
 // Seed Data
 const INITIAL_CLIENTS: Client[] = [];
@@ -897,6 +1029,26 @@ export const useStore = () => {
 
   const currentSettings = currentCompanyId === DEMO_COMPANY_ID ? demoSettings : companySettings;
 
+  const deductStockQuantity = (id: string, qty: number, jobId?: string) => {
+    const item = stockItems.find(s => s.id === id);
+    if (item && item.quantity >= qty) {
+      stockItems = stockItems.map(s => s.id === id ? { ...s, quantity: s.quantity - qty, updatedAt: new Date().toISOString() } : s);
+      
+      stockMovements.push({
+        id: Math.random().toString(36).substr(2, 9),
+        stockItemId: id,
+        quantityChange: -qty,
+        reason: jobId ? "worker report" : "manual adjustment",
+        jobId,
+        createdAt: new Date().toISOString(),
+        companyId: currentCompanyId
+      });
+      
+      addLog("UPDATE", "StockItem", `Deducted ${qty} from ${item.name}`);
+      refresh();
+    }
+  };
+
   return {
     clients: filteredClients,
     workers: filteredWorkers,
@@ -1137,25 +1289,7 @@ export const useStore = () => {
     deleteStockItem: (id: string) => {
       stockItems = stockItems.filter(s => s.id !== id); refresh();
     },
-    deductStockQuantity: (id: string, qty: number, jobId?: string) => {
-      const item = stockItems.find(s => s.id === id);
-      if (item && item.quantity >= qty) {
-        stockItems = stockItems.map(s => s.id === id ? { ...s, quantity: s.quantity - qty, updatedAt: new Date().toISOString() } : s);
-        
-        stockMovements.push({
-          id: Math.random().toString(36).substr(2, 9),
-          stockItemId: id,
-          quantityChange: -qty,
-          reason: jobId ? "worker report" : "manual adjustment",
-          jobId,
-          createdAt: new Date().toISOString(),
-          companyId: currentCompanyId
-        });
-        
-        addLog("UPDATE", "StockItem", `Deducted ${qty} from ${item.name}`);
-        refresh();
-      }
-    },
+    deductStockQuantity,
 
     addAsset: (a: Omit<Asset, "id" | "companyId" | "createdAt" | "updatedAt">) => {
       const entry = { ...a, id: Math.random().toString(36).substr(2, 9), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), companyId: currentCompanyId };
@@ -1171,10 +1305,24 @@ export const useStore = () => {
     addReviewItem: (r: Omit<ReviewItem, "id" | "companyId">) => {
       const entry = { ...r, id: Math.random().toString(36).substr(2, 9), companyId: currentCompanyId };
       reviewItems.push(entry as ReviewItem);
-      addLog("CREATE", "ReviewItem", `Created new review item ${r.title}`);
+      addLog("CREATE", "ReviewItem", `Created new review item ${r.title || "Unknown"}`);
       refresh();
     },
     updateReviewItem: (id: string, u: Partial<ReviewItem>) => {
+      const item = reviewItems.find(r => r.id === id);
+      
+      // If we are approving an item that wasn't previously approved
+      if (item && u.status === 'approved' && item.status !== 'approved') {
+        addLog('APPROVE', 'ReviewItem', `Approved review item ${item.title || item.id}`);
+        
+        // Deduct inventory for any materials used
+        if (item.materialsUsed && item.materialsUsed.length > 0) {
+          item.materialsUsed.forEach(material => {
+            deductStockQuantity(material.stockItemId, material.quantity, item.jobId);
+          });
+        }
+      }
+
       reviewItems = reviewItems.map(r => r.id === id ? { ...r, ...u } as ReviewItem : r);
       refresh();
     },

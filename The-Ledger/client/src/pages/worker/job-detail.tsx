@@ -1,6 +1,7 @@
 import { WorkerMobileLayout } from "@/components/WorkerMobileLayout";
 import { useStore, useAuth } from "@/lib/mockData";
 import { useWorkerStore } from "@/lib/workerStore";
+import { useShiftStore } from "@/lib/shiftStore";
 import { useLocation, useRoute } from "wouter";
 import { MapPin, Users, Truck, Clock, FileText, Camera, Upload, CheckCircle2, AlertTriangle, ArrowLeft, ClipboardList } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -13,30 +14,25 @@ export default function WorkerJobDetailPage() {
   const [, setLocation] = useLocation();
   const { jobs, clients, workers, equipment } = useStore();
   const { user } = useAuth();
-  const { isOnline, addPendingSync, startShift, endShift, getActiveShift } = useWorkerStore();
+  const { isOnline, addPendingSync } = useWorkerStore();
+  const { activeShift, elapsedTime, startShift, endShift } = useShiftStore();
 
   const job = jobs.find((j) => j.id === params?.id);
   const client = clients.find((c) => c.id === job?.clientId);
   
   const [activeTab, setActiveTab] = useState<"overview" | "crew" | "assets" | "docs">("overview");
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   if (!job) return <WorkerMobileLayout title="Job Not Found"><div className="p-8 text-center text-slate-500">Job not found or access denied.</div></WorkerMobileLayout>;
 
   const assignedWorkers = workers.filter(w => job.assignedWorkerIds.includes(w.id));
   const assignedEquipment = equipment.filter(e => job.assignedEquipmentIds.includes(e.id));
-  const shift = getActiveShift(job.id);
+  const isShiftActiveForJob = activeShift?.jobId === job.id && activeShift?.isRunning;
   
-  const formatDuration = (ms: number) => {
-    const seconds = Math.floor((ms / 1000) % 60);
-    const minutes = Math.floor((ms / (1000 * 60)) % 60);
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  const formatDuration = (seconds: number) => {
+    const s = Math.floor(seconds % 60);
+    const m = Math.floor((seconds / 60) % 60);
+    const h = Math.floor(seconds / (60 * 60));
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const handleUploadPhoto = () => {
@@ -46,10 +42,14 @@ export default function WorkerJobDetailPage() {
   };
 
   const handleToggleShift = () => {
-    if (shift) {
-      endShift(job.id);
+    if (isShiftActiveForJob) {
+      endShift();
     } else {
-      startShift(job.id);
+      if (activeShift && activeShift.jobId !== job.id) {
+        alert("You already have an active shift for another job. Please end it first.");
+        return;
+      }
+      startShift(job.id, user?.id || "unknown-worker");
     }
   };
 
@@ -98,14 +98,14 @@ export default function WorkerJobDetailPage() {
               <Clock className="w-5 h-5 text-slate-300" />
               <h3 className="font-semibold text-sm tracking-wide uppercase">Time Logging</h3>
             </div>
-            {shift && (
+            {isShiftActiveForJob && (
               <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/20 border-none animate-pulse">Shift Active</Badge>
             )}
           </div>
           
-          {shift && (
+          {isShiftActiveForJob && (
             <div className="text-4xl font-mono text-center font-bold tracking-wider mb-6 text-emerald-400">
-              {formatDuration(now - new Date(shift.startTime).getTime())}
+              {formatDuration(elapsedTime)}
             </div>
           )}
 
@@ -113,11 +113,11 @@ export default function WorkerJobDetailPage() {
             size="lg" 
             className={cn(
               "w-full font-bold text-lg rounded-xl h-14", 
-              shift ? "bg-red-500 hover:bg-red-600 text-white" : "bg-emerald-500 hover:bg-emerald-600 text-white"
+              isShiftActiveForJob ? "bg-red-500 hover:bg-red-600 text-white" : "bg-emerald-500 hover:bg-emerald-600 text-white"
             )}
             onClick={handleToggleShift}
           >
-            {shift ? "End Shift" : "Start Shift"}
+            {isShiftActiveForJob ? "End Shift" : "Start Shift"}
           </Button>
           {!isOnline && (
              <p className="text-center mt-3 text-xs text-slate-400 flex items-center justify-center gap-1">

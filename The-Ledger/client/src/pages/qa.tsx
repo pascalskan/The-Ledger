@@ -1,6 +1,8 @@
 import { Layout } from "@/components/layout";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 export default function QAPage() {
   const checks = [
@@ -30,9 +32,29 @@ export default function QAPage() {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">QA Checklist</h2>
-          <p className="text-muted-foreground mt-1">Verification of core application flows.</p>
+          <h2 className="text-3xl font-bold tracking-tight">QA Center</h2>
+          <p className="text-muted-foreground mt-1">Verification of core application flows and enterprise hardening.</p>
         </div>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-500" />
+                    Phase 2 Hardening & Validation
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                    This checklist validates the enterprise-grade hardening of the Phase 2 field operations system.
+                    It covers offline persistence, replay batching, governance, and doctrine compliance.
+                </p>
+                <Link href="/qa/validation">
+                    <Button>
+                        Open Phase 2 Validation Checklist <ExternalLink className="w-4 h-4 ml-2" />
+                    </Button>
+                </Link>
+            </CardContent>
+        </Card>
 
         <div className="grid gap-6 md:grid-cols-2">
           {checks.map((cat) => (

@@ -43,7 +43,9 @@ export default function ReviewDetailPage() {
 
   const filteredItems = activeTab === "all" 
     ? pendingItems 
-    : pendingItems.filter(item => item.type === activeTab);
+    : activeTab === "report"
+      ? pendingItems.filter(item => item.type === "report" || item.type === "worker-report")
+      : pendingItems.filter(item => item.type === activeTab);
 
   return (
     <Layout>
@@ -65,7 +67,7 @@ export default function ReviewDetailPage() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <TabsList>
               <TabsTrigger value="all">All Pending ({pendingItems.length})</TabsTrigger>
-              <TabsTrigger value="report">Reports ({pendingItems.filter(i => i.type === "report").length})</TabsTrigger>
+              <TabsTrigger value="report">Reports ({pendingItems.filter(i => i.type === "report" || i.type === "worker-report").length})</TabsTrigger>
               <TabsTrigger value="photo">Photos ({pendingItems.filter(i => i.type === "photo").length})</TabsTrigger>
             </TabsList>
             
@@ -95,7 +97,7 @@ export default function ReviewDetailPage() {
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              {item.type === 'report' ? <FileText className="h-4 w-4 text-purple-500" /> : <ImageIcon className="h-4 w-4 text-blue-500" />}
+                              {item.type === 'report' || item.type === 'worker-report' ? <FileText className="h-4 w-4 text-purple-500" /> : <ImageIcon className="h-4 w-4 text-blue-500" />}
                               <Badge variant="secondary" className="capitalize">
                                 {item.type}
                               </Badge>
@@ -110,13 +112,23 @@ export default function ReviewDetailPage() {
                           </div>
                         </div>
 
-                        {item.type === 'report' && (
+                        {(item.type === 'report' || item.type === 'worker-report') && (
                           <div className="mt-4 space-y-4">
-                            <div>
-                              <h4 className="text-sm font-medium text-slate-900 mb-1">Summary</h4>
-                              <p className="text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-100">{item.content}</p>
-                            </div>
+                            {item.content && (
+                              <div>
+                                <h4 className="text-sm font-medium text-slate-900 mb-1">Summary</h4>
+                                <p className="text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-100">{item.content}</p>
+                              </div>
+                            )}
+
+                            {item.notes && !item.content && (
+                               <div>
+                                 <h4 className="text-sm font-medium text-slate-900 mb-1">Summary</h4>
+                                 <p className="text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-100">{item.notes}</p>
+                               </div>
+                            )}
                             
+                            {/* Legacy Items */}
                             {item.items && item.items.length > 0 && (
                               <div>
                                 <h4 className="text-sm font-medium text-slate-900 mb-2">Materials Logged</h4>
@@ -125,6 +137,21 @@ export default function ReviewDetailPage() {
                                     <div key={idx} className={`flex justify-between p-2 px-3 ${idx !== 0 ? 'border-t' : ''}`}>
                                       <span className="text-sm text-slate-700">{mat.name}</span>
                                       <span className="text-sm font-medium">{mat.quantity}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Phase 2 Materials Used */}
+                            {item.materialsUsed && item.materialsUsed.length > 0 && (
+                              <div>
+                                <h4 className="text-sm font-medium text-slate-900 mb-2">Materials Logged</h4>
+                                <div className="bg-white border rounded-md overflow-hidden">
+                                  {item.materialsUsed.map((mat, idx) => (
+                                    <div key={idx} className={`flex justify-between p-2 px-3 ${idx !== 0 ? 'border-t' : ''}`}>
+                                      <span className="text-sm text-slate-700">{mat.stockItemName}</span>
+                                      <span className="text-sm font-medium">Qty: {mat.quantity}{mat.unit ? ` ${mat.unit}` : ''}</span>
                                     </div>
                                   ))}
                                 </div>

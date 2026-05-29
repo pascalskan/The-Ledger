@@ -42,6 +42,8 @@ import AutomationsPage from "@/pages/automations";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
+import { SynchronizationDebugPanel } from "@/components/dev/SynchronizationDebugPanel";
+import { Phase2ValidationChecklist } from "@/components/dev/Phase2ValidationChecklist";
 
 function ProtectedRoute({ component: Component, roles }: { component: React.ComponentType, roles?: string[] }) {
   const { user } = useAuth();
@@ -184,6 +186,9 @@ function Router() {
       <Route path="/qa">
         <ProtectedRoute component={QAPage} />
       </Route>
+      <Route path="/qa/validation">
+        <ProtectedRoute component={Phase2ValidationChecklist} />
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -195,6 +200,7 @@ function App() {
       <TooltipProvider>
         <Router />
         <Toaster />
+        <SynchronizationDebugPanel />
       </TooltipProvider>
     </QueryClientProvider>
   );

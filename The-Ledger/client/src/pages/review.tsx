@@ -29,7 +29,9 @@ export default function ReviewPage() {
     const jobItems = reviewItems.filter(r => r.jobId === job.id && r.status === "pending");
     
     const pendingPhotos = jobItems.filter(r => r.type === "photo").length;
-    const pendingReports = jobItems.filter(r => r.type === "report").length;
+    const pendingReports = jobItems.filter(
+      r => r.type === "report" || r.type === "worker-report"
+    ).length;
     const pendingIssues = jobItems.filter(r => r.type === "log").length;
     
     const totalPending = pendingPhotos + pendingReports + pendingIssues;
