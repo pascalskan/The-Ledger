@@ -41,6 +41,7 @@ import JobIntelligenceDashboard from "@/pages/job-intelligence";
 import AutomationsPage from "@/pages/automations";
 import FinancialExplorerPage from "@/pages/financial-explorer";
 import PayrollStagingPage from "@/pages/payroll";
+import InvoiceBuilderPage from "@/pages/invoice-builder";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
@@ -181,6 +182,9 @@ function Router() {
       </Route>
       <Route path="/payroll">
         <ProtectedRoute component={PayrollStagingPage} roles={["CEO"]} />
+      </Route>
+      <Route path="/invoice-builder">
+        <ProtectedRoute component={InvoiceBuilderPage} roles={["CEO", "Project Manager"]} />
       </Route>
       <Route path="/settings">
         <ProtectedRoute component={SettingsPage} roles={["CEO"]} />

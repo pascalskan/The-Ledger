@@ -1131,6 +1131,22 @@ export const useStore = () => {
     invoiceLineItems: mockInvoiceLineItems,
     financialMutations: mockFinancialMutations,
 
+    // Phase 5.3 — Invoice Draft table
+    invoiceDrafts: mockInvoiceDrafts,
+    addInvoiceDraft: (draft: InvoiceDraft) => {
+      mockInvoiceDrafts.push(draft);
+      addLog("CREATE", "InvoiceDraft", `Created draft invoice ${draft.invoiceNumber} for job ${draft.jobId}`);
+      refresh();
+    },
+    updateInvoiceDraftStatus: (id: string, status: import("@/types/finance").InvoiceStatus) => {
+      const idx = mockInvoiceDrafts.findIndex(d => d.id === id);
+      if (idx !== -1) {
+        mockInvoiceDrafts[idx] = { ...mockInvoiceDrafts[idx], status, updatedAt: new Date().toISOString() };
+        addLog("UPDATE", "InvoiceDraft", `Invoice draft ${mockInvoiceDrafts[idx].invoiceNumber} status → ${status}`);
+        refresh();
+      }
+    },
+
     // Phase 4.4 — Job Financial Summary (derived, not stored)
     getJobFinancialSummary,
 
@@ -1913,6 +1929,36 @@ export interface FinancialMutation {
 // Intelligence show real numbers on first load.
 // ======================================================
 
+// ======================================================
+// PHASE 5.3 — INVOICE DRAFT STORE
+//
+// InvoiceDraft documents are generated deterministically
+// from approved InvoiceLineItem records by invoiceBuilder.ts.
+// They live here alongside the other normalized financial tables.
+//
+// Like all financial records, these are populated by the
+// approval path, never created directly from a Job.
+// ======================================================
+
+import type { InvoiceDraft } from "@/types/finance";
+export type { InvoiceDraft } from "@/types/finance";
+export type { InvoiceStatus } from "@/types/finance";
+export type { InvoiceDraftLineItem } from "@/types/finance";
+
+export const mockInvoiceDrafts: InvoiceDraft[] = [];
+
+// ── Invoice number generator ───────────────────────────
+// Deterministic sequential numbering scoped to the current session.
+// Format: INV-YYYY-NNNN   e.g. INV-2026-0001
+// Production would use a persisted counter; for the mock this is
+// sufficient to produce unique, human-readable numbers.
+let _invoiceDraftSeq = 0;
+export function generateInvoiceNumber(): string {
+  _invoiceDraftSeq += 1;
+  const year = new Date().getFullYear();
+  return `INV-${year}-${String(_invoiceDraftSeq).padStart(4, "0")}`;
+}
+
 export const mockTimesheets: TimesheetEntry[] = [];
 
 export const mockExpenses: ExpenseEntry[] = [];
@@ -2102,6 +2148,40 @@ export const mockFinancialMutations: FinancialMutation[] = [];
       approvedBy: APPROVED_BY,
     });
   });
+  // ────────────────────────────────────
+  // PHASE 5.3 — SEED INVOICE DRAFT
+  // Generated from the seed InvoiceLineItem records above.
+  // Mirrors what invoiceBuilder.generateInvoiceDraft() would produce
+  // for dj-kitchen-extract-1 so the Invoice Builder page has live
+  // data on first load without requiring a manual approval.
+  // ────────────────────────────────────
+  const seedDraftLines = [
+    { id: "seed-line-1", type: "labor"     as const, description: "Labour – Sophie Taylor (32h @ £55/h)",             quantity: 32,  unitPrice: 55,     amount: 1760   },
+    { id: "seed-line-2", type: "labor"     as const, description: "Labour – Ben Hughes (24h @ £55/h)",               quantity: 24,  unitPrice: 55,     amount: 1320   },
+    { id: "seed-line-3", type: "equipment" as const, description: "Equipment – Hiab support (canopy lift) (16h)",   quantity: 16,  unitPrice: 65,     amount: 1040   },
+    { id: "seed-line-4", type: "equipment" as const, description: "Equipment – Crew van (tools transport) (24h)",   quantity: 24,  unitPrice: 18.75,  amount: 450    },
+    { id: "seed-line-5", type: "expense"   as const, description: "Expense – Skip hire — waste removal (+15% markup)", quantity: 1,  unitPrice: 212.75, amount: 212.75 },
+    { id: "seed-line-6", type: "material"  as const, description: "Materials – 15mm Isolating Valve ×40",            quantity: 40,  unitPrice: 3.50,   amount: 140    },
+  ];
+  const seedSubtotal = seedDraftLines.reduce((s, l) => s + l.amount, 0); // 4922.75
+  const seedTaxRate  = 0;
+  const seedTaxAmt   = seedSubtotal * seedTaxRate;
+  mockInvoiceDrafts.push({
+    id: "seed-draft-kex-1",
+    invoiceNumber: "INV-2026-0001",
+    jobId: JOB_ID,
+    clientId: "dc1",
+    lineItems: seedDraftLines,
+    subtotal: seedSubtotal,
+    taxRate: seedTaxRate,
+    taxAmount: seedTaxAmt,
+    total: seedSubtotal + seedTaxAmt,
+    status: "draft",
+    createdAt: APPROVED_AT,
+    updatedAt: APPROVED_AT,
+  });
+  // Keep the seq counter consistent with the seeded invoice number
+  _invoiceDraftSeq = 1;
 })();
 
 // ======================================================
