@@ -76,6 +76,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Workers", href: "/workers", icon: Users, roles: ["CEO", "Project Manager"] },
     { label: "Stock & Assets", href: "/equipment", icon: Package, Blocks, roles: ["CEO", "Project Manager"] },
     { label: "Invoices", href: "/invoices", icon: FileText, roles: ["CEO", "Project Manager"] },
+    { label: "Invoice Builder", href: "/invoice-builder", icon: ReceiptText, roles: ["CEO", "Project Manager"] },
     { label: "Financial Insights", href: "/expenses", icon: ReceiptText, roles: ["CEO", "Admin", "Project Manager", "Worker"] },
     { label: "Map", href: "/map", icon: MapIcon, roles: ["CEO", "Project Manager", "Worker"] },
     { label: "Schedule", href: "/schedule", icon: Calendar, roles: ["CEO", "Project Manager", "Worker"] },
