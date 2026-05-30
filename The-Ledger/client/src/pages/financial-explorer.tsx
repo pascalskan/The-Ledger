@@ -19,8 +19,10 @@ import {
   FileText,
   Activity,
   DollarSign,
+  BarChart3,
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { MarginIntelligenceTable } from "@/components/finance/MarginIntelligenceTable";
 
 function fmt(n: number) {
   return `£${n.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -122,8 +124,11 @@ export default function FinancialExplorerPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="mutations">
+        <Tabs defaultValue="profitability">
           <TabsList className="flex flex-wrap h-auto gap-1">
+            <TabsTrigger value="profitability" className="flex items-center gap-1.5">
+              <BarChart3 className="h-3.5 w-3.5" /> Profitability
+            </TabsTrigger>
             <TabsTrigger value="mutations">Audit Log</TabsTrigger>
             <TabsTrigger value="timesheets">Timesheets</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
@@ -131,6 +136,13 @@ export default function FinancialExplorerPage() {
             <TabsTrigger value="equipment">Equipment</TabsTrigger>
             <TabsTrigger value="lineitems">Invoice Lines</TabsTrigger>
           </TabsList>
+
+          {/* ── Phase 5.2: Profitability Dashboard ── */}
+          <TabsContent value="profitability">
+            <div className="mt-4">
+              <MarginIntelligenceTable targetMargin={20} />
+            </div>
+          </TabsContent>
 
           {/* ── Financial Mutation Audit Log ── */}
           <TabsContent value="mutations">
@@ -190,8 +202,10 @@ export default function FinancialExplorerPage() {
                     <TableRow>
                       <TableHead>Worker</TableHead>
                       <TableHead className="text-right">Hours</TableHead>
-                      <TableHead className="text-right">Hourly Rate</TableHead>
+                      <TableHead className="text-right">Cost Rate</TableHead>
                       <TableHead className="text-right">Labour Cost</TableHead>
+                      <TableHead className="text-right">Billable Rate</TableHead>
+                      <TableHead className="text-right">Labour Revenue</TableHead>
                       <TableHead>Job</TableHead>
                       <TableHead>Approved By</TableHead>
                       <TableHead>Approved At</TableHead>
@@ -203,7 +217,9 @@ export default function FinancialExplorerPage() {
                         <TableCell className="font-medium">{t.workerName}</TableCell>
                         <TableCell className="text-right">{t.hours}</TableCell>
                         <TableCell className="text-right">{fmt(t.hourlyRate)}</TableCell>
-                        <TableCell className="text-right font-medium">{fmt(t.laborCost)}</TableCell>
+                        <TableCell className="text-right font-medium text-red-600">{fmt(t.laborCost)}</TableCell>
+                        <TableCell className="text-right">{fmt(t.billableRate)}</TableCell>
+                        <TableCell className="text-right font-medium text-emerald-600">{fmt(t.laborRevenue)}</TableCell>
                         <TableCell><JobLink jobId={t.jobId} /></TableCell>
                         <TableCell className="text-sm">{t.approvedBy}</TableCell>
                         <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
@@ -228,6 +244,8 @@ export default function FinancialExplorerPage() {
                     <TableRow>
                       <TableHead>Description</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">Markup %</TableHead>
+                      <TableHead className="text-right">Recovery Amount</TableHead>
                       <TableHead>Job</TableHead>
                       <TableHead>Submitted By</TableHead>
                       <TableHead>Approved By</TableHead>
@@ -238,7 +256,13 @@ export default function FinancialExplorerPage() {
                     {[...expenses].reverse().map((e) => (
                       <TableRow key={e.id}>
                         <TableCell className="font-medium">{e.description}</TableCell>
-                        <TableCell className="text-right font-medium">{fmt(e.amount)}</TableCell>
+                        <TableCell className="text-right font-medium text-red-600">{fmt(e.amount)}</TableCell>
+                        <TableCell className="text-right">
+                          {(e as any).markupPercent !== undefined
+                            ? `${(e as any).markupPercent}%`
+                            : <span className="text-muted-foreground text-xs">—</span>}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-emerald-600">{fmt(e.recoveryAmount)}</TableCell>
                         <TableCell><JobLink jobId={e.jobId} /></TableCell>
                         <TableCell className="text-sm">{e.submittedBy}</TableCell>
                         <TableCell className="text-sm">{e.approvedBy}</TableCell>
@@ -265,7 +289,7 @@ export default function FinancialExplorerPage() {
                       <TableHead>Stock Item</TableHead>
                       <TableHead className="text-right">Qty Used</TableHead>
                       <TableHead className="text-right">Unit Cost</TableHead>
-                      <TableHead className="text-right">Markup</TableHead>
+                      <TableHead className="text-right">Markup Price</TableHead>
                       <TableHead className="text-right">Cost Impact</TableHead>
                       <TableHead className="text-right">Revenue Impact</TableHead>
                       <TableHead>Job</TableHead>
@@ -297,7 +321,7 @@ export default function FinancialExplorerPage() {
             </div>
           </TabsContent>
 
-          {/* ── Equipment Usage ── */}
+          {/* ── Equipment Usage (Phase 5.2: adds billedRate and revenueImpact columns) ── */}
           <TabsContent value="equipment">
             <div className="border rounded-md mt-4">
               {equipmentUsageRecords.length === 0 ? (
@@ -309,6 +333,8 @@ export default function FinancialExplorerPage() {
                       <TableHead>Asset</TableHead>
                       <TableHead className="text-right">Hours Used</TableHead>
                       <TableHead className="text-right">Usage Cost</TableHead>
+                      <TableHead className="text-right">Billed Rate</TableHead>
+                      <TableHead className="text-right">Revenue Impact</TableHead>
                       <TableHead>Job</TableHead>
                       <TableHead>Approved At</TableHead>
                     </TableRow>
@@ -318,12 +344,22 @@ export default function FinancialExplorerPage() {
                       <TableRow key={r.id}>
                         <TableCell className="font-medium">{r.assetName}</TableCell>
                         <TableCell className="text-right">{r.hoursUsed}</TableCell>
-                        <TableCell className="text-right font-medium">
+                        <TableCell className="text-right font-medium text-red-600">
                           {r.usageCost === 0 ? (
                             <span className="text-muted-foreground text-xs">No rate</span>
                           ) : (
                             fmt(r.usageCost)
                           )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {(r as any).billedRate !== undefined
+                            ? fmt((r as any).billedRate)
+                            : <span className="text-muted-foreground text-xs">—</span>}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-emerald-600">
+                          {(r as any).revenueImpact !== undefined
+                            ? fmt((r as any).revenueImpact)
+                            : <span className="text-muted-foreground text-xs">—</span>}
                         </TableCell>
                         <TableCell><JobLink jobId={r.jobId} /></TableCell>
                         <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
