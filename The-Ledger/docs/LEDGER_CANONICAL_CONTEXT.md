@@ -2,28 +2,36 @@
 
 ## Canonical Context Document
 
-Version: 3.0
+Version: 4.0
 Status: Active Source of Truth
+Last Updated: May 2026
 
 ---
 
 # PROJECT IDENTITY
 
-The Ledger is an operational intelligence, financial normalization, and business management platform designed for field service, maintenance, construction, facilities management, and trade businesses.
+The Ledger is an operational intelligence, financial normalization, workforce management, document intelligence, and business operations platform designed for:
+
+- Facilities Management
+- Cleaning
+- Security
+- Labour Providers
+- Field Services
+- Construction
+- Maintenance
+- Trade Businesses
 
 The Ledger is not accounting software.
 
-The Ledger sits between operations and accounting systems.
-
-Its purpose is to transform operational activity into structured, auditable, financially accurate data.
+The Ledger sits between operations and accounting systems and transforms operational activity into structured, auditable, financially accurate data.
 
 Supported downstream systems include:
 
-* QuickBooks
-* Xero
-* FreshBooks
-* Zoho Books
-* Future accounting integrations
+- QuickBooks
+- Xero
+- FreshBooks
+- Zoho Books
+- Future accounting integrations
 
 ---
 
@@ -32,10 +40,6 @@ Supported downstream systems include:
 ## Operational Data Is Financial Data
 
 Every financial outcome originates from operational activity.
-
-Poor operational data creates poor financial data.
-
-The Ledger enforces:
 
 Operational Event
 → Structured Submission
@@ -52,12 +56,12 @@ Nothing becomes financially real until approved.
 
 No operational event may directly create:
 
-* Revenue
-* Cost
-* Payroll
-* Invoice entries
-* Inventory deductions
-* Accounting mutations
+- Revenue
+- Cost
+- Payroll
+- Invoice entries
+- Inventory deductions
+- Accounting mutations
 
 until approved.
 
@@ -71,13 +75,14 @@ Every financially relevant action must be traceable.
 
 Required audit fields:
 
-* Who
-* What
-* When
-* Previous Value
-* New Value
-* Source Object
-* Destination Object
+- Who
+- What
+- When
+- Previous Value
+- New Value
+- Source Object
+- Destination Object
+- External Reference
 
 No silent financial mutations.
 
@@ -87,92 +92,152 @@ No silent financial mutations.
 
 Every Job acts as a mini-ledger.
 
-All financial events must be attributable to a Job.
-
-Financial reporting is job-centric.
-
 Jobs own:
 
-* Revenue
-* Labor Costs
-* Material Costs
-* Equipment Costs
-* Profitability
-* Exposure
+- Revenue
+- Labor Costs
+- Material Costs
+- Equipment Costs
+- Profitability
+- Exposure
+- Audit Trail
+
+All financial reporting is job-centric.
 
 ---
 
-# CURRENT PROJECT STATUS
+# PRODUCT DEFINITION
 
-Current development prioritizes:
+## Executive Platform
 
-1. Workflow validation
-2. Financial normalization
-3. Operational correctness
-4. Review workflows
+The Ledger contains:
 
-Backend implementation is intentionally deferred until workflow architecture is validated.
+- Dashboard
+- Job Intelligence
+- Review Center
+- Jobs
+- Clients
+- Workers
+- Schedule
+- Map
+- Stock
+- Assets
+- Locations
+- Alerts
+- Invoices
+- Financial Insights
+- Roles & Permissions
+- Audits
+- Automations
+- Settings
+- API Integrations
 
-Do not treat backend incompleteness as project incompleteness.
+## Worker Application
+
+Workers can:
+
+- View assigned jobs
+- View schedule
+- Start shift timer
+- End shift timer
+- Submit reports
+- Upload photos
+- Log issues
+- Submit expenses
+- View previous submissions
+
+Workers never have financial visibility.
+
+## Client Portal
+
+Clients can:
+
+- View projects
+- View assigned crews
+- View documents
+- View comments
+- Submit requests
+- View financial summaries
+- View invoice status
+
+Client access is provisioned from the main Ledger platform.
+
+---
+
+# CURRENT DEVELOPMENT MODEL
+
+The current implementation is a high-fidelity frontend prototype.
+
+Purpose:
+
+- Workflow validation
+- Financial logic validation
+- UX validation
+- Approval pipeline validation
+- Integration architecture validation
+
+Backend implementation is intentionally deferred.
+
+Current architecture relies heavily on:
+
+- mockData.ts
+- Zustand state management
+- Mock authentication
+- Frontend-only persistence
 
 ---
 
 # TECHNOLOGY STACK
 
-Frontend
+## Frontend
 
-* React
-* TypeScript
-* Vite
-* TailwindCSS
-* shadcn/ui
-* Wouter
-* Zustand
-* TanStack Query
-* React Hook Form
-* Zod
+- React
+- TypeScript
+- Vite
+- TailwindCSS
+- shadcn/ui
+- Wouter
+- Zustand
+- TanStack Query
+- React Hook Form
+- Zod
 
-Development
+## Development
 
-* GitHub
-* PyCharm
-* Claude Desktop
-* Filesystem MCP
-* Playwright MCP
+- Git
+- GitHub
+- PyCharm
+- Claude Desktop
+- Filesystem MCP
+- Playwright MCP
 
-Backend (Future)
+## Future Backend
 
-* Express
-* PostgreSQL
-* Drizzle ORM
+- Express
+- PostgreSQL
+- Drizzle ORM
 
 ---
 
-# CURRENT IMPLEMENTATION STATE
+# ROLE MODEL
 
-The frontend prototype is highly advanced.
+## CEO
 
-Implemented systems include:
+- Full platform access
 
-* Authentication workflow (mock)
-* RBAC
-* Jobs
-* Clients
-* Workers
-* Equipment
-* Assets
-* Stock
-* Locations
-* Scheduling
-* Worker mobile application
-* Review Center
-* Financial Explorer
-* Audit logging
-* Offline queue architecture
-* Synchronization engine
-* Playwright doctrine testing
+## Project Manager
 
-The system currently operates on a mock-data architecture to validate business logic before backend implementation.
+- Access scoped to assigned jobs
+
+## Worker
+
+- Mobile-first workflow
+- Reporting access only
+- No financial visibility
+
+## Client
+
+- Read-only portal access
 
 ---
 
@@ -180,16 +245,15 @@ The system currently operates on a mock-data architecture to validate business l
 
 The Review Center is the core control system of The Ledger.
 
-All worker submissions enter Review Center before becoming financially relevant.
-
 Submission Types:
 
-* Timesheets
-* Inventory Usage
-* Equipment Usage
-* Expenses
-* Reports
-* Uploads
+- Timesheets
+- Inventory Usage
+- Equipment Usage
+- Expenses
+- Reports
+- Uploads
+- QA Records
 
 Workflow:
 
@@ -198,7 +262,7 @@ Worker Submission
 → Approve / Reject / Correct
 → Financial Normalization
 → Financial Explorer
-→ Future Accounting Sync
+→ Accounting Sync
 
 Nothing bypasses Review Center.
 
@@ -208,177 +272,217 @@ Nothing bypasses Review Center.
 
 Approved operational events become normalized financial records.
 
-Current normalization targets:
+Normalization targets include:
 
-* TimesheetEntry
-* ExpenseEntry
-* InventoryMutation
-* EquipmentUsageRecord
-* InvoiceLineItem
-* FinancialMutation
+- TimesheetEntry
+- ExpenseEntry
+- InventoryMutation
+- EquipmentUsageRecord
+- InvoiceLineItem
+- FinancialMutation
+- PayrollRecords
+- RevenueEvents
 
 Normalization is the bridge between operations and finance.
 
 ---
 
-# PHASE STATUS
+# CURRENT ROADMAP STATUS
 
 ## Phase 1 — Foundation & RBAC
 
 Status: Complete
 
-Completed:
+## Phase 2 — Worker Mobile Experience
 
-* Routing
-* RBAC
-* Type normalization
-* Layout architecture
-* Worker mobile views
-* Dashboard foundation
+Status: Complete
 
----
+## Phase 3 — Review Centre
 
-## Phase 2 — Field Operations
+Status: Complete
 
-Status: Largely Complete
+## Phase 4 — Document Intelligence Foundation
 
-Completed:
+Status: Complete
 
-* Worker workflows
-* Mobile reporting
-* Upload system
-* Offline queue
-* Synchronization architecture
-* Playwright validation
+Includes:
 
-Remaining:
+- Upload Infrastructure
+- Review Centre
+- Processing Pipeline
+- Revenue Normalisation
+- Financial Mutation Infrastructure
 
-* Additional edge-case testing
-* Workflow refinement
+## Phase 5.1 — Financial Foundation
 
----
+Status: Complete
 
-## Phase 3 — Operational Management
+## Phase 5.2 — Financial Intelligence
 
-Status: Mostly Complete
+Status: Complete
 
-Completed:
+## Phase 5.3 — Invoice Generation Pipeline
 
-* Jobs
-* Clients
-* Workers
-* Equipment
-* Assets
-* Locations
-* Scheduling
-* Stock
+Status: Complete
 
-Remaining:
+Branch:
 
-* Scheduling intelligence improvements
-* Dispatch optimization
-* Asset conflict management
+feature/phase-5-3-invoice-pipeline
 
----
+## Phase 5.4 — Payroll Export System
 
-## Phase 4 — Review Center & Financial Normalization
+Status: Complete
 
-Status: Active
+Branch:
 
-Completed:
+feature/phase-5-4-payroll-export
 
-* Review Center UI
-* Approval workflows
-* PM scope enforcement
-* Financial normalization records
-* Financial Explorer
-* Inventory deduction workflow
-* Audit workflow
+Verified:
 
-Current Focus:
+- Build PASS
+- Playwright PASS
+- 40/40 Tests PASS
 
-* Profitability calculations
-* Payroll staging
-* Invoice readiness
-* Correction workflow refinement
+## Phase 5.5 — Margin Intelligence & Forecasting
 
----
+Status: Complete
 
-## Phase 5 — Financial Intelligence
+Implemented:
 
-Status: Next
+- Forecast Engine
+- Margin Intelligence Engine
+- Risk Classification
+- Exposure-Aware Forecasting
+- Financial Explorer Forecasting Tab
+- Portfolio Forecast KPIs
+- Job Forecast Panel
+- Margin Variance Analysis
+- Financial Risk Status Badges
+
+Verified:
+
+- Build PASS
+- Playwright PASS
+- 52/52 Tests PASS
+
+## Phase 5.6 — Accounting Synchronization Layer
+
+Status: Next Active Target
 
 Planned:
 
-* Dynamic profitability engine
-* Payroll engine
-* Invoice generation pipeline
-* Margin intelligence
-* Financial forecasting
+- Accounting Sync Centre
+- Provider Management
+- Sync Queue
+- Sync Logs
+- Error Resolution Workflows
+- External Reference Tracking
+- Accounting Sync Explorer Tab
 
 ---
 
-## Phase 6 — Accounting Integration
+# CLAUDE WORKFLOW DOCTRINE
 
-Planned:
+Claude is used for implementation.
 
-* QuickBooks
-* Xero
-* OAuth
-* Sync logs
-* Reconciliation workflows
+ChatGPT is used for:
+
+- Architecture
+- Roadmap management
+- Planning
+- Auditing
+- Prompt generation
+
+Claude is used for:
+
+- Repository inspection
+- Implementation
+- Testing
+- Playwright validation
+- Git workflow
+- PR creation
+
+Every Claude session must be self-contained.
 
 ---
 
-## Phase 7 — Client Portal
+# IMPLEMENTATION RULES
 
-Planned:
+Before implementation Claude must:
 
-* Portal authentication
-* Client visibility
-* Documents
-* Requests
-* Communication
+1. Read LEDGER_CANONICAL_CONTEXT.md
+2. Read latest handoff
+3. Run git status
+4. Run git branch
+5. Run git log --oneline -20
+
+Produce:
+
+- Current State
+- Proposed Changes
+- Implementation Plan
+
+before coding.
 
 ---
 
-# AUDIT RULES FOR AI ASSISTANTS
+# GIT RULES
 
-Before making implementation recommendations:
+Never commit directly to main.
 
-1. Read this file completely.
-2. Treat this file as the source of truth.
-3. Do not assume repository structure alone reflects project status.
-4. Do not recommend backend implementation unless it directly blocks current roadmap objectives.
-5. Prioritize Phase 4 completion before recommending Phase 5 work.
-6. Evaluate features against doctrine rather than backend completeness.
+Always:
 
-When auditing:
+- Create feature branch
+- Implement
+- Test
+- Commit
+- Push
+- Open PR
+- Stop
 
-Focus on:
+---
 
-* Review Center
-* Approval workflows
-* Financial normalization
-* Profitability
-* Payroll staging
-* Invoice readiness
+# CONTEXT SAFETY RULE
 
-before considering database implementation.
+If context limits or execution limits are approaching:
+
+- Commit work
+- Push work
+- Create handoff
+- Stop
+
+Never leave work stranded.
 
 ---
 
 # CURRENT PRIMARY OBJECTIVE
 
-Complete Phase 4.
+Phase 5.6 — Accounting Synchronization Layer
 
-Specifically:
+Continue development from:
 
-Review Center
-→ Approval
-→ Financial Normalization
-→ Profitability Engine
-→ Payroll Readiness
-→ Invoice Readiness
+Phase 5.4 Payroll Export System
 
-Only after these systems are validated should large-scale backend implementation become the primary focus.
+Next steps:
+
+- Repository verification
+- Roadmap verification
+- Phase 5.5 scope definition
+- Claude implementation prompt generation
+
+---
+
+# AI AUDIT RULES
+
+Before making recommendations:
+
+1. Read this file completely.
+2. Treat this file as the source of truth.
+3. Verify repository state before roadmap recommendations.
+4. Preserve approval doctrine.
+5. Preserve job attribution.
+6. Preserve auditability.
+7. Preserve financial integrity.
+8. Preserve accounting-system independence.
+
+This document is the canonical source of truth for The Ledger.

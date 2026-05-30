@@ -13,6 +13,7 @@ import { JobIntelligenceSection } from "@/components/JobIntelligenceSection";
 import { JobFinancialSummarySection } from "@/components/JobFinancialSummarySection";
 import { InvoiceReadinessPanel } from "@/components/finance/InvoiceReadinessPanel";
 import { PendingExposurePanel } from "@/components/finance/PendingExposurePanel";
+import { JobForecastPanel } from "@/components/finance/JobForecastPanel";
 import { INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS } from "@/lib/invoiceBuilder";
 
 export default function JobDetailPage() {
@@ -314,6 +315,9 @@ export default function JobDetailPage() {
           <InvoiceReadinessPanel jobId={job.id} />
           <PendingExposurePanel jobId={job.id} />
         </div>
+
+        {/* Phase 5.5: Financial Forecast */}
+        <JobForecastPanel jobId={job.id} />
 
         {/* Phase 5.3: Invoice Draft status */}
         {(() => {

@@ -21,9 +21,11 @@ import {
   DollarSign,
   BarChart3,
   FilePlus,
+  TrendingUp,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { MarginIntelligenceTable } from "@/components/finance/MarginIntelligenceTable";
+import { ForecastTab } from "@/components/finance/ForecastTab";
 import {
   INVOICE_STATUS_LABELS,
   INVOICE_STATUS_COLORS,
@@ -137,6 +139,9 @@ export default function FinancialExplorerPage() {
             <TabsTrigger value="profitability" className="flex items-center gap-1.5">
               <BarChart3 className="h-3.5 w-3.5" /> Profitability
             </TabsTrigger>
+            <TabsTrigger value="forecasting" className="flex items-center gap-1.5" data-testid="tab-forecasting">
+              <TrendingUp className="h-3.5 w-3.5" /> Forecasting
+            </TabsTrigger>
             <TabsTrigger value="invoice-pipeline" className="flex items-center gap-1.5" data-testid="tab-invoice-pipeline">
               <FilePlus className="h-3.5 w-3.5" /> Invoice Pipeline
             </TabsTrigger>
@@ -153,6 +158,11 @@ export default function FinancialExplorerPage() {
             <div className="mt-4">
               <MarginIntelligenceTable targetMargin={20} />
             </div>
+          </TabsContent>
+
+          {/* ── Phase 5.5: Forecasting ── */}
+          <TabsContent value="forecasting">
+            <ForecastTab />
           </TabsContent>
 
           {/* ── Phase 5.3: Invoice Pipeline ── */}
