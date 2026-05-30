@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRoute, useLocation } from "wouter";
-import { Calendar, MapPin, Users, Truck, ReceiptText, ArrowLeft, FileText, Eye, Search } from "lucide-react";
+import { Calendar, MapPin, Users, Truck, ReceiptText, ArrowLeft, FileText, Eye, Search, FilePlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,11 @@ import { JobIntelligenceSection } from "@/components/JobIntelligenceSection";
 import { JobFinancialSummarySection } from "@/components/JobFinancialSummarySection";
 import { InvoiceReadinessPanel } from "@/components/finance/InvoiceReadinessPanel";
 import { PendingExposurePanel } from "@/components/finance/PendingExposurePanel";
+import { JobForecastPanel } from "@/components/finance/JobForecastPanel";
+import { INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS } from "@/lib/invoiceBuilder";
 
 export default function JobDetailPage() {
-  const { jobs, clients, workers, equipment, invoices, addInvoice, roles, updateJob, users } = useStore();
+  const { jobs, clients, workers, equipment, invoices, addInvoice, roles, updateJob, users, invoiceDrafts } = useStore();
   const [match, params] = useRoute("/jobs/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -313,6 +315,47 @@ export default function JobDetailPage() {
           <InvoiceReadinessPanel jobId={job.id} />
           <PendingExposurePanel jobId={job.id} />
         </div>
+
+        {/* Phase 5.5: Financial Forecast */}
+        <JobForecastPanel jobId={job.id} />
+
+        {/* Phase 5.3: Invoice Draft status */}
+        {(() => {
+          const draft = invoiceDrafts.find(d => d.jobId === job.id);
+          if (!draft) return null;
+          return (
+            <Card data-testid={`job-invoice-draft-panel-${job.id}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <FilePlus className="h-4 w-4" /> Invoice Draft
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Invoice Number</span>
+                  <span className="font-mono font-semibold" data-testid={`job-draft-number-${job.id}`}>{draft.invoiceNumber}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Status</span>
+                  <Badge variant="outline" className={INVOICE_STATUS_COLORS[draft.status]} data-testid={`job-draft-status-${job.id}`}>
+                    {INVOICE_STATUS_LABELS[draft.status]}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Total</span>
+                  <span className="font-semibold" data-testid={`job-draft-total-${job.id}`}>
+                    £{draft.total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="pt-1">
+                  <Button size="sm" variant="outline" onClick={() => setLocation('/invoice-builder')}>
+                    Open Invoice Builder
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         <div className="grid gap-4 md:grid-cols-2">
           <Card>

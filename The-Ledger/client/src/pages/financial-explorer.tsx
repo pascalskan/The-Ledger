@@ -20,9 +20,17 @@ import {
   Activity,
   DollarSign,
   BarChart3,
+  FilePlus,
+  TrendingUp,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { MarginIntelligenceTable } from "@/components/finance/MarginIntelligenceTable";
+import { ForecastTab } from "@/components/finance/ForecastTab";
+import {
+  INVOICE_STATUS_LABELS,
+  INVOICE_STATUS_COLORS,
+} from "@/lib/invoiceBuilder";
+import type { InvoiceStatus } from "@/types/finance";
 
 function fmt(n: number) {
   return `£${n.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -71,6 +79,7 @@ export default function FinancialExplorerPage() {
     invoiceLineItems,
     financialMutations,
     jobs,
+    invoiceDrafts,
   } = useStore();
   const [, setLocation] = useLocation();
 
@@ -93,6 +102,7 @@ export default function FinancialExplorerPage() {
     { label: "Equipment Usage", count: equipmentUsageRecords.length, icon: Wrench, color: "text-violet-600" },
     { label: "Invoice Line Items", count: invoiceLineItems.length, icon: FileText, color: "text-rose-600" },
     { label: "Financial Mutations", count: financialMutations.length, icon: DollarSign, color: "text-slate-600" },
+    { label: "Invoice Drafts", count: invoiceDrafts.length, icon: FilePlus, color: "text-indigo-600" },
   ];
 
   return (
@@ -129,6 +139,12 @@ export default function FinancialExplorerPage() {
             <TabsTrigger value="profitability" className="flex items-center gap-1.5">
               <BarChart3 className="h-3.5 w-3.5" /> Profitability
             </TabsTrigger>
+            <TabsTrigger value="forecasting" className="flex items-center gap-1.5" data-testid="tab-forecasting">
+              <TrendingUp className="h-3.5 w-3.5" /> Forecasting
+            </TabsTrigger>
+            <TabsTrigger value="invoice-pipeline" className="flex items-center gap-1.5" data-testid="tab-invoice-pipeline">
+              <FilePlus className="h-3.5 w-3.5" /> Invoice Pipeline
+            </TabsTrigger>
             <TabsTrigger value="mutations">Audit Log</TabsTrigger>
             <TabsTrigger value="timesheets">Timesheets</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
@@ -141,6 +157,86 @@ export default function FinancialExplorerPage() {
           <TabsContent value="profitability">
             <div className="mt-4">
               <MarginIntelligenceTable targetMargin={20} />
+            </div>
+          </TabsContent>
+
+          {/* ── Phase 5.5: Forecasting ── */}
+          <TabsContent value="forecasting">
+            <ForecastTab />
+          </TabsContent>
+
+          {/* ── Phase 5.3: Invoice Pipeline ── */}
+          <TabsContent value="invoice-pipeline">
+            <div className="mt-4 space-y-4" data-testid="invoice-pipeline-panel">
+              {/* Per-status KPI strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {(["draft", "ready", "sent", "paid"] as InvoiceStatus[]).map((status) => {
+                  const bucket = invoiceDrafts.filter((d) => d.status === status);
+                  const total = bucket.reduce((s, d) => s + d.total, 0);
+                  return (
+                    <Card key={status}>
+                      <CardHeader className="pb-1 pt-4 px-4">
+                        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                          {INVOICE_STATUS_LABELS[status]}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4">
+                        <div className="flex items-end justify-between">
+                          <span className="text-2xl font-bold" data-testid={`fe-pipeline-count-${status}`}>{bucket.length}</span>
+                          <span className="text-sm font-medium text-muted-foreground" data-testid={`fe-pipeline-total-${status}`}>
+                            £{total.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Draft table */}
+              {invoiceDrafts.length === 0 ? (
+                <EmptyState label="No invoice drafts in the pipeline. Generate drafts from the Invoice Builder." />
+              ) : (
+                <div className="border rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Invoice #</TableHead>
+                        <TableHead>Job</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Subtotal</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead>Created</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {[...invoiceDrafts].reverse().map((d) => (
+                        <TableRow key={d.id}>
+                          <TableCell className="font-mono text-xs">{d.invoiceNumber}</TableCell>
+                          <TableCell>
+                            <button
+                              className="text-left hover:underline text-blue-600 max-w-[160px] truncate block"
+                              onClick={() => setLocation(`/jobs/${d.jobId}`)}
+                            >
+                              {jobName(d.jobId)}
+                            </button>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={INVOICE_STATUS_COLORS[d.status]}>
+                              {INVOICE_STATUS_LABELS[d.status]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">{fmt(d.subtotal)}</TableCell>
+                          <TableCell className="text-right font-medium">{fmt(d.total)}</TableCell>
+                          <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+                            {fmtDate(d.createdAt)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </div>
           </TabsContent>
 

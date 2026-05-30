@@ -991,7 +991,29 @@ let roles: Role[] = [
 ];
 
 let users = [...SEED_USERS];
-let currentUser: User | null = null;
+
+// ──────────────────────────────────────────────────────────────
+// AUTH PERSISTENCE
+// Stores the logged-in user's email in localStorage so that a
+// full-page navigation (e.g. Playwright page.goto()) does not
+// reset currentUser to null and cause ProtectedRoute to redirect.
+//
+// clearBrowserState() in tests calls localStorage.clear() which
+// removes the key — auth correctly resets between tests.
+// ──────────────────────────────────────────────────────────────
+const AUTH_STORAGE_KEY = "ledger-auth-email";
+
+function restoreAuthFromStorage(): User | null {
+  try {
+    const email = typeof localStorage !== "undefined" ? localStorage.getItem(AUTH_STORAGE_KEY) : null;
+    if (email) return SEED_USERS.find(u => u.email === email) ?? null;
+  } catch {
+    // localStorage unavailable (SSR / locked storage) — fail silently
+  }
+  return null;
+}
+
+let currentUser: User | null = restoreAuthFromStorage();
 let companySettings = { ...DEFAULT_SETTINGS }; // This will be per-request simulated in useStore
 let demoSettings = { ...DEMO_SETTINGS };
 
@@ -1038,11 +1060,13 @@ export const useAuth = () => {
   const login = (email: string) => {
     const found = SEED_USERS.find(u => u.email === email) || SEED_USERS[0];
     currentUser = found;
+    try { localStorage.setItem(AUTH_STORAGE_KEY, found.email); } catch { /* ignore */ }
     setUser(found);
   };
 
   const logout = () => {
     currentUser = null;
+    try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch { /* ignore */ }
     setUser(null);
   };
 
@@ -1131,6 +1155,38 @@ export const useStore = () => {
     invoiceLineItems: mockInvoiceLineItems,
     financialMutations: mockFinancialMutations,
 
+    // Phase 5.4 — Payroll Export table
+    payrollExports: mockPayrollExports,
+    addPayrollExport: (payrollExport: import("@/lib/payrollExportEngine").PayrollExport) => {
+      mockPayrollExports.push(payrollExport);
+      addLog("CREATE", "PayrollExport", `Generated payroll export ${payrollExport.exportNumber} for period: ${payrollExport.period.label}`);
+      refresh();
+    },
+    updatePayrollExportStatus: (id: string, status: PayrollExportStatus) => {
+      const idx = mockPayrollExports.findIndex(e => e.id === id);
+      if (idx !== -1) {
+        mockPayrollExports[idx] = { ...mockPayrollExports[idx], status };
+        addLog("UPDATE", "PayrollExport", `Payroll export ${mockPayrollExports[idx].exportNumber} status \u2192 ${status}`);
+        refresh();
+      }
+    },
+
+    // Phase 5.3 — Invoice Draft table
+    invoiceDrafts: mockInvoiceDrafts,
+    addInvoiceDraft: (draft: InvoiceDraft) => {
+      mockInvoiceDrafts.push(draft);
+      addLog("CREATE", "InvoiceDraft", `Created draft invoice ${draft.invoiceNumber} for job ${draft.jobId}`);
+      refresh();
+    },
+    updateInvoiceDraftStatus: (id: string, status: import("@/types/finance").InvoiceStatus) => {
+      const idx = mockInvoiceDrafts.findIndex(d => d.id === id);
+      if (idx !== -1) {
+        mockInvoiceDrafts[idx] = { ...mockInvoiceDrafts[idx], status, updatedAt: new Date().toISOString() };
+        addLog("UPDATE", "InvoiceDraft", `Invoice draft ${mockInvoiceDrafts[idx].invoiceNumber} status \u2192 ${status}`);
+        refresh();
+      }
+    },
+
     // Phase 4.4 — Job Financial Summary (derived, not stored)
     getJobFinancialSummary,
 
@@ -1213,7 +1269,7 @@ export const useStore = () => {
           const equipmentLines = (after.equipmentUsage || []).map((eu) => {
             const eq = equipment.find((e) => e.id === eu.equipmentId);
             const name = eq?.name || "Equipment";
-            const note = eu.note ? ` — ${eu.note}` : "";
+            const note = eu.note ? ` \u2014 ${eu.note}` : "";
             return {
               description: `Equipment (per day): ${name}${note}`,
               qty: eu.days,
@@ -1439,7 +1495,7 @@ export const useStore = () => {
               reviewId: item.id,
               jobId: item.jobId,
               type: 'labor',
-              description: `Labour – ${labor.workerName} (${labor.hours}h @ £${billableRate}/h)`,
+              description: `Labour \u2013 ${labor.workerName} (${labor.hours}h @ \u00a3${billableRate}/h)`,
               quantity: labor.hours,
               unitPrice: billableRate,
               amount: laborRevenue,
@@ -1501,8 +1557,8 @@ export const useStore = () => {
             // Invoice line item: expense — client-facing price = recoveryAmount
             const expLineId = Math.random().toString(36).substr(2, 9);
             const expLineDesc = markupPercent > 0
-              ? `Expense – ${exp.notes || exp.category} (+${markupPercent}% markup)`
-              : `Expense – ${exp.notes || exp.category}`;
+              ? `Expense \u2013 ${exp.notes || exp.category} (+${markupPercent}% markup)`
+              : `Expense \u2013 ${exp.notes || exp.category}`;
             const expLine: InvoiceLineItem = {
               id: expLineId,
               reportId,
@@ -1579,7 +1635,7 @@ export const useStore = () => {
               reviewId: item.id,
               jobId: item.jobId,
               type: 'material',
-              description: `Materials – ${material.stockItemName} ×${material.quantity}`,
+              description: `Materials \u2013 ${material.stockItemName} \u00d7${material.quantity}`,
               quantity: material.quantity,
               unitPrice: markupPrice,
               amount: revenueImpact,
@@ -1660,7 +1716,7 @@ export const useStore = () => {
               reviewId: item.id,
               jobId: item.jobId,
               type: 'equipment',
-              description: `Equipment – ${eu.assetName} (${hoursUsed}h)`,
+              description: `Equipment \u2013 ${eu.assetName} (${hoursUsed}h)`,
               quantity: hoursUsed,
               unitPrice: billedRate,
               amount: revenueImpact,
@@ -1913,6 +1969,36 @@ export interface FinancialMutation {
 // Intelligence show real numbers on first load.
 // ======================================================
 
+// ======================================================
+// PHASE 5.3 — INVOICE DRAFT STORE
+//
+// InvoiceDraft documents are generated deterministically
+// from approved InvoiceLineItem records by invoiceBuilder.ts.
+// They live here alongside the other normalized financial tables.
+//
+// Like all financial records, these are populated by the
+// approval path, never created directly from a Job.
+// ======================================================
+
+import type { InvoiceDraft } from "@/types/finance";
+export type { InvoiceDraft } from "@/types/finance";
+export type { InvoiceStatus } from "@/types/finance";
+export type { InvoiceDraftLineItem } from "@/types/finance";
+
+export const mockInvoiceDrafts: InvoiceDraft[] = [];
+
+// ── Invoice number generator ───────────────────────────
+// Deterministic sequential numbering scoped to the current session.
+// Format: INV-YYYY-NNNN   e.g. INV-2026-0001
+// Production would use a persisted counter; for the mock this is
+// sufficient to produce unique, human-readable numbers.
+let _invoiceDraftSeq = 0;
+export function generateInvoiceNumber(): string {
+  _invoiceDraftSeq += 1;
+  const year = new Date().getFullYear();
+  return `INV-${year}-${String(_invoiceDraftSeq).padStart(4, "0")}`;
+}
+
 export const mockTimesheets: TimesheetEntry[] = [];
 
 export const mockExpenses: ExpenseEntry[] = [];
@@ -2033,7 +2119,7 @@ export const mockFinancialMutations: FinancialMutation[] = [];
     reportId: REPORT_ID,
     reviewId: REVIEW_ID,
     jobId: JOB_ID,
-    description: "Skip hire — waste removal",
+    description: "Skip hire \u2014 waste removal",
     amount: 185,
     markupPercent: 15,
     recoveryAmount: 212.75,
@@ -2065,12 +2151,12 @@ export const mockFinancialMutations: FinancialMutation[] = [];
   // INVOICE LINE ITEMS — mirror the above
   // ──────────────────────────────────────
   mockInvoiceLineItems.push(
-    { id: "seed-line-1", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour – Sophie Taylor (32h @ £55/h)",          quantity: 32,   unitPrice: 55,     amount: 1760,   approvedAt: APPROVED_AT },
-    { id: "seed-line-2", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour – Ben Hughes (24h @ £55/h)",            quantity: 24,   unitPrice: 55,     amount: 1320,   approvedAt: APPROVED_AT },
-    { id: "seed-line-3", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment – Hiab support (canopy lift) (16h)",  quantity: 16,   unitPrice: 65,     amount: 1040,   approvedAt: APPROVED_AT },
-    { id: "seed-line-4", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment – Crew van (tools transport) (24h)",  quantity: 24,   unitPrice: 18.75,  amount: 450,    approvedAt: APPROVED_AT },
-    { id: "seed-line-5", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "expense",   description: "Expense – Skip hire — waste removal (+15% markup)", quantity: 1,  unitPrice: 212.75, amount: 212.75, approvedAt: APPROVED_AT },
-    { id: "seed-line-6", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "material",  description: "Materials – 15mm Isolating Valve ×40",           quantity: 40,   unitPrice: 3.50,   amount: 140,    approvedAt: APPROVED_AT },
+    { id: "seed-line-1", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour \u2013 Sophie Taylor (32h @ \u00a355/h)",          quantity: 32,   unitPrice: 55,     amount: 1760,   approvedAt: APPROVED_AT },
+    { id: "seed-line-2", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour \u2013 Ben Hughes (24h @ \u00a355/h)",            quantity: 24,   unitPrice: 55,     amount: 1320,   approvedAt: APPROVED_AT },
+    { id: "seed-line-3", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment \u2013 Hiab support (canopy lift) (16h)",  quantity: 16,   unitPrice: 65,     amount: 1040,   approvedAt: APPROVED_AT },
+    { id: "seed-line-4", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment \u2013 Crew van (tools transport) (24h)",  quantity: 24,   unitPrice: 18.75,  amount: 450,    approvedAt: APPROVED_AT },
+    { id: "seed-line-5", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "expense",   description: "Expense \u2013 Skip hire \u2014 waste removal (+15% markup)", quantity: 1,  unitPrice: 212.75, amount: 212.75, approvedAt: APPROVED_AT },
+    { id: "seed-line-6", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "material",  description: "Materials \u2013 15mm Isolating Valve \u00d740",           quantity: 40,   unitPrice: 3.50,   amount: 140,    approvedAt: APPROVED_AT },
   );
 
   // ──────────────────────────────────────
@@ -2102,6 +2188,40 @@ export const mockFinancialMutations: FinancialMutation[] = [];
       approvedBy: APPROVED_BY,
     });
   });
+  // ────────────────────────────────────
+  // PHASE 5.3 — SEED INVOICE DRAFT
+  // Generated from the seed InvoiceLineItem records above.
+  // Mirrors what invoiceBuilder.generateInvoiceDraft() would produce
+  // for dj-kitchen-extract-1 so the Invoice Builder page has live
+  // data on first load without requiring a manual approval.
+  // ────────────────────────────────────
+  const seedDraftLines = [
+    { id: "seed-line-1", type: "labor"     as const, description: "Labour \u2013 Sophie Taylor (32h @ \u00a355/h)",             quantity: 32,  unitPrice: 55,     amount: 1760   },
+    { id: "seed-line-2", type: "labor"     as const, description: "Labour \u2013 Ben Hughes (24h @ \u00a355/h)",               quantity: 24,  unitPrice: 55,     amount: 1320   },
+    { id: "seed-line-3", type: "equipment" as const, description: "Equipment \u2013 Hiab support (canopy lift) (16h)",   quantity: 16,  unitPrice: 65,     amount: 1040   },
+    { id: "seed-line-4", type: "equipment" as const, description: "Equipment \u2013 Crew van (tools transport) (24h)",   quantity: 24,  unitPrice: 18.75,  amount: 450    },
+    { id: "seed-line-5", type: "expense"   as const, description: "Expense \u2013 Skip hire \u2014 waste removal (+15% markup)", quantity: 1,  unitPrice: 212.75, amount: 212.75 },
+    { id: "seed-line-6", type: "material"  as const, description: "Materials \u2013 15mm Isolating Valve \u00d740",            quantity: 40,  unitPrice: 3.50,   amount: 140    },
+  ];
+  const seedSubtotal = seedDraftLines.reduce((s, l) => s + l.amount, 0); // 4922.75
+  const seedTaxRate  = 0;
+  const seedTaxAmt   = seedSubtotal * seedTaxRate;
+  mockInvoiceDrafts.push({
+    id: "seed-draft-kex-1",
+    invoiceNumber: "INV-2026-0001",
+    jobId: JOB_ID,
+    clientId: "dc1",
+    lineItems: seedDraftLines,
+    subtotal: seedSubtotal,
+    taxRate: seedTaxRate,
+    taxAmount: seedTaxAmt,
+    total: seedSubtotal + seedTaxAmt,
+    status: "draft",
+    createdAt: APPROVED_AT,
+    updatedAt: APPROVED_AT,
+  });
+  // Keep the seq counter consistent with the seeded invoice number
+  _invoiceDraftSeq = 1;
 })();
 
 // ======================================================
@@ -2198,6 +2318,32 @@ export function getJobFinancialSummary(jobId: string): JobFinancialSummary {
     marginPercent,
     hasActivity,
   };
+}
+
+// ======================================================
+// PHASE 5.4 — PAYROLL EXPORT STORE
+//
+// PayrollExport documents are generated by the
+// payrollExportEngine.ts generatePayrollExport() function.
+// Stored here alongside other normalized financial tables.
+//
+// Doctrine: only generated from PayrollStagingRecord[]
+// which are derived from approved TimesheetEntry records.
+// Never generated directly from Jobs or ReviewItems.
+// ======================================================
+
+import type { PayrollExport, PayrollExportStatus } from "@/lib/payrollExportEngine";
+export type { PayrollExport } from "@/lib/payrollExportEngine";
+
+export const mockPayrollExports: PayrollExport[] = [];
+
+// ── Payroll export number generator ───────────────────
+// Format: PAY-YYYY-NNNN   e.g. PAY-2026-0001
+let _payrollExportSeq = 0;
+export function generateExportNumber(): string {
+  _payrollExportSeq += 1;
+  const year = new Date().getFullYear();
+  return `PAY-${year}-${String(_payrollExportSeq).padStart(4, "0")}`;
 }
 
 export type { Job } from "@/types/job";

@@ -23,7 +23,8 @@ import {
   Package, Blocks,
   ClipboardCheck,
   Layers,
-  Wallet
+  Wallet,
+  FileDown
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -76,6 +77,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Workers", href: "/workers", icon: Users, roles: ["CEO", "Project Manager"] },
     { label: "Stock & Assets", href: "/equipment", icon: Package, Blocks, roles: ["CEO", "Project Manager"] },
     { label: "Invoices", href: "/invoices", icon: FileText, roles: ["CEO", "Project Manager"] },
+    { label: "Invoice Builder", href: "/invoice-builder", icon: ReceiptText, roles: ["CEO", "Project Manager"] },
     { label: "Financial Insights", href: "/expenses", icon: ReceiptText, roles: ["CEO", "Admin", "Project Manager", "Worker"] },
     { label: "Map", href: "/map", icon: MapIcon, roles: ["CEO", "Project Manager", "Worker"] },
     { label: "Schedule", href: "/schedule", icon: Calendar, roles: ["CEO", "Project Manager", "Worker"] },
@@ -83,6 +85,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Audit Log", href: "/audit", icon: ShieldAlert, roles: ["CEO"] },
     { label: "Financial Explorer", href: "/financial-explorer", icon: Layers, roles: ["CEO"] },
     { label: "Payroll Staging", href: "/payroll", icon: Wallet, roles: ["CEO"] },
+    { label: "Payroll Export", href: "/payroll-export", icon: FileDown, roles: ["CEO"] },
     { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO", "Admin"] },
     { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"] },
   ].filter((item) => hasAnyRole(item.roles));
