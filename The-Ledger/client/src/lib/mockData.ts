@@ -89,7 +89,10 @@ export interface Equipment {
   conditionNotes?: string;
 
   // Pricing
+  // dayRate: internal cost basis per day (what the business pays/costs)
   dayRate?: number;
+  // clientDayRate: default rate charged to clients per day (Phase 4.5)
+  clientDayRate?: number;
 
   // Maintenance & Asset Info
   purchaseDate?: string;
@@ -244,6 +247,11 @@ export interface ExpensePayload {
   notes?: string;
 
   receiptUrl?: string;
+
+  // Phase 4.5 — default 0 (cost-only recovery)
+  // PM may set a markup % at submission time.
+  // recoveryAmount = amount * (1 + markupPercent / 100)
+  markupPercent?: number;
 }
 
 export interface UploadPayload {
@@ -426,7 +434,7 @@ const DEMO_CLIENTS: Client[] = [
     email: "accounts@hsslimited.co.uk",
     phone: "0161 555 0101",
     billingAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
-    notes: "Trading hours: 7am–11pm. Any shutdowns must be agreed 48hrs in advance.",
+    notes: "Trading hours: 7am\u201311pm. Any shutdowns must be agreed 48hrs in advance.",
 
     status: "On Hold",
     tags: ["Kitchen", "Night shift"],
@@ -446,6 +454,9 @@ const DEMO_CLIENTS: Client[] = [
   },
 ];
 
+// Phase 4.5 — Demo workers carry both costRate and billableRate.
+// costRate: what the business pays per hour (internal cost basis)
+// billableRate: default rate charged to clients per hour (revenue basis)
 const DEMO_WORKERS: Worker[] = [
   {
     id: "dw1",
@@ -457,6 +468,8 @@ const DEMO_WORKERS: Worker[] = [
     status: "Active",
     documents: [{ id: "wd-1", name: "CSCS_Card.pdf", type: "certificate", url: "#", uploadedAt: new Date().toISOString() }],
     companyId: DEMO_COMPANY_ID,
+    costRate: 28,
+    billableRate: 85,
   },
   {
     id: "dw2",
@@ -468,6 +481,8 @@ const DEMO_WORKERS: Worker[] = [
     status: "Active",
     documents: [{ id: "wd-2", name: "Driving_Licence.jpg", type: "license", url: "#", uploadedAt: new Date().toISOString() }],
     companyId: DEMO_COMPANY_ID,
+    costRate: 16,
+    billableRate: 55,
   },
   {
     id: "dw3",
@@ -479,6 +494,8 @@ const DEMO_WORKERS: Worker[] = [
     status: "Active",
     documents: [{ id: "wd-3", name: "IPA Fume_Extraction_Cert.pdf", type: "certificate", url: "#", uploadedAt: new Date().toISOString() }],
     companyId: DEMO_COMPANY_ID,
+    costRate: 16,
+    billableRate: 55,
   },
   {
     id: "dw4",
@@ -490,9 +507,14 @@ const DEMO_WORKERS: Worker[] = [
     status: "Active",
     documents: [{ id: "wd-4", name: "RAMS_Signoff.pdf", type: "certificate", url: "#", uploadedAt: new Date().toISOString() }],
     companyId: DEMO_COMPANY_ID,
+    costRate: 17,
+    billableRate: 58,
   },
 ];
 
+// Phase 4.5 — Demo equipment carries both dayRate (cost) and clientDayRate (revenue).
+// dayRate: internal cost per day (what the business pays)
+// clientDayRate: default rate charged to clients per day (revenue basis)
 const DEMO_EQUIPMENT: Equipment[] = [
   {
     id: "de1",
@@ -500,6 +522,7 @@ const DEMO_EQUIPMENT: Equipment[] = [
     category: "Vehicles",
     status: "Available",
     dayRate: 420,
+    clientDayRate: 520,
     purchaseDate: "2023-05-12",
     supplier: "Global Machinery Ltd",
     lastServiceDate: "2025-11-14",
@@ -513,6 +536,7 @@ const DEMO_EQUIPMENT: Equipment[] = [
     category: "Vehicles",
     status: "Available",
     dayRate: 280,
+    clientDayRate: 350,
     purchaseDate: "2022-03-22",
     supplier: "Industrial Supply Co",
     lastServiceDate: "2025-10-03",
@@ -526,6 +550,7 @@ const DEMO_EQUIPMENT: Equipment[] = [
     category: "Support",
     status: "Available",
     dayRate: 90,
+    clientDayRate: 115,
     purchaseDate: "2021-07-01",
     supplier: "Access & Safety Supplies",
     lastServiceDate: "2025-09-18",
@@ -539,6 +564,7 @@ const DEMO_EQUIPMENT: Equipment[] = [
     category: "Electrical",
     status: "Available",
     dayRate: 110,
+    clientDayRate: 140,
     purchaseDate: "2024-01-09",
     supplier: "PowerHire UK",
     lastServiceDate: "2025-12-05",
@@ -552,6 +578,7 @@ const DEMO_EQUIPMENT: Equipment[] = [
     category: "Heavy Machinery",
     status: "Available",
     dayRate: 360,
+    clientDayRate: 450,
     purchaseDate: "2020-04-30",
     supplier: "Global Machinery Ltd",
     lastServiceDate: "2025-08-12",
@@ -565,6 +592,7 @@ const DEMO_EQUIPMENT: Equipment[] = [
     category: "Vehicles",
     status: "Available",
     dayRate: 120,
+    clientDayRate: 150,
     purchaseDate: "2022-11-15",
     supplier: "FleetWorks",
     lastServiceDate: "2025-12-20",
@@ -578,6 +606,7 @@ const DEMO_EQUIPMENT: Equipment[] = [
     category: "Support",
     status: "Available",
     dayRate: 35,
+    clientDayRate: 45,
     purchaseDate: "2024-06-02",
     supplier: "Access & Safety Supplies",
     lastServiceDate: "2025-07-09",
@@ -1054,16 +1083,6 @@ export const useStore = () => {
   const filteredStockMovements = stockMovements.filter(m => m.companyId === currentCompanyId);
   const filteredReviewItems = reviewItems.filter(r => r.companyId === currentCompanyId);
 
-  // Note: Logs are currently global in this mock implementation but in a real app would be filtered.
-  // For now, let's just filter them by actor? Or leave them global for simplicity as they are audit logs?
-  // The requirement says: "Example Business data is visible ONLY to Example Business users."
-  // So we should filter logs too if possible, but logs don't have companyId.
-  // We can assume logs created by users of a company belong to that company.
-  // For simplicity in this mock, we'll leave logs global or we'd need to migrate logs to have companyId.
-  // Let's migrate logs to have companyId dynamically for new logs, but old logs are ambiguous.
-  // Actually, let's just return all logs for now as it's a mock, or filter by user name if we really wanted to.
-  // Better approach: Let's just not filter logs strictly for this mock to avoid breaking existing "System" logs which have no user.
-
   const currentSettings = currentCompanyId === DEMO_COMPANY_ID ? demoSettings : companySettings;
 
   const deductStockQuantity = (id: string, qty: number, jobId?: string) => {
@@ -1369,17 +1388,30 @@ export const useStore = () => {
         const reportId = (item as any).sourceQueueId || item.id;
 
         // ─────────────────────────────────────────────────────────────────
-        // PHASE 4.2 — FINANCIAL MUTATION ENGINE
+        // PHASE 4.2 / 4.5 — FINANCIAL MUTATION ENGINE
         // Runs on every approval. Generates normalized financial objects
-        // from each operational payload on the ReviewItem, then appends
-        // a FinancialMutation audit record for every object created.
+        // from each operational payload on the ReviewItem.
+        //
+        // Phase 4.5 additions:
+        //   - TimesheetEntry: billableRate + laborRevenue from Worker.billableRate
+        //   - EquipmentUsageRecord: billedRate + revenueImpact from Equipment.clientDayRate
+        //   - ExpenseEntry: recoveryAmount from ExpensePayload.markupPercent
+        //   - InvoiceLineItem unit prices use client-facing rates
         // ─────────────────────────────────────────────────────────────────
 
         // 1. LABOR → TimesheetEntry
         if (item.laborEntries && item.laborEntries.length > 0) {
           item.laborEntries.forEach(labor => {
+            // Cost basis: hourlyRate from payload (what the business pays)
             const hourlyRate = labor.hourlyRate ?? 0;
             const laborCost = labor.hours * hourlyRate;
+
+            // Phase 4.5: Revenue basis — look up worker.billableRate.
+            // Falls back to hourlyRate (zero-margin) if not set.
+            const workerRecord = workers.find(w => w.id === labor.workerId);
+            const billableRate = workerRecord?.billableRate ?? hourlyRate;
+            const laborRevenue = labor.hours * billableRate;
+
             const entryId = Math.random().toString(36).substr(2, 9);
 
             const timesheetEntry: TimesheetEntry = {
@@ -1392,12 +1424,14 @@ export const useStore = () => {
               hours: labor.hours,
               hourlyRate,
               laborCost,
+              billableRate,
+              laborRevenue,
               approvedAt,
               approvedBy,
             };
             mockTimesheets.push(timesheetEntry);
 
-            // Invoice line item: labor
+            // Invoice line item: labor — client-facing price = billableRate
             const laborLineId = Math.random().toString(36).substr(2, 9);
             const laborLine: InvoiceLineItem = {
               id: laborLineId,
@@ -1405,10 +1439,10 @@ export const useStore = () => {
               reviewId: item.id,
               jobId: item.jobId,
               type: 'labor',
-              description: `Labour – ${labor.workerName} (${labor.hours}h)`,
+              description: `Labour – ${labor.workerName} (${labor.hours}h @ £${billableRate}/h)`,
               quantity: labor.hours,
-              unitPrice: hourlyRate,
-              amount: laborCost,
+              unitPrice: billableRate,
+              amount: laborRevenue,
               approvedAt,
             };
             mockInvoiceLineItems.push(laborLine);
@@ -1442,6 +1476,11 @@ export const useStore = () => {
         // 2. EXPENSES → ExpenseEntry
         if (item.expenses && item.expenses.length > 0) {
           item.expenses.forEach(exp => {
+            // Phase 4.5: recoveryAmount = amount * (1 + markupPercent / 100)
+            // markupPercent defaults to 0 — cost-only recovery.
+            const markupPercent = exp.markupPercent ?? 0;
+            const recoveryAmount = exp.amount * (1 + markupPercent / 100);
+
             const entryId = Math.random().toString(36).substr(2, 9);
 
             const expenseEntry: ExpenseEntry = {
@@ -1451,24 +1490,29 @@ export const useStore = () => {
               jobId: item.jobId,
               description: exp.notes || exp.category,
               amount: exp.amount,
+              markupPercent,
+              recoveryAmount,
               submittedBy: item.submittedBy || approvedBy,
               approvedAt,
               approvedBy,
             };
             mockExpenses.push(expenseEntry);
 
-            // Invoice line item: expense
+            // Invoice line item: expense — client-facing price = recoveryAmount
             const expLineId = Math.random().toString(36).substr(2, 9);
+            const expLineDesc = markupPercent > 0
+              ? `Expense – ${exp.notes || exp.category} (+${markupPercent}% markup)`
+              : `Expense – ${exp.notes || exp.category}`;
             const expLine: InvoiceLineItem = {
               id: expLineId,
               reportId,
               reviewId: item.id,
               jobId: item.jobId,
               type: 'expense',
-              description: `Expense – ${exp.notes || exp.category}`,
+              description: expLineDesc,
               quantity: 1,
-              unitPrice: exp.amount,
-              amount: exp.amount,
+              unitPrice: recoveryAmount,
+              amount: recoveryAmount,
               approvedAt,
             };
             mockInvoiceLineItems.push(expLine);
@@ -1572,13 +1616,25 @@ export const useStore = () => {
         // 4. EQUIPMENT USAGE → EquipmentUsageRecord
         if (item.equipmentUsage && item.equipmentUsage.length > 0) {
           item.equipmentUsage.forEach(eu => {
-            // Attempt to look up a day rate from the equipment list
             const equipmentRecord = equipment.find(e => e.id === eu.assetId);
             const hoursUsed = eu.hoursUsed ?? 0;
-            // dayRate is a full-day rate; derive an hourly rate (dayRate / 8) if available
-            const usageCost = equipmentRecord?.dayRate
-              ? (equipmentRecord.dayRate / 8) * hoursUsed
+
+            // Phase 4.5:
+            // usageCost  = internal cost  = dayRate / 8 * hoursUsed
+            // billedRate = client charge   = clientDayRate / 8
+            // revenueImpact = billedRate * hoursUsed
+            // Falls back to dayRate when clientDayRate is absent (zero-margin).
+            const costPerHour = equipmentRecord?.dayRate
+              ? equipmentRecord.dayRate / 8
               : 0;
+            const usageCost = costPerHour * hoursUsed;
+
+            const clientPerHour = equipmentRecord?.clientDayRate
+              ? equipmentRecord.clientDayRate / 8
+              : costPerHour; // fallback: zero-margin
+            const billedRate = clientPerHour;
+            const revenueImpact = billedRate * hoursUsed;
+
             const entryId = Math.random().toString(36).substr(2, 9);
 
             const equipRecord: EquipmentUsageRecord = {
@@ -1589,12 +1645,14 @@ export const useStore = () => {
               assetName: eu.assetName,
               hoursUsed,
               usageCost,
+              billedRate,
+              revenueImpact,
               jobId: item.jobId,
               approvedAt,
             };
             mockEquipmentUsage.push(equipRecord);
 
-            // Invoice line item: equipment
+            // Invoice line item: equipment — client-facing price = billedRate
             const eqLineId = Math.random().toString(36).substr(2, 9);
             const eqLine: InvoiceLineItem = {
               id: eqLineId,
@@ -1604,8 +1662,8 @@ export const useStore = () => {
               type: 'equipment',
               description: `Equipment – ${eu.assetName} (${hoursUsed}h)`,
               quantity: hoursUsed,
-              unitPrice: usageCost > 0 && hoursUsed > 0 ? usageCost / hoursUsed : 0,
-              amount: usageCost,
+              unitPrice: billedRate,
+              amount: revenueImpact,
               approvedAt,
             };
             mockInvoiceLineItems.push(eqLine);
@@ -1637,7 +1695,7 @@ export const useStore = () => {
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // END PHASE 4.2
+        // END PHASE 4.2 / 4.5
         // ─────────────────────────────────────────────────────────────────
       }
 
@@ -1674,9 +1732,12 @@ export const useStore = () => {
 // ======================================================
 
 /**
- * A normalized labor cost record created when a LaborPayload
- * inside a ReviewItem is approved. Represents a single worker's
- * time on a job as a financial fact.
+ * A normalized labor cost+revenue record created when a LaborPayload
+ * inside a ReviewItem is approved.
+ *
+ * Phase 4.5 additions:
+ *   billableRate — client-facing rate resolved from Worker.billableRate
+ *   laborRevenue — hours × billableRate (revenue basis)
  */
 export interface TimesheetEntry {
   id: string;
@@ -1689,9 +1750,13 @@ export interface TimesheetEntry {
   workerName: string;
 
   hours: number;
-  hourlyRate: number;
+  hourlyRate: number;   // cost basis (what the business pays)
 
-  laborCost: number; // hours × hourlyRate
+  laborCost: number;    // hours × hourlyRate
+
+  // Phase 4.5 — Revenue
+  billableRate: number; // client-facing rate (Worker.billableRate or fallback)
+  laborRevenue: number; // hours × billableRate
 
   approvedAt: string;
   approvedBy: string;
@@ -1699,8 +1764,11 @@ export interface TimesheetEntry {
 
 /**
  * A normalized expense record created when an ExpensePayload
- * inside a ReviewItem is approved. Represents a confirmed
- * job cost as a financial fact.
+ * inside a ReviewItem is approved.
+ *
+ * Phase 4.5 additions:
+ *   markupPercent  — from ExpensePayload.markupPercent (default 0)
+ *   recoveryAmount — amount × (1 + markupPercent / 100)
  */
 export interface ExpenseEntry {
   id: string;
@@ -1711,7 +1779,11 @@ export interface ExpenseEntry {
 
   description: string;
 
-  amount: number;
+  amount: number;          // cost basis
+
+  // Phase 4.5 — Revenue
+  markupPercent: number;   // 0 = cost-only recovery
+  recoveryAmount: number;  // amount × (1 + markupPercent / 100)
 
   submittedBy: string;
 
@@ -1749,7 +1821,10 @@ export interface InventoryMutation {
 /**
  * A normalized equipment usage record created when an
  * EquipmentUsagePayload inside a ReviewItem is approved.
- * Represents asset utilization as a financial cost fact.
+ *
+ * Phase 4.5 additions:
+ *   billedRate    — client-facing hourly rate = Equipment.clientDayRate / 8
+ *   revenueImpact — hoursUsed × billedRate
  */
 export interface EquipmentUsageRecord {
   id: string;
@@ -1762,7 +1837,11 @@ export interface EquipmentUsageRecord {
 
   hoursUsed: number;
 
-  usageCost: number; // hoursUsed × asset dayRate or derived rate
+  usageCost: number;    // hoursUsed × (Equipment.dayRate / 8) — cost basis
+
+  // Phase 4.5 — Revenue
+  billedRate: number;   // Equipment.clientDayRate / 8 (or dayRate / 8 as fallback)
+  revenueImpact: number; // hoursUsed × billedRate
 
   jobId: string;
 
@@ -1773,8 +1852,7 @@ export interface EquipmentUsageRecord {
  * A normalized invoice line item created from approved operational
  * data. Unlike InvoiceBillingLine (used for display inside Invoice
  * documents), this is a financial normalization record traceable
- * back to a specific report and review. Forms the basis of Job
- * Mini-Ledgers in Phase 4.2.
+ * back to a specific report and review.
  */
 export interface InvoiceLineItem {
   id: string;
@@ -1802,8 +1880,7 @@ export interface InvoiceLineItem {
 
 /**
  * An immutable audit record of every financial state change
- * caused by a Review Center approval. Acts as the append-only
- * mutation log that will drive accounting sync in Phase 4.2+.
+ * caused by a Review Center approval.
  */
 export interface FinancialMutation {
   id: string;
@@ -1820,7 +1897,7 @@ export interface FinancialMutation {
     | "equipment"
     | "invoice";
 
-  entityId: string; // ID of the created TimesheetEntry, ExpenseEntry, etc.
+  entityId: string;
 
   createdAt: string;
 
@@ -1830,8 +1907,10 @@ export interface FinancialMutation {
 // ======================================================
 // PHASE 4.1 — MOCK FINANCIAL TABLES
 //
-// Intentionally empty. Populated by the Review Center
-// approval logic in Phase 4.2.
+// Base arrays start empty. Pre-seeded demo data below
+// populates them via the normal approval path so that
+// Financial Explorer, Job Financial Summary, and Job
+// Intelligence show real numbers on first load.
 // ======================================================
 
 export const mockTimesheets: TimesheetEntry[] = [];
@@ -1847,17 +1926,191 @@ export const mockInvoiceLineItems: InvoiceLineItem[] = [];
 export const mockFinancialMutations: FinancialMutation[] = [];
 
 // ======================================================
+// PHASE 4.5 — DEMO SEED: PRE-APPROVED FINANCIAL RECORDS
+//
+// Simulates a PM having already approved a full WorkerReport
+// for the Kitchen Extraction job. Pre-populates all six
+// normalized tables so the UI shows live financial data
+// immediately on first load without any manual approval step.
+//
+// These records are representative, not exhaustive.
+// They do not duplicate or conflict with the Review Center
+// approval flow — they are a snapshot of one pre-approved
+// report that would have been generated by that flow.
+// ======================================================
+
+(function seedDemoFinancialRecords() {
+  const JOB_ID = "dj-kitchen-extract-1";
+  const APPROVED_AT = "2026-05-22T16:00:00Z";
+  const APPROVED_BY = "Amir Khan";
+  const REPORT_ID = "seed-report-kex-1";
+  const REVIEW_ID = "seed-review-kex-1";
+
+  // ──────────────────────────────────────
+  // LABOUR — Sophie Taylor: 32h
+  // costRate £16/h, billableRate £55/h
+  // ──────────────────────────────────────
+  mockTimesheets.push({
+    id: "seed-ts-kex-1",
+    reportId: REPORT_ID,
+    reviewId: REVIEW_ID,
+    jobId: JOB_ID,
+    workerId: "dw2",
+    workerName: "Sophie Taylor",
+    hours: 32,
+    hourlyRate: 16,
+    laborCost: 512,
+    billableRate: 55,
+    laborRevenue: 1760,
+    approvedAt: APPROVED_AT,
+    approvedBy: APPROVED_BY,
+  });
+
+  // ──────────────────────────────────────
+  // LABOUR — Ben Hughes: 24h
+  // costRate £16/h, billableRate £55/h
+  // ──────────────────────────────────────
+  mockTimesheets.push({
+    id: "seed-ts-kex-2",
+    reportId: REPORT_ID,
+    reviewId: REVIEW_ID,
+    jobId: JOB_ID,
+    workerId: "dw3",
+    workerName: "Ben Hughes",
+    hours: 24,
+    hourlyRate: 16,
+    laborCost: 384,
+    billableRate: 55,
+    laborRevenue: 1320,
+    approvedAt: APPROVED_AT,
+    approvedBy: APPROVED_BY,
+  });
+
+  // ──────────────────────────────────────
+  // EQUIPMENT — Hiab support: 16h used
+  // dayRate £420, clientDayRate £520
+  // billedRate = 520/8 = £65/h
+  // ──────────────────────────────────────
+  mockEquipmentUsage.push({
+    id: "seed-eq-kex-1",
+    reportId: REPORT_ID,
+    reviewId: REVIEW_ID,
+    assetId: "de1",
+    assetName: "Hiab support (canopy lift)",
+    hoursUsed: 16,
+    usageCost: 840,    // 16 * (420/8)
+    billedRate: 65,    // 520/8
+    revenueImpact: 1040, // 16 * 65
+    jobId: JOB_ID,
+    approvedAt: APPROVED_AT,
+  });
+
+  // ──────────────────────────────────────
+  // EQUIPMENT — Crew van: 24h used
+  // dayRate £120, clientDayRate £150
+  // billedRate = 150/8 = £18.75/h
+  // ──────────────────────────────────────
+  mockEquipmentUsage.push({
+    id: "seed-eq-kex-2",
+    reportId: REPORT_ID,
+    reviewId: REVIEW_ID,
+    assetId: "de11",
+    assetName: "Crew van (tools transport)",
+    hoursUsed: 24,
+    usageCost: 360,      // 24 * (120/8)
+    billedRate: 18.75,   // 150/8
+    revenueImpact: 450,  // 24 * 18.75
+    jobId: JOB_ID,
+    approvedAt: APPROVED_AT,
+  });
+
+  // ──────────────────────────────────────
+  // EXPENSE — Skip hire: £185 cost, 15% markup
+  // recoveryAmount = 185 * 1.15 = £212.75
+  // ──────────────────────────────────────
+  mockExpenses.push({
+    id: "seed-exp-kex-1",
+    reportId: REPORT_ID,
+    reviewId: REVIEW_ID,
+    jobId: JOB_ID,
+    description: "Skip hire — waste removal",
+    amount: 185,
+    markupPercent: 15,
+    recoveryAmount: 212.75,
+    submittedBy: "Sophie Taylor",
+    approvedAt: APPROVED_AT,
+    approvedBy: APPROVED_BY,
+  });
+
+  // ──────────────────────────────────────
+  // MATERIALS — 15mm Isolating Valves: 40 units
+  // unitCost £2.10, markupPrice £3.50
+  // ──────────────────────────────────────
+  mockInventoryMutations.push({
+    id: "seed-inv-kex-1",
+    reportId: REPORT_ID,
+    reviewId: REVIEW_ID,
+    stockItemId: "stock-3",
+    stockItemName: "15mm Isolating Valve",
+    quantityUsed: 40,
+    unitCost: 2.10,
+    markupPrice: 3.50,
+    jobCostImpact: 84,    // 40 * 2.10
+    revenueImpact: 140,   // 40 * 3.50
+    jobId: JOB_ID,
+    approvedAt: APPROVED_AT,
+  });
+
+  // ──────────────────────────────────────
+  // INVOICE LINE ITEMS — mirror the above
+  // ──────────────────────────────────────
+  mockInvoiceLineItems.push(
+    { id: "seed-line-1", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour – Sophie Taylor (32h @ £55/h)",          quantity: 32,   unitPrice: 55,     amount: 1760,   approvedAt: APPROVED_AT },
+    { id: "seed-line-2", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour – Ben Hughes (24h @ £55/h)",            quantity: 24,   unitPrice: 55,     amount: 1320,   approvedAt: APPROVED_AT },
+    { id: "seed-line-3", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment – Hiab support (canopy lift) (16h)",  quantity: 16,   unitPrice: 65,     amount: 1040,   approvedAt: APPROVED_AT },
+    { id: "seed-line-4", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment – Crew van (tools transport) (24h)",  quantity: 24,   unitPrice: 18.75,  amount: 450,    approvedAt: APPROVED_AT },
+    { id: "seed-line-5", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "expense",   description: "Expense – Skip hire — waste removal (+15% markup)", quantity: 1,  unitPrice: 212.75, amount: 212.75, approvedAt: APPROVED_AT },
+    { id: "seed-line-6", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "material",  description: "Materials – 15mm Isolating Valve ×40",           quantity: 40,   unitPrice: 3.50,   amount: 140,    approvedAt: APPROVED_AT },
+  );
+
+  // ──────────────────────────────────────
+  // FINANCIAL MUTATIONS — audit trail for seed records
+  // ──────────────────────────────────────
+  const seedMutations: Array<{ type: FinancialMutation["mutationType"]; entityId: string }> = [
+    { type: "timesheet",  entityId: "seed-ts-kex-1"  },
+    { type: "timesheet",  entityId: "seed-ts-kex-2"  },
+    { type: "equipment",  entityId: "seed-eq-kex-1"  },
+    { type: "equipment",  entityId: "seed-eq-kex-2"  },
+    { type: "expense",    entityId: "seed-exp-kex-1" },
+    { type: "inventory",  entityId: "seed-inv-kex-1" },
+    { type: "invoice",    entityId: "seed-line-1"    },
+    { type: "invoice",    entityId: "seed-line-2"    },
+    { type: "invoice",    entityId: "seed-line-3"    },
+    { type: "invoice",    entityId: "seed-line-4"    },
+    { type: "invoice",    entityId: "seed-line-5"    },
+    { type: "invoice",    entityId: "seed-line-6"    },
+  ];
+  seedMutations.forEach(({ type, entityId }, i) => {
+    mockFinancialMutations.push({
+      id: `seed-mut-kex-${i + 1}`,
+      jobId: JOB_ID,
+      sourceReportId: REPORT_ID,
+      sourceReviewId: REVIEW_ID,
+      mutationType: type,
+      entityId,
+      createdAt: APPROVED_AT,
+      approvedBy: APPROVED_BY,
+    });
+  });
+})();
+
+// ======================================================
 // PHASE 4.4 — JOB FINANCIAL SUMMARY
 //
 // Derived calculation layer. Summaries are computed on demand
-// from the Phase 4.2 financial arrays. Nothing is persisted.
+// from the Phase 4.2 / 4.5 financial arrays.
 // ======================================================
 
-/**
- * A derived financial summary for a single job.
- * Calculated from TimesheetEntry, InventoryMutation,
- * EquipmentUsageRecord, and ExpenseEntry records.
- */
 export interface JobFinancialSummary {
   jobId: string;
 
@@ -1878,12 +2131,13 @@ export interface JobFinancialSummary {
   grossProfit: number;
   marginPercent: number;
 
-  hasActivity: boolean; // false when all values are zero
+  hasActivity: boolean;
 }
 
 /**
  * Pure calculation — no side effects, no storage.
- * Call from any component that needs job-level financial intelligence.
+ * Phase 4.5: all four revenue streams now populated from
+ * normalized records.
  */
 export function getJobFinancialSummary(jobId: string): JobFinancialSummary {
   const laborCost = mockTimesheets
@@ -1904,15 +2158,22 @@ export function getJobFinancialSummary(jobId: string): JobFinancialSummary {
 
   const totalCost = laborCost + materialCost + equipmentCost + expenseCost;
 
-  // Revenue: only materials carry revenue for now (revenueImpact = qty × markupPrice).
-  // Labour, equipment, expense revenue = 0 until billing rates are introduced in Phase 4.5+.
-  const laborRevenue = 0;
-  const equipmentRevenue = 0;
-  const expenseRevenue = 0;
+  // Phase 4.5 — all four revenue streams from normalized records.
+  const laborRevenue = mockTimesheets
+    .filter(t => t.jobId === jobId)
+    .reduce((sum, t) => sum + t.laborRevenue, 0);
 
   const materialRevenue = mockInventoryMutations
     .filter(m => m.jobId === jobId)
     .reduce((sum, m) => sum + m.revenueImpact, 0);
+
+  const equipmentRevenue = mockEquipmentUsage
+    .filter(r => r.jobId === jobId)
+    .reduce((sum, r) => sum + r.revenueImpact, 0);
+
+  const expenseRevenue = mockExpenses
+    .filter(e => e.jobId === jobId)
+    .reduce((sum, e) => sum + e.recoveryAmount, 0);
 
   const totalRevenue = laborRevenue + materialRevenue + equipmentRevenue + expenseRevenue;
 
