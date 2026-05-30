@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { useMemo, useState } from "react";
 import { JobIntelligenceSection } from "@/components/JobIntelligenceSection";
 import { JobFinancialSummarySection } from "@/components/JobFinancialSummarySection";
+import { InvoiceReadinessPanel } from "@/components/finance/InvoiceReadinessPanel";
+import { PendingExposurePanel } from "@/components/finance/PendingExposurePanel";
 
 export default function JobDetailPage() {
   const { jobs, clients, workers, equipment, invoices, addInvoice, roles, updateJob, users } = useStore();
@@ -305,6 +307,12 @@ export default function JobDetailPage() {
         <JobIntelligenceSection jobId={job.id} />
 
         <JobFinancialSummarySection jobId={job.id} />
+
+        {/* Phase 5.2: Invoice Readiness + Pending Exposure */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <InvoiceReadinessPanel jobId={job.id} />
+          <PendingExposurePanel jobId={job.id} />
+        </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
