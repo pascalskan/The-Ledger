@@ -13,6 +13,9 @@ import { Page } from '@playwright/test';
  *   1. If a "Profile" bottom-nav button is visible, click it to reach the
  *      profile page where Sign Out is clearly in the viewport.
  *   2. Scroll the Sign Out button into view and click it (works for all layouts).
+ *   3. Wait for /auth URL to confirm navigation is complete before returning.
+ *      This is critical — soft-login helpers assume the page is on /auth when
+ *      they run. Without this wait, the next click() races the route transition.
  */
 export async function signOut(page: Page) {
   // Worker layout: Profile tab navigates to profile page where Sign Out is visible
@@ -26,4 +29,11 @@ export async function signOut(page: Page) {
   const signOutButton = page.getByRole('button', { name: /Sign Out/i }).first();
   await signOutButton.scrollIntoViewIfNeeded();
   await signOutButton.click();
+
+  // Wait for the auth page to be active before returning.
+  // The logout handler calls setLocation("/auth") synchronously after logout(),
+  // but the React re-render and URL update are asynchronous. Without this wait,
+  // the subsequent softLogin* helper may attempt to click "Demo CEO/Worker/PM"
+  // before the auth page has rendered.
+  await page.waitForURL('**/auth', { timeout: 10000 });
 }
