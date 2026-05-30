@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { useStore } from "@/lib/mockData";
+import { addReviewItemDirect } from "@/lib/mockData";
 import { logSyncEvent } from "@/lib/syncEventStore";
 
 const OFFLINE_QUEUE_STORAGE_KEY = "ledger-offline-queue";
@@ -37,7 +37,7 @@ interface OfflineQueueStore {
   isOffline: boolean;
   setOfflineMode: (offline: boolean) => void;
   queue: OfflineQueueItem[];
-  
+
   // Metrics
   activeBatchCount: number;
   pendingBatchCount: number;
@@ -48,15 +48,15 @@ interface OfflineQueueStore {
   updateUploadState: (queueItemId: string, uploadId: string, updates: any) => void;
   retryUpload: (queueItemId: string, uploadId: string) => Promise<void>;
   clearSyncedItems: () => void;
-  
+
   syncQueue: () => Promise<void>;
   processQueueBatch: (items: OfflineQueueItem[]) => Promise<void>;
   processUploadBatch: (queueItemId: string, uploads: any[]) => Promise<void>;
-  
+
   removeUpload: (queueItemId: string, uploadId: string) => void;
   markQueueItemUnderReview: (queueItemId: string, correctionNotes: string) => void;
   markQueueItemResubmitted: (queueItemId: string) => void;
-  
+
   // Debug Helpers
   forceSync: () => Promise<void>;
   clearQueue: () => void;
@@ -73,7 +73,7 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
       queue: [],
       activeBatchCount: 0,
       pendingBatchCount: 0,
-      
+
       injectFailure: false,
       injectConflict: false,
       injectUploadFailure: false,
@@ -181,18 +181,18 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
 
       processUploadBatch: async (queueItemId, uploads) => {
          const state = get();
-         
+
          for (let i = 0; i < uploads.length; i += MAX_CONCURRENT_UPLOADS) {
              const batch = uploads.slice(i, i + MAX_CONCURRENT_UPLOADS);
-             
+
              await Promise.all(batch.map(async (upload) => {
                  logSyncEvent({ type: "upload_started", entityId: upload.uploadId, entityType: "upload" });
-                 
+
                  state.updateUploadState(queueItemId, upload.uploadId, {
                     syncStatus: "uploading",
                     lastAttemptAt: new Date().toISOString(),
                   });
-                  
+
                   // Simulate realistic delay (500-2500ms)
                   const delay = Math.floor(Math.random() * 2000) + 500;
                   const steps = 5;
@@ -204,7 +204,7 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
                     logSyncEvent({ type: "upload_progress", entityId: upload.uploadId, entityType: "upload", metadata: { progress } });
                     await new Promise(r => setTimeout(r, stepDelay));
                   }
-                  
+
                   const uploadShouldFail = state.injectUploadFailure || Math.random() < 0.1;
 
                   if (uploadShouldFail) {
@@ -225,7 +225,7 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
 
       processQueueBatch: async (items) => {
         const state = get();
-        
+
         await Promise.all(items.map(async (item) => {
             try {
                 logSyncEvent({ type: "replay_started", entityId: item.id, entityType: "queueItem" });
@@ -237,7 +237,7 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
                 // Simulate realistic delay (500-2500ms)
                 const delay = Math.floor(Math.random() * 2000) + 500;
                 await new Promise((resolve) => setTimeout(resolve, delay));
-                
+
                 const randomOutcome = Math.random();
                 const didConflict = state.injectConflict || randomOutcome < 0.15;
                 const shouldFail = state.injectFailure || (randomOutcome >= 0.15 && randomOutcome < 0.3);
@@ -265,6 +265,20 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
                   syncStatus: "synced",
                   errorMessage: undefined,
                 });
+
+                // ── Doctrine bridge ──────────────────────────────────────
+                // Hand the replayed payload to the Review Center store.
+                // This fulfils the Queue → Replay → Review Center chain.
+                // sourceQueueId is stamped on the payload so addReviewItemDirect
+                // can detect and reject duplicate replay attempts (idempotent).
+                if (item.type === "worker-report" && item.payload) {
+                  addReviewItemDirect({
+                    ...item.payload,
+                    sourceQueueId: item.id,
+                  });
+                }
+                // ─────────────────────────────────────────────────────────
+
                 logSyncEvent({ type: "replay_completed", entityId: item.id, entityType: "queueItem" });
 
             } catch (error: any) {
@@ -286,29 +300,29 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
         const pendingItems = state.queue.filter(
           (item) => item.syncStatus === "pending" || item.syncStatus === "failed"
         );
-        
+
         if (pendingItems.length === 0) return;
-        
+
         const totalBatches = Math.ceil(pendingItems.length / MAX_CONCURRENT_QUEUE_ITEMS);
         set({ pendingBatchCount: totalBatches });
 
         for (let i = 0; i < pendingItems.length; i += MAX_CONCURRENT_QUEUE_ITEMS) {
             set((s) => ({ activeBatchCount: s.activeBatchCount + 1 }));
-            
+
             const batch = pendingItems.slice(i, i + MAX_CONCURRENT_QUEUE_ITEMS);
             await state.processQueueBatch(batch);
-            
-            set((s) => ({ 
+
+            set((s) => ({
                 activeBatchCount: Math.max(0, s.activeBatchCount - 1),
                 pendingBatchCount: Math.max(0, s.pendingBatchCount - 1)
             }));
         }
       },
-      
+
       forceSync: async () => {
           await get().syncQueue();
       },
-      
+
       clearQueue: () => {
           set({ queue: [] });
       },

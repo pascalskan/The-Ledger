@@ -10,23 +10,75 @@
  *   1. ONLINE PATH — Worker submission creates a ReviewItem in PENDING state.
  *      Inventory is NOT deducted at submission time.
  *
- *   2. OFFLINE PATH — Worker submission (in offline mode) writes to the queue.
- *      Neither inventory NOR a ReviewItem is created at queue-write time.
- *      (The offline queue gap: synced items never reach the Review Center
- *      without a manual call to addReviewItem. This gap is tracked in the
- *      test outcome and must be resolved before Phase 4.)
+ *   2. OFFLINE PATH — Worker submission (offline mode) writes to the queue.
+ *      After sync completes (syncStatus = "synced"), the replayed payload IS
+ *      handed to addReviewItemDirect() and appears as PENDING in the Review
+ *      Center. Inventory is still NOT deducted until a manager approves.
  *
- *   3. APPROVAL GATE — Inventory is only deducted when an approved ReviewItem
- *      is updated to status === 'approved' inside the Review Center.
- *      This is already proven by inventory-deduction.spec.ts; this test
- *      documents the doctrine assertion in isolation.
+ *   3. ATTRIBUTION — The submitted ReviewItem carries the correct job reference.
  */
 
-import { test, expect } from '@playwright/test';
-import { loginAsCEO, loginAsWorker, softLoginAsCEO, softLoginAsWorker } from '../helpers/login';
+import { test, expect, type Page } from '@playwright/test';
+import {
+  loginAsCEO,
+  loginAsWorker,
+  softLoginAsCEO,
+  softLoginAsWorker,
+} from '../helpers/login';
 import { signOut } from '../helpers/signOut';
 import { openReviewCenter } from '../helpers/navigation';
 import { clearBrowserState } from '../helpers/state';
+
+// ---------------------------------------------------------------------------
+// SynchronizationDebugPanel helpers
+//
+// The panel is a fixed overlay in the bottom-right corner (App.tsx).
+// When OPEN  → shows the full panel; gear button is gone.
+// When CLOSED → shows only the gear button; panel is gone.
+// ---------------------------------------------------------------------------
+
+/** Open the panel. No-op if already open. */
+async function openDebugPanel(page: Page) {
+  const panelVisible = await page.getByText('Enterprise Sync QA').isVisible().catch(() => false);
+  if (!panelVisible) {
+    await page.locator('button[title="Enterprise Sync QA Panel"]').click();
+  }
+  await expect(page.getByText('Enterprise Sync QA')).toBeVisible({ timeout: 5000 });
+}
+
+/**
+ * Close the panel. No-op if already closed.
+ *
+ * The × button has no accessible name (icon-only). We target it as the button
+ * that is a direct child of the panel's dark header flex row, which also
+ * contains the "Enterprise Sync QA" heading text.
+ */
+async function closeDebugPanel(page: Page) {
+  const panelVisible = await page.getByText('Enterprise Sync QA').isVisible().catch(() => false);
+  if (!panelVisible) return;
+  // The close button is the only <button> inside the bg-slate-900 header bar.
+  // Use { force: true } because the panel content can occasionally overlap during animation.
+  await page
+    .locator('div.bg-slate-900.text-white.p-3 button')
+    .click({ force: true });
+  // Wait for the gear to reappear, confirming the panel is closed.
+  await expect(page.locator('button[title="Enterprise Sync QA Panel"]')).toBeVisible({ timeout: 3000 });
+}
+
+async function clickSimulateOffline(page: Page) {
+  await page.getByRole('button', { name: /Simulate Offline/i }).click();
+}
+
+async function clickReconnect(page: Page) {
+  await page.getByRole('button', { name: /Reconnect/i }).click();
+}
+
+async function clickForceReplay(page: Page) {
+  // Force Replay is disabled while offline — wait for it to be enabled first.
+  const forceBtn = page.getByRole('button', { name: /Force Replay/i });
+  await expect(forceBtn).not.toBeDisabled({ timeout: 5000 });
+  await forceBtn.click();
+}
 
 // ---------------------------------------------------------------------------
 // Test 1 — Online submission: creates a pending ReviewItem, no stock mutation
@@ -56,7 +108,7 @@ test('Online submission creates a pending ReviewItem and does NOT deduct stock',
 
   await signOut(page);
 
-  // Worker: submit a report with 3 units of "1/2 Copper Elbow" (soft login — store preserved)
+  // Worker: submit a report with 3 units of "1/2 Copper Elbow"
   await softLoginAsWorker(page);
 
   await page.getByRole('button', { name: /Open Job/i }).first().click();
@@ -70,16 +122,12 @@ test('Online submission creates a pending ReviewItem and does NOT deduct stock',
     .getByRole('textbox', { name: /Search materials to log/i })
     .fill('1/2 Copper Elbow');
 
-  await page
-    .locator('.cursor-pointer', { hasText: '1/2 Copper Elbow' })
-    .first()
-    .click();
+  await page.locator('.cursor-pointer', { hasText: '1/2 Copper Elbow' }).first().click();
 
   const addedItemCard = page.locator('.bg-white.rounded-xl', { hasText: '1/2 Copper Elbow' });
   await addedItemCard.locator('input[type="number"]').fill('3');
 
   await page.getByRole('button', { name: /Save/i }).click();
-
   await expect(page.getByRole('status')).toContainText('Report Submitted');
 
   await signOut(page);
@@ -104,7 +152,7 @@ test('Online submission creates a pending ReviewItem and does NOT deduct stock',
     10
   );
 
-  // DOCTRINE ASSERTION: stock must not have changed yet
+  // DOCTRINE ASSERTION: stock must not have changed yet (no deduction before approval)
   expect(postSubmitQty).toBe(baselineQty);
 
   // DOCTRINE ASSERTION: Review Center must show a pending item
@@ -113,58 +161,41 @@ test('Online submission creates a pending ReviewItem and does NOT deduct stock',
 });
 
 // ---------------------------------------------------------------------------
-// Test 2 — Offline submission: queue write does NOT create a ReviewItem
+// Test 2 — Offline submission bridges to Review Center after sync (FIXED)
 //
-// NOTE: This test documents the known offline queue gap identified during the
-// Phase 2 certification audit.
+// Drives offline mode through the SynchronizationDebugPanel UI buttons.
 //
-// The gap: processQueueBatch() in offlineQueueStore.ts transitions items to
-// syncStatus === "synced" but NEVER calls addReviewItem(). Synced offline
-// submissions therefore do not appear in the Review Center.
-//
-// Severity: HIGH — violates the Worker → Queue → Replay → Review Center
-// doctrine chain. Workers who submit offline have their reports silently
-// dropped from the review pipeline.
-//
-// This test currently asserts the broken behavior (no review item created)
-// so that it PASSES as a documented finding. Once the gap is fixed (the sync
-// handler must call addReviewItem on success), this assertion must be inverted
-// to expect a pending item in the Review Center.
+// Flow:
+//   1. Panel opened → Simulate Offline → panel CLOSED before navigating
+//   2. Worker submits report → "Saved Offline" toast → on job detail page
+//   3. Panel opened → Reconnect → Force Replay → panel CLOSED
+//   4. processQueueBatch() fires → addReviewItemDirect() called
+//   5. Panel CLOSED before signOut (panel overlay was blocking the Profile button)
+//   6. CEO logs in → Review Center shows the new pending item
 // ---------------------------------------------------------------------------
-test('KNOWN GAP — Offline submission queues item but does NOT bridge to Review Center on sync', async ({ page }) => {
+test('Offline submission appears in Review Center after sync completes', async ({ page }) => {
   await clearBrowserState(page);
 
-  // CEO: record baseline review-center count
+  // CEO: record baseline count of job rows in the Review Center
   await loginAsCEO(page);
   await openReviewCenter(page);
-
-  // Count pending items before we do anything
   const pendingRowsBefore = await page.locator('tr').filter({ hasText: /DEMO-JOB-/i }).count();
-
   await signOut(page);
 
-  // Worker: enable offline mode and submit a report
+  // Worker: soft-login so the module-level store state is preserved
   await softLoginAsWorker(page);
 
-  // Enable offline mode via the debug toggle (if present), otherwise inject
-  // via page.evaluate to set the store flag directly.
-  await page.evaluate(() => {
-    // Directly set the offline flag on the persisted Zustand store key
-    const raw = localStorage.getItem('ledger-offline-queue');
-    const store = raw ? JSON.parse(raw) : { state: {} };
-    store.state = { ...(store.state || {}), isOffline: true };
-    localStorage.setItem('ledger-offline-queue', JSON.stringify(store));
-  });
+  // ── Step 1: Enable offline mode ──────────────────────────────────────────
+  await openDebugPanel(page);
+  await clickSimulateOffline(page);
+  await closeDebugPanel(page); // MUST close before clicking job list buttons
 
-  // Reload to pick up the persisted offline flag
-  await page.reload();
-
-  // Re-login as worker after reload
-  await page.getByRole('button', { name: /Demo Worker/i }).click();
-  await page.getByRole('button', { name: /Sign in/i }).click();
-
+  // ── Step 2: Submit report offline ────────────────────────────────────────
   await page.getByRole('button', { name: /Open Job/i }).first().click();
   await page.getByRole('button', { name: /Submit Report/i }).click();
+
+  // The amber offline banner confirms the store flag is active
+  await expect(page.locator('body')).toContainText(/Offline Mode Active/i);
 
   await page
     .getByRole('textbox', { name: /Describe the work completed/i })
@@ -172,35 +203,34 @@ test('KNOWN GAP — Offline submission queues item but does NOT bridge to Review
 
   await page.getByRole('button', { name: /Save/i }).click();
 
-  // The offline path should show "Saved Offline" toast
+  // Expect the offline toast (report.tsx goes to queue instead of Review Center)
   await expect(page.getByRole('status')).toContainText(/Saved Offline|offline/i);
 
-  // Turn offline mode OFF so the queue can attempt to sync
-  await page.evaluate(() => {
-    const raw = localStorage.getItem('ledger-offline-queue');
-    const store = raw ? JSON.parse(raw) : { state: {} };
-    store.state = { ...(store.state || {}), isOffline: false };
-    localStorage.setItem('ledger-offline-queue', JSON.stringify(store));
-  });
+  // report.tsx now redirects to /worker/jobs/:id — panel gear is available
 
-  // Wait for the sync delay (the store triggers syncQueue after 500ms)
+  // ── Step 3: Reconnect and force replay ───────────────────────────────────
+  await openDebugPanel(page);
+  await clickReconnect(page);
+  // setOfflineMode(false) triggers syncQueue() after a 500ms debounce
+  await page.waitForTimeout(600);
+  await clickForceReplay(page);
+  // processQueueBatch has up to 2500ms of simulated delay; wait for it to settle
   await page.waitForTimeout(4000);
+
+  // ── Step 4: Close panel BEFORE sign-out ──────────────────────────────────
+  // The panel is a fixed overlay in the bottom-right. If it remains open,
+  // its scrollable content intercepts pointer events and blocks the Profile button.
+  await closeDebugPanel(page);
 
   await signOut(page);
 
-  // CEO: check whether a new review item appeared in the Review Center
+  // ── Step 5: CEO verifies the replayed item is in the Review Center ────────
   await softLoginAsCEO(page);
   await openReviewCenter(page);
-
   const pendingRowsAfter = await page.locator('tr').filter({ hasText: /DEMO-JOB-/i }).count();
 
-  // KNOWN GAP ASSERTION: the offline-synced report does NOT appear in the
-  // Review Center because processQueueBatch() never calls addReviewItem().
-  //
-  // If this assertion FAILS in the future, it means the gap has been fixed —
-  // at that point, change toBe(pendingRowsBefore) → toBeGreaterThan(pendingRowsBefore)
-  // and remove the "KNOWN GAP" label from the test name.
-  expect(pendingRowsAfter).toBe(pendingRowsBefore);
+  // DOCTRINE ASSERTION: the offline-synced report now appears in the Review Center
+  expect(pendingRowsAfter).toBeGreaterThan(pendingRowsBefore);
 });
 
 // ---------------------------------------------------------------------------
@@ -226,7 +256,7 @@ test('Worker identity is preserved on submitted ReviewItem', async ({ page }) =>
   await loginAsCEO(page);
   await openReviewCenter(page);
 
-  // The review center should show an item that carries a worker reference
-  // (job ID appears in the table, meaning the submission was attributed to a job/worker)
+  // The review center must show a job reference confirming the submission
+  // was attributed to a job and preserved through the submission pipeline
   await expect(page.locator('body')).toContainText(/DEMO-JOB-/i);
 });

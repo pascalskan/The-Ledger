@@ -965,10 +965,46 @@ let currentUser: User | null = null;
 let companySettings = { ...DEFAULT_SETTINGS }; // This will be per-request simulated in useStore
 let demoSettings = { ...DEMO_SETTINGS };
 
+// ---------------------------------------------------------------------------
+// Standalone store mutator — safe to call outside React components.
+//
+// useStore() is a React hook and cannot be called from Zustand actions or
+// other non-component contexts. This function writes directly to the shared
+// module-level reviewItems array so the offline queue sync path can hand
+// off a replayed payload to the Review Center without going through the hook.
+//
+// Deduplication: if a ReviewItem with the same sourceQueueId already exists
+// the call is a no-op. This prevents duplicate entries when a queue item is
+// replayed more than once (e.g. retry after a transient failure where the
+// first attempt actually succeeded but the status update was lost).
+// ---------------------------------------------------------------------------
+export function addReviewItemDirect(r: Omit<ReviewItem, "id" | "companyId">): void {
+  const sourceId = (r as any).sourceQueueId as string | undefined;
+  if (sourceId && reviewItems.some((existing) => (existing as any).sourceQueueId === sourceId)) {
+    // Already bridged — idempotent replay, skip.
+    return;
+  }
+  const companyId = currentUser?.companyId || REAL_COMPANY_ID;
+  const entry: ReviewItem = {
+    ...r,
+    id: Math.random().toString(36).substr(2, 9),
+    companyId,
+  } as ReviewItem;
+  reviewItems.push(entry);
+  logs.unshift({
+    id: Math.random().toString(36).substr(2, 9),
+    actorName: currentUser?.name || "System (Replay)",
+    action: "CREATE",
+    entity: "ReviewItem",
+    details: `Created new review item ${r.title || "Unknown"} via offline replay`,
+    timestamp: new Date().toISOString(),
+  });
+}
+
 // Hooks
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(currentUser);
-  
+
   const login = (email: string) => {
     const found = SEED_USERS.find(u => u.email === email) || SEED_USERS[0];
     currentUser = found;
@@ -1016,12 +1052,12 @@ export const useStore = () => {
   const filteredLocations = locations.filter(l => l.companyId === currentCompanyId);
   const filteredStockMovements = stockMovements.filter(m => m.companyId === currentCompanyId);
   const filteredReviewItems = reviewItems.filter(r => r.companyId === currentCompanyId);
-  
-  // Note: Logs are currently global in this mock implementation but in a real app would be filtered. 
+
+  // Note: Logs are currently global in this mock implementation but in a real app would be filtered.
   // For now, let's just filter them by actor? Or leave them global for simplicity as they are audit logs?
   // The requirement says: "Example Business data is visible ONLY to Example Business users."
-  // So we should filter logs too if possible, but logs don't have companyId. 
-  // We can assume logs created by users of a company belong to that company. 
+  // So we should filter logs too if possible, but logs don't have companyId.
+  // We can assume logs created by users of a company belong to that company.
   // For simplicity in this mock, we'll leave logs global or we'd need to migrate logs to have companyId.
   // Let's migrate logs to have companyId dynamically for new logs, but old logs are ambiguous.
   // Actually, let's just return all logs for now as it's a mock, or filter by user name if we really wanted to.
@@ -1033,7 +1069,7 @@ export const useStore = () => {
     const item = stockItems.find(s => s.id === id);
     if (item && item.quantity >= qty) {
       stockItems = stockItems.map(s => s.id === id ? { ...s, quantity: s.quantity - qty, updatedAt: new Date().toISOString() } : s);
-      
+
       stockMovements.push({
         id: Math.random().toString(36).substr(2, 9),
         stockItemId: id,
@@ -1043,7 +1079,7 @@ export const useStore = () => {
         createdAt: new Date().toISOString(),
         companyId: currentCompanyId
       });
-      
+
       addLog("UPDATE", "StockItem", `Deducted ${qty} from ${item.name}`);
       refresh();
     }
@@ -1064,9 +1100,9 @@ export const useStore = () => {
     locations: filteredLocations,
     stockMovements: filteredStockMovements,
     reviewItems: filteredReviewItems,
-    logs, 
+    logs,
     companySettings: currentSettings,
-    
+
     // Portal access (unfiltered for mockup portal auth)
     allJobs: jobs,
     allClients: clients,
@@ -1075,7 +1111,7 @@ export const useStore = () => {
     allEquipment: equipment,
     allStockItems: stockItems,
     allAssets: assets,
-    
+
     // Core CRUD with Refresh - Automatically injects correct companyId
     addClient: (c: Omit<Client, "id" | "clientId" | "companyId">) => {
       const entry = { ...c, id: Math.random().toString(36).substr(2, 9), clientId: `CL-${String(clients.length + 1).padStart(6, '0')}`, companyId: currentCompanyId };
@@ -1113,17 +1149,17 @@ export const useStore = () => {
       const lat = 51.5074 + (Math.random() * 0.1 - 0.05);
       const lng = -0.1278 + (Math.random() * 0.1 - 0.05);
 
-      jobs.push({ 
-        ...j, 
-        id: Math.random().toString(36).substr(2, 9), 
-        jobId: `JOB-${String(jobs.length + 1001).padStart(6, '0')}`, 
-        companyId: currentCompanyId, 
+      jobs.push({
+        ...j,
+        id: Math.random().toString(36).substr(2, 9),
+        jobId: `JOB-${String(jobs.length + 1001).padStart(6, '0')}`,
+        companyId: currentCompanyId,
         latitude: j.latitude || lat,
         longitude: j.longitude || lng,
-        assignedWorkerIds: [], 
-        assignedEquipmentIds: [], 
+        assignedWorkerIds: [],
+        assignedEquipmentIds: [],
         documents: [],
-        managerId: j.managerId 
+        managerId: j.managerId
       }); refresh();
     },
     updateJob: (id: string, u: Partial<Job>) => {
@@ -1179,13 +1215,13 @@ export const useStore = () => {
       const year = new Date().getFullYear();
       const seq = String(invoices.filter(i => i.companyId === currentCompanyId).length + 1).padStart(4, "0");
       const entry = { ...inv, id: Math.random().toString(36).substr(2, 9), invoiceId: `${prefix}-${year}-${seq}`, companyId: currentCompanyId };
-      invoices = [...invoices, entry]; 
-      addLog("CREATE", "Invoice", `Created ${entry.invoiceId}`); 
+      invoices = [...invoices, entry];
+      addLog("CREATE", "Invoice", `Created ${entry.invoiceId}`);
       refresh();
       return entry.id;
     },
     updateInvoice: (id: string, u: Partial<Invoice>) => {
-      invoices = invoices.map(i => i.id === id ? { ...i, ...u } : i); 
+      invoices = invoices.map(i => i.id === id ? { ...i, ...u } : i);
       if (u.status === "Sent") addLog("SEND", "Invoice", `Sent invoice ${id}`);
       refresh();
     },
@@ -1250,12 +1286,12 @@ export const useStore = () => {
     addStockItem: (s: Omit<StockItem, "id" | "companyId" | "createdAt" | "updatedAt">) => {
       // Check for duplicate name + sku + locationId
       const existing = stockItems.find(item => item.name === s.name && item.sku === s.sku && item.locationId === s.locationId && item.companyId === currentCompanyId);
-      
+
       if (existing) {
         // Update quantity and unitCost
         const newQty = existing.quantity + s.quantity;
         stockItems = stockItems.map(item => item.id === existing.id ? { ...item, quantity: newQty, unitCost: s.unitCost || item.unitCost, updatedAt: new Date().toISOString() } : item);
-        
+
         stockMovements.push({
           id: Math.random().toString(36).substr(2, 9),
           stockItemId: existing.id,
@@ -1264,12 +1300,12 @@ export const useStore = () => {
           createdAt: new Date().toISOString(),
           companyId: currentCompanyId
         });
-        
+
         addLog("UPDATE", "StockItem", `Updated existing stock ${existing.name} by ${s.quantity}`);
       } else {
         const entry = { ...s, id: Math.random().toString(36).substr(2, 9), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), companyId: currentCompanyId };
         stockItems.push(entry);
-        
+
         stockMovements.push({
           id: Math.random().toString(36).substr(2, 9),
           stockItemId: entry.id,
@@ -1278,7 +1314,7 @@ export const useStore = () => {
           createdAt: new Date().toISOString(),
           companyId: currentCompanyId
         });
-        
+
         addLog("CREATE", "StockItem", `Created new stock ${s.name}`);
       }
       refresh();
@@ -1311,11 +1347,11 @@ export const useStore = () => {
     },
     updateReviewItem: (id: string, u: Partial<ReviewItem>) => {
       const item = reviewItems.find(r => r.id === id);
-      
+
       // If we are approving an item that wasn't previously approved
       if (item && u.status === 'approved' && item.status !== 'approved') {
         addLog('APPROVE', 'ReviewItem', `Approved review item ${item.title || item.id}`);
-        
+
         // Deduct inventory for any materials used
         if (item.materialsUsed && item.materialsUsed.length > 0) {
           item.materialsUsed.forEach(material => {
