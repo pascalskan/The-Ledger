@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useJobIntelligence } from "@/lib/useJobIntelligence";
+import { useStore } from "@/lib/mockData";
+import { getAllJobMargins } from "@/lib/profitabilityEngine";
 import { useLocation } from "wouter";
-import { TrendingUp, AlertTriangle, AlertCircle, CheckCircle2, ArrowRight, Activity } from "lucide-react";
+import { TrendingUp, AlertTriangle, AlertCircle, CheckCircle2, ArrowRight, Activity, TrendingDown, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +15,97 @@ function fmt(n: number) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   })}`;
+}
+
+function fmtPct(n: number) {
+  return `${n.toFixed(1)}%`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Portfolio Profitability Strip
+// Shows aggregated KPIs for all active + planned jobs that have approved data.
+// Source: getAllJobMargins() → getJobFinancialSummary() per job.
+// ─────────────────────────────────────────────────────────────────────────────
+function PortfolioProfitabilityStrip() {
+  const { jobs } = useStore();
+
+  // Only include active and planned jobs in portfolio summary
+  const activeJobs = jobs.filter(
+    (j) => j.status === "Active" || j.status === "Planned"
+  );
+
+  const margins = getAllJobMargins(activeJobs, 20);
+  const withActivity = margins.filter((m) => m.hasActivity);
+
+  if (withActivity.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-200 p-4 text-center text-sm text-muted-foreground">
+        <BarChart3 className="h-5 w-5 mx-auto mb-1 opacity-30" />
+        No approved financial activity across active jobs.
+        Approve a worker report to see portfolio KPIs.
+      </div>
+    );
+  }
+
+  const totalRevenue = withActivity.reduce((s, m) => s + m.summary.totalRevenue, 0);
+  const totalCost    = withActivity.reduce((s, m) => s + m.summary.totalCost, 0);
+  const grossProfit  = totalRevenue - totalCost;
+  const avgMargin    = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+  const belowTarget  = withActivity.filter((m) => m.belowThreshold).length;
+  const profitPositive = grossProfit >= 0;
+
+  const kpis = [
+    {
+      label: "Portfolio Revenue",
+      value: fmt(totalRevenue),
+      sub: `${withActivity.length} job${withActivity.length !== 1 ? "s" : ""} with activity`,
+      color: "text-slate-900",
+    },
+    {
+      label: "Portfolio Cost",
+      value: fmt(totalCost),
+      sub: "Approved cost",
+      color: "text-slate-700",
+    },
+    {
+      label: "Gross Profit",
+      value: (grossProfit < 0 ? "-" : "") + fmt(grossProfit),
+      sub: profitPositive ? "Positive" : "Below zero",
+      color: profitPositive ? "text-green-600" : "text-red-600",
+    },
+    {
+      label: "Avg Margin",
+      value: fmtPct(avgMargin),
+      sub: avgMargin >= 20 ? "On target" : "Below 20% target",
+      color: avgMargin >= 20 ? "text-green-600" : avgMargin > 0 ? "text-amber-600" : "text-red-600",
+    },
+    {
+      label: "Below Target",
+      value: String(belowTarget),
+      sub: belowTarget === 0 ? "All jobs healthy" : `${belowTarget} job${belowTarget !== 1 ? "s" : ""} < 20% margin`,
+      color: belowTarget === 0 ? "text-green-600" : "text-amber-600",
+    },
+  ];
+
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <BarChart3 className="h-4 w-4 text-muted-foreground" />
+        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Portfolio Summary — Active &amp; Planned Jobs
+        </p>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        {kpis.map(({ label, value, sub, color }) => (
+          <div key={label}>
+            <p className="text-xs text-muted-foreground mb-1">{label}</p>
+            <p className={cn("text-xl font-bold", color)}>{value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function JobIntelligenceDashboard() {
@@ -33,6 +126,9 @@ export default function JobIntelligenceDashboard() {
             Financial analytics derived from approved operational activity.
           </p>
         </div>
+
+        {/* Portfolio Profitability Strip */}
+        <PortfolioProfitabilityStrip />
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {activeMetrics.map((metrics) => {
