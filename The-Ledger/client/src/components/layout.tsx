@@ -21,7 +21,8 @@ import {
   TrendingUp,
   Zap,
   Package, Blocks,
-  ClipboardCheck
+  ClipboardCheck,
+  Layers
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -79,6 +80,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Schedule", href: "/schedule", icon: Calendar, roles: ["CEO", "Project Manager", "Worker"] },
     { label: "Manage Roles", href: "/roles", icon: UserCog, roles: ["CEO", "Admin"] },
     { label: "Audit Log", href: "/audit", icon: ShieldAlert, roles: ["CEO"] },
+    { label: "Financial Explorer", href: "/financial-explorer", icon: Layers, roles: ["CEO"] },
     { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO", "Admin"] },
     { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"] },
   ].filter((item) => hasAnyRole(item.roles));

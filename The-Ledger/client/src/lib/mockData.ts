@@ -107,7 +107,8 @@ export interface Equipment {
   companyId: string;
 }
 
-export interface InvoiceLineItem {
+// Thin billing stub used inside Invoice documents (pre-financial-normalization)
+export interface InvoiceBillingLine {
   description: string;
   qty: number;
   unitPrice: number;
@@ -121,7 +122,7 @@ export interface Invoice {
   issueDate: string;
   dueDate: string;
   status: "Draft" | "Sent" | "Paid" | "Overdue" | "Void" | "Exported";
-  lineItems: InvoiceLineItem[];
+  lineItems: InvoiceBillingLine[];
   notes?: string;
   companyId: string;
   quickbooksInvoiceId?: string;
@@ -143,13 +144,13 @@ export interface CompanySettings {
   email?: string;
   phone?: string;
   website?: string;
-  
+
   bankName: string;
   accountName: string;
   accountNumber: string;
   sortCode: string;
   address: string;
-  
+
   branding?: {
     logoUrl?: string;
     primaryColor?: string;
@@ -759,7 +760,7 @@ const DEFAULT_SETTINGS: CompanySettings = {
   taxId: "GB 000 0000 00",
   email: "accounts@omnisoftware.com",
   phone: "020 7000 0000",
-  
+
   bankName: "Commercial Bank",
   accountName: "OMNI LEDGER OPS",
   accountNumber: "88229911",
@@ -1103,6 +1104,17 @@ export const useStore = () => {
     logs,
     companySettings: currentSettings,
 
+    // Phase 4.2 — Financial normalization tables
+    timesheets: mockTimesheets,
+    expenses: mockExpenses,
+    inventoryMutations: mockInventoryMutations,
+    equipmentUsageRecords: mockEquipmentUsage,
+    invoiceLineItems: mockInvoiceLineItems,
+    financialMutations: mockFinancialMutations,
+
+    // Phase 4.4 — Job Financial Summary (derived, not stored)
+    getJobFinancialSummary,
+
     // Portal access (unfiltered for mockup portal auth)
     allJobs: jobs,
     allClients: clients,
@@ -1352,12 +1364,281 @@ export const useStore = () => {
       if (item && u.status === 'approved' && item.status !== 'approved') {
         addLog('APPROVE', 'ReviewItem', `Approved review item ${item.title || item.id}`);
 
-        // Deduct inventory for any materials used
-        if (item.materialsUsed && item.materialsUsed.length > 0) {
-          item.materialsUsed.forEach(material => {
-            deductStockQuantity(material.stockItemId, material.quantity, item.jobId);
+        const approvedAt = new Date().toISOString();
+        const approvedBy = currentUser?.name || 'System';
+        const reportId = (item as any).sourceQueueId || item.id;
+
+        // ─────────────────────────────────────────────────────────────────
+        // PHASE 4.2 — FINANCIAL MUTATION ENGINE
+        // Runs on every approval. Generates normalized financial objects
+        // from each operational payload on the ReviewItem, then appends
+        // a FinancialMutation audit record for every object created.
+        // ─────────────────────────────────────────────────────────────────
+
+        // 1. LABOR → TimesheetEntry
+        if (item.laborEntries && item.laborEntries.length > 0) {
+          item.laborEntries.forEach(labor => {
+            const hourlyRate = labor.hourlyRate ?? 0;
+            const laborCost = labor.hours * hourlyRate;
+            const entryId = Math.random().toString(36).substr(2, 9);
+
+            const timesheetEntry: TimesheetEntry = {
+              id: entryId,
+              reportId,
+              reviewId: item.id,
+              jobId: item.jobId,
+              workerId: labor.workerId,
+              workerName: labor.workerName,
+              hours: labor.hours,
+              hourlyRate,
+              laborCost,
+              approvedAt,
+              approvedBy,
+            };
+            mockTimesheets.push(timesheetEntry);
+
+            // Invoice line item: labor
+            const laborLineId = Math.random().toString(36).substr(2, 9);
+            const laborLine: InvoiceLineItem = {
+              id: laborLineId,
+              reportId,
+              reviewId: item.id,
+              jobId: item.jobId,
+              type: 'labor',
+              description: `Labour – ${labor.workerName} (${labor.hours}h)`,
+              quantity: labor.hours,
+              unitPrice: hourlyRate,
+              amount: laborCost,
+              approvedAt,
+            };
+            mockInvoiceLineItems.push(laborLine);
+
+            // FinancialMutation audit – timesheet
+            mockFinancialMutations.push({
+              id: Math.random().toString(36).substr(2, 9),
+              jobId: item.jobId,
+              sourceReportId: reportId,
+              sourceReviewId: item.id,
+              mutationType: 'timesheet',
+              entityId: entryId,
+              createdAt: approvedAt,
+              approvedBy,
+            });
+
+            // FinancialMutation audit – invoice line
+            mockFinancialMutations.push({
+              id: Math.random().toString(36).substr(2, 9),
+              jobId: item.jobId,
+              sourceReportId: reportId,
+              sourceReviewId: item.id,
+              mutationType: 'invoice',
+              entityId: laborLineId,
+              createdAt: approvedAt,
+              approvedBy,
+            });
           });
         }
+
+        // 2. EXPENSES → ExpenseEntry
+        if (item.expenses && item.expenses.length > 0) {
+          item.expenses.forEach(exp => {
+            const entryId = Math.random().toString(36).substr(2, 9);
+
+            const expenseEntry: ExpenseEntry = {
+              id: entryId,
+              reportId,
+              reviewId: item.id,
+              jobId: item.jobId,
+              description: exp.notes || exp.category,
+              amount: exp.amount,
+              submittedBy: item.submittedBy || approvedBy,
+              approvedAt,
+              approvedBy,
+            };
+            mockExpenses.push(expenseEntry);
+
+            // Invoice line item: expense
+            const expLineId = Math.random().toString(36).substr(2, 9);
+            const expLine: InvoiceLineItem = {
+              id: expLineId,
+              reportId,
+              reviewId: item.id,
+              jobId: item.jobId,
+              type: 'expense',
+              description: `Expense – ${exp.notes || exp.category}`,
+              quantity: 1,
+              unitPrice: exp.amount,
+              amount: exp.amount,
+              approvedAt,
+            };
+            mockInvoiceLineItems.push(expLine);
+
+            // FinancialMutation audit – expense
+            mockFinancialMutations.push({
+              id: Math.random().toString(36).substr(2, 9),
+              jobId: item.jobId,
+              sourceReportId: reportId,
+              sourceReviewId: item.id,
+              mutationType: 'expense',
+              entityId: entryId,
+              createdAt: approvedAt,
+              approvedBy,
+            });
+
+            // FinancialMutation audit – invoice line
+            mockFinancialMutations.push({
+              id: Math.random().toString(36).substr(2, 9),
+              jobId: item.jobId,
+              sourceReportId: reportId,
+              sourceReviewId: item.id,
+              mutationType: 'invoice',
+              entityId: expLineId,
+              createdAt: approvedAt,
+              approvedBy,
+            });
+          });
+        }
+
+        // 3. MATERIALS → InventoryMutation  (+ existing deductStockQuantity)
+        if (item.materialsUsed && item.materialsUsed.length > 0) {
+          item.materialsUsed.forEach(material => {
+            // Existing inventory deduction — must remain
+            deductStockQuantity(material.stockItemId, material.quantity, item.jobId);
+
+            const unitCost = material.unitCost ?? 0;
+            const markupPrice = material.markupPrice ?? unitCost;
+            const jobCostImpact = material.quantity * unitCost;
+            const revenueImpact = material.quantity * markupPrice;
+            const entryId = Math.random().toString(36).substr(2, 9);
+
+            const invMutation: InventoryMutation = {
+              id: entryId,
+              reportId,
+              reviewId: item.id,
+              stockItemId: material.stockItemId,
+              stockItemName: material.stockItemName,
+              quantityUsed: material.quantity,
+              unitCost,
+              markupPrice,
+              jobCostImpact,
+              revenueImpact,
+              jobId: item.jobId,
+              approvedAt,
+            };
+            mockInventoryMutations.push(invMutation);
+
+            // Invoice line item: material
+            const matLineId = Math.random().toString(36).substr(2, 9);
+            const matLine: InvoiceLineItem = {
+              id: matLineId,
+              reportId,
+              reviewId: item.id,
+              jobId: item.jobId,
+              type: 'material',
+              description: `Materials – ${material.stockItemName} ×${material.quantity}`,
+              quantity: material.quantity,
+              unitPrice: markupPrice,
+              amount: revenueImpact,
+              approvedAt,
+            };
+            mockInvoiceLineItems.push(matLine);
+
+            // FinancialMutation audit – inventory
+            mockFinancialMutations.push({
+              id: Math.random().toString(36).substr(2, 9),
+              jobId: item.jobId,
+              sourceReportId: reportId,
+              sourceReviewId: item.id,
+              mutationType: 'inventory',
+              entityId: entryId,
+              createdAt: approvedAt,
+              approvedBy,
+            });
+
+            // FinancialMutation audit – invoice line
+            mockFinancialMutations.push({
+              id: Math.random().toString(36).substr(2, 9),
+              jobId: item.jobId,
+              sourceReportId: reportId,
+              sourceReviewId: item.id,
+              mutationType: 'invoice',
+              entityId: matLineId,
+              createdAt: approvedAt,
+              approvedBy,
+            });
+          });
+        }
+
+        // 4. EQUIPMENT USAGE → EquipmentUsageRecord
+        if (item.equipmentUsage && item.equipmentUsage.length > 0) {
+          item.equipmentUsage.forEach(eu => {
+            // Attempt to look up a day rate from the equipment list
+            const equipmentRecord = equipment.find(e => e.id === eu.assetId);
+            const hoursUsed = eu.hoursUsed ?? 0;
+            // dayRate is a full-day rate; derive an hourly rate (dayRate / 8) if available
+            const usageCost = equipmentRecord?.dayRate
+              ? (equipmentRecord.dayRate / 8) * hoursUsed
+              : 0;
+            const entryId = Math.random().toString(36).substr(2, 9);
+
+            const equipRecord: EquipmentUsageRecord = {
+              id: entryId,
+              reportId,
+              reviewId: item.id,
+              assetId: eu.assetId,
+              assetName: eu.assetName,
+              hoursUsed,
+              usageCost,
+              jobId: item.jobId,
+              approvedAt,
+            };
+            mockEquipmentUsage.push(equipRecord);
+
+            // Invoice line item: equipment
+            const eqLineId = Math.random().toString(36).substr(2, 9);
+            const eqLine: InvoiceLineItem = {
+              id: eqLineId,
+              reportId,
+              reviewId: item.id,
+              jobId: item.jobId,
+              type: 'equipment',
+              description: `Equipment – ${eu.assetName} (${hoursUsed}h)`,
+              quantity: hoursUsed,
+              unitPrice: usageCost > 0 && hoursUsed > 0 ? usageCost / hoursUsed : 0,
+              amount: usageCost,
+              approvedAt,
+            };
+            mockInvoiceLineItems.push(eqLine);
+
+            // FinancialMutation audit – equipment
+            mockFinancialMutations.push({
+              id: Math.random().toString(36).substr(2, 9),
+              jobId: item.jobId,
+              sourceReportId: reportId,
+              sourceReviewId: item.id,
+              mutationType: 'equipment',
+              entityId: entryId,
+              createdAt: approvedAt,
+              approvedBy,
+            });
+
+            // FinancialMutation audit – invoice line
+            mockFinancialMutations.push({
+              id: Math.random().toString(36).substr(2, 9),
+              jobId: item.jobId,
+              sourceReportId: reportId,
+              sourceReviewId: item.id,
+              mutationType: 'invoice',
+              entityId: eqLineId,
+              createdAt: approvedAt,
+              approvedBy,
+            });
+          });
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // END PHASE 4.2
+        // ─────────────────────────────────────────────────────────────────
       }
 
       reviewItems = reviewItems.map(r => r.id === id ? { ...r, ...u } as ReviewItem : r);
@@ -1380,6 +1661,284 @@ export const useStore = () => {
     }
   };
 };
+// ======================================================
+// PHASE 4.1 — FINANCIAL NORMALIZATION LAYER
+//
+// These interfaces represent post-approval financial truth.
+// They are generated by the Review Center upon approval and
+// are intentionally separate from the pre-approval operational
+// payload types (LaborPayload, EquipmentUsagePayload, etc.).
+//
+// Core doctrine: Operational Data IS Financial Data —
+// but ONLY after approval through the Review Center.
+// ======================================================
+
+/**
+ * A normalized labor cost record created when a LaborPayload
+ * inside a ReviewItem is approved. Represents a single worker's
+ * time on a job as a financial fact.
+ */
+export interface TimesheetEntry {
+  id: string;
+
+  reportId: string;
+  reviewId: string;
+  jobId: string;
+
+  workerId: string;
+  workerName: string;
+
+  hours: number;
+  hourlyRate: number;
+
+  laborCost: number; // hours × hourlyRate
+
+  approvedAt: string;
+  approvedBy: string;
+}
+
+/**
+ * A normalized expense record created when an ExpensePayload
+ * inside a ReviewItem is approved. Represents a confirmed
+ * job cost as a financial fact.
+ */
+export interface ExpenseEntry {
+  id: string;
+
+  reportId: string;
+  reviewId: string;
+  jobId: string;
+
+  description: string;
+
+  amount: number;
+
+  submittedBy: string;
+
+  approvedAt: string;
+  approvedBy: string;
+}
+
+/**
+ * A normalized inventory consumption record created when a
+ * MaterialUsagePayload inside a ReviewItem is approved.
+ * Drives both job cost and revenue impact downstream.
+ */
+export interface InventoryMutation {
+  id: string;
+
+  reportId: string;
+  reviewId: string;
+
+  stockItemId: string;
+  stockItemName: string;
+
+  quantityUsed: number;
+
+  unitCost: number;
+  markupPrice: number;
+
+  jobCostImpact: number;  // quantityUsed × unitCost
+  revenueImpact: number;  // quantityUsed × markupPrice
+
+  jobId: string;
+
+  approvedAt: string;
+}
+
+/**
+ * A normalized equipment usage record created when an
+ * EquipmentUsagePayload inside a ReviewItem is approved.
+ * Represents asset utilization as a financial cost fact.
+ */
+export interface EquipmentUsageRecord {
+  id: string;
+
+  reportId: string;
+  reviewId: string;
+
+  assetId: string;
+  assetName: string;
+
+  hoursUsed: number;
+
+  usageCost: number; // hoursUsed × asset dayRate or derived rate
+
+  jobId: string;
+
+  approvedAt: string;
+}
+
+/**
+ * A normalized invoice line item created from approved operational
+ * data. Unlike InvoiceBillingLine (used for display inside Invoice
+ * documents), this is a financial normalization record traceable
+ * back to a specific report and review. Forms the basis of Job
+ * Mini-Ledgers in Phase 4.2.
+ */
+export interface InvoiceLineItem {
+  id: string;
+
+  reportId: string;
+  reviewId: string;
+
+  jobId: string;
+
+  type:
+    | "labor"
+    | "material"
+    | "equipment"
+    | "expense";
+
+  description: string;
+
+  quantity: number;
+  unitPrice: number;
+
+  amount: number; // quantity × unitPrice
+
+  approvedAt: string;
+}
+
+/**
+ * An immutable audit record of every financial state change
+ * caused by a Review Center approval. Acts as the append-only
+ * mutation log that will drive accounting sync in Phase 4.2+.
+ */
+export interface FinancialMutation {
+  id: string;
+
+  jobId: string;
+
+  sourceReportId: string;
+  sourceReviewId: string;
+
+  mutationType:
+    | "timesheet"
+    | "expense"
+    | "inventory"
+    | "equipment"
+    | "invoice";
+
+  entityId: string; // ID of the created TimesheetEntry, ExpenseEntry, etc.
+
+  createdAt: string;
+
+  approvedBy: string;
+}
+
+// ======================================================
+// PHASE 4.1 — MOCK FINANCIAL TABLES
+//
+// Intentionally empty. Populated by the Review Center
+// approval logic in Phase 4.2.
+// ======================================================
+
+export const mockTimesheets: TimesheetEntry[] = [];
+
+export const mockExpenses: ExpenseEntry[] = [];
+
+export const mockInventoryMutations: InventoryMutation[] = [];
+
+export const mockEquipmentUsage: EquipmentUsageRecord[] = [];
+
+export const mockInvoiceLineItems: InvoiceLineItem[] = [];
+
+export const mockFinancialMutations: FinancialMutation[] = [];
+
+// ======================================================
+// PHASE 4.4 — JOB FINANCIAL SUMMARY
+//
+// Derived calculation layer. Summaries are computed on demand
+// from the Phase 4.2 financial arrays. Nothing is persisted.
+// ======================================================
+
+/**
+ * A derived financial summary for a single job.
+ * Calculated from TimesheetEntry, InventoryMutation,
+ * EquipmentUsageRecord, and ExpenseEntry records.
+ */
+export interface JobFinancialSummary {
+  jobId: string;
+
+  laborCost: number;
+  materialCost: number;
+  equipmentCost: number;
+  expenseCost: number;
+
+  totalCost: number;
+
+  laborRevenue: number;
+  materialRevenue: number;
+  equipmentRevenue: number;
+  expenseRevenue: number;
+
+  totalRevenue: number;
+
+  grossProfit: number;
+  marginPercent: number;
+
+  hasActivity: boolean; // false when all values are zero
+}
+
+/**
+ * Pure calculation — no side effects, no storage.
+ * Call from any component that needs job-level financial intelligence.
+ */
+export function getJobFinancialSummary(jobId: string): JobFinancialSummary {
+  const laborCost = mockTimesheets
+    .filter(t => t.jobId === jobId)
+    .reduce((sum, t) => sum + t.laborCost, 0);
+
+  const materialCost = mockInventoryMutations
+    .filter(m => m.jobId === jobId)
+    .reduce((sum, m) => sum + m.jobCostImpact, 0);
+
+  const equipmentCost = mockEquipmentUsage
+    .filter(r => r.jobId === jobId)
+    .reduce((sum, r) => sum + r.usageCost, 0);
+
+  const expenseCost = mockExpenses
+    .filter(e => e.jobId === jobId)
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const totalCost = laborCost + materialCost + equipmentCost + expenseCost;
+
+  // Revenue: only materials carry revenue for now (revenueImpact = qty × markupPrice).
+  // Labour, equipment, expense revenue = 0 until billing rates are introduced in Phase 4.5+.
+  const laborRevenue = 0;
+  const equipmentRevenue = 0;
+  const expenseRevenue = 0;
+
+  const materialRevenue = mockInventoryMutations
+    .filter(m => m.jobId === jobId)
+    .reduce((sum, m) => sum + m.revenueImpact, 0);
+
+  const totalRevenue = laborRevenue + materialRevenue + equipmentRevenue + expenseRevenue;
+
+  const grossProfit = totalRevenue - totalCost;
+  const marginPercent = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+
+  const hasActivity = totalCost > 0 || totalRevenue > 0;
+
+  return {
+    jobId,
+    laborCost,
+    materialCost,
+    equipmentCost,
+    expenseCost,
+    totalCost,
+    laborRevenue,
+    materialRevenue,
+    equipmentRevenue,
+    expenseRevenue,
+    totalRevenue,
+    grossProfit,
+    marginPercent,
+    hasActivity,
+  };
+}
+
 export type { Job } from "@/types/job";
 export type { Worker } from "@/types/worker";
 export type { Client } from "@/types/client";

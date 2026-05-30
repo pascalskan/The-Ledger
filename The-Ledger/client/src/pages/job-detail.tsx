@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { useMemo, useState } from "react";
 import { JobIntelligenceSection } from "@/components/JobIntelligenceSection";
+import { JobFinancialSummarySection } from "@/components/JobFinancialSummarySection";
 
 export default function JobDetailPage() {
   const { jobs, clients, workers, equipment, invoices, addInvoice, roles, updateJob, users } = useStore();
@@ -302,6 +303,8 @@ export default function JobDetailPage() {
         </div>
 
         <JobIntelligenceSection jobId={job.id} />
+
+        <JobFinancialSummarySection jobId={job.id} />
 
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
