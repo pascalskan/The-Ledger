@@ -15,6 +15,12 @@ export default function ReviewPage() {
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
 
+  console.log('ALL REVIEW ITEMS', reviewItems);
+  console.log(
+    'DEMO-JOB-0202 ITEMS',
+    reviewItems.filter(r => r.jobId === 'dj-showcase-maint-1')
+  );
+
   // In a real app, this would be data fetched from a backend containing pending items per job
   // For the mockup, we'll generate some demo review items based on active/completed jobs
   

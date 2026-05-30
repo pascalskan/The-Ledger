@@ -1,69 +1,113 @@
 import { test, expect } from '@playwright/test';
-import { login, logout } from '../utils/auth';
-import { TEST_WORKER_EMAIL, TEST_CEO_EMAIL } from '../utils/constants';
 
-test.describe('Inventory Deduction Workflow', () => {
-  let initialStockQuantity: number;
-  const stockItemToUse = {
-    name: '1/2 Copper Elbow',
-    quantityToUse: 4,
-  };
+import { loginAsCEO, softLoginAsWorker, softLoginAsCEO } from '../helpers/login';
+import { signOut } from '../helpers/signOut';
+import { openReviewCenter } from '../helpers/navigation';
+import { approveReviewForJob } from '../helpers/review';
+import { submitMaterialReport } from '../helpers/worker';
 
-  test.beforeEach(async ({ page }) => {
-    // 1. Login as CEO
-    await login(page, TEST_CEO_EMAIL);
+// IMPORTANT: This test does NOT use clearBrowserState.
+//
+// The mock store is purely in-memory (module-level variables in mockData.ts).
+// Any page.goto() call reloads the JS bundle and resets ALL store state.
+// To preserve data across role switches, we use signOut() (UI navigation)
+// followed by softLogin* helpers (no page.goto) so the store survives.
+// Only the first loginAsCEO uses page.goto to establish a clean starting point.
 
-    // 2. Open Stock & Assets
-    await page.goto('/stock');
+test('Inventory quantity decreases when approved material usage is processed', async ({
+  page,
+}) => {
+  let startingQty = 0;
 
-    // 3. Record current quantity
-    const stockRow = page.locator(`tr:has-text("${stockItemToUse.name}")`);
-    const quantityCell = stockRow.locator('td').nth(2);
-    initialStockQuantity = parseInt(await quantityCell.innerText(), 10);
+  //
+  // STEP 1: CEO records the starting stock quantity
+  //
+  await loginAsCEO(page); // Only hard-goto — establishes baseline store state
 
-    // 4. Sign out
-    await logout(page);
-  });
+  await page
+    .locator('a')
+    .filter({ hasText: 'Stock & Assets' })
+    .first()
+    .click();
 
-  test('should deduct inventory after a worker report is approved', async ({ page }) => {
-    // 5. Login as Worker
-    await login(page, TEST_WORKER_EMAIL);
+  await expect(
+    page.getByRole('heading', { name: /Stock & Assets/i })
+  ).toBeVisible();
 
-    // 6. Submit a report
-    await page.goto('/worker/report');
-    await page.getByLabel('Job').click();
-    await page.getByRole('option', { name: /Kitchen extraction/ }).click();
-    await page.getByRole('button', { name: 'Add Stock' }).click();
-    await page.getByLabel('Stock Item').click();
-    await page.getByRole('option', { name: stockItemToUse.name }).click();
-    await page.getByLabel('Quantity').fill(stockItemToUse.quantityToUse.toString());
-    await page.getByRole('button', { name: 'Add' }).click();
-    await page.getByRole('button', { name: 'Submit Report' }).click();
-    await expect(page.getByText('Report submitted successfully')).toBeVisible();
+  await page.getByRole('tab', { name: /^Stock$/i }).click();
 
-    // 7. Sign out
-    await logout(page);
+  await expect(page.getByText('1/2 Copper Elbow')).toBeVisible();
 
-    // 8. Login as CEO
-    await login(page, TEST_CEO_EMAIL);
+  const startingRow = page
+    .getByRole('row')
+    .filter({ hasText: '1/2 Copper Elbow' });
 
-    // 9. Open Review Center
-    await page.goto('/reviews');
+  const startingQtyCell = startingRow.locator('td').nth(2);
 
-    // 10. Approve the review item
-    const reviewItem = page.locator('.review-item').first();
-    await expect(reviewItem).toContainText(stockItemToUse.name);
-    await reviewItem.getByRole('button', { name: 'Approve' }).click();
-    await expect(page.getByText('Review item approved')).toBeVisible();
+  startingQty = parseInt(
+    ((await startingQtyCell.textContent()) || '0').trim(),
+    10
+  );
 
-    // 11. Return to Stock & Assets
-    await page.goto('/stock');
+  console.log('[DOCTRINE] Starting quantity:', startingQty);
 
-    // 12. Verify quantity
-    const stockRow = page.locator(`tr:has-text("${stockItemToUse.name}")`);
-    const quantityCell = stockRow.locator('td').nth(2);
-    const newStockQuantity = parseInt(await quantityCell.innerText(), 10);
+  //
+  // STEP 2: Sign out CEO, sign in as Worker (soft — no page reload)
+  //
+  await signOut(page);
+  await softLoginAsWorker(page);
 
-    expect(newStockQuantity).toBe(initialStockQuantity - stockItemToUse.quantityToUse);
-  });
+  await submitMaterialReport(
+    page,
+    '1/2 Copper Elbow',
+    4,
+    'Inventory deduction doctrine test'
+  );
+
+  //
+  // STEP 3: Sign out Worker, sign in as CEO (soft — no page reload)
+  //
+  await signOut(page);
+  await softLoginAsCEO(page);
+
+  await openReviewCenter(page);
+
+  await expect(
+    page.locator('tr').filter({ hasText: 'DEMO-JOB-0202' })
+  ).toBeVisible({ timeout: 10000 });
+
+  await approveReviewForJob(page, 'DEMO-JOB-0202');
+
+  //
+  // STEP 4: Verify stock quantity decreased
+  //
+  await page
+    .locator('a')
+    .filter({ hasText: 'Stock & Assets' })
+    .first()
+    .click();
+
+  await expect(
+    page.getByRole('heading', { name: /Stock & Assets/i })
+  ).toBeVisible();
+
+  await page.getByRole('tab', { name: /^Stock$/i }).click();
+
+  await expect(page.getByText('1/2 Copper Elbow')).toBeVisible();
+
+  const endingRow = page
+    .getByRole('row')
+    .filter({ hasText: '1/2 Copper Elbow' });
+
+  const endingQtyCell = endingRow.locator('td').nth(2);
+
+  const endingQty = parseInt(
+    ((await endingQtyCell.textContent()) || '0').trim(),
+    10
+  );
+
+  console.log('[DOCTRINE] Ending quantity:', endingQty);
+  console.log('[DOCTRINE] Expected:', startingQty - 4);
+
+  expect(endingQty).toBe(startingQty - 4);
 });

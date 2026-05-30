@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 
 export async function submitBasicReport(page: Page, description: string = 'Basic report', jobText?: string) {
   if (jobText) {
@@ -10,3 +10,43 @@ export async function submitBasicReport(page: Page, description: string = 'Basic
   await page.getByRole('textbox', { name: /Describe the work completed/i }).fill(description);
   await page.getByRole('button', { name: /Save/i }).click();
 }
+
+export async function submitMaterialReport(
+  page: Page,
+  materialName: string,
+  quantity: number,
+  description: string = 'Inventory deduction test'
+) {
+  await page.getByRole('button', { name: /Open Job/i }).first().click();
+
+  await page.getByRole('button', { name: /Submit Report/i }).click();
+
+  await page
+    .getByRole('textbox', {
+      name: /Describe the work completed/i,
+    })
+    .fill(description);
+
+  await page
+    .getByRole('textbox', {
+      name: /Search materials to log/i,
+    })
+    .fill(materialName);
+
+  // Click the search result item to add it
+  await page
+    .locator('.cursor-pointer', { hasText: materialName })
+    .first()
+    .click();
+
+  // Find the added item card and fill its quantity
+  const addedItemCard = page.locator('.bg-white.rounded-xl', { hasText: materialName });
+  await addedItemCard.locator('input[type="number"]').fill(String(quantity));
+
+  // Save the report
+  await page.getByRole('button', { name: /Save/i }).click();
+  
+  // Wait for success toast to confirm creation
+  await expect(
+    page.getByRole('status')
+  ).toContainText('Report Submitted');}

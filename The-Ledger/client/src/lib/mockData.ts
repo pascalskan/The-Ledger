@@ -1304,6 +1304,7 @@ export const useStore = () => {
 
     addReviewItem: (r: Omit<ReviewItem, "id" | "companyId">) => {
       const entry = { ...r, id: Math.random().toString(36).substr(2, 9), companyId: currentCompanyId };
+      console.log('ADD REVIEW ITEM', entry);
       reviewItems.push(entry as ReviewItem);
       addLog("CREATE", "ReviewItem", `Created new review item ${r.title || "Unknown"}`);
       refresh();

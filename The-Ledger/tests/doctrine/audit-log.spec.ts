@@ -1,4 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { clearBrowserState } from '../helpers/state';
+
+test.beforeEach(async ({ page }) => {
+  await clearBrowserState(page);
+});
 
 test('Review creation generates audit entry', async ({ page }) => {
   await page.goto('/auth');

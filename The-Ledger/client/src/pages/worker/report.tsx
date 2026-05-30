@@ -309,6 +309,7 @@ export default function WorkerReportPage() {
     // ONLINE FLOW
     // ======================================================
 
+    console.log('SUBMIT REVIEW ITEM', reviewItem);
     addReviewItem(reviewItem);
 
     toast({

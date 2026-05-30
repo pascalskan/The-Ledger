@@ -3,6 +3,11 @@ import { loginAsWorker, loginAsPM, loginAsCEO } from '../helpers/login';
 import { signOut } from '../helpers/signOut';
 import { openReviewCenter } from '../helpers/navigation';
 import { submitBasicReport } from '../helpers/worker';
+import { clearBrowserState } from '../helpers/state';
+
+test.beforeEach(async ({ page }) => {
+  await clearBrowserState(page);
+});
 
 test('PM visibility is restricted to assigned jobs, while CEO sees all', async ({ page }) => {
   // 1. Login as a worker to create a review item.

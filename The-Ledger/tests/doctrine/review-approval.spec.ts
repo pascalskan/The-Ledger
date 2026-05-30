@@ -4,6 +4,11 @@ import { signOut } from '../helpers/signOut';
 import { submitBasicReport } from '../helpers/worker';
 import { openReviewCenter } from '../helpers/navigation';
 import { approveFirstPendingReview } from '../helpers/review';
+import { clearBrowserState } from '../helpers/state';
+
+test.beforeEach(async ({ page }) => {
+  await clearBrowserState(page);
+});
 
 test('Worker report can be approved by CEO', async ({ page }) => {
   // Worker submits report
