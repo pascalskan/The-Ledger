@@ -1131,6 +1131,22 @@ export const useStore = () => {
     invoiceLineItems: mockInvoiceLineItems,
     financialMutations: mockFinancialMutations,
 
+    // Phase 5.3 — Invoice Draft table
+    invoiceDrafts: mockInvoiceDrafts,
+    addInvoiceDraft: (draft: InvoiceDraft) => {
+      mockInvoiceDrafts.push(draft);
+      addLog("CREATE", "InvoiceDraft", `Created draft invoice ${draft.invoiceNumber} for job ${draft.jobId}`);
+      refresh();
+    },
+    updateInvoiceDraftStatus: (id: string, status: InvoiceStatus) => {
+      const idx = mockInvoiceDrafts.findIndex(d => d.id === id);
+      if (idx !== -1) {
+        mockInvoiceDrafts[idx] = { ...mockInvoiceDrafts[idx], status, updatedAt: new Date().toISOString() };
+        addLog("UPDATE", "InvoiceDraft", `Invoice draft ${mockInvoiceDrafts[idx].invoiceNumber} status \u2192 ${status}`);
+        refresh();
+      }
+    },
+
     // Phase 4.4 — Job Financial Summary (derived, not stored)
     getJobFinancialSummary,
 
@@ -1213,7 +1229,7 @@ export const useStore = () => {
           const equipmentLines = (after.equipmentUsage || []).map((eu) => {
             const eq = equipment.find((e) => e.id === eu.equipmentId);
             const name = eq?.name || "Equipment";
-            const note = eu.note ? ` — ${eu.note}` : "";
+            const note = eu.note ? ` \u2014 ${eu.note}` : "";
             return {
               description: `Equipment (per day): ${name}${note}`,
               qty: eu.days,
@@ -1439,7 +1455,7 @@ export const useStore = () => {
               reviewId: item.id,
               jobId: item.jobId,
               type: 'labor',
-              description: `Labour – ${labor.workerName} (${labor.hours}h @ £${billableRate}/h)`,
+              description: `Labour \u2013 ${labor.workerName} (${labor.hours}h @ \u00a3${billableRate}/h)`,
               quantity: labor.hours,
               unitPrice: billableRate,
               amount: laborRevenue,
@@ -1447,7 +1463,7 @@ export const useStore = () => {
             };
             mockInvoiceLineItems.push(laborLine);
 
-            // FinancialMutation audit – timesheet
+            // FinancialMutation audit \u2013 timesheet
             mockFinancialMutations.push({
               id: Math.random().toString(36).substr(2, 9),
               jobId: item.jobId,
@@ -1459,7 +1475,7 @@ export const useStore = () => {
               approvedBy,
             });
 
-            // FinancialMutation audit – invoice line
+            // FinancialMutation audit \u2013 invoice line
             mockFinancialMutations.push({
               id: Math.random().toString(36).substr(2, 9),
               jobId: item.jobId,
@@ -1501,8 +1517,8 @@ export const useStore = () => {
             // Invoice line item: expense — client-facing price = recoveryAmount
             const expLineId = Math.random().toString(36).substr(2, 9);
             const expLineDesc = markupPercent > 0
-              ? `Expense – ${exp.notes || exp.category} (+${markupPercent}% markup)`
-              : `Expense – ${exp.notes || exp.category}`;
+              ? `Expense \u2013 ${exp.notes || exp.category} (+${markupPercent}% markup)`
+              : `Expense \u2013 ${exp.notes || exp.category}`;
             const expLine: InvoiceLineItem = {
               id: expLineId,
               reportId,
@@ -1517,7 +1533,7 @@ export const useStore = () => {
             };
             mockInvoiceLineItems.push(expLine);
 
-            // FinancialMutation audit – expense
+            // FinancialMutation audit \u2013 expense
             mockFinancialMutations.push({
               id: Math.random().toString(36).substr(2, 9),
               jobId: item.jobId,
@@ -1529,7 +1545,7 @@ export const useStore = () => {
               approvedBy,
             });
 
-            // FinancialMutation audit – invoice line
+            // FinancialMutation audit \u2013 invoice line
             mockFinancialMutations.push({
               id: Math.random().toString(36).substr(2, 9),
               jobId: item.jobId,
@@ -1579,7 +1595,7 @@ export const useStore = () => {
               reviewId: item.id,
               jobId: item.jobId,
               type: 'material',
-              description: `Materials – ${material.stockItemName} ×${material.quantity}`,
+              description: `Materials \u2013 ${material.stockItemName} \u00d7${material.quantity}`,
               quantity: material.quantity,
               unitPrice: markupPrice,
               amount: revenueImpact,
@@ -1587,7 +1603,7 @@ export const useStore = () => {
             };
             mockInvoiceLineItems.push(matLine);
 
-            // FinancialMutation audit – inventory
+            // FinancialMutation audit \u2013 inventory
             mockFinancialMutations.push({
               id: Math.random().toString(36).substr(2, 9),
               jobId: item.jobId,
@@ -1599,7 +1615,7 @@ export const useStore = () => {
               approvedBy,
             });
 
-            // FinancialMutation audit – invoice line
+            // FinancialMutation audit \u2013 invoice line
             mockFinancialMutations.push({
               id: Math.random().toString(36).substr(2, 9),
               jobId: item.jobId,
@@ -1660,7 +1676,7 @@ export const useStore = () => {
               reviewId: item.id,
               jobId: item.jobId,
               type: 'equipment',
-              description: `Equipment – ${eu.assetName} (${hoursUsed}h)`,
+              description: `Equipment \u2013 ${eu.assetName} (${hoursUsed}h)`,
               quantity: hoursUsed,
               unitPrice: billedRate,
               amount: revenueImpact,
@@ -1668,7 +1684,7 @@ export const useStore = () => {
             };
             mockInvoiceLineItems.push(eqLine);
 
-            // FinancialMutation audit – equipment
+            // FinancialMutation audit \u2013 equipment
             mockFinancialMutations.push({
               id: Math.random().toString(36).substr(2, 9),
               jobId: item.jobId,
@@ -1680,7 +1696,7 @@ export const useStore = () => {
               approvedBy,
             });
 
-            // FinancialMutation audit – invoice line
+            // FinancialMutation audit \u2013 invoice line
             mockFinancialMutations.push({
               id: Math.random().toString(36).substr(2, 9),
               jobId: item.jobId,
@@ -1906,12 +1922,24 @@ export interface FinancialMutation {
 
 // ======================================================
 // PHASE 4.1 — MOCK FINANCIAL TABLES
-//
-// Base arrays start empty. Pre-seeded demo data below
-// populates them via the normal approval path so that
-// Financial Explorer, Job Financial Summary, and Job
-// Intelligence show real numbers on first load.
 // ======================================================
+
+// ======================================================
+// PHASE 5.3 — INVOICE DRAFT STORE
+// ======================================================
+import type { InvoiceDraft, InvoiceStatus } from "@/types/finance";
+export type { InvoiceDraft } from "@/types/finance";
+export type { InvoiceStatus } from "@/types/finance";
+export type { InvoiceDraftLineItem } from "@/types/finance";
+
+export const mockInvoiceDrafts: InvoiceDraft[] = [];
+
+let _invoiceDraftSeq = 0;
+export function generateInvoiceNumber(): string {
+  _invoiceDraftSeq += 1;
+  const year = new Date().getFullYear();
+  return `INV-${year}-${String(_invoiceDraftSeq).padStart(4, "0")}`;
+}
 
 export const mockTimesheets: TimesheetEntry[] = [];
 
@@ -1927,16 +1955,6 @@ export const mockFinancialMutations: FinancialMutation[] = [];
 
 // ======================================================
 // PHASE 4.5 — DEMO SEED: PRE-APPROVED FINANCIAL RECORDS
-//
-// Simulates a PM having already approved a full WorkerReport
-// for the Kitchen Extraction job. Pre-populates all six
-// normalized tables so the UI shows live financial data
-// immediately on first load without any manual approval step.
-//
-// These records are representative, not exhaustive.
-// They do not duplicate or conflict with the Review Center
-// approval flow — they are a snapshot of one pre-approved
-// report that would have been generated by that flow.
 // ======================================================
 
 (function seedDemoFinancialRecords() {
@@ -1946,10 +1964,6 @@ export const mockFinancialMutations: FinancialMutation[] = [];
   const REPORT_ID = "seed-report-kex-1";
   const REVIEW_ID = "seed-review-kex-1";
 
-  // ──────────────────────────────────────
-  // LABOUR — Sophie Taylor: 32h
-  // costRate £16/h, billableRate £55/h
-  // ──────────────────────────────────────
   mockTimesheets.push({
     id: "seed-ts-kex-1",
     reportId: REPORT_ID,
@@ -1966,10 +1980,6 @@ export const mockFinancialMutations: FinancialMutation[] = [];
     approvedBy: APPROVED_BY,
   });
 
-  // ──────────────────────────────────────
-  // LABOUR — Ben Hughes: 24h
-  // costRate £16/h, billableRate £55/h
-  // ──────────────────────────────────────
   mockTimesheets.push({
     id: "seed-ts-kex-2",
     reportId: REPORT_ID,
@@ -1986,11 +1996,6 @@ export const mockFinancialMutations: FinancialMutation[] = [];
     approvedBy: APPROVED_BY,
   });
 
-  // ──────────────────────────────────────
-  // EQUIPMENT — Hiab support: 16h used
-  // dayRate £420, clientDayRate £520
-  // billedRate = 520/8 = £65/h
-  // ──────────────────────────────────────
   mockEquipmentUsage.push({
     id: "seed-eq-kex-1",
     reportId: REPORT_ID,
@@ -1998,18 +2003,13 @@ export const mockFinancialMutations: FinancialMutation[] = [];
     assetId: "de1",
     assetName: "Hiab support (canopy lift)",
     hoursUsed: 16,
-    usageCost: 840,    // 16 * (420/8)
-    billedRate: 65,    // 520/8
-    revenueImpact: 1040, // 16 * 65
+    usageCost: 840,
+    billedRate: 65,
+    revenueImpact: 1040,
     jobId: JOB_ID,
     approvedAt: APPROVED_AT,
   });
 
-  // ──────────────────────────────────────
-  // EQUIPMENT — Crew van: 24h used
-  // dayRate £120, clientDayRate £150
-  // billedRate = 150/8 = £18.75/h
-  // ──────────────────────────────────────
   mockEquipmentUsage.push({
     id: "seed-eq-kex-2",
     reportId: REPORT_ID,
@@ -2017,23 +2017,19 @@ export const mockFinancialMutations: FinancialMutation[] = [];
     assetId: "de11",
     assetName: "Crew van (tools transport)",
     hoursUsed: 24,
-    usageCost: 360,      // 24 * (120/8)
-    billedRate: 18.75,   // 150/8
-    revenueImpact: 450,  // 24 * 18.75
+    usageCost: 360,
+    billedRate: 18.75,
+    revenueImpact: 450,
     jobId: JOB_ID,
     approvedAt: APPROVED_AT,
   });
 
-  // ──────────────────────────────────────
-  // EXPENSE — Skip hire: £185 cost, 15% markup
-  // recoveryAmount = 185 * 1.15 = £212.75
-  // ──────────────────────────────────────
   mockExpenses.push({
     id: "seed-exp-kex-1",
     reportId: REPORT_ID,
     reviewId: REVIEW_ID,
     jobId: JOB_ID,
-    description: "Skip hire — waste removal",
+    description: "Skip hire \u2014 waste removal",
     amount: 185,
     markupPercent: 15,
     recoveryAmount: 212.75,
@@ -2042,10 +2038,6 @@ export const mockFinancialMutations: FinancialMutation[] = [];
     approvedBy: APPROVED_BY,
   });
 
-  // ──────────────────────────────────────
-  // MATERIALS — 15mm Isolating Valves: 40 units
-  // unitCost £2.10, markupPrice £3.50
-  // ──────────────────────────────────────
   mockInventoryMutations.push({
     id: "seed-inv-kex-1",
     reportId: REPORT_ID,
@@ -2055,27 +2047,21 @@ export const mockFinancialMutations: FinancialMutation[] = [];
     quantityUsed: 40,
     unitCost: 2.10,
     markupPrice: 3.50,
-    jobCostImpact: 84,    // 40 * 2.10
-    revenueImpact: 140,   // 40 * 3.50
+    jobCostImpact: 84,
+    revenueImpact: 140,
     jobId: JOB_ID,
     approvedAt: APPROVED_AT,
   });
 
-  // ──────────────────────────────────────
-  // INVOICE LINE ITEMS — mirror the above
-  // ──────────────────────────────────────
   mockInvoiceLineItems.push(
-    { id: "seed-line-1", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour – Sophie Taylor (32h @ £55/h)",          quantity: 32,   unitPrice: 55,     amount: 1760,   approvedAt: APPROVED_AT },
-    { id: "seed-line-2", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour – Ben Hughes (24h @ £55/h)",            quantity: 24,   unitPrice: 55,     amount: 1320,   approvedAt: APPROVED_AT },
-    { id: "seed-line-3", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment – Hiab support (canopy lift) (16h)",  quantity: 16,   unitPrice: 65,     amount: 1040,   approvedAt: APPROVED_AT },
-    { id: "seed-line-4", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment – Crew van (tools transport) (24h)",  quantity: 24,   unitPrice: 18.75,  amount: 450,    approvedAt: APPROVED_AT },
-    { id: "seed-line-5", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "expense",   description: "Expense – Skip hire — waste removal (+15% markup)", quantity: 1,  unitPrice: 212.75, amount: 212.75, approvedAt: APPROVED_AT },
-    { id: "seed-line-6", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "material",  description: "Materials – 15mm Isolating Valve ×40",           quantity: 40,   unitPrice: 3.50,   amount: 140,    approvedAt: APPROVED_AT },
+    { id: "seed-line-1", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour \u2013 Sophie Taylor (32h @ \u00a355/h)",          quantity: 32,   unitPrice: 55,     amount: 1760,   approvedAt: APPROVED_AT },
+    { id: "seed-line-2", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour \u2013 Ben Hughes (24h @ \u00a355/h)",            quantity: 24,   unitPrice: 55,     amount: 1320,   approvedAt: APPROVED_AT },
+    { id: "seed-line-3", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment \u2013 Hiab support (canopy lift) (16h)",  quantity: 16,   unitPrice: 65,     amount: 1040,   approvedAt: APPROVED_AT },
+    { id: "seed-line-4", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment \u2013 Crew van (tools transport) (24h)",  quantity: 24,   unitPrice: 18.75,  amount: 450,    approvedAt: APPROVED_AT },
+    { id: "seed-line-5", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "expense",   description: "Expense \u2013 Skip hire \u2014 waste removal (+15% markup)", quantity: 1,  unitPrice: 212.75, amount: 212.75, approvedAt: APPROVED_AT },
+    { id: "seed-line-6", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "material",  description: "Materials \u2013 15mm Isolating Valve \u00d740",           quantity: 40,   unitPrice: 3.50,   amount: 140,    approvedAt: APPROVED_AT },
   );
 
-  // ──────────────────────────────────────
-  // FINANCIAL MUTATIONS — audit trail for seed records
-  // ──────────────────────────────────────
   const seedMutations: Array<{ type: FinancialMutation["mutationType"]; entityId: string }> = [
     { type: "timesheet",  entityId: "seed-ts-kex-1"  },
     { type: "timesheet",  entityId: "seed-ts-kex-2"  },
@@ -2102,13 +2088,36 @@ export const mockFinancialMutations: FinancialMutation[] = [];
       approvedBy: APPROVED_BY,
     });
   });
+
+  // ── PHASE 5.3: SEED INVOICE DRAFT ──
+  const seedDraftLines = [
+    { id: "seed-line-1", type: "labor"     as const, description: "Labour \u2013 Sophie Taylor (32h @ \u00a355/h)",                quantity: 32,  unitPrice: 55,     amount: 1760   },
+    { id: "seed-line-2", type: "labor"     as const, description: "Labour \u2013 Ben Hughes (24h @ \u00a355/h)",                  quantity: 24,  unitPrice: 55,     amount: 1320   },
+    { id: "seed-line-3", type: "equipment" as const, description: "Equipment \u2013 Hiab support (canopy lift) (16h)",         quantity: 16,  unitPrice: 65,     amount: 1040   },
+    { id: "seed-line-4", type: "equipment" as const, description: "Equipment \u2013 Crew van (tools transport) (24h)",         quantity: 24,  unitPrice: 18.75,  amount: 450    },
+    { id: "seed-line-5", type: "expense"   as const, description: "Expense \u2013 Skip hire \u2014 waste removal (+15% markup)", quantity: 1,   unitPrice: 212.75, amount: 212.75 },
+    { id: "seed-line-6", type: "material"  as const, description: "Materials \u2013 15mm Isolating Valve \u00d740",             quantity: 40,  unitPrice: 3.50,   amount: 140    },
+  ];
+  const seedSubtotal = seedDraftLines.reduce((s, l) => s + l.amount, 0);
+  mockInvoiceDrafts.push({
+    id: "seed-draft-kex-1",
+    invoiceNumber: "INV-2026-0001",
+    jobId: JOB_ID,
+    clientId: "dc1",
+    lineItems: seedDraftLines,
+    subtotal: seedSubtotal,
+    taxRate: 0,
+    taxAmount: 0,
+    total: seedSubtotal,
+    status: "draft",
+    createdAt: APPROVED_AT,
+    updatedAt: APPROVED_AT,
+  });
+  _invoiceDraftSeq = 1;
 })();
 
 // ======================================================
 // PHASE 4.4 — JOB FINANCIAL SUMMARY
-//
-// Derived calculation layer. Summaries are computed on demand
-// from the Phase 4.2 / 4.5 financial arrays.
 // ======================================================
 
 export interface JobFinancialSummary {
@@ -2134,11 +2143,6 @@ export interface JobFinancialSummary {
   hasActivity: boolean;
 }
 
-/**
- * Pure calculation — no side effects, no storage.
- * Phase 4.5: all four revenue streams now populated from
- * normalized records.
- */
 export function getJobFinancialSummary(jobId: string): JobFinancialSummary {
   const laborCost = mockTimesheets
     .filter(t => t.jobId === jobId)
@@ -2158,7 +2162,6 @@ export function getJobFinancialSummary(jobId: string): JobFinancialSummary {
 
   const totalCost = laborCost + materialCost + equipmentCost + expenseCost;
 
-  // Phase 4.5 — all four revenue streams from normalized records.
   const laborRevenue = mockTimesheets
     .filter(t => t.jobId === jobId)
     .reduce((sum, t) => sum + t.laborRevenue, 0);
