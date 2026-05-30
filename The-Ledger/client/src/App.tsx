@@ -40,6 +40,7 @@ import WorkerProfilePage from "@/pages/worker/profile";
 import JobIntelligenceDashboard from "@/pages/job-intelligence";
 import AutomationsPage from "@/pages/automations";
 import FinancialExplorerPage from "@/pages/financial-explorer";
+import PayrollStagingPage from "@/pages/payroll";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
@@ -177,6 +178,9 @@ function Router() {
       </Route>
       <Route path="/financial-explorer">
         <ProtectedRoute component={FinancialExplorerPage} roles={["CEO"]} />
+      </Route>
+      <Route path="/payroll">
+        <ProtectedRoute component={PayrollStagingPage} roles={["CEO"]} />
       </Route>
       <Route path="/settings">
         <ProtectedRoute component={SettingsPage} roles={["CEO"]} />
