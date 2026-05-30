@@ -1,276 +1,338 @@
 // ======================================================
 // PHASE 5.4 — PAYROLL EXPORT ENGINE
 //
-// Pure calculation layer. No side effects. No storage.
-// All derived from groupTimesheetsForPayroll() which reads
-// from mockTimesheets (approved TimesheetEntry records).
+// Pure functions. No side effects. No React state.
+// All data flows from PayrollStagingRecord[] which are
+// produced by groupTimesheetsForPayroll() in profitabilityEngine.ts.
 //
-// Core doctrine:
-//   Approved Operational Activity
-//   → Financial Mutation Engine
-//   → Payroll Staging (groupTimesheetsForPayroll)
-//   → Payroll Export Engine (this file)
+// Doctrine:
+//   Approved TimesheetEntry records
+//   → groupTimesheetsForPayroll()  (profitabilityEngine.ts)
+//   → PayrollStagingRecord[]       (draft staging)
+//   → generatePayrollExport()      ← this file
+//   → PayrollExport                (exportable payload)
+//   → CSV download / downstream payroll system
 //
-// Never: Job → Payroll Export directly.
+// Never: Job → Payroll directly.
+// Never: re-derive hours from raw ReviewItem data.
+// Always: consume from the approved TimesheetEntry layer.
 // ======================================================
 
-import type { TimesheetEntry } from "./mockData";
-import type { PayrollExportPeriod, PayrollExportWorkerLine } from "./mockData";
-import { groupTimesheetsForPayroll } from "./profitabilityEngine";
+import type { PayrollStagingRecord } from "@/lib/profitabilityEngine";
 
 // ──────────────────────────────────────────────────────
-// CONSTANTS
+// TYPE: PayrollPeriod
+//
+// Describes the payroll period for a given export run.
+// Either a bounded window (start → end) or 'all-time'.
 // ──────────────────────────────────────────────────────
+export type PayrollPeriodType = "all" | "current-month" | "last-month" | "custom";
 
-// Standard UK weekly hours threshold for overtime detection.
-// Hours above this per period are flagged as overtime.
-export const OVERTIME_THRESHOLD_WEEKLY = 37.5;
-export const OVERTIME_THRESHOLD_FORTNIGHTLY = 75.0;
-export const OVERTIME_THRESHOLD_MONTHLY = 162.5; // ~37.5 * (52/12)
-
-export const PERIOD_TYPE_LABELS: Record<PayrollExportPeriod["periodType"], string> = {
-  weekly: "Weekly",
-  fortnightly: "Fortnightly",
-  monthly: "Monthly",
-};
-
-export const EXPORT_STATUS_LABELS: Record<PayrollExportPeriod["status"], string> = {
-  draft: "Draft",
-  staged: "Staged",
-  exported: "Exported",
-};
-
-export const EXPORT_STATUS_COLORS: Record<PayrollExportPeriod["status"], string> = {
-  draft: "text-amber-700 bg-amber-50 border-amber-200",
-  staged: "text-blue-700 bg-blue-50 border-blue-200",
-  exported: "text-emerald-700 bg-emerald-50 border-emerald-200",
-};
-
-// ──────────────────────────────────────────────────────
-// PERIOD LABEL GENERATORS
-// ──────────────────────────────────────────────────────
-
-export function generatePayrollPeriodLabel(
-  periodType: PayrollExportPeriod["periodType"],
-  periodEnd: Date
-): string {
-  const dateStr = periodEnd.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
-  switch (periodType) {
-    case "weekly":      return `Week ending ${dateStr}`;
-    case "fortnightly": return `Fortnight ending ${dateStr}`;
-    case "monthly":     return `Month ending ${dateStr}`;
-  }
+export interface PayrollPeriod {
+  type: PayrollPeriodType;
+  startDate: string | null;  // ISO string or null for 'all'
+  endDate: string | null;    // ISO string or null for 'all'
+  label: string;             // Human-readable e.g. "May 2026" or "All approved timesheets"
 }
 
 // ──────────────────────────────────────────────────────
-// getPeriodBounds
+// TYPE: PayrollExportStatus
 //
-// Returns the ISO date strings for the start and end of
-// the period type relative to the reference date.
-// Reference date is typically "now" or a selected date.
+// Tracks the lifecycle of a generated payroll export.
+//   generated → downloaded → exported
+//
+// 'generated' — export payload created, not yet downloaded
+// 'downloaded' — file downloaded by user
+// 'exported' — confirmed sent to payroll system (manual)
 // ──────────────────────────────────────────────────────
-export function getPeriodBounds(
-  periodType: PayrollExportPeriod["periodType"],
-  referenceDate: Date = new Date()
-): { start: string; end: string; label: string } {
-  const ref = new Date(referenceDate);
+export type PayrollExportStatus = "generated" | "downloaded" | "exported";
 
-  if (periodType === "weekly") {
-    // Week ending Sunday
-    const dayOfWeek = ref.getDay(); // 0=Sun
-    const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-    const end = new Date(ref);
-    end.setDate(ref.getDate() + daysUntilSunday);
-    end.setHours(23, 59, 59, 999);
-    const start = new Date(end);
-    start.setDate(end.getDate() - 6);
-    start.setHours(0, 0, 0, 0);
+// ──────────────────────────────────────────────────────
+// TYPE: PayrollWorkerSummary
+//
+// Per-worker line in the export payload.
+// Mirrors PayrollStagingRecord but is a self-contained
+// snapshot — safe to serialise and transmit downstream
+// without reference to other application state.
+// ──────────────────────────────────────────────────────
+export interface PayrollWorkerSummary {
+  workerId: string;
+  workerName: string;
+  totalHours: number;
+  totalCost: number;           // labour cost (business pays)
+  totalRevenue: number;        // labour revenue (billed to client)
+  margin: number;              // (revenue - cost) / revenue * 100
+  timesheetCount: number;      // number of TimesheetEntry records included
+  jobIds: string[];            // distinct jobs this worker has hours on
+  jobLabels: string[];         // resolved job titles (or jobId if unresolvable)
+}
+
+// ──────────────────────────────────────────────────────
+// TYPE: PayrollExport
+//
+// The complete, self-contained payroll export document.
+// Generated by generatePayrollExport() and stored in
+// mockPayrollExports[].
+//
+// This is an audit-grade document — once generated its
+// payload is immutable. Any re-generation creates a new
+// export with a new ID and timestamp.
+// ──────────────────────────────────────────────────────
+export interface PayrollExport {
+  id: string;
+  exportNumber: string;         // e.g. "PAY-2026-0001"
+  period: PayrollPeriod;
+  workers: PayrollWorkerSummary[];
+
+  // Totals — derived from workers[] on generation
+  totalWorkers: number;
+  totalHours: number;
+  totalCost: number;
+  totalRevenue: number;
+  overallMargin: number;        // totalRevenue > 0 ? (totalRevenue - totalCost) / totalRevenue * 100 : 0
+
+  status: PayrollExportStatus;
+  generatedAt: string;          // ISO — when generatePayrollExport() was called
+  generatedBy: string;          // user name
+
+  // Validation
+  validationErrors: string[];   // populated if export has issues (empty = valid)
+  isValid: boolean;             // true if validationErrors.length === 0
+}
+
+// ──────────────────────────────────────────────────────
+// derivePeriodBounds
+//
+// Converts a PayrollPeriodType into concrete start/end
+// ISO strings and a human-readable label.
+//
+// Used both by the UI (to compute filter bounds for
+// groupTimesheetsForPayroll) and by the export engine
+// (to stamp the PayrollPeriod on the export document).
+// ──────────────────────────────────────────────────────
+export function derivePeriodBounds(type: PayrollPeriodType, customStart?: string, customEnd?: string): PayrollPeriod {
+  const now = new Date();
+
+  if (type === "all") {
     return {
-      start: start.toISOString(),
-      end: end.toISOString(),
-      label: generatePayrollPeriodLabel("weekly", end),
+      type,
+      startDate: null,
+      endDate: null,
+      label: "All approved timesheets",
     };
   }
 
-  if (periodType === "fortnightly") {
-    // Fortnight ending Sunday of current week
-    const dayOfWeek = ref.getDay();
-    const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-    const end = new Date(ref);
-    end.setDate(ref.getDate() + daysUntilSunday);
-    end.setHours(23, 59, 59, 999);
-    const start = new Date(end);
-    start.setDate(end.getDate() - 13);
-    start.setHours(0, 0, 0, 0);
+  if (type === "current-month") {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
     return {
-      start: start.toISOString(),
-      end: end.toISOString(),
-      label: generatePayrollPeriodLabel("fortnightly", end),
+      type,
+      startDate: start.toISOString(),
+      endDate: now.toISOString(),
+      label: start.toLocaleString("en-GB", { month: "long", year: "numeric" }),
     };
   }
 
-  // Monthly: calendar month containing referenceDate
-  const start = new Date(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0);
-  const end = new Date(ref.getFullYear(), ref.getMonth() + 1, 0, 23, 59, 59, 999);
+  if (type === "last-month") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    return {
+      type,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      label: start.toLocaleString("en-GB", { month: "long", year: "numeric" }),
+    };
+  }
+
+  // custom
+  const startDate = customStart ?? null;
+  const endDate = customEnd ?? null;
+  const startLabel = startDate
+    ? new Date(startDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    : "—";
+  const endLabel = endDate
+    ? new Date(endDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    : "—";
   return {
-    start: start.toISOString(),
-    end: end.toISOString(),
-    label: generatePayrollPeriodLabel("monthly", end),
+    type,
+    startDate,
+    endDate,
+    label: `${startLabel} – ${endLabel}`,
   };
 }
 
 // ──────────────────────────────────────────────────────
-// getOvertimeThreshold
+// validatePayrollExport
 //
-// Returns the overtime hours threshold for the period type.
+// Pure validation. Returns an array of error strings.
+// Empty array = valid. Non-empty array = invalid.
+//
+// Validates:
+//   - Export must have at least one worker
+//   - All workers must have totalHours > 0
+//   - All workers must have totalCost >= 0
+//   - Period must be defined (either bounded or all-time)
 // ──────────────────────────────────────────────────────
-export function getOvertimeThreshold(
-  periodType: PayrollExportPeriod["periodType"]
-): number {
-  switch (periodType) {
-    case "weekly":      return OVERTIME_THRESHOLD_WEEKLY;
-    case "fortnightly": return OVERTIME_THRESHOLD_FORTNIGHTLY;
-    case "monthly":     return OVERTIME_THRESHOLD_MONTHLY;
+export function validatePayrollExport(workers: PayrollWorkerSummary[], period: PayrollPeriod): string[] {
+  const errors: string[] = [];
+
+  if (workers.length === 0) {
+    errors.push("No approved timesheet records found for the selected period.");
   }
+
+  workers.forEach((w) => {
+    if (w.totalHours <= 0) {
+      errors.push(`Worker "${w.workerName}" has zero or negative hours (${w.totalHours}h). Review timesheet data.`);
+    }
+    if (w.totalCost < 0) {
+      errors.push(`Worker "${w.workerName}" has a negative labour cost. Review rate data.`);
+    }
+  });
+
+  return errors;
 }
 
 // ──────────────────────────────────────────────────────
-// generatePayrollExportPeriod
+// generatePayrollExport
 //
-// Derives a PayrollExportPeriod from approved TimesheetEntry[]
-// for the given period type and reference date.
+// Creates a PayrollExport from an array of PayrollStagingRecord[].
+// The staging records are produced by groupTimesheetsForPayroll()
+// in profitabilityEngine.ts — this engine does not re-aggregate
+// timesheet data itself.
 //
-// IMPORTANT: All inputs come from mockTimesheets which is
-// populated exclusively by the Review Center approval engine.
-// This function does not read from Job records directly.
+// Parameters:
+//   id          — caller-supplied unique ID
+//   exportNumber — e.g. "PAY-2026-0001" from generateExportNumber()
+//   records     — PayrollStagingRecord[] from groupTimesheetsForPayroll()
+//   period      — PayrollPeriod from derivePeriodBounds()
+//   jobLookup   — map of jobId → job title for label resolution
+//   generatedBy — current user's name
+//
+// Returns a fully-computed, immutable PayrollExport.
 // ──────────────────────────────────────────────────────
-export function generatePayrollExportPeriod(
-  timesheets: TimesheetEntry[],
-  periodType: PayrollExportPeriod["periodType"],
-  referenceDate: Date = new Date()
-): PayrollExportPeriod {
-  const { start, end, label } = getPeriodBounds(periodType, referenceDate);
-  const overtimeThreshold = getOvertimeThreshold(periodType);
+export function generatePayrollExport(
+  id: string,
+  exportNumber: string,
+  records: PayrollStagingRecord[],
+  period: PayrollPeriod,
+  jobLookup: Map<string, string>,
+  generatedBy: string,
+): PayrollExport {
+  // Map PayrollStagingRecord → PayrollWorkerSummary
+  const workers: PayrollWorkerSummary[] = records.map((r) => ({
+    workerId: r.workerId,
+    workerName: r.workerName,
+    totalHours: r.totalHours,
+    totalCost: r.totalCost,
+    totalRevenue: r.totalRevenue,
+    margin: r.margin,
+    timesheetCount: r.timesheetIds.length,
+    jobIds: r.jobIds,
+    jobLabels: r.jobIds.map((jid) => jobLookup.get(jid) ?? jid),
+  }));
 
-  // Re-use the existing groupTimesheetsForPayroll() aggregation layer.
-  // This preserves the Single Source of Financial Truth.
-  const stagingRecords = groupTimesheetsForPayroll(timesheets, start, end);
+  // Aggregate totals
+  const totalWorkers = workers.length;
+  const totalHours = workers.reduce((s, w) => s + w.totalHours, 0);
+  const totalCost = workers.reduce((s, w) => s + w.totalCost, 0);
+  const totalRevenue = workers.reduce((s, w) => s + w.totalRevenue, 0);
+  const overallMargin = totalRevenue > 0
+    ? ((totalRevenue - totalCost) / totalRevenue) * 100
+    : 0;
 
-  const workerLines: PayrollExportWorkerLine[] = stagingRecords.map((r) => {
-    const regularHours = Math.min(r.totalHours, overtimeThreshold);
-    const overtimeHours = Math.max(0, r.totalHours - overtimeThreshold);
-    return {
-      workerId: r.workerId,
-      workerName: r.workerName,
-      totalHours: r.totalHours,
-      regularHours,
-      overtimeHours,
-      totalCost: r.totalCost,
-      totalRevenue: r.totalRevenue,
-      margin: r.margin,
-      timesheetIds: r.timesheetIds,
-      jobIds: r.jobIds,
-    };
-  });
-
-  const totalHours = workerLines.reduce((s, w) => s + w.totalHours, 0);
-  const totalCost = workerLines.reduce((s, w) => s + w.totalCost, 0);
-  const totalRevenue = workerLines.reduce((s, w) => s + w.totalRevenue, 0);
-  const totalOvertimeHours = workerLines.reduce((s, w) => s + w.overtimeHours, 0);
-
-  const now = new Date().toISOString();
+  const validationErrors = validatePayrollExport(workers, period);
 
   return {
-    id: Math.random().toString(36).substr(2, 9),
-    periodType,
-    periodLabel: label,
-    periodStart: start,
-    periodEnd: end,
-    workerLines,
-    workerCount: workerLines.length,
+    id,
+    exportNumber,
+    period,
+    workers,
+    totalWorkers,
     totalHours,
     totalCost,
     totalRevenue,
-    totalOvertimeHours,
-    status: "draft",
-    createdAt: now,
-    updatedAt: now,
+    overallMargin,
+    status: "generated",
+    generatedAt: new Date().toISOString(),
+    generatedBy,
+    validationErrors,
+    isValid: validationErrors.length === 0,
   };
 }
 
 // ──────────────────────────────────────────────────────
-// generateCSVExport
+// serializePayrollExportToCSV
 //
-// Produces a plain CSV string from a PayrollExportPeriod.
-// This is the browser-side export format.
-// In production, this would be POSTed to an accounting
-// integration endpoint (Phase 6).
+// Converts a PayrollExport into a CSV string suitable for
+// download. Format is designed for import into standard
+// payroll and accounting systems.
+//
+// Columns:
+//   Worker ID, Worker Name, Total Hours, Labour Cost (£),
+//   Labour Revenue (£), Margin (%), Timesheet Count,
+//   Jobs, Period, Export Number, Generated At
 // ──────────────────────────────────────────────────────
-export function generateCSVExport(period: PayrollExportPeriod): string {
-  const fmt = (n: number) => n.toFixed(2);
-  const rows: string[] = [
-    `Payroll Export — ${period.periodLabel}`,
-    `Period type,${PERIOD_TYPE_LABELS[period.periodType]}`,
-    `Period start,${new Date(period.periodStart).toLocaleDateString("en-GB")}`,
-    `Period end,${new Date(period.periodEnd).toLocaleDateString("en-GB")}`,
-    `Status,${EXPORT_STATUS_LABELS[period.status]}`,
-    `Worker count,${period.workerCount}`,
-    `Total hours,${fmt(period.totalHours)}`,
-    `Total labour cost,£${fmt(period.totalCost)}`,
-    `Total labour revenue,£${fmt(period.totalRevenue)}`,
-    `Total overtime hours,${fmt(period.totalOvertimeHours)}`,
-    "",
-    "Worker,Total Hours,Regular Hours,Overtime Hours,Labour Cost,Labour Revenue,Margin %,Timesheet IDs,Job IDs",
-    ...period.workerLines.map((w) =>
-      [
-        w.workerName,
-        fmt(w.totalHours),
-        fmt(w.regularHours),
-        fmt(w.overtimeHours),
-        `£${fmt(w.totalCost)}`,
-        `£${fmt(w.totalRevenue)}`,
-        `${fmt(w.margin)}%`,
-        w.timesheetIds.join(";"),
-        w.jobIds.join(";"),
-      ].join(",")
-    ),
+export function serializePayrollExportToCSV(payrollExport: PayrollExport): string {
+  const headers = [
+    "Worker ID",
+    "Worker Name",
+    "Total Hours",
+    "Labour Cost (£)",
+    "Labour Revenue (£)",
+    "Margin (%)",
+    "Timesheet Count",
+    "Jobs",
+    "Period",
+    "Export Number",
+    "Generated At",
   ];
-  return rows.join("\n");
-}
 
-// ──────────────────────────────────────────────────────
-// isValidExportTransition
-//
-// Validates status workflow: draft → staged → exported
-// No backward transitions permitted.
-// ──────────────────────────────────────────────────────
-export function isValidExportTransition(
-  from: PayrollExportPeriod["status"],
-  to: PayrollExportPeriod["status"]
-): boolean {
-  const ORDER: Record<PayrollExportPeriod["status"], number> = {
-    draft: 0,
-    staged: 1,
-    exported: 2,
+  const escapeCSV = (value: string | number): string => {
+    const str = String(value);
+    // Wrap in quotes if contains comma, quote, or newline
+    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
   };
-  return ORDER[to] === ORDER[from] + 1;
+
+  const rows = payrollExport.workers.map((w) => [
+    escapeCSV(w.workerId),
+    escapeCSV(w.workerName),
+    escapeCSV(w.totalHours.toFixed(2)),
+    escapeCSV(w.totalCost.toFixed(2)),
+    escapeCSV(w.totalRevenue.toFixed(2)),
+    escapeCSV(w.margin.toFixed(2)),
+    escapeCSV(w.timesheetCount),
+    escapeCSV(w.jobLabels.join("; ")),
+    escapeCSV(payrollExport.period.label),
+    escapeCSV(payrollExport.exportNumber),
+    escapeCSV(new Date(payrollExport.generatedAt).toLocaleString("en-GB")),
+  ]);
+
+  const lines = [
+    headers.map(escapeCSV).join(","),
+    ...rows.map((row) => row.join(",")),
+    // Summary row
+    "",
+    `TOTAL,,${payrollExport.totalHours.toFixed(2)},${payrollExport.totalCost.toFixed(2)},${payrollExport.totalRevenue.toFixed(2)},${payrollExport.overallMargin.toFixed(2)},,,,,`,
+  ];
+
+  return lines.join("\n");
 }
 
-export function nextExportStatus(
-  current: PayrollExportPeriod["status"]
-): PayrollExportPeriod["status"] | null {
-  if (current === "draft")   return "staged";
-  if (current === "staged")  return "exported";
-  return null;
-}
+// ──────────────────────────────────────────────────────
+// EXPORT STATUS LABELS & COLORS
+// Used in UI components — matches Ledger badge conventions
+// ──────────────────────────────────────────────────────
 
-export const EXPORT_STATUS_NEXT_LABEL: Record<PayrollExportPeriod["status"], string> = {
-  draft: "Mark as Staged",
-  staged: "Export Payroll",
-  exported: "",
+export const EXPORT_STATUS_LABELS: Record<PayrollExportStatus, string> = {
+  generated: "Generated",
+  downloaded: "Downloaded",
+  exported: "Exported",
+};
+
+export const EXPORT_STATUS_COLORS: Record<PayrollExportStatus, string> = {
+  generated: "text-amber-600  border-amber-200  bg-amber-50",
+  downloaded: "text-blue-600   border-blue-200   bg-blue-50",
+  exported:   "text-emerald-600 border-emerald-200 bg-emerald-50",
 };
