@@ -2,7 +2,7 @@
 
 ## Canonical Context Document
 
-Version: 4.2
+Version: 4.3
 Status: Active Source of Truth
 Last Updated: May 2026
 
@@ -141,6 +141,26 @@ Provider connections are administered centrally from the Accounting Settings pag
 
 ---
 
+## Reconciliation Doctrine
+
+Reconciliation detects discrepancies between The Ledger and downstream accounting systems.
+
+Reconciliation never modifies financial records.
+
+The Ledger remains the source of operational truth.
+
+All exceptions are traceable and actionable.
+
+Reconciliation statuses:
+
+- Matched — Ledger and accounting system agree
+- Unmatched — Records exist in both but values differ
+- Requires Review — Ambiguous discrepancy requiring manual inspection
+- Missing in Ledger — Record exists in accounting but not in Ledger
+- Missing in Accounting — Record exists in Ledger but not in accounting system
+
+---
+
 # PRODUCT DEFINITION
 
 ## Executive Platform
@@ -166,6 +186,7 @@ The Ledger contains:
 - Automations
 - Settings
 - Accounting Settings
+- Reconciliation Centre
 - API Integrations
 
 ## Worker Application
@@ -450,14 +471,44 @@ Verified:
 - Playwright: Pending verification (owner to run locally)
 - Expected suite: 80+ passing tests
 
-## Phase 5.8 — Recommended Next Target
+## Phase 5.8 — Reconciliation Centre
+
+Status: Complete
+
+Branch: feature/phase-5-8-reconciliation-center
+
+Implemented:
+
+- reconciliationEngine.ts: ReconciliationRecord types, status labels/colours, SEED data, computeReconciliationSummary, searchReconciliationRecords
+- syncOperationsEngine.ts: SyncHealth KPIs, FailureQueueEntry types, SEED data, mockRetryEntry, formatAvgDuration
+- components/finance/ReconciliationTab.tsx: Reconciliation tab for Financial Explorer (status table, KPI strip, filters, search)
+- components/finance/JobReconciliationPanel.tsx: Per-job reconciliation panel on Job Detail page
+- pages/reconciliation-center.tsx: Full Reconciliation Centre page (CEO only)
+  - KPI strip: Matched, Unmatched, Requires Review, Missing Records
+  - Reconciliation Table: Entity, Type, Provider, Ledger Reference, Accounting Reference, Status, Last Checked
+  - Filters: Status, Provider, Entity Type + Search
+  - Sync Operations Dashboard: KPIs (Total Syncs, Success Rate, Failures, Retries), Failure Queue, Retry Actions
+- Route: /reconciliation-center (CEO only) added to App.tsx
+- Navigation: Reconciliation Centre added to CEO sidebar with GitMerge icon
+- Financial Explorer: Reconciliation tab integrated
+- Job Detail: JobReconciliationPanel integrated
+- tests/doctrine/reconciliation-center.spec.ts: 16 doctrine tests
+
+Verified:
+
+- Build: Pending verification (owner to run locally)
+- Playwright: Pending verification (owner to run locally)
+- Expected suite: 96+ passing tests
+
+## Phase 5.9 — Recommended Next Target
 
 Candidates:
 
 - Bulk Sync Actions (select all pending, sync all)
-- Reconciliation Workflow (match Ledger records to accounting system)
 - OAuth flow scaffolding for QuickBooks / Xero
 - Sync Notifications / Alerts integration
+- Reconciliation Action Workflow (mark as resolved, escalate)
+- Reconciliation history and trend reporting
 
 ---
 
@@ -537,9 +588,9 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 5.7 — Accounting Settings & Provider Management is complete.
+Phase 5.8 — Reconciliation Centre is complete.
 
-Next: Phase 5.8 (see candidates above).
+Next: Phase 5.9 (see candidates above).
 
 ---
 

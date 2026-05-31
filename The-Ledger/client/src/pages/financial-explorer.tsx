@@ -23,11 +23,13 @@ import {
   FilePlus,
   TrendingUp,
   RefreshCw,
+  GitMerge,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { MarginIntelligenceTable } from "@/components/finance/MarginIntelligenceTable";
 import { ForecastTab } from "@/components/finance/ForecastTab";
 import { AccountingSyncTab } from "@/components/finance/AccountingSyncTab";
+import { ReconciliationTab } from "@/components/finance/ReconciliationTab";
 import {
   INVOICE_STATUS_LABELS,
   INVOICE_STATUS_COLORS,
@@ -151,6 +153,10 @@ export default function FinancialExplorerPage() {
             <TabsTrigger value="accounting-sync" className="flex items-center gap-1.5" data-testid="tab-accounting-sync">
               <RefreshCw className="h-3.5 w-3.5" /> Accounting Sync
             </TabsTrigger>
+            {/* ── Phase 5.8: Reconciliation ── */}
+            <TabsTrigger value="reconciliation" className="flex items-center gap-1.5" data-testid="tab-reconciliation">
+              <GitMerge className="h-3.5 w-3.5" /> Reconciliation
+            </TabsTrigger>
             <TabsTrigger value="mutations">Audit Log</TabsTrigger>
             <TabsTrigger value="timesheets">Timesheets</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
@@ -249,6 +255,11 @@ export default function FinancialExplorerPage() {
           {/* ── Phase 5.6: Accounting Sync Centre ── */}
           <TabsContent value="accounting-sync">
             <AccountingSyncTab />
+          </TabsContent>
+
+          {/* ── Phase 5.8: Reconciliation ── */}
+          <TabsContent value="reconciliation">
+            <ReconciliationTab />
           </TabsContent>
 
           {/* ── Financial Mutation Audit Log ── */}
@@ -428,7 +439,7 @@ export default function FinancialExplorerPage() {
             </div>
           </TabsContent>
 
-          {/* ── Equipment Usage (Phase 5.2: adds billedRate and revenueImpact columns) ── */}
+          {/* ── Equipment Usage ── */}
           <TabsContent value="equipment">
             <div className="border rounded-md mt-4">
               {equipmentUsageRecords.length === 0 ? (

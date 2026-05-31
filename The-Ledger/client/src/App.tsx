@@ -44,6 +44,7 @@ import FinancialExplorerPage from "@/pages/financial-explorer";
 import PayrollStagingPage from "@/pages/payroll";
 import InvoiceBuilderPage from "@/pages/invoice-builder";
 import PayrollExportPage from "@/pages/payroll-export";
+import ReconciliationCenterPage from "@/pages/reconciliation-center";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
@@ -190,6 +191,10 @@ function Router() {
       </Route>
       <Route path="/invoice-builder">
         <ProtectedRoute component={InvoiceBuilderPage} roles={["CEO", "Project Manager"]} />
+      </Route>
+      {/* Phase 5.8: Reconciliation Centre — CEO only */}
+      <Route path="/reconciliation-center">
+        <ProtectedRoute component={ReconciliationCenterPage} roles={["CEO"]} />
       </Route>
       <Route path="/settings">
         <ProtectedRoute component={SettingsPage} roles={["CEO"]} />
