@@ -223,7 +223,7 @@ test('Offline submission appears in Review Center after sync completes', async (
   await page.waitForTimeout(600);
   await clickForceReplay(page);
   // processQueueBatch has up to 2500ms of simulated delay; wait for it to fully settle
-  await page.waitForTimeout(6000);
+  await page.waitForTimeout(8000);
 
   // ── Step 4: Close panel BEFORE sign-out ──────────────────────────────────
   // The panel is a fixed overlay in the bottom-right. If it remains open,

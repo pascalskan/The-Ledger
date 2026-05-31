@@ -41,7 +41,7 @@ test('Automation Core: /automations page loads for CEO', async ({ page }) => {
   await page.goto('/automations');
   await expect(page).toHaveURL(/automations/i);
   await expect(
-    page.getByRole('heading', { name: /Automations/i })
+    page.getByRole('heading', { name: /Automation Centre/i })
   ).toBeVisible();
 });
 
@@ -54,27 +54,21 @@ test('Automation Core: CEO can navigate to Automations via sidebar', async ({ pa
   await expect(page).toHaveURL(/automations/i);
 });
 
-test('Automation Core: Automations page renders at least one automation card from seed data', async ({ page }) => {
+test('Automation Core: Automations page renders at least one automation rule from seed data', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/automations');
-  // The existing page renders cards from mockData automations
-  // At least one card should be visible
-  const cards = page.locator('.grid > *');
-  const count = await cards.count();
-  expect(count).toBeGreaterThan(0);
+  // The Automation Centre renders a rules table from SEED_AUTOMATION_RULES
+  await expect(page.getByTestId('aut-rules-table')).toBeVisible();
+  await expect(page.getByTestId('aut-rule-row-rule-001')).toBeVisible();
 });
 
-test('Automation Core: Activity Log tab is present and clickable', async ({ page }) => {
+test('Automation Core: Execution History tab is present and clickable', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/automations');
-  const activityTab = page.getByRole('button', { name: /Activity Log/i });
-  await expect(activityTab).toBeVisible();
-  await activityTab.click();
-  // After clicking, the Activity Log card title (CardTitle) appears — use role heading
-  // to avoid strict-mode violation from the tab button also matching /Activity Log/
-  await expect(
-    page.getByRole('heading', { name: /Activity Log/i })
-  ).toBeVisible();
+  const historyTab = page.getByTestId('aut-tab-execution-history');
+  await expect(historyTab).toBeVisible();
+  await historyTab.click();
+  await expect(page.getByTestId('aut-execution-table')).toBeVisible();
 });
 
 // ── Engine Validation: Automation Engine Types ──────────────────────────────
