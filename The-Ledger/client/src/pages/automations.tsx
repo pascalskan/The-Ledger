@@ -97,7 +97,7 @@ export default function AutomationsPage() {
         {activeTab === "activity" && (
           <Card className="border-slate-200 shadow-sm">
             <CardHeader className="bg-slate-50/50 border-b pb-4">
-              <CardTitle className="text-lg">Activity Log</CardTitle>
+              <CardTitle role="heading" className="text-lg">Activity Log</CardTitle>
               <CardDescription>Recent automation triggers and executions.</CardDescription>
             </CardHeader>
             <div className="divide-y divide-slate-100">

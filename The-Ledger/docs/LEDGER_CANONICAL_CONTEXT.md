@@ -2,9 +2,16 @@
 
 ## Canonical Context Document
 
-Version: 4.4
+Version: 4.5
 Status: Active Source of Truth
 Last Updated: May 2026
+
+Repository Baseline:
+main @ a4526cb
+
+Verification Status:
+Build PASS
+Playwright 113 / 113 PASSING
 
 ---
 
@@ -502,10 +509,10 @@ Implemented:
 
 Verified:
 
-- 15 Playwright doctrine tests added
-- Build: Pending verification (owner to run locally)
-- Playwright: Pending verification (owner to run locally)
-- Expected suite: 80+ passing tests
+- Build PASS
+- Playwright PASS
+- 80 / 80 Tests PASS
+- Merged into main
 
 ## Phase 5.8 — Reconciliation Centre
 
@@ -532,9 +539,10 @@ Implemented:
 
 Verified:
 
-- Build: Pending verification (owner to run locally)
-- Playwright: Pending verification (owner to run locally)
-- Expected suite: 96+ passing tests
+- Build PASS
+- Playwright PASS
+- 96 / 96 Tests PASS
+- Merged into main
 
 ## Phase 5.9 — Exception Resolution & Financial Controls
 
@@ -567,10 +575,56 @@ Implemented:
 
 Verified:
 
-- Build: Pending verification (owner to run locally)
-- Playwright: Pending verification (owner to run locally)
-- Expected suite: 113+ passing tests
+- Build PASS
+- Playwright PASS
+- 113 / 113 Tests PASS
+- Merged into main
 
+Post-Merge Stabilisation:
+
+- Offline Review Sync pipeline hardened
+- Direct review item persistence added
+- Offline replay doctrine test stabilised
+- Commit: a4526cb
+
+## Phase 6.0A — Automation Core
+
+Status: Complete
+
+Branch:
+feature/phase-6-0a-automation-core
+
+Implemented:
+
+- automationEngine.ts
+- automationRuleEngine.ts
+- automationAuditEngine.ts
+- Trigger Catalogue V1
+- Action Catalogue V1
+- Automation execution model
+- Automation audit trail
+- Financial safety controls
+- Job attribution enforcement
+
+Verified:
+
+- Build PASS
+- Playwright PASS
+- 129 / 129 Tests PASS
+
+Phase 6.0B — Automation Centre UI
+
+Status: Next
+
+Target Deliverables:
+
+- Automation Centre page
+- Automation KPI strip
+- Automation rule management
+- Execution history
+- Automation audit viewer
+- Financial safeguard visibility
+- CEO-only automation administration
 ---
 
 # CLAUDE WORKFLOW DOCTRINE
@@ -649,9 +703,28 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 5.9 — Exception Resolution & Financial Controls is complete.
+Phase 5.9 is complete.
 
-Next: Phase 6 — see handoff for candidates.
+Current Development Target:
+
+Phase 6.0 — Workflow Automation Foundation
+
+Objectives:
+
+- Automation Engine
+- Trigger Framework
+- Action Framework
+- Rule Builder
+- Automation Audit Trail
+- Job-Based Automation Attribution
+- Financial Safeguards
+- Review Centre Integration
+
+Phase 6 introduces controlled business automation while preserving:
+- Approval Doctrine
+- Audit Doctrine
+- Job Attribution Doctrine
+- Financial Integrity Doctrine
 
 ---
 
