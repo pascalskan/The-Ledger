@@ -46,11 +46,11 @@ test('AC-02: KPI strip renders all five cards', async ({ page }) => {
   await expect(page.getByTestId('aut-kpi-financially-sensitive')).toBeVisible();
 });
 
-test('AC-03: KPI values match seed data (6 total, 3 active, 1 disabled, 2 financially sensitive)', async ({ page }) => {
+test('AC-03: KPI values match seed data (6 total, 4 active, 1 disabled, 2 financially sensitive)', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/automations');
   await expect(page.getByTestId('aut-kpi-total')).toHaveText('6');
-  await expect(page.getByTestId('aut-kpi-active')).toHaveText('3');
+  await expect(page.getByTestId('aut-kpi-active')).toHaveText('4');
   await expect(page.getByTestId('aut-kpi-disabled')).toHaveText('1');
   await expect(page.getByTestId('aut-kpi-financially-sensitive')).toHaveText('2');
 });
