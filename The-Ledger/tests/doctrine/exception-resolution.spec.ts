@@ -12,7 +12,7 @@
  *   - Financial Explorer Exceptions tab is visible
  *   - Job Detail JobExceptionPanel is visible
  *
- * Target: 16 tests
+ * Target: 17 tests
  */
 import { test, expect } from '@playwright/test';
 import { loginAsCEO } from '../helpers/login';
@@ -46,7 +46,6 @@ test('Exception Resolution Centre: KPI strip renders all four cards', async ({ p
   await loginAsCEO(page);
   await page.goto('/exception-resolution-center');
   await expect(page.getByTestId('exc-kpi-strip')).toBeVisible();
-  // The KPI cards show the counts
   await expect(page.getByTestId('exc-kpi-open')).toBeVisible();
   await expect(page.getByTestId('exc-kpi-investigating')).toBeVisible();
   await expect(page.getByTestId('exc-kpi-awaiting')).toBeVisible();
@@ -175,13 +174,13 @@ test('Financial Explorer: Exceptions tab panel renders KPI strip and table', asy
 
 // ── Job Detail — JobExceptionPanel ────────────────────────────────────────────
 
-test('Job Detail: JobExceptionPanel renders on first seed job', async ({ page }) => {
+test('Job Detail: JobExceptionPanel renders on seed kitchen extraction job', async ({ page }) => {
   await loginAsCEO(page);
-  // Navigate to any job detail page via jobs list
-  await page.goto('/jobs');
-  // Click first job row
-  const firstJob = page.locator('tbody tr').first();
-  await firstJob.click();
-  // JobExceptionPanel should be visible (data-testid starts with job-exception-panel-)
-  await expect(page.locator('[data-testid^="job-exception-panel-"]').first()).toBeVisible();
+  // Navigate directly to the seed job — avoids relying on jobs-list DOM structure
+  // (jobs list renders cards/links, not a plain tbody table).
+  // dj-kitchen-extract-1 is the primary seed job seeded in mockData.ts.
+  await page.goto('/jobs/dj-kitchen-extract-1');
+  await expect(page.getByTestId('page-job-dj-kitchen-extract-1')).toBeVisible({ timeout: 8000 });
+  // JobExceptionPanel is rendered unconditionally for every job
+  await expect(page.getByTestId('job-exception-panel-dj-kitchen-extract-1')).toBeVisible();
 });
