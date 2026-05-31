@@ -45,6 +45,7 @@ import PayrollStagingPage from "@/pages/payroll";
 import InvoiceBuilderPage from "@/pages/invoice-builder";
 import PayrollExportPage from "@/pages/payroll-export";
 import ReconciliationCenterPage from "@/pages/reconciliation-center";
+import ExceptionResolutionCenterPage from "@/pages/exception-resolution-center";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
@@ -195,6 +196,10 @@ function Router() {
       {/* Phase 5.8: Reconciliation Centre — CEO only */}
       <Route path="/reconciliation-center">
         <ProtectedRoute component={ReconciliationCenterPage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 5.9: Exception Resolution Centre — CEO only */}
+      <Route path="/exception-resolution-center">
+        <ProtectedRoute component={ExceptionResolutionCenterPage} roles={["CEO"]} />
       </Route>
       <Route path="/settings">
         <ProtectedRoute component={SettingsPage} roles={["CEO"]} />

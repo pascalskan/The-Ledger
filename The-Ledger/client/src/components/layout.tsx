@@ -27,6 +27,7 @@ import {
   FileDown,
   Link2 as Link2Icon,
   GitMerge,
+  TriangleAlert,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -93,6 +94,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"] },
     // Phase 5.8: Reconciliation Centre — CEO only
     { label: "Reconciliation Centre", href: "/reconciliation-center", icon: GitMerge, roles: ["CEO"], testId: "nav-reconciliation-centre" },
+    // Phase 5.9: Exception Resolution Centre — CEO only
+    { label: "Exception Resolution", href: "/exception-resolution-center", icon: TriangleAlert, roles: ["CEO"], testId: "nav-exception-resolution-centre" },
     { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"] },
   ].filter((item) => hasAnyRole(item.roles));
 

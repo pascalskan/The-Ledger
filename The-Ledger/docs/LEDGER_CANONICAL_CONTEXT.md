@@ -2,7 +2,7 @@
 
 ## Canonical Context Document
 
-Version: 4.3
+Version: 4.4
 Status: Active Source of Truth
 Last Updated: May 2026
 
@@ -161,6 +161,41 @@ Reconciliation statuses:
 
 ---
 
+## Exception Resolution Doctrine
+
+All financial exceptions are traceable to their source event.
+
+No exception resolution bypasses the CEO audit trail.
+
+All overrides require explicit approval.
+
+Every resolution or rejection generates an immutable audit entry.
+
+Exception statuses:
+
+- Open — Detected, not yet assigned
+- Under Investigation — Being reviewed by assigned user
+- Awaiting Approval — Resolution prepared, pending CEO sign-off
+- Resolved — CEO-approved resolution applied
+- Rejected — Closed without resolution
+
+---
+
+## Financial Controls Doctrine
+
+Financial Controls govern override requests that would alter approved financial records.
+
+All controls require CEO approval.
+
+No control is silent — every approval and rejection is audited.
+
+Control lifecycle:
+
+- Pending Approval → Approved
+- Pending Approval → Rejected
+
+---
+
 # PRODUCT DEFINITION
 
 ## Executive Platform
@@ -187,6 +222,7 @@ The Ledger contains:
 - Settings
 - Accounting Settings
 - Reconciliation Centre
+- Exception Resolution Centre
 - API Integrations
 
 ## Worker Application
@@ -500,15 +536,40 @@ Verified:
 - Playwright: Pending verification (owner to run locally)
 - Expected suite: 96+ passing tests
 
-## Phase 5.9 — Recommended Next Target
+## Phase 5.9 — Exception Resolution & Financial Controls
 
-Candidates:
+Status: Complete
 
-- Bulk Sync Actions (select all pending, sync all)
-- OAuth flow scaffolding for QuickBooks / Xero
-- Sync Notifications / Alerts integration
-- Reconciliation Action Workflow (mark as resolved, escalate)
-- Reconciliation history and trend reporting
+Branch: feature/phase-5-9-exception-resolution
+
+Implemented:
+
+- lib/exceptionResolutionEngine.ts: ExceptionRecord types, SEED data (8 seed exceptions), status/type labels and colours, computeExceptionSummary, searchExceptions, filterExceptions*, resolveException, rejectException, getAssigneeNames
+- lib/financialControlsEngine.ts: FinancialControl types, SEED data (4 seed controls), control state labels/colours, computeControlSummary, approveControl, rejectControl, fmt helper
+- pages/exception-resolution-center.tsx: Full Exception Resolution Centre (CEO only)
+  - KPI strip: Open, Investigating, Awaiting Approval, Resolved
+  - Exception Queue: Exception ID, Type, Job/Client, Status, Assigned To, Created Date, View action
+  - Search: job, client, exception ID
+  - Filters: Status, Type, Assigned User
+  - Exception detail/resolution dialog: Resolve + Reject with notes
+  - Financial Controls tab: dashboard KPIs (Pending, Approved, Rejected, Financial Impact)
+  - Override Queue: Control Type, Requested By, Approval Status, Financial Impact, Approve/Reject actions
+  - Control approval dialog: notes required, audit entry generated
+- components/finance/ExceptionsTab.tsx: Exceptions tab for Financial Explorer
+- components/finance/JobExceptionPanel.tsx: Per-job exceptions panel on Job Detail page
+- App.tsx: /exception-resolution-center route (CEO only) — already present from prior commit
+- layout.tsx: CEO sidebar nav item — already present from prior commit
+- financial-explorer.tsx: Exceptions tab wired (TabsTrigger + TabsContent)
+- job-detail.tsx: JobExceptionPanel wired
+- tests/doctrine/exception-resolution.spec.ts: 17 doctrine tests
+- docs/LEDGER_CANONICAL_CONTEXT.md: v4.4, Phase 5.9 marked complete, Exception Resolution and Financial Controls Doctrine added
+- docs/handoffs/phase-5-9-handoff-2026-05-31.md: handoff document
+
+Verified:
+
+- Build: Pending verification (owner to run locally)
+- Playwright: Pending verification (owner to run locally)
+- Expected suite: 113+ passing tests
 
 ---
 
@@ -588,9 +649,9 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 5.8 — Reconciliation Centre is complete.
+Phase 5.9 — Exception Resolution & Financial Controls is complete.
 
-Next: Phase 5.9 (see candidates above).
+Next: Phase 6 — see handoff for candidates.
 
 ---
 

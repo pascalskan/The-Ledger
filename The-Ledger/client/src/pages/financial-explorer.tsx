@@ -24,12 +24,14 @@ import {
   TrendingUp,
   RefreshCw,
   GitMerge,
+  AlertTriangle,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { MarginIntelligenceTable } from "@/components/finance/MarginIntelligenceTable";
 import { ForecastTab } from "@/components/finance/ForecastTab";
 import { AccountingSyncTab } from "@/components/finance/AccountingSyncTab";
 import { ReconciliationTab } from "@/components/finance/ReconciliationTab";
+import { ExceptionsTab } from "@/components/finance/ExceptionsTab";
 import {
   INVOICE_STATUS_LABELS,
   INVOICE_STATUS_COLORS,
@@ -157,6 +159,10 @@ export default function FinancialExplorerPage() {
             <TabsTrigger value="reconciliation" className="flex items-center gap-1.5" data-testid="tab-reconciliation">
               <GitMerge className="h-3.5 w-3.5" /> Reconciliation
             </TabsTrigger>
+            {/* ── Phase 5.9: Exceptions ── */}
+            <TabsTrigger value="exceptions" className="flex items-center gap-1.5" data-testid="tab-exceptions">
+              <AlertTriangle className="h-3.5 w-3.5" /> Exceptions
+            </TabsTrigger>
             <TabsTrigger value="mutations">Audit Log</TabsTrigger>
             <TabsTrigger value="timesheets">Timesheets</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
@@ -260,6 +266,11 @@ export default function FinancialExplorerPage() {
           {/* ── Phase 5.8: Reconciliation ── */}
           <TabsContent value="reconciliation">
             <ReconciliationTab />
+          </TabsContent>
+
+          {/* ── Phase 5.9: Exceptions ── */}
+          <TabsContent value="exceptions">
+            <ExceptionsTab />
           </TabsContent>
 
           {/* ── Financial Mutation Audit Log ── */}

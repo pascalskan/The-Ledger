@@ -16,6 +16,7 @@ import { PendingExposurePanel } from "@/components/finance/PendingExposurePanel"
 import { JobForecastPanel } from "@/components/finance/JobForecastPanel";
 import { JobSyncPanel } from "@/components/finance/JobSyncPanel";
 import { JobReconciliationPanel } from "@/components/finance/JobReconciliationPanel";
+import { JobExceptionPanel } from "@/components/finance/JobExceptionPanel";
 import { INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS } from "@/lib/invoiceBuilder";
 
 export default function JobDetailPage() {
@@ -220,7 +221,7 @@ export default function JobDetailPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Schedule & Location</CardTitle>
+              <CardTitle>Schedule &amp; Location</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center gap-2">
@@ -326,6 +327,9 @@ export default function JobDetailPage() {
 
         {/* Phase 5.8: Reconciliation Status */}
         <JobReconciliationPanel jobId={job.id} />
+
+        {/* Phase 5.9: Exception & Controls Status */}
+        <JobExceptionPanel jobId={job.id} />
 
         {/* Phase 5.3: Invoice Draft status */}
         {(() => {
