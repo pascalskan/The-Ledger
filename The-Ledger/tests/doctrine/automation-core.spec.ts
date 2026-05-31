@@ -70,8 +70,11 @@ test('Automation Core: Activity Log tab is present and clickable', async ({ page
   const activityTab = page.getByRole('button', { name: /Activity Log/i });
   await expect(activityTab).toBeVisible();
   await activityTab.click();
-  // Activity section should appear
-  await expect(page.getByText(/Activity Log/i)).toBeVisible();
+  // After clicking, the Activity Log card title (CardTitle) appears — use role heading
+  // to avoid strict-mode violation from the tab button also matching /Activity Log/
+  await expect(
+    page.getByRole('heading', { name: /Activity Log/i })
+  ).toBeVisible();
 });
 
 // ── Engine Validation: Automation Engine Types ──────────────────────────────
