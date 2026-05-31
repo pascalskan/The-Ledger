@@ -210,12 +210,20 @@ test('Offline submission appears in Review Center after sync completes', async (
 
   // ── Step 3: Reconnect and force replay ───────────────────────────────────
   await openDebugPanel(page);
+
+  // Guarantee fault injection is OFF so processQueueBatch always succeeds.
+  // Both checkboxes default false, but explicitly uncheck them to be deterministic.
+  const failureCheckbox = page.locator('input[type="checkbox"]').nth(0);
+  const conflictCheckbox = page.locator('input[type="checkbox"]').nth(1);
+  if (await failureCheckbox.isChecked()) await failureCheckbox.uncheck();
+  if (await conflictCheckbox.isChecked()) await conflictCheckbox.uncheck();
+
   await clickReconnect(page);
   // setOfflineMode(false) triggers syncQueue() after a 500ms debounce
   await page.waitForTimeout(600);
   await clickForceReplay(page);
-  // processQueueBatch has up to 2500ms of simulated delay; wait for it to settle
-  await page.waitForTimeout(4000);
+  // processQueueBatch has up to 2500ms of simulated delay; wait for it to fully settle
+  await page.waitForTimeout(6000);
 
   // ── Step 4: Close panel BEFORE sign-out ──────────────────────────────────
   // The panel is a fixed overlay in the bottom-right. If it remains open,
@@ -225,6 +233,8 @@ test('Offline submission appears in Review Center after sync completes', async (
   await signOut(page);
 
   // ── Step 5: CEO verifies the replayed item is in the Review Center ────────
+  // addReviewItemDirect() now persists the entry to localStorage under
+  // ledger-direct-review-items, so it survives the page reload on sign-in.
   await softLoginAsCEO(page);
   await openReviewCenter(page);
   const pendingRowsAfter = await page.locator('tr').filter({ hasText: /DEMO-JOB-/i }).count();

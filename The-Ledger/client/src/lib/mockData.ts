@@ -1029,7 +1029,31 @@ let demoSettings = { ...DEMO_SETTINGS };
 // the call is a no-op. This prevents duplicate entries when a queue item is
 // replayed more than once (e.g. retry after a transient failure where the
 // first attempt actually succeeded but the status update was lost).
+//
+// Persistence: entries are also written to localStorage under
+// DIRECT_REVIEW_ITEMS_KEY so they survive full page reloads (which reset the
+// module-level array). On module init the key is read back and merged.
 // ---------------------------------------------------------------------------
+const DIRECT_REVIEW_ITEMS_KEY = "ledger-direct-review-items";
+
+function loadPersistedDirectItems(): ReviewItem[] {
+  try {
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(DIRECT_REVIEW_ITEMS_KEY) : null;
+    if (raw) return JSON.parse(raw) as ReviewItem[];
+  } catch { /* ignore */ }
+  return [];
+}
+
+// Merge any persisted direct items into the module array at startup.
+(function mergePersistedDirectItems() {
+  const persisted = loadPersistedDirectItems();
+  for (const item of persisted) {
+    if (!reviewItems.some(r => r.id === item.id)) {
+      reviewItems.push(item);
+    }
+  }
+})();
+
 export function addReviewItemDirect(r: Omit<ReviewItem, "id" | "companyId">): void {
   const sourceId = (r as any).sourceQueueId as string | undefined;
   if (sourceId && reviewItems.some((existing) => (existing as any).sourceQueueId === sourceId)) {
@@ -1043,6 +1067,14 @@ export function addReviewItemDirect(r: Omit<ReviewItem, "id" | "companyId">): vo
     companyId,
   } as ReviewItem;
   reviewItems.push(entry);
+
+  // Persist to localStorage so the entry survives page reloads.
+  try {
+    const existing = loadPersistedDirectItems();
+    existing.push(entry);
+    localStorage.setItem(DIRECT_REVIEW_ITEMS_KEY, JSON.stringify(existing));
+  } catch { /* ignore */ }
+
   logs.unshift({
     id: Math.random().toString(36).substr(2, 9),
     actorName: currentUser?.name || "System (Replay)",
