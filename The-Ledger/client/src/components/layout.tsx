@@ -26,6 +26,7 @@ import {
   Wallet,
   FileDown,
   Link2 as Link2Icon,
+  GitMerge,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -90,6 +91,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO", "Admin"] },
     // Phase 5.7: Accounting Settings — CEO only
     { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"] },
+    // Phase 5.8: Reconciliation Centre — CEO only
+    { label: "Reconciliation Centre", href: "/reconciliation-center", icon: GitMerge, roles: ["CEO"], testId: "nav-reconciliation-centre" },
     { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"] },
   ].filter((item) => hasAnyRole(item.roles));
 
@@ -114,11 +117,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             const isActive = location === item.href;
             const content = (
               <Link key={item.href} href={item.href}>
-                <a className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                  isActive ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  collapsed && "justify-center px-0"
-                )}>
+                <a
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    isActive ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    collapsed && "justify-center px-0"
+                  )}
+                  data-testid={(item as any).testId}
+                >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
                   {!collapsed && <span>{item.label}</span>}
                 </a>
