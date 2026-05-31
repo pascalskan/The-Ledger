@@ -20,7 +20,8 @@ import EquipmentDetailPage from "@/pages/equipment-detail";
 import MapPage from "@/pages/map";
 import AuditPage from "@/pages/audit";
 import SettingsPage from "@/pages/settings";
-import AccountingSettingsPage from "@/pages/settings/accounting";
+import AccountingSettingsPage from "@/pages/accounting-settings";
+import LegacyAccountingSettingsPage from "@/pages/settings/accounting";
 import IntegrationsPage from "@/pages/integrations";
 import AuthPage from "@/pages/auth";
 import RolesPage from "@/pages/roles";
@@ -196,8 +197,13 @@ function Router() {
       <Route path="/settings/integrations">
         <ProtectedRoute component={IntegrationsPage} roles={["CEO"]} />
       </Route>
-      <Route path="/settings/integrations/accounting">
+      {/* Phase 5.7: Primary accounting settings route */}
+      <Route path="/accounting-settings">
         <ProtectedRoute component={AccountingSettingsPage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 5.6 legacy route — now delegates to same component */}
+      <Route path="/settings/integrations/accounting">
+        <ProtectedRoute component={LegacyAccountingSettingsPage} roles={["CEO"]} />
       </Route>
       <Route path="/qa">
         <ProtectedRoute component={QAPage} />

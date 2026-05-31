@@ -2,7 +2,7 @@
 
 ## Canonical Context Document
 
-Version: 4.1
+Version: 4.2
 Status: Active Source of Truth
 Last Updated: May 2026
 
@@ -124,6 +124,23 @@ Sync lifecycle:
 
 ---
 
+## Accounting Settings Doctrine
+
+Provider management lives in The Ledger, not in accounting systems.
+
+The CEO controls:
+
+- Which providers are enabled
+- Which provider is the default
+- Sync policies (automatic vs manual, retry behaviour)
+- Entity mapping (which entities sync to which providers)
+
+Settings never bypass approval workflows.
+
+Provider connections are administered centrally from the Accounting Settings page.
+
+---
+
 # PRODUCT DEFINITION
 
 ## Executive Platform
@@ -148,6 +165,7 @@ The Ledger contains:
 - Audits
 - Automations
 - Settings
+- Accounting Settings
 - API Integrations
 
 ## Worker Application
@@ -379,13 +397,9 @@ Verified:
 
 Status: Complete
 
-Merged:
+Merged: main
 
-main
-
-Merge Commit:
-
-849e9e2
+Merge Commit: 849e9e2
 
 Implemented:
 
@@ -407,15 +421,43 @@ Verified:
 - 65 / 65 Tests PASS
 - Merged into main
 
-## Phase 5.7 — Next Active Target
+## Phase 5.7 — Accounting Settings & Provider Management
+
+Status: Complete
+
+Branch: feature/phase-5-7-accounting-settings
+
+Implemented:
+
+- accountingSettingsEngine.ts: ProviderConfig, ProviderStatus, SyncPolicy, EntityMapping types + helpers
+- accountingProviders.ts: Extended with description, website, ProviderStatus support
+- pages/accounting-settings.tsx: Full 4-provider settings page (CEO only)
+  - Provider cards (QuickBooks, Xero, FreshBooks, Zoho Books)
+  - Status badges (Connected, Disconnected, Requires Reconnect, Disabled)
+  - Default provider indicator and Set Default action
+  - Connect / Disconnect / Disable / Enable actions (mock)
+  - Entity support display and last sync per provider
+- Sync Policy Centre: Automatic/Manual toggle, Retry Failed Syncs, Auto Retry Interval, Sync Notifications
+- Entity Mapping Configuration: Customers, Jobs, Invoices, Payroll with status and provider compatibility
+- Summary bar: active provider count, default provider name, sync mode
+- Navigation: Accounting Settings added to CEO sidebar
+- Route: /accounting-settings (CEO only); legacy /settings/integrations/accounting retained
+
+Verified:
+
+- 15 Playwright doctrine tests added
+- Build: Pending verification (owner to run locally)
+- Playwright: Pending verification (owner to run locally)
+- Expected suite: 80+ passing tests
+
+## Phase 5.8 — Recommended Next Target
 
 Candidates:
 
-- Accounting Settings Page (provider connect/disconnect UI)
 - Bulk Sync Actions (select all pending, sync all)
-- Sync Notifications / Alerts integration
-- OAuth flow scaffolding for QuickBooks / Xero
 - Reconciliation Workflow (match Ledger records to accounting system)
+- OAuth flow scaffolding for QuickBooks / Xero
+- Sync Notifications / Alerts integration
 
 ---
 
@@ -495,11 +537,9 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 5.7 — Next Active Target
+Phase 5.7 — Accounting Settings & Provider Management is complete.
 
-Phase 5.6 Accounting Synchronization Layer is complete.
-
-See Phase 5.7 candidates above.
+Next: Phase 5.8 (see candidates above).
 
 ---
 

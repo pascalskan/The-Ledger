@@ -1,5 +1,6 @@
 // ======================================================
 // PHASE 5.6 — ACCOUNTING PROVIDERS
+// EXTENDED: Phase 5.7 — Provider Configuration Support
 //
 // Provider abstraction layer.
 // No live integrations. Mock architecture only.
@@ -41,6 +42,8 @@ export interface AccountingProviderMeta {
   bgColor: string;       // Tailwind background colour class
   borderColor: string;   // Tailwind border colour class
   connected: boolean;    // Mock connection state
+  description: string;   // Short description for settings UI
+  website: string;       // Provider website
 }
 
 export const ACCOUNTING_PROVIDERS: AccountingProviderMeta[] = [
@@ -52,6 +55,8 @@ export const ACCOUNTING_PROVIDERS: AccountingProviderMeta[] = [
     bgColor: "bg-green-50",
     borderColor: "border-green-200",
     connected: true,
+    description: "Industry-leading accounting for small to mid-size businesses.",
+    website: "https://quickbooks.intuit.com",
   },
   {
     id: "xero",
@@ -61,6 +66,8 @@ export const ACCOUNTING_PROVIDERS: AccountingProviderMeta[] = [
     bgColor: "bg-sky-50",
     borderColor: "border-sky-200",
     connected: true,
+    description: "Cloud-based accounting used by millions of businesses globally.",
+    website: "https://www.xero.com",
   },
   {
     id: "freshbooks",
@@ -70,6 +77,8 @@ export const ACCOUNTING_PROVIDERS: AccountingProviderMeta[] = [
     bgColor: "bg-blue-50",
     borderColor: "border-blue-200",
     connected: false,
+    description: "Simple invoicing and accounting for service businesses.",
+    website: "https://www.freshbooks.com",
   },
   {
     id: "zoho",
@@ -79,6 +88,8 @@ export const ACCOUNTING_PROVIDERS: AccountingProviderMeta[] = [
     bgColor: "bg-red-50",
     borderColor: "border-red-200",
     connected: false,
+    description: "Comprehensive finance management within the Zoho ecosystem.",
+    website: "https://www.zoho.com/books",
   },
 ];
 

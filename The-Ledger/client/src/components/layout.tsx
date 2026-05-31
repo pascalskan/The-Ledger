@@ -24,7 +24,8 @@ import {
   ClipboardCheck,
   Layers,
   Wallet,
-  FileDown
+  FileDown,
+  Link2 as Link2Icon,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -87,6 +88,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Payroll Staging", href: "/payroll", icon: Wallet, roles: ["CEO"] },
     { label: "Payroll Export", href: "/payroll-export", icon: FileDown, roles: ["CEO"] },
     { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO", "Admin"] },
+    // Phase 5.7: Accounting Settings — CEO only
+    { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"] },
     { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"] },
   ].filter((item) => hasAnyRole(item.roles));
 
