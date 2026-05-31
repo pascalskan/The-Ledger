@@ -22,10 +22,12 @@ import {
   BarChart3,
   FilePlus,
   TrendingUp,
+  RefreshCw,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { MarginIntelligenceTable } from "@/components/finance/MarginIntelligenceTable";
 import { ForecastTab } from "@/components/finance/ForecastTab";
+import { AccountingSyncTab } from "@/components/finance/AccountingSyncTab";
 import {
   INVOICE_STATUS_LABELS,
   INVOICE_STATUS_COLORS,
@@ -145,6 +147,10 @@ export default function FinancialExplorerPage() {
             <TabsTrigger value="invoice-pipeline" className="flex items-center gap-1.5" data-testid="tab-invoice-pipeline">
               <FilePlus className="h-3.5 w-3.5" /> Invoice Pipeline
             </TabsTrigger>
+            {/* ── Phase 5.6: Accounting Sync ── */}
+            <TabsTrigger value="accounting-sync" className="flex items-center gap-1.5" data-testid="tab-accounting-sync">
+              <RefreshCw className="h-3.5 w-3.5" /> Accounting Sync
+            </TabsTrigger>
             <TabsTrigger value="mutations">Audit Log</TabsTrigger>
             <TabsTrigger value="timesheets">Timesheets</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
@@ -238,6 +244,11 @@ export default function FinancialExplorerPage() {
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          {/* ── Phase 5.6: Accounting Sync Centre ── */}
+          <TabsContent value="accounting-sync">
+            <AccountingSyncTab />
           </TabsContent>
 
           {/* ── Financial Mutation Audit Log ── */}
