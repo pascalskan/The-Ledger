@@ -612,19 +612,46 @@ Verified:
 - Playwright PASS
 - 129 / 129 Tests PASS
 
-Phase 6.0B — Automation Centre UI
+## Phase 6.0B — Automation Centre UI
+
+Status: Complete
+
+Branch:
+feature/phase-6-0b-automation-centre
+
+Implemented:
+
+- pages/automations.tsx: Full Automation Centre replacing stub page (CEO only)
+  - KPI strip: Total, Active, Disabled, Executions Today, Financially Sensitive
+  - Tab 1 — Automation Rules: table with search/status/category filters, Rule Detail Dialog (trigger, conditions, actions, financial safeguard, enable/disable)
+  - Tab 2 — Execution History: table with seed data, Execution Detail Dialog
+  - Tab 3 — Automation Audit: immutable read-only table with search and result filter
+  - FinanciallySensitive badge with tooltip on all category displays
+  - CEO-only RBAC (PM and Worker denied)
+- automationAuditEngine.ts: Added AUTOMATION_EXECUTION_RESULT_LABELS, AUTOMATION_EXECUTION_RESULT_COLORS, SEED_EXECUTION_HISTORY (5 seed entries)
+- App.tsx: /automations route tightened to CEO only
+- layout.tsx: Automations nav item tightened to CEO only
+- tests/doctrine/automation-centre.spec.ts: 19 doctrine tests
+- tests/doctrine/automation-core.spec.ts: 3 page-level tests updated for new UI
+
+Verified:
+
+- Build PASS (pending)
+- Playwright PASS (pending)
+- Target: 148 / 148 Tests PASS
+
+Phase 6.0C — Automation Builder
 
 Status: Next
 
 Target Deliverables:
 
-- Automation Centre page
-- Automation KPI strip
-- Automation rule management
-- Execution history
-- Automation audit viewer
-- Financial safeguard visibility
-- CEO-only automation administration
+- Visual rule builder UI
+- Trigger selection
+- Condition builder
+- Action chain editor
+- Draft → Active promotion workflow
+- CEO approval gate for FinanciallySensitive rules
 ---
 
 # CLAUDE WORKFLOW DOCTRINE

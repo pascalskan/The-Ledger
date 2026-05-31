@@ -89,7 +89,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Financial Explorer", href: "/financial-explorer", icon: Layers, roles: ["CEO"] },
     { label: "Payroll Staging", href: "/payroll", icon: Wallet, roles: ["CEO"] },
     { label: "Payroll Export", href: "/payroll-export", icon: FileDown, roles: ["CEO"] },
-    { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO", "Admin"] },
+    { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO"] },
     // Phase 5.7: Accounting Settings — CEO only
     { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"] },
     // Phase 5.8: Reconciliation Centre — CEO only

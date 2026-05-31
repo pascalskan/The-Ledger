@@ -122,7 +122,7 @@ function Router() {
         <ProtectedRoute component={JobIntelligenceDashboard} roles={["CEO", "Project Manager"]} />
       </Route>
       <Route path="/automations">
-        <ProtectedRoute component={AutomationsPage} roles={["CEO", "Admin"]} />
+        <ProtectedRoute component={AutomationsPage} roles={["CEO"]} />
       </Route>
       <Route path="/jobs">
         <ProtectedRoute component={JobsPage} />
