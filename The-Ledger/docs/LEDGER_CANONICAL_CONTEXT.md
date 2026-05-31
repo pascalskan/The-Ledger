@@ -2,7 +2,7 @@
 
 ## Canonical Context Document
 
-Version: 4.0
+Version: 4.1
 Status: Active Source of Truth
 Last Updated: May 2026
 
@@ -103,6 +103,24 @@ Jobs own:
 - Audit Trail
 
 All financial reporting is job-centric.
+
+---
+
+## Accounting Sync Doctrine
+
+Synchronization exports approved financial truth to downstream accounting systems.
+
+The Ledger remains the source of operational truth.
+
+Sync never creates or modifies financial records.
+
+All sync actions are auditable.
+
+Sync lifecycle:
+
+- Pending → Syncing → Synced
+- Pending → Syncing → Failed
+- Failed → Retry Required → Syncing → Synced
 
 ---
 
@@ -325,17 +343,9 @@ Status: Complete
 
 Status: Complete
 
-Branch:
-
-feature/phase-5-3-invoice-pipeline
-
 ## Phase 5.4 — Payroll Export System
 
 Status: Complete
-
-Branch:
-
-feature/phase-5-4-payroll-export
 
 Verified:
 
@@ -367,17 +377,38 @@ Verified:
 
 ## Phase 5.6 — Accounting Synchronization Layer
 
-Status: Next Active Target
+Status: Complete
 
-Planned:
+Branch:
 
-- Accounting Sync Centre
-- Provider Management
-- Sync Queue
-- Sync Logs
-- Error Resolution Workflows
-- External Reference Tracking
-- Accounting Sync Explorer Tab
+feature/phase-5-6-accounting-sync
+
+Implemented:
+
+- Accounting Provider Abstraction (QuickBooks, Xero, FreshBooks, Zoho Books)
+- Accounting Sync Engine (Pending, Syncing, Synced, Failed, Retry Required)
+- Sync Log Engine
+- Accounting Sync Tab in Financial Explorer (KPI strip, queue table, search, sort, filter)
+- Job Sync Panel on Job Detail page (per-job sync status, external ref, history)
+- Error Resolution Workflow (error details panel, resolution guidance, retry flow)
+- Sync Audit Trail (immutable log of all sync actions)
+- Provider Visibility (QuickBooks, Xero badges in queue and job panel)
+- External Reference Tracking (accounting system IDs visible per record)
+
+Verified:
+
+- 13 Playwright doctrine tests added
+- Expected total: 65+ tests passing
+
+## Phase 5.7 — Next Active Target
+
+Candidates:
+
+- Accounting Settings Page (provider connect/disconnect UI)
+- Bulk Sync Actions (select all pending, sync all)
+- Sync Notifications / Alerts integration
+- OAuth flow scaffolding for QuickBooks / Xero
+- Reconciliation Workflow (match Ledger records to accounting system)
 
 ---
 
@@ -457,18 +488,11 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 5.6 — Accounting Synchronization Layer
+Phase 5.7 — Next Active Target
 
-Continue development from:
+Phase 5.6 Accounting Synchronization Layer is complete.
 
-Phase 5.4 Payroll Export System
-
-Next steps:
-
-- Repository verification
-- Roadmap verification
-- Phase 5.5 scope definition
-- Claude implementation prompt generation
+See Phase 5.7 candidates above.
 
 ---
 
