@@ -45,7 +45,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   getAllNotifications,
-  getUnreadCount,
   markNotificationRead,
   NOTIFICATION_TYPE_LABELS,
   NOTIFICATION_PRIORITY_COLORS,
@@ -66,7 +65,6 @@ function NotificationBell({ userId }: { userId: string }) {
 
   const unreadCount = notifications.filter((n) => n.status === 'unread').length;
 
-  // Latest 5 notifications (unread first, then by date)
   const preview = [...notifications]
     .sort((a, b) => {
       if (a.status === 'unread' && b.status !== 'unread') return -1;
@@ -238,15 +236,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Payroll Staging", href: "/payroll", icon: Wallet, roles: ["CEO"] },
     { label: "Payroll Export", href: "/payroll-export", icon: FileDown, roles: ["CEO"] },
     { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO"] },
-    // Phase 6.0D: Automation Governance Centre — CEO only
     { label: "Automation Governance", href: "/automation-governance", icon: ShieldCheck, roles: ["CEO"], testId: "nav-automation-governance" },
-    // Phase 6.1: Notification Centre — CEO + PM
     { label: "Notifications", href: "/notifications", icon: Bell, roles: ["CEO", "Project Manager"], testId: "nav-notifications" },
-    // Phase 5.7: Accounting Settings — CEO only
     { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"] },
-    // Phase 5.8: Reconciliation Centre — CEO only
     { label: "Reconciliation Centre", href: "/reconciliation-center", icon: GitMerge, roles: ["CEO"], testId: "nav-reconciliation-centre" },
-    // Phase 5.9: Exception Resolution Centre — CEO only
     { label: "Exception Resolution", href: "/exception-resolution-center", icon: TriangleAlert, roles: ["CEO"], testId: "nav-exception-resolution-centre" },
     { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"] },
   ].filter((item) => hasAnyRole(item.roles));
@@ -313,7 +306,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           )}
         </div>
-        <Button variant="outline" className={cn("w-full justify-start", collapsed && "justify-center p-0")} onClick={handleLogout}>
+        {/* data-testid="btn-sign-out" lets signOut.ts find this button whether
+            the sidebar is collapsed (icon-only, no accessible name) or expanded. */}
+        <Button
+          data-testid="btn-sign-out"
+          variant="outline"
+          className={cn("w-full justify-start", collapsed && "justify-center p-0")}
+          onClick={handleLogout}
+        >
           <LogOut className={cn("h-4 w-4", !collapsed && "mr-2")} />
           {!collapsed && "Sign Out"}
         </Button>
