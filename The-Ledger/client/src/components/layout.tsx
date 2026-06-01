@@ -1,6 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -29,11 +35,149 @@ import {
   GitMerge,
   TriangleAlert,
   ShieldCheck,
+  Bell,
+  ExternalLink,
+  CheckCircle,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  getAllNotifications,
+  markNotificationRead,
+  NOTIFICATION_TYPE_LABELS,
+  NOTIFICATION_PRIORITY_COLORS,
+} from "@/lib/notificationEngine";
+
+// ──────────────────────────────────────────────────────
+// NOTIFICATION BELL COMPONENT
+// ──────────────────────────────────────────────────────
+
+function NotificationBell({ userId }: { userId: string }) {
+  const [, setLocation] = useLocation();
+  const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState(() => getAllNotifications());
+
+  function refresh() {
+    setNotifications(getAllNotifications());
+  }
+
+  const unreadCount = notifications.filter((n) => n.status === 'unread').length;
+
+  // Latest 5 notifications (unread first, then by date)
+  const preview = [...notifications]
+    .sort((a, b) => {
+      if (a.status === 'unread' && b.status !== 'unread') return -1;
+      if (a.status !== 'unread' && b.status === 'unread') return 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    })
+    .slice(0, 5);
+
+  function handleMarkRead(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    markNotificationRead(id, userId);
+    refresh();
+  }
+
+  function handleViewAll() {
+    setOpen(false);
+    setLocation('/notifications');
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          data-testid="notif-bell-btn"
+          variant="ghost"
+          size="icon"
+          className="relative text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          aria-label="Notifications"
+        >
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span
+              data-testid="notif-bell-badge"
+              className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center"
+            >
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        data-testid="notif-bell-dropdown"
+        className="w-80 p-0"
+        align="end"
+        sideOffset={8}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <p className="font-semibold text-sm">Notifications</p>
+          {unreadCount > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              {unreadCount} unread
+            </Badge>
+          )}
+        </div>
+        <div className="divide-y max-h-80 overflow-y-auto">
+          {preview.length === 0 && (
+            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+              No notifications
+            </div>
+          )}
+          {preview.map((notif) => (
+            <div
+              key={notif.id}
+              data-testid={`notif-bell-item-${notif.id}`}
+              className={cn(
+                "px-4 py-3 flex items-start gap-3",
+                notif.status === 'unread' ? "bg-blue-50/60" : ""
+              )}
+            >
+              <div className="flex-1 min-w-0">
+                <p className={cn("text-sm truncate", notif.status === 'unread' ? "font-semibold" : "")}>
+                  {notif.title}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                  {NOTIFICATION_TYPE_LABELS[notif.type]}
+                </p>
+              </div>
+              {notif.status === 'unread' && (
+                <Button
+                  data-testid={`notif-bell-mark-read-${notif.id}`}
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 shrink-0"
+                  onClick={(e) => handleMarkRead(notif.id, e)}
+                  title="Mark as read"
+                >
+                  <CheckCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="border-t p-3">
+          <Button
+            data-testid="notif-bell-view-all"
+            variant="outline"
+            size="sm"
+            className="w-full gap-1"
+            onClick={handleViewAll}
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            View All Notifications
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ──────────────────────────────────────────────────────
+// MAIN LAYOUT
+// ──────────────────────────────────────────────────────
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -72,6 +216,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     return userRoleNames.some((name) => allowed.includes(name));
   };
 
+  const isCEOorPM = hasAnyRole(["CEO", "Project Manager"]);
+
   const NAV_ITEMS = [
     { label: "Dashboard", href: "/", icon: LayoutDashboard, roles: ["CEO", "Project Manager", "Worker"] },
     { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: ["CEO", "Project Manager"] },
@@ -91,13 +237,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Payroll Staging", href: "/payroll", icon: Wallet, roles: ["CEO"] },
     { label: "Payroll Export", href: "/payroll-export", icon: FileDown, roles: ["CEO"] },
     { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO"] },
-    // Phase 6.0D: Automation Governance Centre — CEO only
     { label: "Automation Governance", href: "/automation-governance", icon: ShieldCheck, roles: ["CEO"], testId: "nav-automation-governance" },
-    // Phase 5.7: Accounting Settings — CEO only
+    { label: "Notifications", href: "/notifications", icon: Bell, roles: ["CEO", "Project Manager"], testId: "nav-notifications" },
     { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"] },
-    // Phase 5.8: Reconciliation Centre — CEO only
     { label: "Reconciliation Centre", href: "/reconciliation-center", icon: GitMerge, roles: ["CEO"], testId: "nav-reconciliation-centre" },
-    // Phase 5.9: Exception Resolution Centre — CEO only
     { label: "Exception Resolution", href: "/exception-resolution-center", icon: TriangleAlert, roles: ["CEO"], testId: "nav-exception-resolution-centre" },
     { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"] },
   ].filter((item) => hasAnyRole(item.roles));
@@ -164,7 +307,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           )}
         </div>
-        <Button variant="outline" className={cn("w-full justify-start", collapsed && "justify-center p-0")} onClick={handleLogout}>
+        {/* data-testid="btn-sign-out" is required by tests/helpers/signOut.ts.
+            The button renders as icon-only when the sidebar is collapsed, so
+            getByRole(name:/Sign Out/i) would fail to resolve it. The testid
+            provides a stable, layout-agnostic selector. */}
+        <Button
+          data-testid="btn-sign-out"
+          variant="outline"
+          className={cn("w-full justify-start", collapsed && "justify-center p-0")}
+          onClick={handleLogout}
+        >
           <LogOut className={cn("h-4 w-4", !collapsed && "mr-2")} />
           {!collapsed && "Sign Out"}
         </Button>
@@ -182,12 +334,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="h-6 w-6 bg-primary rounded-sm flex items-center justify-center text-primary-foreground text-xs">L</div>
           The Ledger
         </div>
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild><Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button></SheetTrigger>
-          <SheetContent side="left" className="p-0 w-64 border-r-sidebar-border bg-sidebar text-sidebar-foreground">
-             <SidebarContent />
-          </SheetContent>
-        </Sheet>
+        <div className="flex items-center gap-1">
+          {isCEOorPM && user?.id && (
+            <NotificationBell userId={user.id} />
+          )}
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild><Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button></SheetTrigger>
+            <SheetContent side="left" className="p-0 w-64 border-r-sidebar-border bg-sidebar text-sidebar-foreground">
+               <SidebarContent />
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
       <main className={cn("flex-1 p-6 md:p-8 pt-20 md:pt-8 transition-all duration-300 relative", collapsed ? "md:ml-16" : "md:ml-64")}>
         {isDemo && (
