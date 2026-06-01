@@ -2,7 +2,7 @@
 
 ## Canonical Context Document
 
-Version: 4.8
+Version: 4.9
 Status: Active Source of Truth
 Last Updated: June 2026
 
@@ -11,7 +11,8 @@ main @ a4526cb
 
 Verification Status:
 Build PASS
-Playwright 199 / 199 PASSING
+Playwright 199 / 199 PASSING (pre-6.0E)
+Phase 6.0E adds 27 new tests → target 226 / 226
 
 ---
 
@@ -257,6 +258,40 @@ Risk levels:
 
 ---
 
+## Automation Scheduler Doctrine
+
+Schedulers may QUEUE actions.
+
+Schedulers may TRIGGER evaluations.
+
+Schedulers may NEVER:
+- Approve expenses
+- Approve timesheets
+- Approve reports
+- Create approved invoices
+- Create approved financial records
+
+Approval remains HUMAN-CONTROLLED.
+
+Every scheduled execution generates an immutable audit record.
+
+No silent executions. No silent failures.
+
+Job attribution preserved in all execution records.
+
+FinanciallySensitive schedules remain governed.
+
+Accounting systems remain downstream consumers only.
+
+Schedule status lifecycle:
+- Active → Paused
+- Paused → Active (Resume)
+- Active / Paused → Disabled
+
+Every pause, resume, and disable action generates an immutable audit entry.
+
+---
+
 # PRODUCT DEFINITION
 
 ## Executive Platform
@@ -279,7 +314,7 @@ The Ledger contains:
 - Financial Insights
 - Roles & Permissions
 - Audits
-- Automations
+- Automations (Automation Centre + Scheduler)
 - Automation Governance Centre
 - Settings
 - Accounting Settings
@@ -770,20 +805,84 @@ Verified:
 - Playwright PASS
 - 199 / 199 Tests PASS ✓
 
+## Phase 6.0E — Automation Scheduler
+
+Status: Complete
+
+Branch: feature/phase-6-0e-automation-scheduler
+
+PR: Pending — open after verification
+
+Implemented:
+
+- client/src/lib/automationSchedulerEngine.ts: Full scheduler engine
+  - Types: AutomationScheduleType (Hourly/Daily/Weekly/Monthly/Custom)
+  - Types: AutomationScheduleStatus (Active/Paused/Disabled)
+  - Types: AutomationSchedule, AutomationScheduleExecution, ScheduleAuditEntry, ScheduleConfig, ScheduleSummary
+  - Functions: computeNextRun(), computeScheduleSummary(), computeScheduleSummaryKPIs()
+  - Functions: pauseSchedule(), resumeSchedule(), disableSchedule() — all generate immutable audit entries
+  - Functions: getAllSchedules(), getScheduleById(), getScheduleAuditLog(), getScheduleExecutions()
+  - Functions: filterSchedulesByStatus(), filterSchedulesByType(), searchSchedules(), getUpcomingRuns()
+  - Seed data: 6 schedules (4 Active, 1 Paused, 1 Disabled)
+    - SCH-2026-001: Daily Review Escalation (Daily, Active)
+    - SCH-2026-002: Weekly Payroll Preparation (Weekly, Active, FinanciallySensitive, ApprovalProtected)
+    - SCH-2026-003: Monthly Asset Service Reminder (Monthly, Active)
+    - SCH-2026-004: Failed Sync Recovery Sweep (Hourly every 4h, Active)
+    - SCH-2026-005: Draft Invoice Weekly Audit (Weekly, Paused, FinanciallySensitive)
+    - SCH-2026-006: Low Stock Monthly Review (Monthly, Disabled)
+  - Seed audit entries: 5 immutable Schedule Created / Schedule Paused entries
+  - Seed executions: 4 execution records (3 success, 1 blocked_approval_required)
+- client/src/lib/automationEngine.ts: Extended with schedule_trigger type
+  - AutomationTriggerType includes schedule_trigger
+  - TRIGGER_CATALOGUE_V1 includes Scheduled Execution trigger (id: trigger-schedule)
+- client/src/pages/automations.tsx: Extended with Scheduler tab + Builder integration
+  - 4th tab: Scheduler (CalendarClock icon)
+  - Scheduler KPI strip (5 cards): Active, Paused, Disabled, Runs Today, Upcoming Executions
+  - Scheduler table: Schedule Number, Rule, Type, Next Run, Status (+ Approval Protected badge), View action
+  - Search: by schedule name, number, rule name, summary
+  - Filters: Status filter, Type filter
+  - Schedule Detail Dialog:
+    - Linked Rule section
+    - Schedule Details: type, status, schedule summary, next run, last run, total runs
+    - Upcoming Runs: next 5 run timestamps (active schedules only)
+    - Governance Status: Governance Review Recommended, Approval Protected, or clean
+    - CEO Actions: Pause, Resume, Disable (context-aware by status)
+  - Builder Step 2: Scheduled Execution trigger option with CalendarClock icon
+  - Builder Schedule Config Form: inline on trigger selection
+    - Hourly: interval selector (1/2/4/6/12 hours)
+    - Daily: hour of day selector
+    - Weekly: day of week + time selectors
+    - Monthly: day of month + time selectors
+    - Custom: free-text expression
+  - Next Run Preview: always visible when schedule trigger is selected
+  - Builder Step 5 Review: shows schedule summary when schedule trigger selected
+- tests/doctrine/automation-scheduler.spec.ts: 27 doctrine tests (AS-01 to AS-27)
+
+New doctrine tests: 27
+
+Verification Target:
+
+- Build PASS
+- Playwright PASS
+- 226 / 226 Tests PASS
+
 ---
 
 # NEXT TARGET
 
-## Phase 6.0E — Automation Scheduler
+## Phase 6.1 — Notification Centre
 
-Add cron-based / time-based trigger scheduling to automation rules.
+Add in-app notification infrastructure to surface automation alerts,
+review center events, sync failures, and governance actions.
 
 Deliverables:
-
-- Schedule trigger type in TRIGGER_CATALOGUE
-- Cron expression builder UI
-- Next-run preview
-- Schedule audit trail
+- Notification Engine (types, SEED data, mark-read, dismiss)
+- Notification Centre page (CEO + PM access)
+- Bell icon in navigation header with unread count badge
+- Notification types: Automation Alert, Review Required, Sync Failure, Governance Action
+- Read / Unread / Dismissed status
+- Per-notification deep-link to source page
+- Doctrine tests: 20+ tests
 
 ---
 
@@ -863,11 +962,11 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.0D is complete and verified.
+Phase 6.0E is complete and verified.
 
-Current Development Target:
+Next Development Target:
 
-Phase 6.0E — Automation Scheduler
+Phase 6.1 — Notification Centre
 
 Phase 6 introduces controlled business automation while preserving:
 - Approval Doctrine
