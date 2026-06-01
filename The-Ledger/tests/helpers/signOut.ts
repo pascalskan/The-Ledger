@@ -7,18 +7,15 @@ import { Page } from '@playwright/test';
  *   - Worker mobile layout: has a "Profile" bottom-nav button that navigates
  *     to /worker/profile, where a "Sign Out" button is visible in the page body.
  *   - CEO / PM sidebar layout: has a "Sign Out" button at the bottom of the
- *     sidebar. When the sidebar is COLLAPSED the button renders as icon-only
- *     (no visible text), so getByRole(name:/Sign Out/i) fails to resolve it.
- *     We target data-testid="btn-sign-out" instead — a stable, layout-agnostic
- *     selector that works in both expanded and collapsed states.
+ *     sidebar (may require scrollIntoViewIfNeeded if the viewport is short).
  *
  * Strategy:
- *   1. If a "Profile" bottom-nav button is visible (Worker mobile layout),
- *      click it to reach the profile page where Sign Out is in the viewport.
- *   2. Target the Sign Out button by data-testid, scroll into view, and
- *      force-click to bypass viewport-clipping actionability checks.
- *   3. Wait for the /auth URL to confirm navigation is complete before
- *      returning — soft-login helpers assume /auth is active when they run.
+ *   1. If a "Profile" bottom-nav button is visible, click it to reach the
+ *      profile page where Sign Out is clearly in the viewport.
+ *   2. Scroll the Sign Out button into view and click it (works for all layouts).
+ *   3. Wait for /auth URL to confirm navigation is complete before returning.
+ *      This is critical — soft-login helpers assume the page is on /auth when
+ *      they run. Without this wait, the next click() races the route transition.
  */
 export async function signOut(page: Page) {
   // Worker layout: Profile tab navigates to profile page where Sign Out is visible
@@ -27,14 +24,11 @@ export async function signOut(page: Page) {
     await profileButton.click();
   }
 
-  // Target by testid so the selector works whether the sidebar is collapsed
-  // (icon-only, no accessible name) or expanded ("Sign Out" text visible).
-  // { force: true } bypasses Playwright's viewport-clipping actionability check
-  // — the button is rendered and interactive even when the sidebar overflow
-  // container clips it below the visible scroll area.
-  const signOutButton = page.getByTestId('btn-sign-out').first();
+  // Scroll Sign Out into view before clicking (handles sidebar layout where the
+  // button can sit below the visible viewport at default 720px height)
+  const signOutButton = page.getByRole('button', { name: /Sign Out/i }).first();
   await signOutButton.scrollIntoViewIfNeeded();
-  await signOutButton.click({ force: true });
+  await signOutButton.click();
 
   // Wait for the auth page to be active before returning.
   // The logout handler calls setLocation("/auth") synchronously after logout(),
