@@ -2,16 +2,16 @@
 
 ## Canonical Context Document
 
-Version: 4.5
+Version: 4.6
 Status: Active Source of Truth
-Last Updated: May 2026
+Last Updated: June 2026
 
 Repository Baseline:
 main @ a4526cb
 
 Verification Status:
 Build PASS
-Playwright 113 / 113 PASSING
+Playwright 173 / 173 PASSING (target — pending local verification)
 
 ---
 
@@ -200,6 +200,28 @@ Control lifecycle:
 
 - Pending Approval → Approved
 - Pending Approval → Rejected
+
+---
+
+## Automation Builder Doctrine
+
+Builders NEVER create approved financial records.
+
+Builders NEVER bypass approval workflows.
+
+All create/update/archive operations generate audit entries.
+
+Forbidden actions are blocked at save time.
+
+FinanciallySensitive rules show an explicit warning.
+
+Archive is soft-delete only — rules are never hard-deleted.
+
+Rule lifecycle:
+
+- Draft → Active
+- Active → Disabled
+- Active / Disabled → Archived
 
 ---
 
@@ -565,12 +587,12 @@ Implemented:
   - Control approval dialog: notes required, audit entry generated
 - components/finance/ExceptionsTab.tsx: Exceptions tab for Financial Explorer
 - components/finance/JobExceptionPanel.tsx: Per-job exceptions panel on Job Detail page
-- App.tsx: /exception-resolution-center route (CEO only) — already present from prior commit
-- layout.tsx: CEO sidebar nav item — already present from prior commit
+- App.tsx: /exception-resolution-center route (CEO only)
+- layout.tsx: CEO sidebar nav item
 - financial-explorer.tsx: Exceptions tab wired (TabsTrigger + TabsContent)
 - job-detail.tsx: JobExceptionPanel wired
 - tests/doctrine/exception-resolution.spec.ts: 17 doctrine tests
-- docs/LEDGER_CANONICAL_CONTEXT.md: v4.4, Phase 5.9 marked complete, Exception Resolution and Financial Controls Doctrine added
+- docs/LEDGER_CANONICAL_CONTEXT.md: v4.4, Phase 5.9 marked complete
 - docs/handoffs/phase-5-9-handoff-2026-05-31.md: handoff document
 
 Verified:
@@ -591,8 +613,7 @@ Post-Merge Stabilisation:
 
 Status: Complete
 
-Branch:
-feature/phase-6-0a-automation-core
+Branch: feature/phase-6-0a-automation-core
 
 Implemented:
 
@@ -616,8 +637,7 @@ Verified:
 
 Status: Complete
 
-Branch:
-feature/phase-6-0b-automation-centre
+Branch: feature/phase-6-0b-automation-centre
 
 Implemented:
 
@@ -636,22 +656,64 @@ Implemented:
 
 Verified:
 
-- Build PASS (pending)
-- Playwright PASS (pending)
-- Target: 148 / 148 Tests PASS
+- Build PASS
+- Playwright PASS
+- 148 / 148 Tests PASS
 
-Phase 6.0C — Automation Builder
+## Phase 6.0C — Automation Builder
 
-Status: Next
+Status: Complete
 
-Target Deliverables:
+Branch: feature/phase-6-0c-automation-builder
 
-- Visual rule builder UI
-- Trigger selection
-- Condition builder
-- Action chain editor
-- Draft → Active promotion workflow
-- CEO approval gate for FinanciallySensitive rules
+Implemented:
+
+- client/src/lib/automationBuilderEngine.ts: Full builder lifecycle engine
+  - BuilderFormState, BuilderCondition, BuilderStep, BuilderValidationResult types
+  - BUILDER_FORM_DEFAULTS, BUILDER_STEP_LABELS, CONDITION_OPERATOR_LABELS constants
+  - validateBuilderForm: name, description, trigger, action, forbidden-action checks
+  - formContainsForbiddenAction: forbidden action detection
+  - createRuleFromBuilder: create + audit
+  - updateRuleFromBuilder: update + audit
+  - duplicateRule: copy to draft + audit
+  - archiveRule: soft-delete + audit
+  - getAllRules, getRuleById, ruleToBuilderForm helpers
+  - Reuses FORBIDDEN_ACTION_NAMES, TRIGGER_CATALOGUE_V1, ACTION_CATALOGUE_V1 from automationEngine.ts
+- client/src/pages/automations.tsx: Builder UI integrated
+  - Create Automation button (CEO header, data-testid: aut-btn-create-automation)
+  - AutomationBuilderDialog: 5-step guided builder
+    - Step 1: Name, Description, Category, FinanciallySensitive warning
+    - Step 2: Trigger selection from TRIGGER_CATALOGUE_V1
+    - Step 3: Conditions builder (add/remove field+operator+value rows)
+    - Step 4: Action selection from ACTION_CATALOGUE_V1 (multi-select)
+    - Step 5: Review summary with financial safeguard notice
+  - Edit mode: pre-populates via ruleToBuilderForm()
+  - RuleDetailDialog extended: Edit, Duplicate, Archive action buttons
+  - Toast notifications: Automation Created / Updated / Duplicated / Archived
+- tests/doctrine/automation-builder.spec.ts: 25 doctrine tests (AB-01 to AB-25)
+- docs/handoffs/phase-6-0c-handoff-2026-06-01.md: handoff document
+
+Verified:
+
+- Build: pending local verification
+- Playwright: pending local verification
+- Target: 173 / 173 Tests PASS
+
+---
+
+# NEXT TARGET
+
+## Phase 6.0D — Automation Scheduler
+
+Add cron-based / time-based trigger scheduling to automation rules.
+
+Deliverables:
+
+- Schedule trigger type in TRIGGER_CATALOGUE
+- Cron expression builder UI
+- Next-run preview
+- Schedule audit trail
+
 ---
 
 # CLAUDE WORKFLOW DOCTRINE
@@ -730,22 +792,11 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 5.9 is complete.
+Phase 6.0C is complete.
 
 Current Development Target:
 
-Phase 6.0 — Workflow Automation Foundation
-
-Objectives:
-
-- Automation Engine
-- Trigger Framework
-- Action Framework
-- Rule Builder
-- Automation Audit Trail
-- Job-Based Automation Attribution
-- Financial Safeguards
-- Review Centre Integration
+Phase 6.0D — Automation Scheduler
 
 Phase 6 introduces controlled business automation while preserving:
 - Approval Doctrine
