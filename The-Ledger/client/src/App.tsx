@@ -47,6 +47,7 @@ import InvoiceBuilderPage from "@/pages/invoice-builder";
 import PayrollExportPage from "@/pages/payroll-export";
 import ReconciliationCenterPage from "@/pages/reconciliation-center";
 import ExceptionResolutionCenterPage from "@/pages/exception-resolution-center";
+import NotificationCentrePage from "@/pages/notification-center";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
@@ -128,6 +129,10 @@ function Router() {
       {/* Phase 6.0D: Automation Governance Centre — CEO only */}
       <Route path="/automation-governance">
         <ProtectedRoute component={AutomationGovernanceCentrePage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 6.1: Notification Centre — CEO + PM */}
+      <Route path="/notifications">
+        <ProtectedRoute component={NotificationCentrePage} roles={["CEO", "Project Manager"]} />
       </Route>
       <Route path="/jobs">
         <ProtectedRoute component={JobsPage} />
