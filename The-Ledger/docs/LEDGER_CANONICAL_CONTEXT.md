@@ -2,19 +2,60 @@
 
 ## Canonical Context Document
 
-Version: 4.9
+Version: 5
 Status: Active Source of Truth
 Last Updated: June 2026
 
 Repository Baseline:
-main @ a4526cb
+main
 
 Verification Status:
 Build PASS
-Playwright 199 / 199 PASSING (pre-6.0E)
-Phase 6.0E adds 27 new tests → target 226 / 226
+Playwright 254 / 254 PASSING
+
+Current Completed Phase:
+Phase 6.1 — Notification Centre
+
+Next Target:
+Phase 6.2 — Activity Feed & Event Stream
 
 ---
+# PRODUCT VISION
+
+Dashboard
+- Executive operational overview
+- Financial API powered KPI visibility
+
+Job Intelligence
+- Job profitability
+- Forecasting
+- Margin intelligence
+
+Review Centre
+- Financial approval gate
+
+Jobs
+- Operational command centre
+- Job mini-ledger ownership
+
+Clients
+- CRM + portal provisioning
+
+Workers
+- Workforce management
+
+Stock & Assets
+- Inventory and asset intelligence
+
+Automations
+- Governance-controlled automation platform
+
+Notification Centre
+- Platform-wide event visibility
+
+Client Portal
+- Read-only client transparency layer
+
 
 # PROJECT IDENTITY
 
@@ -290,6 +331,36 @@ Schedule status lifecycle:
 
 Every pause, resume, and disable action generates an immutable audit entry.
 
+## Notification Doctrine
+
+Notifications are informational records that surface operational,
+financial, governance, review, and automation events.
+
+Notifications may:
+
+- Alert users
+- Request review
+- Surface failures
+- Deep-link to source records
+
+Notifications may NEVER:
+
+- Create financial mutations
+- Approve records
+- Bypass Review Centre workflows
+
+Notification lifecycle:
+
+Unread
+→ Read
+→ Dismissed
+
+Dismissed notifications remain auditable.
+
+Notification actions generate immutable audit entries.
+
+Job attribution is preserved where applicable.
+
 ---
 
 # PRODUCT DEFINITION
@@ -314,6 +385,7 @@ The Ledger contains:
 - Financial Insights
 - Roles & Permissions
 - Audits
+- Notification Centre
 - Automations (Automation Centre + Scheduler)
 - Automation Governance Centre
 - Settings
@@ -860,30 +932,52 @@ Implemented:
 
 New doctrine tests: 27
 
-Verification Target:
+Verified:
 
-- Build PASS
-- Playwright PASS
-- 226 / 226 Tests PASS
+Build PASS
+Playwright PASS
+226 / 226 Tests PASS
 
----
-
-# NEXT TARGET
+Merged into main
 
 ## Phase 6.1 — Notification Centre
 
-Add in-app notification infrastructure to surface automation alerts,
-review center events, sync failures, and governance actions.
+Status: Complete
 
-Deliverables:
-- Notification Engine (types, SEED data, mark-read, dismiss)
-- Notification Centre page (CEO + PM access)
-- Bell icon in navigation header with unread count badge
-- Notification types: Automation Alert, Review Required, Sync Failure, Governance Action
-- Read / Unread / Dismissed status
-- Per-notification deep-link to source page
-- Doctrine tests: 20+ tests
+Branch:
+feature/phase-6-1-notification-centre
 
+Implemented:
+
+- notificationEngine.ts
+- Notification Centre page
+- Header notification bell
+- Deep linking
+- Notification audit events
+- CEO + PM RBAC
+- Read / Unread / Dismissed lifecycle
+
+Notification Types:
+
+- Automation Alert
+- Review Required
+- Sync Failure
+- Governance Action
+- Financial Control
+- Exception Event
+
+Verified:
+
+Build PASS
+Playwright PASS
+
+254 / 254 Tests PASS
+
+Merged into main
+---
+
+Next Development Target:
+Phase 6.2 — Activity Feed & Event Stream
 ---
 
 # CLAUDE WORKFLOW DOCTRINE
@@ -962,19 +1056,9 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.0E is complete and verified.
+Phase 6.1 is complete
 
-Next Development Target:
-
-Phase 6.1 — Notification Centre
-
-Phase 6 introduces controlled business automation while preserving:
-- Approval Doctrine
-- Audit Doctrine
-- Job Attribution Doctrine
-- Financial Integrity Doctrine
-
----
+next Phase is 6.2
 
 # AI AUDIT RULES
 
