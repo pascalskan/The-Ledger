@@ -25,6 +25,8 @@
  * imports of the engine module paths.
  *
  * Target: 13 tests
+ * Updated: Phase 6.0E — TRIGGER_CATALOGUE_V1 count updated 9 → 10
+ *          (schedule_trigger added to engine in Phase 6.0E)
  */
 import { test, expect } from '@playwright/test';
 import { loginAsCEO } from '../helpers/login';
@@ -85,7 +87,7 @@ test('Automation Engine: SEED_AUTOMATION_RULES contains 6 seed rules', async ({ 
   expect(count).toBe(6);
 });
 
-test('Automation Engine: TRIGGER_CATALOGUE_V1 contains 9 triggers', async ({ page }) => {
+test('Automation Engine: TRIGGER_CATALOGUE_V1 contains 10 triggers', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/automations');
 
@@ -94,7 +96,8 @@ test('Automation Engine: TRIGGER_CATALOGUE_V1 contains 9 triggers', async ({ pag
     return mod.TRIGGER_CATALOGUE_V1.length;
   });
 
-  expect(count).toBe(9);
+  // Phase 6.0E added schedule_trigger — catalogue is now 10 (was 9)
+  expect(count).toBe(10);
 });
 
 test('Automation Engine: ACTION_CATALOGUE_V1 contains 8 actions', async ({ page }) => {
