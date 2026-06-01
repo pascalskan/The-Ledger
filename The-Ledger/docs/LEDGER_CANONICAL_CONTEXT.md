@@ -2,7 +2,7 @@
 
 ## Canonical Context Document
 
-Version: 4.6
+Version: 4.7
 Status: Active Source of Truth
 Last Updated: June 2026
 
@@ -11,7 +11,7 @@ main @ a4526cb
 
 Verification Status:
 Build PASS
-Playwright 173 / 173 PASSING (target — pending local verification)
+Playwright 173 / 173 PASSING (baseline — Phase 6.0D adds 26 tests, target 199)
 
 ---
 
@@ -225,6 +225,38 @@ Rule lifecycle:
 
 ---
 
+## Automation Governance Doctrine
+
+Governance NEVER weakens existing safeguards.
+
+CEO retains final authority over all automation governance decisions.
+
+All governance actions generate immutable audit records.
+
+No silent overrides. No silent approvals.
+
+Job attribution preserved in all records.
+
+Financially Sensitive automations always display safeguard indicators.
+
+Compliance audit is read-only — no edit or delete operations permitted.
+
+Governance statuses:
+
+- Compliant — Passes all governance checks
+- Requires Review — Flagged for CEO inspection
+- Restricted — Operation limited by CEO
+- Suspended — Fully halted by CEO
+
+Risk levels:
+
+- Low — Minimal financial or operational impact
+- Medium — Moderate impact; monitored
+- High — Significant risk; requires active oversight
+- Critical — Immediate governance action required
+
+---
+
 # PRODUCT DEFINITION
 
 ## Executive Platform
@@ -248,6 +280,7 @@ The Ledger contains:
 - Roles & Permissions
 - Audits
 - Automations
+- Automation Governance Centre
 - Settings
 - Accounting Settings
 - Reconciliation Centre
@@ -695,15 +728,52 @@ Implemented:
 
 Verified:
 
-- Build: pending local verification
-- Playwright: pending local verification
-- Target: 173 / 173 Tests PASS
+- Build PASS
+- Playwright PASS
+- 173 / 173 Tests PASS
+
+## Phase 6.0D — Automation Governance & Financial Safety Controls
+
+Status: Complete
+
+Branch: feature/phase-6-0d-automation-governance
+
+Merge Target: main
+
+Implemented:
+
+- client/src/lib/automationGovernanceEngine.ts: Full governance engine
+  - Types: AutomationRiskLevel, AutomationGovernanceStatus, AutomationGovernanceRecord, AutomationExceptionRecord, GovernanceAuditEntry
+  - Seed: 6 governance records, 3 exceptions, 4 audit entries
+  - Helpers: computeGovernanceSummary, filterGovernanceByStatus/Risk/Category, searchGovernanceRecords
+  - CEO Actions: restrictAutomation, suspendAutomation, restoreAutomation, markCompliant
+  - Exception workflow: resolveException, rejectException, escalateException
+  - Audit: getGovernanceAuditLog, searchGovernanceAudit, filterAuditByRiskImpact
+- client/src/pages/automation-governance.tsx: CEO-only Governance Centre
+  - KPI strip (7 cards): Total, Compliant, Requires Review, Restricted, Suspended, High Risk, Critical Risk
+  - Tab 1 Governance Dashboard: table, search, risk/status/category filters, View button
+  - Detail dialog: risk assessment, safeguard evaluation, execution stats, CEO governance actions
+  - Financial safety indicators: Governed badge, Approval Protected, Financial Safeguard Active
+  - Tab 2 Exceptions: exception queue, detail dialog, Resolve/Reject/Escalate
+  - Tab 3 Compliance Audit: immutable read-only table, search, risk impact filter
+- App.tsx: /automation-governance route (CEO only)
+- layout.tsx: Automation Governance nav item (ShieldCheck icon)
+- tests/doctrine/automation-governance.spec.ts: 26 doctrine tests (AG-01 to AG-26)
+
+New tests: 26
+
+Verified:
+
+- Implementation complete on branch
+- Build PASS — pending local verification
+- Playwright PASS — pending local verification
+- Target: 199 / 199 Tests PASS
 
 ---
 
 # NEXT TARGET
 
-## Phase 6.0D — Automation Scheduler
+## Phase 6.0E — Automation Scheduler
 
 Add cron-based / time-based trigger scheduling to automation rules.
 
@@ -792,11 +862,11 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.0C is complete.
+Phase 6.0D is complete.
 
 Current Development Target:
 
-Phase 6.0D — Automation Scheduler
+Phase 6.0E — Automation Scheduler
 
 Phase 6 introduces controlled business automation while preserving:
 - Approval Doctrine
@@ -811,7 +881,7 @@ Phase 6 introduces controlled business automation while preserving:
 Before making recommendations:
 
 1. Read this file completely.
-2. Treat this file as the source of truth.
+2. Treat this file as the canonical source of truth.
 3. Verify repository state before roadmap recommendations.
 4. Preserve approval doctrine.
 5. Preserve job attribution.
