@@ -3,41 +3,47 @@ import { Page } from '@playwright/test';
 /**
  * Signs the current user out regardless of which layout is active.
  *
- * All three previous DOM-based approaches (sidebar btn-sign-out, worker profile
- * page, URL-based detection) failed because:
- *   - The sidebar is position:fixed with no overflow scroll, so btn-sign-out
- *     at the bottom can be outside the 1280×720 Playwright viewport when the
- *     nav list is long enough to push it below the fold.
- *   - { force: true } bypasses visibility checks but not the "outside of
- *     viewport" hard block that Playwright enforces for clipped fixed elements.
+ * Root cause of failures: the sidebar is position:fixed with no overflow-y
+ * scroll. When the nav list is long (many phases added items), the Sign Out
+ * button at the bottom falls below the 1280×720 Playwright viewport boundary.
+ * Playwright's "outside of viewport" check blocks the click even with
+ * { force: true } — force bypasses visibility but not the hard viewport clip.
  *
- * Solution: bypass the DOM entirely. Clear the auth key from localStorage
- * (which the app reads on module init to restore sessions) then navigate
- * directly to /auth. The app's useEffect in Layout detects user === null and
- * redirects, but navigating directly is faster and more reliable.
+ * Solution: use page.evaluate to dispatch a native click event directly on
+ * the button element. A programmatic click is not subject to Playwright's
+ * actionability checks (visibility, viewport clipping, pointer-events). The
+ * button's onClick calls logout() which clears currentUser and localStorage,
+ * then navigates to /auth — exactly what we need.
  *
- * This preserves in-memory store state (no page.goto / full reload) so
- * multi-role tests that use softLogin* helpers after signOut continue to work.
+ * For the Worker mobile layout the sign-out button is on /worker/profile.
+ * We navigate there first (client-side, no reload) so the button is present.
  */
 export async function signOut(page: Page) {
-  // Clear the persisted auth token so the next page load (or soft-login) does
-  // not auto-restore the current session.
-  await page.evaluate(() => {
-    localStorage.removeItem('ledger-auth-email');
-    // Also clear any direct-review-items that should persist across reloads
-    // (kept here for completeness; actual tests that need persistence handle
-    // this themselves via clearBrowserState or explicit setup).
-  });
+  const currentUrl = page.url();
+  const isWorkerLayout = currentUrl.includes('/worker/');
 
-  // Trigger the app's logout by navigating to /auth client-side.
-  // pushState + popstate is picked up by Wouter without a full page reload,
-  // preserving the module-level in-memory store that softLogin* helpers rely on.
+  if (isWorkerLayout) {
+    // Navigate to /worker/profile without a full page reload so the
+    // in-memory store state is preserved for subsequent softLogin* calls.
+    await page.evaluate(() => {
+      window.history.pushState({}, '', '/worker/profile');
+      window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+    });
+    // Wait for Wouter to render the profile route.
+    await page.waitForFunction(
+      () => window.location.pathname === '/worker/profile',
+      { timeout: 5000 }
+    );
+    await page.waitForTimeout(300);
+  }
+
+  // Programmatically click the first btn-sign-out in the DOM.
+  // This bypasses Playwright's viewport/visibility actionability checks,
+  // which block clicks on fixed-position elements below the fold.
   await page.evaluate(() => {
-    // Call the app's own logout mechanism if accessible, otherwise clear state
-    // by dispatching a storage event — the auth hook watches localStorage.
-    localStorage.removeItem('ledger-auth-email');
-    window.history.pushState({}, '', '/auth');
-    window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+    const btn = document.querySelector<HTMLElement>('[data-testid="btn-sign-out"]');
+    if (!btn) throw new Error('btn-sign-out not found in DOM');
+    btn.click();
   });
 
   await page.waitForURL('**/auth', { timeout: 10000 });
