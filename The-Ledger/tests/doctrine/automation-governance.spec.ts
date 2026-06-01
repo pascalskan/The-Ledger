@@ -16,7 +16,7 @@
  *   - Financial Safety: Governed badge, Approval Protected, Safeguard
  *   - RBAC: CEO allowed, PM read-only denied, Worker denied
  *
- * Target: 22 new doctrine tests (173 existing → 195 total)
+ * Target: 26 new doctrine tests (173 existing → 199 total)
  */
 import { test, expect } from '@playwright/test';
 import { loginAsCEO, loginAsPM, loginAsWorker } from '../helpers/login';
@@ -61,13 +61,13 @@ test('AG-03: KPI strip renders all 7 cards', async ({ page }) => {
   await expect(page.getByTestId('gov-kpi-critical-risk')).toBeVisible();
 });
 
-test('AG-04: KPI values match seed data (6 total, 2 compliant, 2 requires review)', async ({ page }) => {
+test('AG-04: KPI values match seed data (6 total, 3 compliant, 2 requires review)', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/automation-governance');
   const totalCard = page.getByTestId('gov-kpi-total');
   await expect(totalCard).toContainText('6');
   const compliantCard = page.getByTestId('gov-kpi-compliant');
-  await expect(compliantCard).toContainText('2');
+  await expect(compliantCard).toContainText('3');
   const reviewCard = page.getByTestId('gov-kpi-requires-review');
   await expect(reviewCard).toContainText('2');
 });
