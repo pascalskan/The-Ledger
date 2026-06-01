@@ -40,6 +40,7 @@ import WorkerUploadsPage from "@/pages/worker/uploads";
 import WorkerProfilePage from "@/pages/worker/profile";
 import JobIntelligenceDashboard from "@/pages/job-intelligence";
 import AutomationsPage from "@/pages/automations";
+import AutomationGovernanceCentrePage from "@/pages/automation-governance";
 import FinancialExplorerPage from "@/pages/financial-explorer";
 import PayrollStagingPage from "@/pages/payroll";
 import InvoiceBuilderPage from "@/pages/invoice-builder";
@@ -123,6 +124,10 @@ function Router() {
       </Route>
       <Route path="/automations">
         <ProtectedRoute component={AutomationsPage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 6.0D: Automation Governance Centre — CEO only */}
+      <Route path="/automation-governance">
+        <ProtectedRoute component={AutomationGovernanceCentrePage} roles={["CEO"]} />
       </Route>
       <Route path="/jobs">
         <ProtectedRoute component={JobsPage} />
