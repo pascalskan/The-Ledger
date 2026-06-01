@@ -1,9 +1,8 @@
 // ======================================================
-// PHASE 6.0A — AUTOMATION ENGINE
+// PHASE 6.0A — AUTOMATION ENGINE (extended in 6.0E)
 //
 // Core automation model for The Ledger Automation Foundation.
-// Defines all types, catalogues, seed data, and helpers
-// needed by the rule evaluation and audit engines.
+// Extended in Phase 6.0E with schedule_trigger type.
 //
 // Architecture: Mock only. No backend. Pure functions +
 // seed data.
@@ -82,7 +81,8 @@ export type AutomationTriggerType =
   | "sync_failed"
   | "asset_service_due"
   | "low_stock_alert"
-  | "worker_report_submitted";
+  | "worker_report_submitted"
+  | "schedule_trigger";  // Phase 6.0E — time-based trigger
 
 export interface AutomationTrigger {
   id: string;
@@ -94,7 +94,7 @@ export interface AutomationTrigger {
 }
 
 // ──────────────────────────────────────────────────────
-// TRIGGER CATALOGUE V1
+// TRIGGER CATALOGUE V1 (extended in 6.0E)
 // ──────────────────────────────────────────────────────
 
 export const TRIGGER_CATALOGUE_V1: AutomationTrigger[] = [
@@ -152,6 +152,13 @@ export const TRIGGER_CATALOGUE_V1: AutomationTrigger[] = [
     type: "worker_report_submitted",
     label: "Worker Report Submitted",
     description: "Fires when a worker submits a job report.",
+  },
+  // Phase 6.0E — Scheduled Execution trigger
+  {
+    id: "trigger-schedule",
+    type: "schedule_trigger",
+    label: "Scheduled Execution",
+    description: "Fires on a time-based schedule (Hourly, Daily, Weekly, Monthly, or Custom). Configure the schedule in the Scheduler tab.",
   },
 ];
 
