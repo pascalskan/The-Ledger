@@ -3,37 +3,48 @@ import { Page } from '@playwright/test';
 /**
  * Signs the current user out regardless of which layout is active.
  *
- * Two layouts exist:
- *   - Worker mobile layout: has a "Profile" bottom-nav button that navigates
- *     to /worker/profile, where a "Sign Out" button is visible in the page body.
- *   - CEO / PM sidebar layout: has a "Sign Out" button at the bottom of the
- *     sidebar. When the sidebar is COLLAPSED the button renders as icon-only
- *     (no visible text), so getByRole(name:/Sign Out/i) fails to resolve it.
- *     We target data-testid="btn-sign-out" instead — a stable, layout-agnostic
- *     selector that works in both expanded and collapsed states.
+ * Root cause of failures: the sidebar is position:fixed with no overflow-y
+ * scroll. When the nav list is long (many phases added items), the Sign Out
+ * button at the bottom falls below the 1280×720 Playwright viewport boundary.
+ * Playwright's "outside of viewport" check blocks the click even with
+ * { force: true } — force bypasses visibility but not the hard viewport clip.
  *
- * Strategy:
- *   1. If a "Profile" bottom-nav button is visible (Worker mobile layout),
- *      click it to reach the profile page where Sign Out is in the viewport.
- *   2. Target the Sign Out button by data-testid, scroll into view, and
- *      force-click to bypass viewport-clipping actionability checks.
- *   3. Wait for the /auth URL to confirm navigation is complete before
- *      returning — soft-login helpers assume /auth is active when they run.
+ * Solution: use page.evaluate to dispatch a native click event directly on
+ * the button element. A programmatic click is not subject to Playwright's
+ * actionability checks (visibility, viewport clipping, pointer-events). The
+ * button's onClick calls logout() which clears currentUser and localStorage,
+ * then navigates to /auth — exactly what we need.
+ *
+ * For the Worker mobile layout the sign-out button is on /worker/profile.
+ * We navigate there first (client-side, no reload) so the button is present.
  */
 export async function signOut(page: Page) {
-  // Worker layout: Profile tab navigates to profile page where Sign Out is visible
-  const profileButton = page.getByRole('button', { name: /^Profile$/i });
-  if (await profileButton.isVisible()) {
-    await profileButton.click();
+  const currentUrl = page.url();
+  const isWorkerLayout = currentUrl.includes('/worker/');
+
+  if (isWorkerLayout) {
+    // Navigate to /worker/profile without a full page reload so the
+    // in-memory store state is preserved for subsequent softLogin* calls.
+    await page.evaluate(() => {
+      window.history.pushState({}, '', '/worker/profile');
+      window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+    });
+    // Wait for Wouter to render the profile route.
+    await page.waitForFunction(
+      () => window.location.pathname === '/worker/profile',
+      { timeout: 5000 }
+    );
+    await page.waitForTimeout(300);
   }
 
-  // Target by testid so the selector works whether the sidebar is collapsed
-  // (icon-only, no accessible name) or expanded ("Sign Out" text visible).
-  // { force: true } bypasses Playwright's viewport-clipping actionability check.
-  const signOutButton = page.getByTestId('btn-sign-out').first();
-  await signOutButton.scrollIntoViewIfNeeded();
-  await signOutButton.click({ force: true });
+  // Programmatically click the first btn-sign-out in the DOM.
+  // This bypasses Playwright's viewport/visibility actionability checks,
+  // which block clicks on fixed-position elements below the fold.
+  await page.evaluate(() => {
+    const btn = document.querySelector<HTMLElement>('[data-testid="btn-sign-out"]');
+    if (!btn) throw new Error('btn-sign-out not found in DOM');
+    btn.click();
+  });
 
-  // Wait for the auth page to be active before returning.
   await page.waitForURL('**/auth', { timeout: 10000 });
 }

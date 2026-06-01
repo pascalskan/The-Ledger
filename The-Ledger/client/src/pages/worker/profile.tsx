@@ -23,6 +23,7 @@ export default function WorkerProfilePage() {
           <p className="text-slate-500 text-sm mb-6">{user?.email}</p>
           
           <button 
+            data-testid="btn-sign-out"
             onClick={handleLogout}
             className="w-full bg-red-50 text-red-600 hover:bg-red-100 rounded-xl py-3.5 font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
           >
