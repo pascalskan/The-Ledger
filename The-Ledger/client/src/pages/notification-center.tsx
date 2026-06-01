@@ -46,7 +46,7 @@ import {
   Ban,
   Info,
 } from 'lucide-react';
-import { useAuth } from '@/lib/mockData';
+import { useAuth, useStore } from '@/lib/mockData';
 import { useLocation } from 'wouter';
 import {
   type Notification,
@@ -73,7 +73,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 export default function NotificationCentrePage() {
-  const { user, roles } = useAuth();
+  const { user } = useAuth();
+  const { roles } = useStore();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 

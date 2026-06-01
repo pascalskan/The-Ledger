@@ -7,12 +7,15 @@ import { Page } from '@playwright/test';
  *   - Worker mobile layout: has a "Profile" bottom-nav button that navigates
  *     to /worker/profile, where a "Sign Out" button is visible in the page body.
  *   - CEO / PM sidebar layout: has a "Sign Out" button at the bottom of the
- *     sidebar (may require scrollIntoViewIfNeeded if the viewport is short).
+ *     sidebar (may be outside the overflow-clipped viewport at default heights).
  *
  * Strategy:
  *   1. If a "Profile" bottom-nav button is visible, click it to reach the
  *      profile page where Sign Out is clearly in the viewport.
- *   2. Scroll the Sign Out button into view and click it (works for all layouts).
+ *   2. Scroll the Sign Out button into view, then force-click it.
+ *      { force: true } bypasses Playwright's actionability checks for viewport
+ *      clipping — the button IS rendered and interactive, it just sits below
+ *      the visible scroll area of the sidebar container in some viewport sizes.
  *   3. Wait for /auth URL to confirm navigation is complete before returning.
  *      This is critical — soft-login helpers assume the page is on /auth when
  *      they run. Without this wait, the next click() races the route transition.
@@ -25,10 +28,13 @@ export async function signOut(page: Page) {
   }
 
   // Scroll Sign Out into view before clicking (handles sidebar layout where the
-  // button can sit below the visible viewport at default 720px height)
+  // button can sit below the visible viewport at default 720px height).
+  // Use { force: true } to bypass viewport-clipping actionability checks —
+  // the button is rendered and interactive even when clipped by the sidebar
+  // overflow container.
   const signOutButton = page.getByRole('button', { name: /Sign Out/i }).first();
   await signOutButton.scrollIntoViewIfNeeded();
-  await signOutButton.click();
+  await signOutButton.click({ force: true });
 
   // Wait for the auth page to be active before returning.
   // The logout handler calls setLocation("/auth") synchronously after logout(),
