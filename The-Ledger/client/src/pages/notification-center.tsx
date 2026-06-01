@@ -11,6 +11,9 @@
  * - No financial mutations occur here
  * - All interactions are audited
  * - Deep links navigate to source pages
+ *
+ * NOTE: All hooks are declared before any conditional returns
+ * to comply with the Rules of Hooks.
  */
 
 import { useState, useMemo } from 'react';
@@ -40,7 +43,6 @@ import {
   Search,
   ExternalLink,
   Eye,
-  BookOpen,
   Ban,
   Info,
 } from 'lucide-react';
@@ -75,23 +77,15 @@ export default function NotificationCentrePage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  // RBAC check
+  // Derive RBAC info — must happen before any early return
   const userRoleNames = (user?.roleIds || [])
     .map((rid: string) => roles.find((r: any) => r.id === rid)?.name)
     .filter(Boolean) as string[];
   const isCEO = userRoleNames.includes('CEO');
   const isPM = userRoleNames.includes('Project Manager');
+  const isAllowed = isCEO || isPM;
 
-  if (!isCEO && !isPM) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-64">
-          <p className="text-muted-foreground">Access denied. CEO or Project Manager role required.</p>
-        </div>
-      </Layout>
-    );
-  }
-
+  // ── All hooks declared unconditionally ──────────────
   const [notifications, setNotifications] = useState<Notification[]>(() => {
     let all = getAllNotifications();
     if (isPM && !isCEO && user?.id) {
@@ -115,7 +109,6 @@ export default function NotificationCentrePage() {
     result = filterNotificationsByType(result, typeFilter);
     result = filterNotificationsByPriority(result, priorityFilter);
     result = searchNotifications(result, searchQuery);
-    // Sort: unread first, then by createdAt descending
     result.sort((a, b) => {
       if (a.status === 'unread' && b.status !== 'unread') return -1;
       if (a.status !== 'unread' && b.status === 'unread') return 1;
@@ -123,6 +116,18 @@ export default function NotificationCentrePage() {
     });
     return result;
   }, [notifications, statusFilter, typeFilter, priorityFilter, searchQuery]);
+  // ────────────────────────────────────────────────────
+
+  // RBAC guard — after all hooks
+  if (!isAllowed) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-64">
+          <p className="text-muted-foreground">Access denied. CEO or Project Manager role required.</p>
+        </div>
+      </Layout>
+    );
+  }
 
   function refreshNotifications() {
     let all = getAllNotifications();
@@ -497,7 +502,10 @@ export default function NotificationCentrePage() {
                 </div>
 
                 {/* Doctrine Notice */}
-                <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-md p-3">
+                <div
+                  data-testid="notif-detail-doctrine-notice"
+                  className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-md p-3"
+                >
                   <Info className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-blue-700">
                     This notification is informational only. No financial data is modified by viewing or dismissing notifications.
