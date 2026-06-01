@@ -3,13 +3,21 @@
 **Handoff Date:** 2026-06-01  
 **Branch:** `feature/phase-6-0d-automation-governance`  
 **Merge Target:** `main`  
-**Status:** Implementation complete — awaiting local Playwright verification before merge
+**PR:** https://github.com/pascalskan/The-Ledger/pull/12  
+**Status:** ✅ Complete — 199 / 199 Playwright tests passing
 
 ---
 
-## Summary
+## Verification Results
 
-Phase 6.0D delivers the Automation Governance Centre: a CEO-only oversight dashboard that provides risk classification, compliance monitoring, exception management, and financial safety controls over all automation rules in The Ledger.
+| Check | Result |
+|-------|--------|
+| Build | PASS |
+| Playwright — full suite | 199 / 199 PASS |
+| New governance tests (AG-01 to AG-26) | 26 / 26 PASS |
+| Regression — all prior tests | 173 / 173 PASS |
+
+Test fix applied during verification: AG-04 assertion corrected from `2` to `3` compliant records to match actual seed data.
 
 ---
 
@@ -29,8 +37,8 @@ Phase 6.0D delivers the Automation Governance Centre: a CEO-only oversight dashb
 | File | Change |
 |------|--------|
 | `client/src/App.tsx` | Added `/automation-governance` route (CEO only) |
-| `client/src/components/layout.tsx` | Added Automation Governance CEO sidebar nav item |
-| `docs/LEDGER_CANONICAL_CONTEXT.md` | Phase 6.0D marked complete |
+| `client/src/components/layout.tsx` | Added Automation Governance CEO sidebar nav item (ShieldCheck icon) |
+| `docs/LEDGER_CANONICAL_CONTEXT.md` | v4.8 — Phase 6.0D marked complete and verified, Automation Governance Doctrine added, verification count updated to 199/199 |
 
 ---
 
@@ -44,143 +52,111 @@ Phase 6.0D delivers the Automation Governance Centre: a CEO-only oversight dashb
 - `GovernanceAuditEntry` — immutable audit record for every CEO action
 
 ### Seed Data
-- 6 governance records (`rule-001` to `rule-006`) spanning all risk levels and statuses
-- 3 seed exceptions (`gex-001` to `gex-003`) covering Open, Under Investigation, Resolved states
+- 6 governance records (`rule-001` to `rule-006`): 3 compliant, 2 requires review, 1 restricted — spanning all risk levels
+- 3 seed exceptions (`gex-001` to `gex-003`): Open, Under Investigation, and a pending state
 - 4 seed audit entries (`gov-audit-001` to `gov-audit-004`)
 
-### Helpers
+### CEO Action Helpers
+- `restrictAutomation()` — sets status to Restricted, generates audit entry
+- `suspendAutomation()` — sets status to Suspended, generates audit entry
+- `restoreAutomation()` — sets status to Compliant, generates audit entry
+- `markCompliant()` — sets status to Compliant, generates audit entry
+- `resolveException()` / `rejectException()` / `escalateException()` — exception workflow
 - `computeGovernanceSummary()` — KPI calculations
-- `filterGovernanceByStatus/Risk/Category()` — table filtering
-- `searchGovernanceRecords()` — fuzzy search
-- `restrictAutomation()` / `suspendAutomation()` / `restoreAutomation()` / `markCompliant()` — CEO governance actions
-- `resolveException()` / `rejectException()` / `escalateException()` — exception workflows
-- `getGovernanceAuditLog()` / `searchGovernanceAudit()` / `filterAuditByRiskImpact()` — audit access
+- `getGovernanceAuditLog()` — returns immutable audit trail
 
 ---
 
 ## Page: Automation Governance Centre (`/automation-governance`)
 
-### KPI Strip (7 cards)
-- `gov-kpi-total` — Total Automations
-- `gov-kpi-compliant` — Compliant
-- `gov-kpi-requires-review` — Requires Review
-- `gov-kpi-restricted` — Restricted
-- `gov-kpi-suspended` — Suspended
-- `gov-kpi-high-risk` — High Risk
-- `gov-kpi-critical-risk` — Critical Risk
+### KPI Strip — 7 cards
+| testId | Metric |
+|--------|--------|
+| `gov-kpi-total` | Total Automations (6) |
+| `gov-kpi-compliant` | Compliant (3) |
+| `gov-kpi-requires-review` | Requires Review (2) |
+| `gov-kpi-restricted` | Restricted |
+| `gov-kpi-suspended` | Suspended |
+| `gov-kpi-high-risk` | High Risk |
+| `gov-kpi-critical-risk` | Critical Risk |
 
 ### Tab 1 — Governance Dashboard
-- Search (`gov-search`)
-- Risk filter (`gov-filter-risk`)
-- Status filter (`gov-filter-status`)
-- Category filter (`gov-filter-category`)
-- Table with per-row testids (`gov-row-{ruleId}`)
-- View button (`gov-btn-view-{ruleId}`)
-- Governed badge for financially sensitive rules (`gov-governed-badge-{ruleId}`)
+- Search: `gov-search`
+- Filters: `gov-filter-risk`, `gov-filter-status`, `gov-filter-category`
+- Table: `gov-dashboard-table`, rows `gov-row-{ruleId}`
+- View: `gov-btn-view-{ruleId}`
+- Governed badge (financially sensitive): `gov-governed-badge-{ruleId}`
 
 ### CEO Actions Dialog (`gov-detail-dialog`)
-- Restrict (`gov-btn-restrict`)
-- Suspend (`gov-btn-suspend`)
-- Restore (`gov-btn-restore`)
-- Mark Compliant (`gov-btn-mark-compliant`)
-- Financial safety indicators: `gov-governed-badge`, `gov-approval-protected`, `gov-financial-safeguard`
+- `gov-btn-restrict`, `gov-btn-suspend`, `gov-btn-restore`, `gov-btn-mark-compliant`
+- `gov-governed-badge`, `gov-approval-protected`, `gov-financial-safeguard`
 
 ### Tab 2 — Exceptions
-- Exception table (`gov-exceptions-table`) with rows `gov-ex-row-{id}`
-- View button `gov-ex-btn-view-{id}`
-- Exception detail dialog (`gov-exception-detail-dialog`)
-- Resolve (`gov-btn-resolve-exception`), Reject (`gov-btn-reject-exception`), Escalate (`gov-btn-escalate-exception`)
+- Table: `gov-exceptions-table`, rows `gov-ex-row-{id}`
+- View: `gov-ex-btn-view-{id}`
+- Dialog: `gov-exception-detail-dialog`
+- Actions: `gov-btn-resolve-exception`, `gov-btn-reject-exception`, `gov-btn-escalate-exception`
 
 ### Tab 3 — Compliance Audit
-- Audit table (`gov-audit-table`)
-- Doctrine notice (`gov-audit-doctrine-notice`) — immutable read-only declaration
-- Search (`gov-audit-search`)
-- Risk impact filter (`gov-audit-filter-risk`)
-- Rows `gov-audit-row-{id}`
+- Table: `gov-audit-table`
+- Doctrine notice: `gov-audit-doctrine-notice`
+- Search: `gov-audit-search`
+- Filter: `gov-audit-filter-risk`
+- Rows: `gov-audit-row-{id}`
 
 ---
 
-## Tests Added
+## Doctrine Tests: AG-01 to AG-26
 
-File: `tests/doctrine/automation-governance.spec.ts`
-
-| ID | Description |
-|----|-------------|
-| AG-01 | Page loads for CEO |
-| AG-02 | CEO navigates via sidebar |
-| AG-03 | KPI strip renders all 7 cards |
-| AG-04 | KPI values match seed data |
-| AG-05 | All 3 tabs render and are clickable |
-| AG-06 | Governance records table visible with seed data |
-| AG-07 | Risk badges visible |
-| AG-08 | Governance status badges visible |
-| AG-09 | Search filters by name |
-| AG-10 | Risk filter works |
-| AG-11 | Status filter works |
-| AG-12 | Detail dialog opens on View |
-| AG-13 | Restrict action updates status and generates audit |
-| AG-14 | Suspend action updates status |
-| AG-15 | Restore action updates status |
-| AG-16 | Mark Compliant action works |
-| AG-17 | Exception queue renders with seed exceptions |
-| AG-18 | Exception detail panel opens |
-| AG-19 | Resolve exception changes status |
-| AG-20 | Reject exception closes dialog |
-| AG-21 | Compliance audit table renders |
-| AG-22 | Compliance audit search filters |
-| AG-23 | Governed badge visible for FinanciallySensitive rules |
-| AG-24 | Approval Protected and Financial Safeguard shown in detail |
-| AG-25 | PM denied access |
-| AG-26 | Worker denied access |
-
-**New tests:** 26  
-**Prior count:** 173  
-**Target total:** 199
+| ID | Description | Result |
+|----|-------------|--------|
+| AG-01 | Page loads for CEO | ✅ PASS |
+| AG-02 | CEO navigates via sidebar | ✅ PASS |
+| AG-03 | KPI strip renders all 7 cards | ✅ PASS |
+| AG-04 | KPI values match seed data (6 total, 3 compliant, 2 requires review) | ✅ PASS |
+| AG-05 | All 3 tabs render and are clickable | ✅ PASS |
+| AG-06 | Governance records table visible with seed data | ✅ PASS |
+| AG-07 | Risk badges visible | ✅ PASS |
+| AG-08 | Governance status badges visible | ✅ PASS |
+| AG-09 | Search filters by name | ✅ PASS |
+| AG-10 | Risk filter works | ✅ PASS |
+| AG-11 | Status filter works | ✅ PASS |
+| AG-12 | Detail dialog opens on View | ✅ PASS |
+| AG-13 | Restrict action updates status and generates audit | ✅ PASS |
+| AG-14 | Suspend action updates status | ✅ PASS |
+| AG-15 | Restore action updates status | ✅ PASS |
+| AG-16 | Mark Compliant action works | ✅ PASS |
+| AG-17 | Exception queue renders with seed exceptions | ✅ PASS |
+| AG-18 | Exception detail panel opens | ✅ PASS |
+| AG-19 | Resolve exception changes status | ✅ PASS |
+| AG-20 | Reject exception closes dialog | ✅ PASS |
+| AG-21 | Compliance audit table renders | ✅ PASS |
+| AG-22 | Compliance audit search filters | ✅ PASS |
+| AG-23 | Governed badge visible for FinanciallySensitive rules | ✅ PASS |
+| AG-24 | Approval Protected and Financial Safeguard shown in detail | ✅ PASS |
+| AG-25 | PM denied access | ✅ PASS |
+| AG-26 | Worker denied access | ✅ PASS |
 
 ---
 
-## Verification Status
+## Governance Doctrine Compliance
 
-Implementation complete. All files committed to branch.
-
-Build and Playwright results are **pending local verification**.
-
-Run locally:
-```bash
-cd The-Ledger
-npm run build
-npx playwright test
-```
-
-Expected: `199 / 199 PASSING`
+- ✅ Governance never weakens existing safeguards
+- ✅ All CEO actions generate immutable audit entries
+- ✅ No silent overrides, no silent approvals
+- ✅ FinanciallySensitive automations show all three safety indicators
+- ✅ Compliance Audit tab is read-only with doctrine notice
+- ✅ RBAC enforced at route level — PM and Worker denied
+- ✅ All 173 prior tests continue to pass (zero regression)
 
 ---
 
-## Governance Doctrine Notes
+## Next Phase
 
-- Governance NEVER weakens existing safeguards
-- All CEO actions generate immutable audit entries
-- No silent overrides, no silent approvals
-- FinanciallySensitive automations always display safeguard indicators
-- RBAC enforced at route level (CEO only via `ProtectedRoute`)
-- Audit tab is read-only — no edit or delete operations permitted
-
----
-
-## Remaining Roadmap
-
-Next target (post-merge): Phase 6.0E — Automation Scheduler
+**Phase 6.0E — Automation Scheduler**
 
 Deliverables:
 - Schedule trigger type in TRIGGER_CATALOGUE
 - Cron expression builder UI
 - Next-run preview
 - Schedule audit trail
-
----
-
-## PR
-
-Branch: `feature/phase-6-0d-automation-governance`  
-Target: `main`  
-Do NOT merge until local Playwright verification passes.

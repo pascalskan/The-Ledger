@@ -2,7 +2,7 @@
 
 ## Canonical Context Document
 
-Version: 4.7
+Version: 4.8
 Status: Active Source of Truth
 Last Updated: June 2026
 
@@ -11,7 +11,7 @@ main @ a4526cb
 
 Verification Status:
 Build PASS
-Playwright 173 / 173 PASSING (baseline — Phase 6.0D adds 26 tests, target 199)
+Playwright 199 / 199 PASSING
 
 ---
 
@@ -740,11 +740,13 @@ Branch: feature/phase-6-0d-automation-governance
 
 Merge Target: main
 
+PR: https://github.com/pascalskan/The-Ledger/pull/12
+
 Implemented:
 
 - client/src/lib/automationGovernanceEngine.ts: Full governance engine
   - Types: AutomationRiskLevel, AutomationGovernanceStatus, AutomationGovernanceRecord, AutomationExceptionRecord, GovernanceAuditEntry
-  - Seed: 6 governance records, 3 exceptions, 4 audit entries
+  - Seed: 6 governance records (3 compliant, 2 requires review, 1 restricted), 3 exceptions, 4 audit entries
   - Helpers: computeGovernanceSummary, filterGovernanceByStatus/Risk/Category, searchGovernanceRecords
   - CEO Actions: restrictAutomation, suspendAutomation, restoreAutomation, markCompliant
   - Exception workflow: resolveException, rejectException, escalateException
@@ -760,14 +762,13 @@ Implemented:
 - layout.tsx: Automation Governance nav item (ShieldCheck icon)
 - tests/doctrine/automation-governance.spec.ts: 26 doctrine tests (AG-01 to AG-26)
 
-New tests: 26
+New doctrine tests: 26
 
 Verified:
 
-- Implementation complete on branch
-- Build PASS — pending local verification
-- Playwright PASS — pending local verification
-- Target: 199 / 199 Tests PASS
+- Build PASS
+- Playwright PASS
+- 199 / 199 Tests PASS ✓
 
 ---
 
@@ -862,7 +863,7 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.0D is complete.
+Phase 6.0D is complete and verified.
 
 Current Development Target:
 
