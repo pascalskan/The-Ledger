@@ -28,6 +28,7 @@ import {
   Link2 as Link2Icon,
   GitMerge,
   TriangleAlert,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -90,6 +91,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Payroll Staging", href: "/payroll", icon: Wallet, roles: ["CEO"] },
     { label: "Payroll Export", href: "/payroll-export", icon: FileDown, roles: ["CEO"] },
     { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO"] },
+    // Phase 6.0D: Automation Governance Centre — CEO only
+    { label: "Automation Governance", href: "/automation-governance", icon: ShieldCheck, roles: ["CEO"], testId: "nav-automation-governance" },
     // Phase 5.7: Accounting Settings — CEO only
     { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"] },
     // Phase 5.8: Reconciliation Centre — CEO only
