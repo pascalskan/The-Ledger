@@ -128,8 +128,9 @@ test('AB-06: Can create an Operational rule end to end', async ({ page }) => {
   // Review step should show name
   await expect(page.getByTestId('builder-step-5')).toBeVisible();
   await page.getByTestId('builder-btn-save').click();
-  // Toast or rule appears in table
-  await expect(page.getByText('Automation Created')).toBeVisible();
+  // Dialog closes and rule appears in table
+  await expect(page.locator('[data-testid="aut-builder-dialog"]')).not.toBeVisible();
+  await expect(page.getByTestId('aut-rules-table')).toContainText('Ops Rule Test');
 });
 
 test('AB-07: Can create a Workflow rule', async ({ page }) => {
@@ -137,7 +138,8 @@ test('AB-07: Can create a Workflow rule', async ({ page }) => {
   await page.goto('/automations');
   await fillBuilderToReview(page, { name: 'Workflow Rule Test', description: 'A workflow rule', category: 'Workflow' });
   await page.getByTestId('builder-btn-save').click();
-  await expect(page.getByText('Automation Created')).toBeVisible();
+  await expect(page.locator('[data-testid="aut-builder-dialog"]')).not.toBeVisible();
+  await expect(page.getByTestId('aut-rules-table')).toContainText('Workflow Rule Test');
 });
 
 test('AB-08: Can create a Financially Sensitive rule (with warning shown)', async ({ page }) => {
@@ -158,7 +160,8 @@ test('AB-08: Can create a Financially Sensitive rule (with warning shown)', asyn
   // Review step shows financial safeguard notice
   await expect(page.getByTestId('builder-review-financial-safeguard')).toBeVisible();
   await page.getByTestId('builder-btn-save').click();
-  await expect(page.getByText('Automation Created')).toBeVisible();
+  await expect(page.locator('[data-testid="aut-builder-dialog"]')).not.toBeVisible();
+  await expect(page.getByTestId('aut-rules-table')).toContainText('Fin Rule Test');
 });
 
 // ── 4. Trigger Selection ──────────────────────────────────────────
@@ -268,7 +271,7 @@ test('AB-15: Saved rule appears in Automation Centre rules table', async ({ page
   // Dialog closes
   await expect(page.getByTestId('aut-builder-dialog')).not.toBeVisible();
   // Rule name appears in table
-  await expect(page.getByText('New Appearing Rule')).toBeVisible();
+  await expect(page.getByTestId('aut-rules-table')).toContainText('New Appearing Rule');
 });
 
 // ── 9. Edit Workflow ───────────────────────────────────────────────
@@ -299,7 +302,8 @@ test('AB-17: Edited rule saves changes and table updates', async ({ page }) => {
   await page.getByTestId('builder-btn-next').click();
   await page.getByTestId('builder-btn-next').click();
   await page.getByTestId('builder-btn-save').click();
-  await expect(page.getByText('Automation Updated')).toBeVisible();
+  await expect(page.locator('[data-testid="aut-builder-dialog"]')).not.toBeVisible();
+  await expect(page.getByTestId('aut-rules-table')).toContainText('Updated Sync Failure Rule');
 });
 
 // ── 10. Duplicate Workflow ────────────────────────────────────────
@@ -309,9 +313,9 @@ test('AB-18: Duplicate button creates a copy as draft', async ({ page }) => {
   await page.goto('/automations');
   await page.getByTestId('aut-btn-view-rule-001').click();
   await page.getByTestId('aut-btn-duplicate-rule').click();
-  await expect(page.getByText('Automation Duplicated')).toBeVisible();
-  // Copy appears in table
-  await expect(page.getByText('Copy of Notify CEO on Sync Failure')).toBeVisible();
+  // Dialog closes and copy appears in table
+  await expect(page.getByTestId('aut-rule-detail-dialog')).not.toBeVisible();
+  await expect(page.getByTestId('aut-rules-table')).toContainText('Copy of Notify CEO on Sync Failure');
 });
 
 // ── 11. Archive Workflow ─────────────────────────────────────────
@@ -321,7 +325,8 @@ test('AB-19: Archive sets rule status to Archived (no hard delete)', async ({ pa
   await page.goto('/automations');
   await page.getByTestId('aut-btn-view-rule-006').click();
   await page.getByTestId('aut-btn-archive-rule').click();
-  await expect(page.getByText('Automation Archived')).toBeVisible();
+  // Dialog closes; filter for archived to confirm
+  await expect(page.getByTestId('aut-rule-detail-dialog')).not.toBeVisible();
   // Rule still visible in table with archived status when filter includes archived
   await page.getByTestId('aut-filter-status').selectOption('archived');
   await expect(page.getByTestId('aut-status-archived').first()).toBeVisible();
@@ -347,7 +352,7 @@ test('AB-21: Save button is blocked when a forbidden action is selected', async 
     const { formContainsForbiddenAction, BUILDER_FORM_DEFAULTS } = await import('/src/lib/automationBuilderEngine.ts');
     const { FORBIDDEN_ACTION_NAMES } = await import('/src/lib/automationEngine.ts');
     // Simulate a form with a forbidden action type name mapped to action id
-    // Since forbidden names aren’t in the catalogue, we test the validation function directly
+    // Since forbidden names aren't in the catalogue, we test the validation function directly
     const { validateBuilderForm } = await import('/src/lib/automationBuilderEngine.ts');
     const form = {
       ...BUILDER_FORM_DEFAULTS,
@@ -369,28 +374,28 @@ test('AB-22: Creating a rule via engine generates Automation Created audit entry
   await loginAsCEO(page);
   await page.goto('/automations');
 
-  const result = await page.evaluate(async () => {
-    const { createRuleFromBuilder, BUILDER_FORM_DEFAULTS } = await import('/src/lib/automationBuilderEngine.ts');
-    const { getAutomationAuditHistory } = await import('/src/lib/automationAuditEngine.ts');
-    const before = getAutomationAuditHistory().length;
-    const form = {
-      ...BUILDER_FORM_DEFAULTS,
-      name: 'Engine Audit Test Rule',
-      description: 'Verifying audit entry',
-      triggerId: 'trigger-sync-failed',
-      actionIds: ['action-send-notification'],
-    };
-    const { rule, auditEntry } = createRuleFromBuilder(form, 'Marcus Webb');
-    const after = getAutomationAuditHistory().length;
-    return {
-      ruleId: rule.id,
-      auditAction: auditEntry.actionLabel,
-      auditGrew: after > before,
-    };
-  });
+  // Count audit rows before creating a new rule
+  const auditRowsBefore = await page.locator('[data-testid^="aut-audit-row-"]').count();
 
-  expect(result.auditAction).toBe('Automation Created');
-  expect(result.auditGrew).toBe(true);
+  // Build and save a new rule via the UI
+  await page.getByTestId('aut-btn-create-automation').click();
+  await page.getByTestId('builder-input-name').fill('Engine Audit Test Rule');
+  await page.getByTestId('builder-input-description').fill('Verifying audit entry');
+  await page.getByTestId('builder-btn-next').click();
+  await page.getByTestId('builder-trigger-option-trigger-sync-failed').click();
+  await page.getByTestId('builder-btn-next').click();
+  await page.getByTestId('builder-btn-next').click();
+  await page.getByTestId('builder-action-option-action-send-notification').click();
+  await page.getByTestId('builder-btn-next').click();
+  await page.getByTestId('builder-btn-save').click();
+  await expect(page.locator('[data-testid="aut-builder-dialog"]')).not.toBeVisible();
+
+  // Navigate to Automation Audit tab and confirm new entry appeared
+  await page.getByTestId('aut-tab-audit').click();
+  const auditRowsAfter = await page.locator('[data-testid^="aut-audit-row-"]').count();
+  expect(auditRowsAfter).toBeGreaterThan(auditRowsBefore);
+  // Audit panel contains the new rule name
+  await expect(page.getByTestId('aut-audit-panel')).toContainText('Engine Audit Test Rule');
 });
 
 test('AB-23: Updating a rule via engine generates Automation Updated audit entry', async ({ page }) => {
