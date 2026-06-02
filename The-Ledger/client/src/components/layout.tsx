@@ -41,6 +41,7 @@ import {
   Activity,
   Radio,
   GitBranch,
+  Terminal,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -244,6 +245,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Activity Feed", href: "/activity-feed", icon: Activity, roles: ["CEO"], testId: "nav-activity-feed" },
     { label: "Event Monitor", href: "/event-monitor", icon: Radio, roles: ["CEO"], testId: "nav-event-monitor" },
     { label: "Workflow Centre", href: "/workflows", icon: GitBranch, roles: ["CEO"], testId: "nav-workflow-centre" },
+    { label: "Executive Command Centre", href: "/executive-command-centre", icon: Terminal, roles: ["CEO"], testId: "nav-executive-command-centre" },
     { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"] },
     { label: "Reconciliation Centre", href: "/reconciliation-center", icon: GitMerge, roles: ["CEO"], testId: "nav-reconciliation-centre" },
     { label: "Exception Resolution", href: "/exception-resolution-center", icon: TriangleAlert, roles: ["CEO"], testId: "nav-exception-resolution-centre" },
