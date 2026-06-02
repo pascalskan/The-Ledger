@@ -76,6 +76,15 @@ function categoryIcon(cat: CriticalAlertItem['category']) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
+// ROUTE → TESTID HELPER
+// Converts a route like "/notifications" → "exec-nav--notifications"
+// Preserves the leading dash so testids match the spec expectations.
+// ─────────────────────────────────────────────────────────────────────
+function routeToTestId(route: string): string {
+  return `exec-nav-${route.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-')}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────
 // PAGE COMPONENT
 // ─────────────────────────────────────────────────────────────────────
 
@@ -434,7 +443,7 @@ export default function ExecutiveCommandCentrePage() {
                 ] as { label: string; route: string; icon: React.ElementType }[]).map(({ label, route, icon: Icon }) => (
                   <Button
                     key={route}
-                    data-testid={`exec-nav-${route.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')}`}
+                    data-testid={routeToTestId(route)}
                     variant="outline"
                     size="sm"
                     className="w-full justify-start gap-2 text-xs"
