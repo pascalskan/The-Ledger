@@ -2,16 +2,16 @@
 
 ## Canonical Context Document
 
-Version: 6.3
+Version: 6.4
 Status: Active Source of Truth
 Last Updated: June 2026
 
 Repository Baseline:
-feature/phase-6-3-event-infrastructure @ 805bfc8 (Phase 6.3 verified)
+feature/phase-6-4-workflow-automation @ 1a36881 (Phase 6.4 complete)
 
 Verification Status:
 Build PASS
-Playwright 309 / 309 PASSING (verified)
+Playwright PASS (35 new doctrine tests, 0 regressions)
 
 ---
 
@@ -389,6 +389,56 @@ Event categories: review_event, automation_event, governance_event, scheduler_ev
 
 ---
 
+## Workflow Automation Doctrine
+
+Workflows MAY:
+- Create notifications
+- Generate activity events
+- Escalate reviews
+- Assign investigations
+- Trigger governance reviews
+- Trigger workflow stages
+
+Workflows MAY NEVER:
+- Approve reports
+- Approve expenses
+- Approve timesheets
+- Create approved invoices
+- Create approved financial records
+- Bypass the Review Centre
+- Bypass CEO approvals
+
+Approval Doctrine remains absolute. Workflows are orchestration — not approval.
+
+All workflow lifecycle events generate immutable audit records.
+
+RBAC:
+- CEO: full Workflow Centre visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+Workflow status lifecycle:
+- Draft → Active
+- Active → Paused
+- Paused → Active (Resume)
+- Active / Paused → Archived
+
+Governance: Financially Sensitive workflows always require governance review on creation.
+
+Execution audit: every Workflow Created, Updated, Archived, Paused, Resumed, Executed generates an audit entry.
+
+Forbidden actions (blocked at engine level):
+- approve_report
+- approve_expense
+- approve_timesheet
+- create_approved_invoice
+- create_approved_financial_record
+- bypass_review_centre
+- bypass_ceo_approval
+
+---
+
 ## Dashboard Intelligence Doctrine
 
 Dashboard widgets are READ-ONLY.
@@ -434,6 +484,7 @@ The Ledger contains:
 - Notification Centre
 - Activity Feed
 - Event Monitor
+- Workflow Centre
 - Settings
 - Accounting Settings
 - Reconciliation Centre
@@ -771,11 +822,64 @@ Implemented:
 
 New doctrine tests: 30
 
+## Phase 6.4 — Cross-Module Workflow Automation
+
+Status: Complete
+
+Branch: feature/phase-6-4-workflow-automation
+
+Verified: 35 new doctrine tests (WF-01 to WF-35), 0 regressions
+
+Implemented:
+
+### Workflow Engine
+
+- client/src/lib/workflowEngine.ts: Cross-module workflow orchestration engine
+  - Types: WorkflowStatus, WorkflowStepStatus, WorkflowType, WorkflowStep, WorkflowExecutionRecord, WorkflowAuditEntry, WorkflowRecord, WorkflowSummary, WorkflowBusEventType
+  - Status constants/colors: WORKFLOW_STATUS_LABELS, WORKFLOW_STATUS_COLORS
+  - Type constants/colors: WORKFLOW_TYPE_LABELS, WORKFLOW_TYPE_COLORS
+  - Step constants/colors: WORKFLOW_STEP_STATUS_LABELS, WORKFLOW_STEP_STATUS_COLORS
+  - Forbidden actions list: WORKFLOW_FORBIDDEN_ACTIONS (7 doctrine-blocked actions)
+  - isWorkflowActionForbidden(): runtime doctrine enforcement at engine level
+  - Seed: 8 realistic workflows across 5 types (review, exception, governance, sync, notification)
+  - Public API: getAllWorkflows(), getWorkflowById(), createWorkflow(), updateWorkflow(), archiveWorkflow(), pauseWorkflow(), resumeWorkflow(), computeWorkflowSummary(), searchWorkflows(), getWorkflowAuditLog(), publishWorkflowEvent()
+  - Immutable audit log for all lifecycle events
+  - Event Bus integration helpers: WorkflowBusEventType (5 event types), WORKFLOW_BUS_EVENT_LABELS, publishWorkflowEvent()
+
+### Workflow Centre Page
+
+- client/src/pages/workflows.tsx: CEO-only Workflow Centre
+  - Doctrine notice banner (workflow capabilities and absolute prohibitions)
+  - KPI strip (5 cards): Total, Active, Paused, Requires Action, Financially Sensitive
+  - Workflow table: type/status badges, trigger event, step pip indicators, action required + financial indicators, inline actions
+  - Filters: Status (all/active/paused/draft/archived), Type (5 workflow types)
+  - Search: name, description, trigger event, type
+  - Workflow Detail Dialog: trigger event, step list with status pips + failure reasons, execution history, governance status panel, financial safeguard panel, action buttons (Pause/Resume/Archive)
+  - Workflow Execution Panel: live execution status, blocked/failed step indicators, per-workflow latest exec status
+
+### Routing & Navigation
+
+- client/src/App.tsx: /workflows route (CEO only, ProtectedRoute)
+- client/src/components/layout.tsx: Workflow Centre nav item (GitBranch icon, testId: nav-workflow-centre, CEO only)
+
+### Testing
+
+- tests/doctrine/workflow-automation.spec.ts: 35 doctrine tests (WF-01 to WF-35)
+  - Group 1: Rendering & Navigation (4 tests)
+  - Group 2: KPI Strip (5 tests)
+  - Group 3: Workflow Table (3 tests)
+  - Group 4: Filters & Search (6 tests)
+  - Group 5: Detail Dialog (6 tests)
+  - Group 6: Workflow Actions — Pause, Resume, Archive (3 tests)
+  - Group 7: Execution Panel (3 tests)
+  - Group 8: Governance & Financial Safeguards (2 tests)
+  - Group 9: RBAC — CEO allowed, PM denied, Worker denied (3 tests)
+
 ---
 
 # NEXT TARGET
 
-## Phase 6.4 — Dashboard Intelligence Layer
+## Phase 6.5 — Dashboard Intelligence Layer
 
 Objective: Transform the existing dashboard from a static layout into a live operational intelligence hub that surfaces actionable cross-module KPIs for the CEO.
 
@@ -783,8 +887,9 @@ Deliverables:
 
 - Executive Summary widget: live counts from Review Centre (pending), Exception Resolution (open), Automation Governance (requires review), Reconciliation (unmatched)
 - Financial Health Snapshot widget: sync health status, reconciliation match rate, open exception count, pending financial controls
-- Outstanding Actions widget: aggregated action-required items across Review Centre, Exceptions, Governance, Notifications, Activity Feed
+- Outstanding Actions widget: aggregated action-required items across Review Centre, Exceptions, Governance, Notifications, Activity Feed, Workflows
 - Recent Automation Activity widget: last 5 automation executions with status badges
+- Recent Workflow Executions widget: last 5 workflow executions from workflowEngine
 - Doctrine tests: 15+ tests covering widget rendering, KPI accuracy against seed data, and RBAC
 
 Doctrine constraints:
@@ -794,7 +899,7 @@ Doctrine constraints:
 - Widgets deep-link to source pages only — no inline actions
 - CEO only (no PM, no Worker, no Client)
 
-Branch naming: feature/phase-6-4-dashboard-intelligence
+Branch naming: feature/phase-6-5-dashboard-intelligence
 
 ---
 
@@ -874,11 +979,11 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.3 is complete and verified at 309/309. Branch: feature/phase-6-3-event-infrastructure.
+Phase 6.4 is complete. Branch: feature/phase-6-4-workflow-automation.
 
 Next Development Target:
 
-Phase 6.4 — Dashboard Intelligence Layer
+Phase 6.5 — Dashboard Intelligence Layer
 
 Phase 6 introduces controlled business automation and operational intelligence while preserving:
 - Approval Doctrine
@@ -888,6 +993,7 @@ Phase 6 introduces controlled business automation and operational intelligence w
 - Notification Doctrine
 - Activity Feed Doctrine
 - Event Bus Doctrine
+- Workflow Automation Doctrine
 - Dashboard Intelligence Doctrine
 
 ---
@@ -907,6 +1013,7 @@ Before making recommendations:
 9. Preserve notification doctrine (informational only — never mutates financial records).
 10. Preserve activity feed doctrine (informational only — never mutates financial records).
 11. Preserve event bus doctrine (informational/evaluative only — never mutates financial records, never bypasses approval).
-12. Preserve dashboard intelligence doctrine (read-only widgets, deep-link only, no inline actions).
+12. Preserve workflow automation doctrine (orchestration only — never approves, never bypasses approval doctrine).
+13. Preserve dashboard intelligence doctrine (read-only widgets, deep-link only, no inline actions).
 
 This document is the canonical source of truth for The Ledger.
