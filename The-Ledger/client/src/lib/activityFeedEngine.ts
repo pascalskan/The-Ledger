@@ -1,5 +1,5 @@
 /**
- * ACTIVITY FEED ENGINE — Phase 6.2
+ * ACTIVITY FEED ENGINE — Phase 6.2 / Updated Phase 6.3
  *
  * Unified operational event stream for The Ledger.
  *
@@ -665,6 +665,21 @@ export function searchEvents(
       (e.jobId && e.jobId.toLowerCase().includes(q)) ||
       e.sourceId.toLowerCase().includes(q),
   );
+}
+
+// ──────────────────────────────────────────────────────
+// WRITE FUNCTIONS (Phase 6.3 — Event Bus integration)
+// ──────────────────────────────────────────────────────
+
+/**
+ * Add an event from the Event Bus into the Activity Feed.
+ * Called by the Activity Feed Subscriber in eventBusEngine.ts.
+ * Doctrine: informational only — no financial mutations.
+ */
+export function addActivityEvent(event: ActivityEvent): void {
+  // Avoid duplicates (idempotent)
+  if (_events.find((e) => e.id === event.id)) return;
+  _events = [event, ..._events];
 }
 
 // ──────────────────────────────────────────────────────
