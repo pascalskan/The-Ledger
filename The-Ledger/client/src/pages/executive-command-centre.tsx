@@ -21,6 +21,12 @@ import {
   type CriticalAlertItem,
 } from '@/lib/executiveCommandEngine';
 import {
+  getAnalyticsSummary,
+  getCriticalRisks,
+  getTrendAnalysis,
+  getForecasts,
+} from '@/lib/analyticsEngine';
+import {
   ACTIVITY_EVENT_TYPE_LABELS,
   ACTIVITY_EVENT_TYPE_COLORS,
   ACTIVITY_PRIORITY_COLORS,
@@ -31,6 +37,7 @@ import {
   Activity,
   GitBranch,
   TrendingUp,
+  TrendingDown,
   ExternalLink,
   Bell,
   Zap,
@@ -39,6 +46,8 @@ import {
   ShieldAlert,
   DollarSign,
   Terminal,
+  BarChart3,
+  Minus,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────
@@ -77,8 +86,6 @@ function categoryIcon(cat: CriticalAlertItem['category']) {
 
 // ─────────────────────────────────────────────────────────────────────
 // ROUTE → TESTID HELPER
-// Converts a route like "/notifications" → "exec-nav--notifications"
-// Preserves the leading dash so testids match the spec expectations.
 // ─────────────────────────────────────────────────────────────────────
 function routeToTestId(route: string): string {
   return `exec-nav-${route.replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-')}`;
@@ -100,7 +107,12 @@ export default function ExecutiveCommandCentrePage() {
   const financial = getFinancialOverview();
   const activityStream = getExecutiveActivityStream(15);
 
-  // Record audit on mount
+  // Analytics intelligence for ECC analytics summary section (Phase 6.6)
+  const analyticsSummary = getAnalyticsSummary();
+  const topRisks = getCriticalRisks().slice(0, 4);
+  const topTrends = getTrendAnalysis().slice(0, 3);
+  const topForecasts = getForecasts().slice(0, 2);
+
   useEffect(() => {
     if (user?.name) {
       recordExecutiveCentreViewed(user.name);
@@ -158,7 +170,6 @@ export default function ExecutiveCommandCentrePage() {
         {/* ── KPI STRIP ── */}
         <div data-testid="exec-kpi-strip" className="grid grid-cols-2 md:grid-cols-5 gap-4">
 
-          {/* Operational Health */}
           <Card data-testid="exec-kpi-operational-health" className="border">
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-muted-foreground mb-1">Operational Health</p>
@@ -170,7 +181,6 @@ export default function ExecutiveCommandCentrePage() {
             </CardContent>
           </Card>
 
-          {/* Financial Health */}
           <Card data-testid="exec-kpi-financial-health" className="border">
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-muted-foreground mb-1">Financial Health</p>
@@ -182,7 +192,6 @@ export default function ExecutiveCommandCentrePage() {
             </CardContent>
           </Card>
 
-          {/* Governance Health */}
           <Card data-testid="exec-kpi-governance-health" className="border">
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-muted-foreground mb-1">Governance Health</p>
@@ -194,7 +203,6 @@ export default function ExecutiveCommandCentrePage() {
             </CardContent>
           </Card>
 
-          {/* Open Exceptions */}
           <Card data-testid="exec-kpi-open-exceptions" className="border">
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-muted-foreground mb-1">Open Exceptions</p>
@@ -203,7 +211,6 @@ export default function ExecutiveCommandCentrePage() {
             </CardContent>
           </Card>
 
-          {/* Critical Alerts */}
           <Card data-testid="exec-kpi-critical-alerts" className="border">
             <CardContent className="pt-4 pb-4">
               <p className="text-xs text-muted-foreground mb-1">Critical Alerts</p>
@@ -458,6 +465,102 @@ export default function ExecutiveCommandCentrePage() {
 
           </div>
         </div>
+
+        {/* ── ANALYTICS SUMMARY SECTION (Phase 6.6) ── */}
+        <Card data-testid="exec-analytics-summary">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-purple-500" />
+                Analytics Intelligence
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1"
+                data-testid="exec-analytics-link"
+                onClick={() => handleDeepLink('/analytics-centre', 'Analytics Centre')}
+              >
+                <ExternalLink className="h-3 w-3" />
+                Analytics Centre
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+              {/* Risk indicators */}
+              <div data-testid="exec-analytics-risks">
+                <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Top Risks</p>
+                <div className="space-y-2">
+                  {topRisks.slice(0, 3).map((risk) => (
+                    <div
+                      key={risk.id}
+                      className={cn(
+                        'flex items-center gap-2 p-2 rounded border text-xs',
+                        risk.severity === 'critical' ? 'bg-red-50 border-red-200 text-red-800' :
+                        risk.severity === 'high' ? 'bg-orange-50 border-orange-200 text-orange-800' :
+                        'bg-amber-50 border-amber-200 text-amber-800'
+                      )}
+                    >
+                      <Badge variant="outline" className="text-[10px] flex-shrink-0">{risk.severity.toUpperCase()}</Badge>
+                      <span className="truncate">{risk.title}</span>
+                    </div>
+                  ))}
+                  {topRisks.length === 0 && (
+                    <p className="text-xs text-muted-foreground">No critical risks detected.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Trend indicators */}
+              <div data-testid="exec-analytics-trends">
+                <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Trend Indicators</p>
+                <div className="space-y-2">
+                  {topTrends.map((trend, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded border text-xs bg-card">
+                      {trend.direction === 'up'
+                        ? <TrendingUp className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
+                        : trend.direction === 'down'
+                        ? <TrendingDown className="h-3.5 w-3.5 text-red-600 flex-shrink-0" />
+                        : <Minus className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />}
+                      <span className="truncate flex-1">{trend.metric}</span>
+                      <span className={cn(
+                        'text-[10px] font-mono flex-shrink-0',
+                        trend.changePercent > 0 ? 'text-emerald-700' : trend.changePercent < 0 ? 'text-red-700' : 'text-muted-foreground'
+                      )}>
+                        {trend.changePercent > 0 ? '+' : ''}{trend.changePercent}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Forecast indicators */}
+              <div data-testid="exec-analytics-forecasts">
+                <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Forecasts</p>
+                <div className="space-y-2">
+                  {topForecasts.map((forecast, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded border text-xs bg-card">
+                      {forecast.projectedChange >= 0
+                        ? <TrendingUp className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
+                        : <TrendingDown className="h-3.5 w-3.5 text-red-600 flex-shrink-0" />}
+                      <span className="truncate flex-1">{forecast.metric.replace(' (30 days)', '')}</span>
+                      <span className={cn(
+                        'text-[10px] font-mono flex-shrink-0',
+                        forecast.projectedChangePercent > 0 ? 'text-emerald-700' : 'text-red-700'
+                      )}>
+                        {forecast.projectedChangePercent > 0 ? '+' : ''}{forecast.projectedChangePercent}%
+                      </span>
+                    </div>
+                  ))}
+                  <p className="text-[10px] text-muted-foreground italic mt-1">Projections — advisory only</p>
+                </div>
+              </div>
+
+            </div>
+          </CardContent>
+        </Card>
 
         {/* ── EXECUTIVE ACTIVITY STREAM ── */}
         <Card data-testid="exec-activity-stream">

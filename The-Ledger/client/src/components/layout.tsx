@@ -42,6 +42,7 @@ import {
   Radio,
   GitBranch,
   Terminal,
+  BarChart3,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -246,6 +247,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Event Monitor", href: "/event-monitor", icon: Radio, roles: ["CEO"], testId: "nav-event-monitor" },
     { label: "Workflow Centre", href: "/workflows", icon: GitBranch, roles: ["CEO"], testId: "nav-workflow-centre" },
     { label: "Executive Command Centre", href: "/executive-command-centre", icon: Terminal, roles: ["CEO"], testId: "nav-executive-command-centre" },
+    { label: "Analytics Centre", href: "/analytics-centre", icon: BarChart3, roles: ["CEO"], testId: "nav-analytics-centre" },
     { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"] },
     { label: "Reconciliation Centre", href: "/reconciliation-center", icon: GitMerge, roles: ["CEO"], testId: "nav-reconciliation-centre" },
     { label: "Exception Resolution", href: "/exception-resolution-center", icon: TriangleAlert, roles: ["CEO"], testId: "nav-exception-resolution-centre" },
@@ -314,8 +316,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           )}
         </div>
-        {/* data-testid="btn-sign-out" lets signOut.ts find this button whether
-            the sidebar is collapsed (icon-only, no accessible name) or expanded. */}
         <Button
           data-testid="btn-sign-out"
           variant="outline"
