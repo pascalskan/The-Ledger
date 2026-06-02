@@ -267,7 +267,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </Button>
       </div>
 
-      <nav className="flex-1 px-2 py-4 space-y-1">
+      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
         <TooltipProvider delayDuration={0}>
           {NAV_ITEMS.map((item) => {
             const isActive = location === item.href;
