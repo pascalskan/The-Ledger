@@ -144,11 +144,9 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
           await new Promise((resolve) => setTimeout(resolve, 250));
         }
 
-        // Fault injection: only trigger when the debug flag is explicitly set.
-        // Random simulation is intentionally removed from the non-injected path
-        // so that retryUpload is deterministically successful when flags are off.
-        const didConflict = state.injectConflict;
-        const didFail = state.injectUploadFailure;
+        const randomOutcome = Math.random();
+        const didConflict = state.injectConflict || randomOutcome < 0.15;
+        const didFail = state.injectUploadFailure || (randomOutcome >= 0.15 && randomOutcome < 0.3);
 
         if (didConflict) {
           state.updateUploadState(queueItemId, uploadId, {
@@ -207,10 +205,7 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
                     await new Promise(r => setTimeout(r, stepDelay));
                   }
 
-                  // Fault injection: only trigger when the debug flag is explicitly set.
-                  // Random simulation is intentionally removed so that uploads succeed
-                  // deterministically when injectUploadFailure is false.
-                  const uploadShouldFail = state.injectUploadFailure;
+                  const uploadShouldFail = state.injectUploadFailure || Math.random() < 0.1;
 
                   if (uploadShouldFail) {
                       state.updateUploadState(queueItemId, upload.uploadId, {
@@ -243,13 +238,9 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
                 const delay = Math.floor(Math.random() * 2000) + 500;
                 await new Promise((resolve) => setTimeout(resolve, delay));
 
-                // Fault injection: only trigger when the debug flag is explicitly set.
-                // Random simulation is intentionally removed so that queue replay
-                // succeeds deterministically when both flags are false.  This
-                // prevents the ~30% flake rate that existed when randomOutcome
-                // thresholds were applied unconditionally.
-                const didConflict = state.injectConflict;
-                const shouldFail = state.injectFailure;
+                const randomOutcome = Math.random();
+                const didConflict = state.injectConflict || randomOutcome < 0.15;
+                const shouldFail = state.injectFailure || (randomOutcome >= 0.15 && randomOutcome < 0.3);
 
                 if (didConflict) {
                   state.updateQueueItem(item.id, {
