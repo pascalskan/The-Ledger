@@ -50,6 +50,7 @@ import ExceptionResolutionCenterPage from "@/pages/exception-resolution-center";
 import NotificationCentrePage from "@/pages/notification-center";
 import ActivityFeedPage from "@/pages/activity-feed";
 import EventMonitorPage from "@/pages/event-monitor";
+import WorkflowCentrePage from "@/pages/workflows";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
@@ -143,6 +144,10 @@ function Router() {
       {/* Phase 6.3: Event Monitor — CEO only */}
       <Route path="/event-monitor">
         <ProtectedRoute component={EventMonitorPage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 6.4: Workflow Centre — CEO only */}
+      <Route path="/workflows">
+        <ProtectedRoute component={WorkflowCentrePage} roles={["CEO"]} />
       </Route>
       <Route path="/jobs">
         <ProtectedRoute component={JobsPage} />
