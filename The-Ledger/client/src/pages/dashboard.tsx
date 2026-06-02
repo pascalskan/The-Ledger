@@ -10,12 +10,38 @@ import {
   Clock,
   CheckCircle2,
   CalendarDays,
-  FileWarning
+  FileWarning,
+  Activity,
+  ExternalLink,
+  TriangleAlert,
+  Zap,
+  RefreshCw,
+  GitMerge,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { getRecentEvents, ACTIVITY_EVENT_TYPE_LABELS, ACTIVITY_EVENT_TYPE_COLORS, ACTIVITY_PRIORITY_COLORS, type ActivityEvent, type ActivityEventType } from "@/lib/activityFeedEngine";
+
+// Icon map for activity event types (inline, no coupling)
+function ActivityEventIcon({ type, className }: { type: ActivityEventType; className?: string }) {
+  const cls = className ?? "h-3.5 w-3.5";
+  switch (type) {
+    case "automation_event":
+    case "scheduler_event":
+      return <Zap className={cls} />;
+    case "sync_event":
+      return <RefreshCw className={cls} />;
+    case "reconciliation_event":
+      return <GitMerge className={cls} />;
+    case "exception_event":
+    case "financial_control_event":
+      return <TriangleAlert className={cls} />;
+    default:
+      return <Activity className={cls} />;
+  }
+}
 
 export default function Dashboard() {
   const { jobs, workers, equipment, invoices, roles } = useStore();
@@ -38,10 +64,14 @@ export default function Dashboard() {
   ];
 
   const isWorker = (user?.roleIds || []).some((rid) => roles.find((r) => r.id === rid)?.name === "Worker");
+  const isCEO = (user?.roleIds || []).some((rid) => roles.find((r) => r.id === rid)?.name === "CEO");
 
   const userJobs = isWorker
     ? jobs.filter((j) => j.assignedWorkerIds.includes(user?.id || ""))
     : jobs;
+
+  // Recent activity events (CEO only widget)
+  const recentEvents = isCEO ? getRecentEvents(10) : [];
 
   return (
     <Layout>
@@ -140,6 +170,74 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent Activity Widget — CEO only */}
+        {isCEO && (
+          <Card
+            data-testid="dashboard-recent-activity-widget"
+            className="border-slate-200/60 shadow-sm"
+          >
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Recent Activity
+                </CardTitle>
+                <CardDescription>Latest 10 operational events across The Ledger.</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1"
+                onClick={() => setLocation("/activity-feed")}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                View All
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y">
+                {recentEvents.length === 0 && (
+                  <p className="py-6 text-center text-sm text-muted-foreground">No recent events.</p>
+                )}
+                {recentEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex items-start gap-3 py-3 hover:bg-slate-50 transition-colors rounded px-2 -mx-2 cursor-pointer"
+                    onClick={() => setLocation("/activity-feed")}
+                  >
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center">
+                        <ActivityEventIcon type={event.type} />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium truncate">{event.title}</p>
+                        {event.actionRequired && (
+                          <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-semibold bg-orange-100 text-orange-800">
+                            <TriangleAlert className="h-2.5 w-2.5" /> Action Required
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <Badge className={cn("text-[10px] h-4 px-1", ACTIVITY_EVENT_TYPE_COLORS[event.type])}>
+                          {ACTIVITY_EVENT_TYPE_LABELS[event.type]}
+                        </Badge>
+                        {event.jobId && (
+                          <span className="text-[10px] font-mono text-muted-foreground">{event.jobId}</span>
+                        )}
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(event.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </Layout>
   );
