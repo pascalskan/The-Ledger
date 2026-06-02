@@ -7,11 +7,11 @@ Status: Active Source of Truth
 Last Updated: June 2026
 
 Repository Baseline:
-feature/phase-6-3-event-infrastructure @ 3581da9 (Phase 6.3 complete)
+feature/phase-6-3-event-infrastructure @ 805bfc8 (Phase 6.3 verified)
 
 Verification Status:
 Build PASS
-Playwright 309 / 309 PASSING (post-6.3 target)
+Playwright 309 / 309 PASSING (verified)
 
 ---
 
@@ -369,6 +369,10 @@ All event processing is fully auditable.
 
 Job attribution preserved on all event records.
 
+Activity Feed dispatch is suppressed during initial seed to prevent bus seed events
+being injected into activityFeedEngine on top of its own seed data.
+Live publishEvent() calls always dispatch normally.
+
 RBAC:
 - CEO: full Event Monitor visibility
 - PM: no access
@@ -376,12 +380,30 @@ RBAC:
 - Client: no access
 
 Event Bus Subscribers (Phase 6.3):
-1. Activity Feed Subscriber — all events → activityFeedEngine
+1. Activity Feed Subscriber — all events → activityFeedEngine (live events only)
 2. Notification Subscriber — warning/critical events → simulated notification creation
 3. Dashboard Subscriber — all events → dashboard reads from getRecentBusEvents()
 4. Automation Subscriber — targeted event types → read-only trigger evaluation only
 
 Event categories: review_event, automation_event, governance_event, scheduler_event, notification_event, sync_event, reconciliation_event, exception_event, financial_control_event, job_event, worker_event, stock_event, asset_event
+
+---
+
+## Dashboard Intelligence Doctrine
+
+Dashboard widgets are READ-ONLY.
+
+Dashboard widgets NEVER:
+- Mutate operational records
+- Approve submissions
+- Create financial records
+- Bypass any approval workflow
+
+All KPI values are derived from existing engine seed data.
+
+Widgets deep-link to source pages only — no inline actions.
+
+RBAC: CEO only (no PM, no Worker, no Client) for intelligence widgets.
 
 ---
 
@@ -706,7 +728,12 @@ Status: Complete — Verified
 
 Branch: feature/phase-6-3-event-infrastructure
 
-Verified: 309 / 309 Tests PASS (279 existing + 30 new)
+PR: https://github.com/pascalskan/The-Ledger/pull/16
+
+Verified: 309 / 309 Tests PASS (279 existing + 30 new, 0 regressions)
+
+Bug fixed: _suppressActivityFeedDispatch flag added to eventBusEngine.ts to prevent
+bus seed events bleeding into activityFeedEngine (AF-05 was showing 45 instead of 25).
 
 Implemented:
 
@@ -719,6 +746,7 @@ Implemented:
   - 4 subscribers: Activity Feed, Notification, Dashboard, Automation
   - Full audit trail: published / consumed / subscriber_triggered / viewed entries
   - Doctrine-safe: informational and evaluative only, no financial mutations
+  - _suppressActivityFeedDispatch: seed-time guard to isolate bus seed from activity feed seed
 
 ### Event Monitor Page
 
@@ -860,6 +888,7 @@ Phase 6 introduces controlled business automation and operational intelligence w
 - Notification Doctrine
 - Activity Feed Doctrine
 - Event Bus Doctrine
+- Dashboard Intelligence Doctrine
 
 ---
 
@@ -878,5 +907,6 @@ Before making recommendations:
 9. Preserve notification doctrine (informational only — never mutates financial records).
 10. Preserve activity feed doctrine (informational only — never mutates financial records).
 11. Preserve event bus doctrine (informational/evaluative only — never mutates financial records, never bypasses approval).
+12. Preserve dashboard intelligence doctrine (read-only widgets, deep-link only, no inline actions).
 
 This document is the canonical source of truth for The Ledger.

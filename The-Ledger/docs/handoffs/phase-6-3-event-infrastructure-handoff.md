@@ -1,17 +1,20 @@
 # Phase 6.3 — Real-Time Event Infrastructure
 ## Handoff Document
 
-**Date:** June 2026  
-**Branch:** feature/phase-6-3-event-infrastructure  
-**Status:** Complete — Ready for merge  
-**Build:** PASS  
-**Playwright Target:** 309 / 309 PASSING (279 existing + 30 new)
+**Date:** June 2026
+**Branch:** feature/phase-6-3-event-infrastructure
+**PR:** https://github.com/pascalskan/The-Ledger/pull/16
+**Status:** Complete — Verified
+**Build:** PASS
+**Playwright:** 309 / 309 PASSING (279 existing + 30 new, 0 regressions)
 
 ---
 
 ## Summary
 
 Phase 6.3 implements the Event Bus Engine — The Ledger's unified real-time event infrastructure — and the Event Monitor page that gives the CEO full operational visibility into the event pipeline.
+
+All 309 tests pass. One bug was found and fixed during verification (see Bug Fixes below).
 
 ---
 
@@ -48,7 +51,7 @@ The Event Bus is the central nervous system of The Ledger's operational pipeline
 - `clearEventHistory()` / `_resetEventBusState()` — test support
 
 **Subscribers:**
-1. **Activity Feed Subscriber** — all events → activityFeedEngine.addActivityEvent()
+1. **Activity Feed Subscriber** — all live events → activityFeedEngine.addActivityEvent()
 2. **Notification Subscriber** — warning/critical events → simulated notification creation
 3. **Dashboard Subscriber** — all events → dashboard reads from getRecentBusEvents()
 4. **Automation Subscriber** — targeted event types → read-only trigger evaluation
@@ -80,7 +83,7 @@ The Event Bus is the central nervous system of The Ledger's operational pipeline
 - **Event Detail panel**: Event ID, title, type/priority badges, description, actor, source, job, consumed-by list, Go to Source deep-link
 - **Subscriber Panel**: 4 subscribers with name, description, status badge, event count
 
-**All interactive elements carry `data-testid` attributes.**
+All interactive elements carry `data-testid` attributes.
 
 ---
 
@@ -106,12 +109,6 @@ The Event Bus is the central nervous system of The Ledger's operational pipeline
 
 ---
 
-### Dashboard Integration
-
-The dashboard `Recent Activity` widget (added in Phase 6.2) remains in place. The Event Bus subscriber pattern means any new events published via `publishEvent()` will automatically flow into the Activity Feed and be visible in the dashboard widget.
-
----
-
 ### Doctrine Tests
 
 **File:** `tests/doctrine/event-bus.spec.ts`
@@ -134,13 +131,27 @@ The dashboard `Recent Activity` widget (added in Phase 6.2) remains in place. Th
 
 ---
 
+## Bug Fixes
+
+### AF-05: Activity Feed total showing 45 instead of 25
+
+**Root cause:** `eventBusEngine.ts` imports `addActivityEvent` and called it for all 20 seed events at module initialisation time. This injected 20 extra events into `activityFeedEngine`'s in-memory store on top of its own 25 seed events, giving 45 total.
+
+**Fix:** Added `_suppressActivityFeedDispatch` boolean flag. `_seedHistory()` sets it `true` inside a `try/finally`, suppressing the Activity Feed subscriber call during seed. The flag resets to `false` in `finally`, so all live `publishEvent()` calls dispatch normally.
+
+**Impact:** Zero. No behaviour change for live event publishing. Activity Feed seed count remains exactly 25. Event Bus seed count remains exactly 20.
+
+**Commit:** `805bfc8`
+
+---
+
 ## Files Added
 
 | File | Description |
 |------|-------------|
-| `client/src/lib/eventBusEngine.ts` | Event Bus Engine (complete) |
-| `client/src/pages/event-monitor.tsx` | Event Monitor page (complete) |
-| `tests/doctrine/event-bus.spec.ts` | 30 doctrine tests |
+| `client/src/lib/eventBusEngine.ts` | Event Bus Engine |
+| `client/src/pages/event-monitor.tsx` | Event Monitor page (CEO only) |
+| `tests/doctrine/event-bus.spec.ts` | 30 doctrine tests (EB-01 to EB-30) |
 | `docs/handoffs/phase-6-3-event-infrastructure-handoff.md` | This document |
 
 ## Files Modified
@@ -149,16 +160,15 @@ The dashboard `Recent Activity` widget (added in Phase 6.2) remains in place. Th
 |------|--------|
 | `client/src/App.tsx` | /event-monitor route (CEO only) |
 | `client/src/components/layout.tsx` | Event Monitor nav item (Radio icon, CEO only) |
-| `The-Ledger/LEDGER_CANONICAL_CONTEXT.md` | Phase 6.3 marked complete |
-| `The-Ledger/docs/LEDGER_CANONICAL_CONTEXT.md` | Phase 6.3 marked complete |
+| `The-Ledger/LEDGER_CANONICAL_CONTEXT.md` | Phase 6.3 verified, Dashboard Intelligence Doctrine added |
 
 ---
 
 ## Verification
 
-- Build: PASS (no new dependencies, no type changes)
-- Playwright: 279 existing + 30 new = 309 total (target)
-- Zero regressions expected
+- Build: PASS
+- Playwright: 309 / 309 PASSING
+- Regressions: 0
 
 ---
 
@@ -181,17 +191,44 @@ All event processing is fully auditable. Job attribution is preserved on all rec
 
 ---
 
-## Recommended Next Phase
+## Next Phase
 
 **Phase 6.4 — Dashboard Intelligence Layer**
 
-Objective: Transform the dashboard into a live operational intelligence hub surfacing actionable cross-module KPIs.
+Branch: `feature/phase-6-4-dashboard-intelligence`
 
-Deliverables:
-- Executive Summary widget: live counts from Review Centre (pending), Exceptions (open), Governance (requires review), Reconciliation (unmatched)
-- Financial Health Snapshot widget: sync health, reconciliation match rate, open exception count, pending financial controls
-- Outstanding Actions widget: aggregated action-required items across all modules
-- Recent Automation Activity widget: last 5 automation executions
-- 15+ doctrine tests
+### Objective
 
-Doctrine constraints: Read-only widgets, deep-link only, CEO only.
+Transform the existing dashboard from a static layout into a live operational intelligence hub surfacing actionable cross-module KPIs for the CEO.
+
+### Deliverables
+
+- **Executive Summary widget** — live counts from Review Centre (pending), Exception Resolution (open), Automation Governance (requires review), Reconciliation (unmatched)
+- **Financial Health Snapshot widget** — sync health status, reconciliation match rate, open exception count, pending financial controls
+- **Outstanding Actions widget** — aggregated action-required items across Review Centre, Exceptions, Governance, Notifications, Activity Feed
+- **Recent Automation Activity widget** — last 5 automation executions with status badges
+- **Doctrine tests** — 15+ tests covering widget rendering, KPI accuracy, RBAC
+
+### Doctrine Constraints
+
+- Widgets are READ-ONLY — no mutations, no approvals, no financial changes
+- All KPI values derived from existing engine seed data — no new seed data required
+- Widgets deep-link to source pages only — no inline actions
+- CEO only (no PM, no Worker, no Client)
+
+### Key Engines to Read From
+
+- `reconciliationEngine.ts` — computeReconciliationSummary()
+- `exceptionResolutionEngine.ts` — computeExceptionSummary()
+- `automationGovernanceEngine.ts` — computeGovernanceSummary()
+- `notificationEngine.ts` — computeNotificationSummary()
+- `activityFeedEngine.ts` — computeActivitySummary(), getActionRequiredEvents()
+- `automationAuditEngine.ts` — SEED_EXECUTION_HISTORY
+- `syncOperationsEngine.ts` — sync health KPIs
+- `financialControlsEngine.ts` — computeControlSummary()
+
+### Existing Pattern to Reuse
+
+Dashboard already imports from activityFeedEngine and renders the Recent Activity widget.
+New widgets follow the same pattern: import engine functions, compute values inline, render cards.
+No new engines required. No new seed data required.
