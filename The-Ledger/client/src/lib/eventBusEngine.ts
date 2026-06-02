@@ -162,6 +162,14 @@ let _auditLog: BusAuditEntry[] = [];
 let _auditCounter = 1;
 let _eventCounter = 1;
 
+/**
+ * Guard flag: when true, the Activity Feed subscriber dispatch is suppressed.
+ * Used during _seedHistory() to prevent the 20 bus seed events from being
+ * injected into activityFeedEngine on top of its own 25 seed events.
+ * Live publishEvent() calls always run with this false.
+ */
+let _suppressActivityFeedDispatch = false;
+
 // ──────────────────────────────────────────────────────
 // SUBSCRIBERS REGISTRY
 // ──────────────────────────────────────────────────────
@@ -264,43 +272,42 @@ function dispatchToSubscribers(event: BusEvent): string[] {
     if (!interested) continue;
 
     // Activity Feed Subscriber
+    // Suppressed during initial seed to prevent bus seed events from being
+    // injected into activityFeedEngine on top of its own 25 seed events.
     if (id === 'activity-feed') {
-      // The activityFeedEngine exposes addActivityEvent if available;
-      // in this frontend prototype we call the exported helper
-      // (guarded so tests that don't hydrate the engine still pass).
-      try {
-        addActivityEvent({
-          id: `bus-af-${event.id}`,
-          type: event.type,
-          title: event.title,
-          description: event.description,
-          createdAt: event.timestamp,
-          priority: event.priority,
-          sourceId: event.sourceId,
-          sourceType: event.sourceType,
-          sourceRoute: event.sourceRoute,
-          jobId: event.jobId,
-          assignedTo: null,
-          actor: event.actor,
-          actionRequired: event.actionRequired,
-        });
-      } catch {
-        // guard: addActivityEvent may not exist in all test contexts
+      if (!_suppressActivityFeedDispatch) {
+        try {
+          addActivityEvent({
+            id: `bus-af-${event.id}`,
+            type: event.type,
+            title: event.title,
+            description: event.description,
+            createdAt: event.timestamp,
+            priority: event.priority,
+            sourceId: event.sourceId,
+            sourceType: event.sourceType,
+            sourceRoute: event.sourceRoute,
+            jobId: event.jobId,
+            assignedTo: null,
+            actor: event.actor,
+            actionRequired: event.actionRequired,
+          });
+        } catch {
+          // guard: addActivityEvent may not exist in all test contexts
+        }
       }
     }
 
     // Notification Subscriber — creates notification for warning/critical events
     if (id === 'notification') {
       if (event.priority === 'warning' || event.priority === 'critical') {
-        // Simulates notification creation (informational — no financial mutation)
         _createSimulatedNotification(event);
       }
     }
 
-    // Dashboard Subscriber — updates dashboard state via event history
-    // (dashboard reads from getRecentBusEvents() directly — no additional call needed)
+    // Dashboard Subscriber — dashboard reads from getRecentBusEvents() directly
 
-    // Automation Subscriber — evaluates triggers (read-only evaluation only)
+    // Automation Subscriber — read-only trigger evaluation only
     if (id === 'automation') {
       _evaluateAutomationTriggers(event);
     }
@@ -372,7 +379,6 @@ interface AutomationEvaluationRecord {
 let _automationEvaluations: AutomationEvaluationRecord[] = [];
 
 function _evaluateAutomationTriggers(event: BusEvent): void {
-  // Simulate evaluation: flag action-required events as potential trigger candidates
   const matched = event.actionRequired && event.priority !== 'info';
   _automationEvaluations = [
     {
@@ -428,8 +434,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-002',
     type: 'review_event',
     title: 'Expense Rejected — JOB-2026-003',
-    description:
-      'Expense from Sarah Chen rejected: insufficient receipt documentation.',
+    description: 'Expense from Sarah Chen rejected: insufficient receipt documentation.',
     timestamp: seedHoursAgo(2),
     priority: 'warning',
     sourceId: 'rev-2026-043',
@@ -457,8 +462,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-004',
     type: 'sync_event',
     title: 'QuickBooks Sync Failed — INV-2026-018',
-    description:
-      'Sync to QuickBooks failed: API rate limit exceeded. Retry scheduled. No financial data corrupted.',
+    description: 'Sync to QuickBooks failed: API rate limit exceeded. Retry scheduled. No financial data corrupted.',
     timestamp: seedHoursAgo(4),
     priority: 'critical',
     sourceId: 'INV-2026-018',
@@ -472,8 +476,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-005',
     type: 'automation_event',
     title: 'Automation Execution Blocked',
-    description:
-      'Rule "Weekly Payroll Preparation" blocked — action requires human approval. No financial mutation.',
+    description: 'Rule "Weekly Payroll Preparation" blocked — action requires human approval. No financial mutation.',
     timestamp: seedHoursAgo(5),
     priority: 'critical',
     sourceId: 'AUTO-2026-002',
@@ -487,8 +490,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-006',
     type: 'governance_event',
     title: 'Automation Flagged — Governance Review Required',
-    description:
-      'Rule "Failed Sync Recovery Sweep" flagged. High risk classification applied.',
+    description: 'Rule "Failed Sync Recovery Sweep" flagged. High risk classification applied.',
     timestamp: seedHoursAgo(6),
     priority: 'warning',
     sourceId: 'rule-004',
@@ -502,8 +504,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-007',
     type: 'exception_event',
     title: 'Financial Exception Detected — JOB-2026-005',
-    description:
-      'Revenue discrepancy of £1,240.00 detected. Exception EXC-2026-001 raised. CEO approval required.',
+    description: 'Revenue discrepancy of £1,240.00 detected. Exception EXC-2026-001 raised. CEO approval required.',
     timestamp: seedHoursAgo(3),
     priority: 'critical',
     sourceId: 'EXC-2026-001',
@@ -517,8 +518,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-008',
     type: 'financial_control_event',
     title: 'Financial Override Pending Approval',
-    description:
-      'Control FC-2026-001 submitted: invoice adjustment of £3,500.00 on JOB-2026-006. CEO approval required.',
+    description: 'Control FC-2026-001 submitted: invoice adjustment of £3,500.00 on JOB-2026-006. CEO approval required.',
     timestamp: seedHoursAgo(2),
     priority: 'critical',
     sourceId: 'FC-2026-001',
@@ -532,8 +532,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-009',
     type: 'reconciliation_event',
     title: 'Reconciliation Discrepancy — INV-2026-015',
-    description:
-      'Invoice INV-2026-015 missing in Xero. Flagged as Missing in Accounting. No data modified.',
+    description: 'Invoice INV-2026-015 missing in Xero. Flagged as Missing in Accounting. No data modified.',
     timestamp: seedDaysAgo(1),
     priority: 'warning',
     sourceId: 'REC-2026-008',
@@ -547,8 +546,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-010',
     type: 'scheduler_event',
     title: 'Scheduled Automation Executed — SCH-2026-001',
-    description:
-      '"Daily Review Escalation" ran at 06:00. Execution successful. Next run: tomorrow 06:00.',
+    description: '"Daily Review Escalation" ran at 06:00. Execution successful. Next run: tomorrow 06:00.',
     timestamp: seedHoursAgo(8),
     priority: 'info',
     sourceId: 'SCH-2026-001',
@@ -562,8 +560,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-011',
     type: 'job_event',
     title: 'Job Status Changed to Active — JOB-2026-009',
-    description:
-      'Job JOB-2026-009 (Riverside Complex Maintenance) changed from Planned to Active.',
+    description: 'Job JOB-2026-009 (Riverside Complex Maintenance) changed from Planned to Active.',
     timestamp: seedHoursAgo(5),
     priority: 'info',
     sourceId: 'JOB-2026-009',
@@ -577,8 +574,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-012',
     type: 'worker_event',
     title: 'Worker Compliance Check Failed',
-    description:
-      'Worker Lisa Park compliance check flagged — certifications expired. Cannot be assigned until resolved.',
+    description: 'Worker Lisa Park compliance check flagged — certifications expired. Cannot be assigned until resolved.',
     timestamp: seedDaysAgo(2),
     priority: 'warning',
     sourceId: 'WRK-2026-007',
@@ -592,8 +588,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-013',
     type: 'stock_event',
     title: 'Low Stock Alert — SKU-2026-041',
-    description:
-      'Stock item Cleaning Grade Disinfectant 5L below reorder threshold. Current: 3 units. Reorder point: 10.',
+    description: 'Stock item Cleaning Grade Disinfectant 5L below reorder threshold. Current: 3 units. Reorder point: 10.',
     timestamp: seedDaysAgo(1),
     priority: 'warning',
     sourceId: 'SKU-2026-041',
@@ -607,8 +602,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-014',
     type: 'asset_event',
     title: 'Asset Maintenance Overdue — AST-2026-012',
-    description:
-      'Asset Industrial Floor Buffer maintenance overdue by 3 days. Flagged for service before next deployment.',
+    description: 'Asset Industrial Floor Buffer maintenance overdue by 3 days. Flagged for service before next deployment.',
     timestamp: seedDaysAgo(3),
     priority: 'warning',
     sourceId: 'AST-2026-012',
@@ -622,8 +616,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-015',
     type: 'sync_event',
     title: 'Xero Sync Completed — PAYROLL-2026-004',
-    description:
-      'Xero synchronisation completed for payroll batch. 12 records synced. Ledger remains source of truth.',
+    description: 'Xero synchronisation completed for payroll batch. 12 records synced. Ledger remains source of truth.',
     timestamp: seedDaysAgo(1),
     priority: 'info',
     sourceId: 'PAYROLL-2026-004',
@@ -637,8 +630,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-016',
     type: 'governance_event',
     title: 'Automation Suspended by CEO',
-    description:
-      'Rule "Draft Invoice Weekly Audit" suspended. All scheduled executions halted. Audit record generated.',
+    description: 'Rule "Draft Invoice Weekly Audit" suspended. All scheduled executions halted. Audit record generated.',
     timestamp: seedDaysAgo(1),
     priority: 'critical',
     sourceId: 'rule-005',
@@ -652,8 +644,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-017',
     type: 'exception_event',
     title: 'Exception Resolved — EXC-2026-002',
-    description:
-      'Exception EXC-2026-002 (labour cost override on JOB-2026-002) resolved with CEO approval.',
+    description: 'Exception EXC-2026-002 (labour cost override on JOB-2026-002) resolved with CEO approval.',
     timestamp: seedDaysAgo(1),
     priority: 'info',
     sourceId: 'EXC-2026-002',
@@ -667,8 +658,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-018',
     type: 'notification_event',
     title: 'Critical Notification Issued',
-    description:
-      'Critical notification NOTIF-003 (Automation Execution Blocked) issued to CEO.',
+    description: 'Critical notification NOTIF-003 (Automation Execution Blocked) issued to CEO.',
     timestamp: seedHoursAgo(6),
     priority: 'info',
     sourceId: 'notif-003',
@@ -682,8 +672,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-019',
     type: 'automation_event',
     title: 'Automation Rule Executed — AUTO-2026-001',
-    description:
-      'Rule "Daily Review Escalation" executed successfully. 3 overdue items escalated. No financial mutations.',
+    description: 'Rule "Daily Review Escalation" executed successfully. 3 overdue items escalated. No financial mutations.',
     timestamp: seedHoursAgo(4),
     priority: 'info',
     sourceId: 'AUTO-2026-001',
@@ -697,8 +686,7 @@ const SEED_BUS_EVENTS: BusEvent[] = [
     id: 'bus-020',
     type: 'job_event',
     title: 'Job Completion Flagged — JOB-2026-001',
-    description:
-      'Job JOB-2026-001 (Westfield Office Cleaning) flagged complete pending final review and invoice generation.',
+    description: 'Job JOB-2026-001 (Westfield Office Cleaning) flagged complete pending final review and invoice generation.',
     timestamp: seedDaysAgo(1),
     priority: 'warning',
     sourceId: 'JOB-2026-001',
@@ -712,20 +700,28 @@ const SEED_BUS_EVENTS: BusEvent[] = [
 
 // ──────────────────────────────────────────────────────
 // INITIALISE STATE WITH SEED DATA
+// Activity Feed dispatch is suppressed during seeding so the 20 bus seed
+// events are not injected into activityFeedEngine on top of its own 25
+// seed events. Live publishEvent() calls always run with the flag false.
 // ──────────────────────────────────────────────────────
 
 function _seedHistory(): void {
-  for (const event of SEED_BUS_EVENTS) {
-    const consumed = dispatchToSubscribers(event);
-    const publishAudit = createAuditEntry(event.id, 'published', null);
-    const consumeAudits = consumed.map((sub) =>
-      createAuditEntry(event.id, 'consumed', sub),
-    );
-    _eventHistory.push({
-      ...event,
-      consumedBy: consumed,
-      auditEntries: [publishAudit, ...consumeAudits],
-    });
+  _suppressActivityFeedDispatch = true;
+  try {
+    for (const event of SEED_BUS_EVENTS) {
+      const consumed = dispatchToSubscribers(event);
+      const publishAudit = createAuditEntry(event.id, 'published', null);
+      const consumeAudits = consumed.map((sub) =>
+        createAuditEntry(event.id, 'consumed', sub),
+      );
+      _eventHistory.push({
+        ...event,
+        consumedBy: consumed,
+        auditEntries: [publishAudit, ...consumeAudits],
+      });
+    }
+  } finally {
+    _suppressActivityFeedDispatch = false;
   }
 }
 
