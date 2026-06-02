@@ -2,12 +2,12 @@
 
 ## Canonical Context Document
 
-Version: 6.4
+Version: 6.5
 Status: Active Source of Truth
 Last Updated: June 2026
 
 Repository Baseline:
-feature/phase-6-4-workflow-automation @ 1a36881 (Phase 6.4 complete)
+feature/phase-6-5-executive-command-centre @ caae7b2 (Phase 6.5 complete)
 
 Verification Status:
 Build PASS
@@ -457,6 +457,47 @@ RBAC: CEO only (no PM, no Worker, no Client) for intelligence widgets.
 
 ---
 
+## Executive Command Centre Doctrine
+
+The Executive Command Centre is a READ-ONLY visibility layer.
+
+It aggregates cross-module intelligence from:
+- Notification Engine
+- Activity Feed Engine
+- Event Bus Engine
+- Workflow Engine
+- Automation Governance Engine
+- Automation Scheduler Engine
+- Exception Resolution Engine
+- Reconciliation Engine
+- Financial Controls Engine
+
+The Executive Command Centre NEVER:
+- Creates financial mutations
+- Approves records
+- Bypasses the Review Centre
+- Modifies operational records
+
+All executive views generate immutable audit records:
+- executive_centre_viewed
+- executive_alert_opened
+- executive_deep_link_opened
+
+Deep links navigate to source modules only — they never execute actions.
+
+RBAC:
+- CEO: full Executive Command Centre visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+Health scoring: 0–100 score per dimension (operational / financial / governance / workflow)
+- healthy: 80–100
+- warning: 50–79
+- critical: 0–49
+
+---
+
 # PRODUCT DEFINITION
 
 ## Executive Platform
@@ -485,6 +526,7 @@ The Ledger contains:
 - Activity Feed
 - Event Monitor
 - Workflow Centre
+- Executive Command Centre
 - Settings
 - Accounting Settings
 - Reconciliation Centre
@@ -875,31 +917,92 @@ Implemented:
   - Group 8: Governance & Financial Safeguards (2 tests)
   - Group 9: RBAC — CEO allowed, PM denied, Worker denied (3 tests)
 
+## Phase 6.5 — Executive Command Centre
+
+Status: Complete
+
+Branch: feature/phase-6-5-executive-command-centre
+
+Verified: 35 new doctrine tests (ECC-01 to ECC-35), 0 regressions
+
+Implemented:
+
+### Executive Command Engine
+
+- client/src/lib/executiveCommandEngine.ts: Cross-module executive visibility engine
+  - Types: HealthLevel, HealthScore, ExecutiveSummary, ExecutiveHealthSnapshot, CriticalAlertItem, OperationalOverview, GovernanceOverview, FinancialOverview, ExecutiveAuditEntry
+  - Public API: getExecutiveSummary(), getOperationalHealth(), getFinancialHealth(), getGovernanceHealth(), getWorkflowHealth(), getExecutiveHealthSnapshot(), getCriticalItems(), getOperationalOverview(), getGovernanceOverview(), getFinancialOverview(), getExecutiveActivityStream(), recordExecutiveCentreViewed(), recordExecutiveAlertOpened(), recordExecutiveDeepLinkOpened(), getExecutiveAuditLog(), _resetExecutiveCommandState()
+  - Aggregates: notificationEngine, activityFeedEngine, eventBusEngine, workflowEngine, automationGovernanceEngine, automationSchedulerEngine, exceptionResolutionEngine, reconciliationEngine, financialControlsEngine
+  - Health scoring: 0–100 per dimension (operational, financial, governance, workflow) → healthy / warning / critical
+  - Critical items: aggregates critical/high notifications, action-required workflows, governance risks, reconciliation exceptions, open exceptions, pending financial controls
+  - Immutable audit log: executive_centre_viewed, executive_alert_opened, executive_deep_link_opened
+  - Doctrine-safe: read-only visibility layer, no financial mutations, no approval actions
+
+### Executive Command Centre Page
+
+- client/src/pages/executive-command-centre.tsx: CEO-only Executive Command Centre
+  - Doctrine notice banner: read-only visibility, no financial mutations
+  - KPI strip (5 cards): Operational Health, Financial Health, Governance Health, Open Exceptions, Critical Alerts
+  - Executive Alert Panel: aggregated critical/high items across all modules, priority badges, source navigation
+  - Operational Overview Panel: Active Workflows, Active Automations, Scheduled Automations, Event Volume, Activity Volume
+  - Governance Overview Panel: Requires Review, Restricted, Suspended, Financially Sensitive Workflows
+  - Financial Oversight Panel: Failed Syncs, Reconciliation Issues, Pending Controls, Open Exceptions
+  - Module Navigation Panel: deep links to Notification Centre, Workflow Centre, Automation Governance, Exception Resolution, Reconciliation Centre, Financial Explorer, Activity Feed, Event Monitor
+  - Executive Activity Stream: latest 15 activity events with priority/type badges
+  - Audit integration: recordExecutiveCentreViewed on mount, recordExecutiveAlertOpened on alert open, recordExecutiveDeepLinkOpened on deep link
+  - RBAC: CEO only
+
+### Dashboard Integration
+
+- client/src/pages/dashboard.tsx: Executive Snapshot widget added (CEO only)
+  - 6 tiles: Critical Alerts, Pending Reviews, Governance Issues, Open Exceptions, Recon Issues, Operational Health
+  - "Open Command Centre" button → /executive-command-centre
+  - Read-only, no inline actions
+
+### Routing & Navigation
+
+- client/src/App.tsx: /executive-command-centre route already registered (CEO only, ProtectedRoute)
+- client/src/components/layout.tsx: Executive Command Centre nav item (Terminal icon, testId: nav-executive-command-centre, CEO only)
+
+### Testing
+
+- tests/doctrine/executive-command-centre.spec.ts: 35 doctrine tests (ECC-01 to ECC-35)
+  - Group 1: Rendering & Navigation (4 tests)
+  - Group 2: KPI Strip (6 tests)
+  - Group 3: Executive Alert Panel (4 tests)
+  - Group 4: Operational Overview Panel (3 tests)
+  - Group 5: Governance Overview Panel (2 tests)
+  - Group 6: Financial Oversight Panel (3 tests)
+  - Group 7: Executive Activity Stream (2 tests)
+  - Group 8: Module Navigation / Deep Links (3 tests)
+  - Group 9: Dashboard Integration — Executive Snapshot Widget (5 tests)
+  - Group 10: RBAC — CEO allowed, PM denied, Worker denied (3 tests)
+
 ---
 
 # NEXT TARGET
 
-## Phase 6.5 — Dashboard Intelligence Layer
+## Phase 6.6 — Advanced Reporting & Export Intelligence
 
-Objective: Transform the existing dashboard from a static layout into a live operational intelligence hub that surfaces actionable cross-module KPIs for the CEO.
+Objective: CEO-level cross-module report generation, exportable financial summaries, operational health reports, and automated report scheduling.
 
 Deliverables:
 
-- Executive Summary widget: live counts from Review Centre (pending), Exception Resolution (open), Automation Governance (requires review), Reconciliation (unmatched)
-- Financial Health Snapshot widget: sync health status, reconciliation match rate, open exception count, pending financial controls
-- Outstanding Actions widget: aggregated action-required items across Review Centre, Exceptions, Governance, Notifications, Activity Feed, Workflows
-- Recent Automation Activity widget: last 5 automation executions with status badges
-- Recent Workflow Executions widget: last 5 workflow executions from workflowEngine
-- Doctrine tests: 15+ tests covering widget rendering, KPI accuracy against seed data, and RBAC
+- Report Engine: templated report generation across jobs, workers, financials, governance
+- Report Centre Page: CEO-only, listing available report types, on-demand and scheduled generation
+- Export formats: PDF and CSV export capability
+- Scheduled Reports: integration with automationSchedulerEngine
+- Dashboard widget: Recent Reports widget (CEO only)
+- Doctrine tests: 30+ tests
 
 Doctrine constraints:
 
-- Dashboard widgets are READ-ONLY — no mutations, no approvals, no financial changes
-- All KPI values derived from existing engine seed data — no new seed data required
-- Widgets deep-link to source pages only — no inline actions
-- CEO only (no PM, no Worker, no Client)
+- Reports are READ-ONLY snapshots — no mutations
+- Reports never bypass Review Centre
+- All report generation is audited
+- CEO only
 
-Branch naming: feature/phase-6-5-dashboard-intelligence
+Branch naming: feature/phase-6-6-reporting-intelligence
 
 ---
 
@@ -979,11 +1082,11 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.4 is complete. Branch: feature/phase-6-4-workflow-automation.
+Phase 6.5 is complete. Branch: feature/phase-6-5-executive-command-centre.
 
 Next Development Target:
 
-Phase 6.5 — Dashboard Intelligence Layer
+Phase 6.6 — Advanced Reporting & Export Intelligence
 
 Phase 6 introduces controlled business automation and operational intelligence while preserving:
 - Approval Doctrine
@@ -995,6 +1098,7 @@ Phase 6 introduces controlled business automation and operational intelligence w
 - Event Bus Doctrine
 - Workflow Automation Doctrine
 - Dashboard Intelligence Doctrine
+- Executive Command Centre Doctrine
 
 ---
 
@@ -1015,5 +1119,6 @@ Before making recommendations:
 11. Preserve event bus doctrine (informational/evaluative only — never mutates financial records, never bypasses approval).
 12. Preserve workflow automation doctrine (orchestration only — never approves, never bypasses approval doctrine).
 13. Preserve dashboard intelligence doctrine (read-only widgets, deep-link only, no inline actions).
+14. Preserve executive command centre doctrine (read-only visibility layer, no financial mutations, no approval actions, full audit trail).
 
 This document is the canonical source of truth for The Ledger.

@@ -17,12 +17,20 @@ import {
   Zap,
   RefreshCw,
   GitMerge,
+  Terminal,
+  ShieldAlert,
+  AlertTriangle,
+  Shield,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { getRecentEvents, ACTIVITY_EVENT_TYPE_LABELS, ACTIVITY_EVENT_TYPE_COLORS, ACTIVITY_PRIORITY_COLORS, type ActivityEvent, type ActivityEventType } from "@/lib/activityFeedEngine";
+import {
+  getExecutiveSummary,
+  getExecutiveHealthSnapshot,
+} from "@/lib/executiveCommandEngine";
 
 // Icon map for activity event types (inline, no coupling)
 function ActivityEventIcon({ type, className }: { type: ActivityEventType; className?: string }) {
@@ -72,6 +80,10 @@ export default function Dashboard() {
 
   // Recent activity events (CEO only widget)
   const recentEvents = isCEO ? getRecentEvents(10) : [];
+
+  // Executive snapshot data (CEO only widget)
+  const execSummary = isCEO ? getExecutiveSummary() : null;
+  const execHealth = isCEO ? getExecutiveHealthSnapshot() : null;
 
   return (
     <Layout>
@@ -170,6 +182,122 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Executive Snapshot Widget — CEO only */}
+        {isCEO && execSummary && execHealth && (
+          <Card
+            data-testid="dashboard-executive-snapshot-widget"
+            className="border-slate-200/60 shadow-sm"
+          >
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Terminal className="h-5 w-5 text-purple-600" />
+                  Executive Snapshot
+                </CardTitle>
+                <CardDescription>Live operational summary — critical alerts, pending reviews, and governance issues.</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1"
+                data-testid="dashboard-exec-snapshot-open-btn"
+                onClick={() => setLocation("/executive-command-centre")}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open Command Centre
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {/* Critical Alerts */}
+                <div
+                  data-testid="dashboard-exec-snapshot-critical-alerts"
+                  className={cn(
+                    "p-3 rounded-lg border text-center",
+                    execSummary.criticalAlerts > 0 ? "bg-red-50 border-red-200" : "bg-card"
+                  )}
+                >
+                  <AlertTriangle className={cn("h-4 w-4 mx-auto mb-1", execSummary.criticalAlerts > 0 ? "text-red-500" : "text-muted-foreground")} />
+                  <p className={cn("text-2xl font-bold", execSummary.criticalAlerts > 0 ? "text-red-600" : "")}>{execSummary.criticalAlerts}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Critical Alerts</p>
+                </div>
+
+                {/* Pending Reviews */}
+                <div
+                  data-testid="dashboard-exec-snapshot-pending-reviews"
+                  className={cn(
+                    "p-3 rounded-lg border text-center",
+                    execSummary.pendingReviews > 0 ? "bg-amber-50 border-amber-200" : "bg-card"
+                  )}
+                >
+                  <ShieldAlert className={cn("h-4 w-4 mx-auto mb-1", execSummary.pendingReviews > 0 ? "text-amber-500" : "text-muted-foreground")} />
+                  <p className={cn("text-2xl font-bold", execSummary.pendingReviews > 0 ? "text-amber-600" : "")}>{execSummary.pendingReviews}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Pending Reviews</p>
+                </div>
+
+                {/* Governance Issues */}
+                <div
+                  data-testid="dashboard-exec-snapshot-governance-issues"
+                  className={cn(
+                    "p-3 rounded-lg border text-center",
+                    execSummary.governanceRisks > 0 ? "bg-purple-50 border-purple-200" : "bg-card"
+                  )}
+                >
+                  <Shield className={cn("h-4 w-4 mx-auto mb-1", execSummary.governanceRisks > 0 ? "text-purple-500" : "text-muted-foreground")} />
+                  <p className={cn("text-2xl font-bold", execSummary.governanceRisks > 0 ? "text-purple-600" : "")}>{execSummary.governanceRisks}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Governance Issues</p>
+                </div>
+
+                {/* Open Exceptions */}
+                <div
+                  data-testid="dashboard-exec-snapshot-open-exceptions"
+                  className={cn(
+                    "p-3 rounded-lg border text-center",
+                    execSummary.openExceptions > 0 ? "bg-rose-50 border-rose-200" : "bg-card"
+                  )}
+                >
+                  <TriangleAlert className={cn("h-4 w-4 mx-auto mb-1", execSummary.openExceptions > 0 ? "text-rose-500" : "text-muted-foreground")} />
+                  <p className={cn("text-2xl font-bold", execSummary.openExceptions > 0 ? "text-rose-600" : "")}>{execSummary.openExceptions}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Open Exceptions</p>
+                </div>
+
+                {/* Recon Issues */}
+                <div
+                  data-testid="dashboard-exec-snapshot-recon-issues"
+                  className={cn(
+                    "p-3 rounded-lg border text-center",
+                    execSummary.reconciliationIssues > 0 ? "bg-orange-50 border-orange-200" : "bg-card"
+                  )}
+                >
+                  <RefreshCw className={cn("h-4 w-4 mx-auto mb-1", execSummary.reconciliationIssues > 0 ? "text-orange-500" : "text-muted-foreground")} />
+                  <p className={cn("text-2xl font-bold", execSummary.reconciliationIssues > 0 ? "text-orange-600" : "")}>{execSummary.reconciliationIssues}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Recon Issues</p>
+                </div>
+
+                {/* Operational Health */}
+                <div
+                  data-testid="dashboard-exec-snapshot-op-health"
+                  className={cn(
+                    "p-3 rounded-lg border text-center",
+                    execHealth.operational.level === 'critical' ? "bg-red-50 border-red-200" :
+                    execHealth.operational.level === 'warning' ? "bg-amber-50 border-amber-200" : "bg-emerald-50 border-emerald-200"
+                  )}
+                >
+                  <Activity className={cn("h-4 w-4 mx-auto mb-1",
+                    execHealth.operational.level === 'critical' ? "text-red-500" :
+                    execHealth.operational.level === 'warning' ? "text-amber-500" : "text-emerald-500"
+                  )} />
+                  <p className={cn("text-sm font-bold",
+                    execHealth.operational.level === 'critical' ? "text-red-600" :
+                    execHealth.operational.level === 'warning' ? "text-amber-600" : "text-emerald-600"
+                  )}>{execHealth.operational.label}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Op Health</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Activity Widget — CEO only */}
         {isCEO && (
