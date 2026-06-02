@@ -3,7 +3,7 @@
 
 Date: 2026-06-02
 Branch: feature/phase-6-2-activity-feed
-Status: Implementation Complete — Awaiting Local Test Verification
+Status: **Complete — Verified (279 / 279 PASS)**
 
 ---
 
@@ -90,8 +90,15 @@ The Activity Feed is **informational only**. It:
   - Widget includes View All button → `/activity-feed`
   - `data-testid="dashboard-recent-activity-widget"`
 
+### Offline Queue Store
+- `client/src/lib/offlineQueueStore.ts`
+  - **Bug fix:** removed unconditional random fault simulation from `processQueueBatch`, `processUploadBatch`, and `retryUpload`
+  - Root cause: random 15% conflict + 15% failure thresholds fired even when the SynchronizationDebugPanel fault-injection flags were explicitly unchecked, causing ~30% of offline replay attempts to silently fail and doctrine test 179 to fail intermittently
+  - Fix: fault simulation now only activates when `injectConflict` / `injectFailure` / `injectUploadFailure` Zustand flags are explicitly `true`; realistic latency simulation (500–2500 ms) preserved
+  - Impact: test 179 (offline submission → Review Center) now passes deterministically
+
 ### Documentation
-- `The-Ledger/LEDGER_CANONICAL_CONTEXT.md` — Phase 6.2 marked complete
+- `The-Ledger/LEDGER_CANONICAL_CONTEXT.md` — v6.0, Phase 6.2 marked complete, Activity Feed Doctrine added, Phase 6.3 set as next target
 
 ---
 
@@ -101,7 +108,7 @@ The Activity Feed is **informational only**. It:
 |-------|-------|
 | Existing (Phase 6.1 baseline) | 254 |
 | Phase 6.2 new tests | 25 |
-| **Expected total** | **279** |
+| **Verified total** | **279** |
 
 ---
 
@@ -136,39 +143,47 @@ The Activity Feed is **informational only**. It:
 
 ---
 
-## Verification Requirements
+## Verification
 
-After pulling locally:
-
-```bash
-cd The-Ledger
-npm run build
-npx playwright test
 ```
-
-Expected:
-- Build PASS
-- Playwright PASS
-- 254 existing tests preserved
-- 25 new tests passing
-- Total: 279 tests
-
----
-
-## Risks
-
-1. **Dashboard modification**: The dashboard.tsx changes are purely additive. Risk: low.
-2. **Layout.tsx modification**: Only adds one nav item and one icon import. Risk: low.
-3. **App.tsx modification**: Only adds one route and one import. Risk: low.
-4. **Test isolation**: `_resetActivityFeedState()` ensures clean state between tests if needed.
+Build: PASS
+Playwright: PASS
+Total tests: 279 / 279
+Regressions: 0
+```
 
 ---
 
 ## Recommended Next Phase
 
 **Phase 6.3 — Dashboard Intelligence Layer**
-- Executive summary widget pulling live KPIs from existing engines
-- Outstanding action items widget (Review Centre pending, exceptions open, governance review required)
-- Financial health snapshot (reconciliation status, sync health, exception count)
-- Recent automation activity widget
-- Doctrine tests: 15+ tests
+
+Branch: `feature/phase-6-3-dashboard-intelligence`
+
+Objective: Transform the existing dashboard from a static layout into a live operational intelligence hub that surfaces actionable cross-module KPIs for the CEO.
+
+### Deliverables
+
+- **Executive Summary widget** — live counts from Review Centre (pending), Exception Resolution (open), Automation Governance (requires review), Reconciliation (unmatched)
+- **Financial Health Snapshot widget** — sync health status, reconciliation match rate, open exception count, pending financial controls
+- **Outstanding Actions widget** — aggregated action-required items across Review Centre, Exceptions, Governance, Notifications, Activity Feed
+- **Recent Automation Activity widget** — last 5 automation executions with status badges
+- **Doctrine tests** — 15+ tests covering widget rendering, KPI accuracy against seed data, and RBAC
+
+### Doctrine Constraints
+
+- Dashboard widgets are READ-ONLY — no mutations, no approvals, no financial changes
+- All KPI values derived from existing engine seed data — no new seed data required
+- Widgets deep-link to source pages only — no inline actions
+- CEO only (no PM, no Worker, no Client)
+
+### Starting Instructions for Claude
+
+1. `git fetch origin`
+2. `git checkout -b feature/phase-6-3-dashboard-intelligence origin/main` (branch from main after 6.2 is merged)
+3. Read `LEDGER_CANONICAL_CONTEXT.md`
+4. Read this handoff
+5. Implement widgets in `client/src/pages/dashboard.tsx`
+6. Add doctrine tests in `tests/doctrine/dashboard-intelligence.spec.ts`
+7. Run full Playwright suite — target 294+ passing
+8. Commit, push, open PR

@@ -2,16 +2,16 @@
 
 ## Canonical Context Document
 
-Version: 5.1
+Version: 6.0
 Status: Active Source of Truth
 Last Updated: June 2026
 
 Repository Baseline:
-main @ 5b4ca9a (post Phase 6.0E merge)
+feature/phase-6-2-activity-feed @ cd6b275 (Phase 6.2 complete)
 
 Verification Status:
 Build PASS
-Playwright 254 / 254 PASSING (post-6.1)
+Playwright 279 / 279 PASSING (post-6.2)
 
 ---
 
@@ -319,6 +319,35 @@ Deep links navigate to source pages only — they never execute actions.
 
 ---
 
+## Activity Feed Doctrine
+
+The Activity Feed is INFORMATIONAL only.
+
+The Activity Feed NEVER:
+- Creates Revenue, Cost, Payroll, Inventory deductions, or Financial mutations
+- Bypasses approval workflows
+- Modifies operational records
+
+Event interactions (Viewed, Opened, Navigated) generate immutable audit records.
+
+No silent state changes.
+
+RBAC:
+- CEO: full activity feed visibility (all event types, all jobs)
+- PM: no access (Phase 6.2)
+- Worker: no access
+- Client: no access
+
+Deep links navigate to source pages only — they never execute actions.
+
+Job attribution preserved on all event records.
+
+Event priority levels: info / warning / critical
+
+Event types: review_event, automation_event, governance_event, scheduler_event, notification_event, sync_event, reconciliation_event, exception_event, financial_control_event, job_event, worker_event, stock_event, asset_event
+
+---
+
 # PRODUCT DEFINITION
 
 ## Executive Platform
@@ -344,6 +373,7 @@ The Ledger contains:
 - Automations (Automation Centre + Scheduler)
 - Automation Governance Centre
 - Notification Centre
+- Activity Feed
 - Settings
 - Accounting Settings
 - Reconciliation Centre
@@ -945,20 +975,95 @@ Verified:
 - Playwright PASS
 - 254 / 254 Tests PASS (226 existing + 28 new, 0 regressions)
 
+## Phase 6.2 — Activity Feed & Event Stream
+
+Status: Complete — Verified
+
+Branch: feature/phase-6-2-activity-feed
+
+Verified: 279 / 279 Tests PASS
+
+Implemented:
+
+### Activity Feed Engine
+
+- client/src/lib/activityFeedEngine.ts
+  - 13 event types (review_event through asset_event)
+  - 3 priority levels (info / warning / critical)
+  - 25 realistic seed events sourced from all completed modules
+  - Full query API: getAllEvents, getEventById, getRecentEvents, getActionRequiredEvents
+  - computeActivitySummary: total, critical, actionRequired, today, last7Days
+  - filterEventsByType, filterEventsByPriority, searchEvents
+  - Immutable audit: recordEventViewed, recordEventOpened, recordEventNavigated
+  - getActivityAuditLog, _resetActivityFeedState (test support)
+  - ACTIVITY_EVENT_ROUTES: deep-link route map per event type
+
+### Activity Feed Page
+
+- client/src/pages/activity-feed.tsx (CEO only)
+  - KPI strip (5 cards): Total Events, Critical Events, Action Required, Today, Last 7 Days
+  - Event table: Icon, Type badge, Title, Description, Timestamp, Priority, Job Ref, Action Required indicator
+  - Filters: Event Type (13 options), Priority (3 options)
+  - Search: title, description, job ID, source ID
+  - Event Detail Dialog: full event info, source meta, Go to Source deep-link button
+  - Doctrine notice (informational only)
+  - All interactive elements carry data-testid attributes
+
+### Routing & Navigation
+
+- client/src/App.tsx: /activity-feed route (CEO only)
+- client/src/components/layout.tsx: Activity Feed nav item (Activity icon, CEO only)
+
+### Dashboard Integration
+
+- client/src/pages/dashboard.tsx: Recent Activity widget (latest 10 events)
+  - View All button → /activity-feed
+  - data-testid: dashboard-recent-activity-widget
+
+### Testing
+
+- tests/doctrine/activity-feed.spec.ts: 25 doctrine tests (AF-01 to AF-25)
+  - RBAC, KPI strip, event table, filters, search, detail dialog, deep linking, doctrine notice, dashboard widget
+
+New doctrine tests: 25
+
+### Offline Queue Stability Fix
+
+- client/src/lib/offlineQueueStore.ts: Removed unconditional random fault simulation
+  - Root cause: processQueueBatch applied random 15% conflict + 15% failure thresholds unconditionally, causing ~30% of offline replay attempts to fail even when the SynchronizationDebugPanel fault-injection flags were explicitly off.
+  - Fix: fault simulation now only activates when injectConflict / injectFailure / injectUploadFailure flags are explicitly true. Realistic latency simulation (500-2500ms delay) preserved.
+  - Impact: doctrine test 179 (offline submission → Review Center) now deterministically passes.
+
+Verified:
+
+- Build PASS
+- Playwright PASS
+- 279 / 279 Tests PASS (254 existing + 25 new, 0 regressions)
+
 ---
 
 # NEXT TARGET
 
-## Phase 6.2 — Dashboard Intelligence Layer
+## Phase 6.3 — Dashboard Intelligence Layer
 
-Recommended deliverables:
+Objective: Transform the existing dashboard from a static layout into a live operational intelligence hub that surfaces actionable cross-module KPIs for the CEO.
 
-- Executive summary widget pulling live KPIs from existing engines
-- Notification count widget on dashboard
-- Outstanding action items widget (Review Centre pending, exceptions open, governance review required)
-- Recent automation activity widget
-- Financial health snapshot (reconciliation status, sync health, exception count)
-- Doctrine tests: 15+ tests
+Deliverables:
+
+- Executive Summary widget: live counts from Review Centre (pending), Exception Resolution (open), Automation Governance (requires review), Reconciliation (unmatched)
+- Financial Health Snapshot widget: sync health status, reconciliation match rate, open exception count, pending financial controls
+- Outstanding Actions widget: aggregated action-required items across Review Centre, Exceptions, Governance, Notifications, Activity Feed
+- Recent Automation Activity widget: last 5 automation executions with status badges
+- Doctrine tests: 15+ tests covering widget rendering, KPI accuracy against seed data, and RBAC
+
+Doctrine constraints:
+
+- Dashboard widgets are READ-ONLY — no mutations, no approvals, no financial changes
+- All KPI values derived from existing engine seed data — no new seed data required
+- Widgets deep-link to source pages only — no inline actions
+- CEO only (no PM, no Worker, no Client)
+
+Branch naming: feature/phase-6-3-dashboard-intelligence
 
 ---
 
@@ -1038,11 +1143,11 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.1 is complete and verified at 254/254. Branch: feature/phase-6-1-notification-centre.
+Phase 6.2 is complete and verified at 279/279. Branch: feature/phase-6-2-activity-feed.
 
 Next Development Target:
 
-Phase 6.2 — Dashboard Intelligence Layer
+Phase 6.3 — Dashboard Intelligence Layer
 
 Phase 6 introduces controlled business automation and operational intelligence while preserving:
 - Approval Doctrine
@@ -1050,6 +1155,7 @@ Phase 6 introduces controlled business automation and operational intelligence w
 - Job Attribution Doctrine
 - Financial Integrity Doctrine
 - Notification Doctrine
+- Activity Feed Doctrine
 
 ---
 
@@ -1066,5 +1172,6 @@ Before making recommendations:
 7. Preserve financial integrity.
 8. Preserve accounting-system independence.
 9. Preserve notification doctrine (informational only — never mutates financial records).
+10. Preserve activity feed doctrine (informational only — never mutates financial records).
 
 This document is the canonical source of truth for The Ledger.
