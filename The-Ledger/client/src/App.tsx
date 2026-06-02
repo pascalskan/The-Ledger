@@ -48,6 +48,7 @@ import PayrollExportPage from "@/pages/payroll-export";
 import ReconciliationCenterPage from "@/pages/reconciliation-center";
 import ExceptionResolutionCenterPage from "@/pages/exception-resolution-center";
 import NotificationCentrePage from "@/pages/notification-center";
+import ActivityFeedPage from "@/pages/activity-feed";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
@@ -133,6 +134,10 @@ function Router() {
       {/* Phase 6.1: Notification Centre — CEO + PM */}
       <Route path="/notifications">
         <ProtectedRoute component={NotificationCentrePage} roles={["CEO", "Project Manager"]} />
+      </Route>
+      {/* Phase 6.2: Activity Feed — CEO only */}
+      <Route path="/activity-feed">
+        <ProtectedRoute component={ActivityFeedPage} roles={["CEO"]} />
       </Route>
       <Route path="/jobs">
         <ProtectedRoute component={JobsPage} />
