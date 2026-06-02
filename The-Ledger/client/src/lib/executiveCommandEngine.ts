@@ -14,11 +14,9 @@
 import {
   getAllNotifications,
   computeNotificationSummary,
-  type Notification,
 } from './notificationEngine';
 
 import {
-  getAllEvents,
   getRecentEvents,
   computeActivitySummary,
   type ActivityEvent,
@@ -26,51 +24,38 @@ import {
 
 import {
   computeEventBusSummary,
-  getRecentBusEvents,
-  type EventBusSummary,
 } from './eventBusEngine';
 
 import {
   getAllWorkflows,
   computeWorkflowSummary,
-  type WorkflowRecord,
-  type WorkflowSummary,
 } from './workflowEngine';
 
 import {
   getAllGovernanceRecords,
-  getAllExceptions as getAllGovernanceExceptions,
   computeGovernanceSummary,
-  type AutomationGovernanceRecord,
-  type GovernanceSummary,
 } from './automationGovernanceEngine';
 
 import {
-  computeSchedulerSummary,
+  computeScheduleSummaryKPIs,
   getAllSchedules,
-  type SchedulerSummary,
+  getScheduleExecutions,
 } from './automationSchedulerEngine';
 
 import {
   SEED_EXCEPTIONS as EXCEPTION_RECORDS,
   computeExceptionSummary,
-  type ExceptionRecord,
-  type ExceptionSummary,
 } from './exceptionResolutionEngine';
 
 import {
   SEED_RECONCILIATION_RECORDS,
   computeReconciliationSummary,
   getExceptionRecords as getReconExceptions,
-  type ReconciliationRecord,
-  type ReconciliationSummary,
 } from './reconciliationEngine';
 
 import {
   SEED_FINANCIAL_CONTROLS,
   computeControlSummary,
-  type FinancialControl,
-  type ControlSummary,
 } from './financialControlsEngine';
 
 // ─────────────────────────────────────────────────────────────────────
@@ -108,11 +93,33 @@ export interface CriticalAlertItem {
   id: string;
   title: string;
   description: string;
-  source: string;        // module name
-  sourceRoute: string;   // deep-link target
+  source: string;
+  sourceRoute: string;
   priority: 'high' | 'critical';
   category: 'notification' | 'workflow' | 'governance' | 'reconciliation' | 'exception' | 'financial_control';
   createdAt: string;
+}
+
+export interface OperationalOverview {
+  activeWorkflows: number;
+  activeAutomations: number;
+  scheduledAutomations: number;
+  eventVolume: number;
+  activityVolume: number;
+}
+
+export interface GovernanceOverview {
+  requiresReview: number;
+  restricted: number;
+  suspended: number;
+  financiallySensitiveWorkflows: number;
+}
+
+export interface FinancialOverview {
+  failedSyncs: number;
+  openReconciliationIssues: number;
+  pendingFinancialControls: number;
+  openExceptions: number;
 }
 
 export interface ExecutiveAuditEntry {
@@ -146,7 +153,7 @@ function _writeAudit(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// HEALTH SCORING
+// HEALTH SCORING HELPER
 // ─────────────────────────────────────────────────────────────────────
 
 function _scoreHealth(score: number): HealthLevel {
@@ -167,12 +174,10 @@ export function getExecutiveSummary(): ExecutiveSummary {
   const reconSummary = computeReconciliationSummary(SEED_RECONCILIATION_RECORDS);
   const controlSummary = computeControlSummary(SEED_FINANCIAL_CONTROLS);
 
-  // Failed syncs = sync_failure notifications (actionRequired)
   const failedSyncs = getAllNotifications().filter(
     (n) => n.type === 'sync_failure' && n.actionRequired,
   ).length;
 
-  // Reconciliation issues = unmatched + requires_review + missing records
   const reconciliationIssues =
     reconSummary.unmatched +
     reconSummary.requiresReview +
@@ -289,11 +294,9 @@ export function getExecutiveHealthSnapshot(): ExecutiveHealthSnapshot {
 export function getCriticalItems(): CriticalAlertItem[] {
   const items: CriticalAlertItem[] = [];
 
-  // Critical / high notifications (unread + actionRequired)
+  // Critical / high notifications
   const notifications = getAllNotifications().filter(
-    (n) =>
-      (n.priority === 'critical' || n.priority === 'high') &&
-      n.status !== 'dismissed',
+    (n) => (n.priority === 'critical' || n.priority === 'high') && n.status !== 'dismissed',
   );
   for (const n of notifications) {
     items.push({
@@ -308,13 +311,13 @@ export function getCriticalItems(): CriticalAlertItem[] {
     });
   }
 
-  // Failed / blocked workflows
+  // Action-required active workflows
   const workflows = getAllWorkflows().filter((w) => w.actionRequired && w.status === 'active');
   for (const w of workflows) {
     items.push({
       id: w.id,
       title: `Workflow Action Required: ${w.name}`,
-      description: `Workflow requires attention — status: ${w.governanceStatus}`,
+      description: `Workflow requires attention — governance status: ${w.governanceStatus}`,
       source: 'Workflow Centre',
       sourceRoute: '/workflows',
       priority: 'high',
@@ -323,9 +326,12 @@ export function getCriticalItems(): CriticalAlertItem[] {
     });
   }
 
-  // Governance risks (requires_review + restricted + suspended)
+  // Governance risks
   const govRecords = getAllGovernanceRecords().filter(
-    (g) => g.governanceStatus === 'Requires Review' || g.governanceStatus === 'Restricted' || g.governanceStatus === 'Suspended',
+    (g) =>
+      g.governanceStatus === 'Requires Review' ||
+      g.governanceStatus === 'Restricted' ||
+      g.governanceStatus === 'Suspended',
   );
   for (const g of govRecords) {
     items.push({
@@ -334,7 +340,8 @@ export function getCriticalItems(): CriticalAlertItem[] {
       description: `Status: ${g.governanceStatus} — Risk: ${g.riskLevel}`,
       source: 'Automation Governance',
       sourceRoute: '/automation-governance',
-      priority: g.riskLevel === 'Critical' || g.governanceStatus === 'Suspended' ? 'critical' : 'high',
+      priority:
+        g.riskLevel === 'Critical' || g.governanceStatus === 'Suspended' ? 'critical' : 'high',
       category: 'governance',
       createdAt: g.updatedAt,
     });
@@ -355,9 +362,12 @@ export function getCriticalItems(): CriticalAlertItem[] {
     });
   }
 
-  // Open/Under Investigation exceptions
+  // Open exceptions
   const openExceptions = EXCEPTION_RECORDS.filter(
-    (e) => e.status === 'open' || e.status === 'under_investigation' || e.status === 'awaiting_approval',
+    (e) =>
+      e.status === 'open' ||
+      e.status === 'under_investigation' ||
+      e.status === 'awaiting_approval',
   );
   for (const e of openExceptions) {
     items.push({
@@ -399,17 +409,11 @@ export function getCriticalItems(): CriticalAlertItem[] {
 // PUBLIC API — OPERATIONAL OVERVIEW
 // ─────────────────────────────────────────────────────────────────────
 
-export interface OperationalOverview {
-  activeWorkflows: number;
-  activeAutomations: number;
-  scheduledAutomations: number;
-  eventVolume: number;
-  activityVolume: number;
-}
-
 export function getOperationalOverview(): OperationalOverview {
   const workflowSummary = computeWorkflowSummary(getAllWorkflows());
-  const schedulerSummary = computeSchedulerSummary(getAllSchedules());
+  const schedules = getAllSchedules();
+  const executions = getScheduleExecutions();
+  const schedulerSummary = computeScheduleSummaryKPIs(schedules, executions);
   const busSummary = computeEventBusSummary();
   const activitySummary = computeActivitySummary();
 
@@ -417,7 +421,7 @@ export function getOperationalOverview(): OperationalOverview {
     activeWorkflows: workflowSummary.active,
     activeAutomations: schedulerSummary.active,
     scheduledAutomations: schedulerSummary.total,
-    eventVolume: busSummary.totalEvents,
+    eventVolume: busSummary.total,
     activityVolume: activitySummary.total,
   };
 }
@@ -425,13 +429,6 @@ export function getOperationalOverview(): OperationalOverview {
 // ─────────────────────────────────────────────────────────────────────
 // PUBLIC API — GOVERNANCE OVERVIEW
 // ─────────────────────────────────────────────────────────────────────
-
-export interface GovernanceOverview {
-  requiresReview: number;
-  restricted: number;
-  suspended: number;
-  financiallySensitiveWorkflows: number;
-}
 
 export function getGovernanceOverview(): GovernanceOverview {
   const govSummary = computeGovernanceSummary(getAllGovernanceRecords());
@@ -449,13 +446,6 @@ export function getGovernanceOverview(): GovernanceOverview {
 // PUBLIC API — FINANCIAL OVERVIEW
 // ─────────────────────────────────────────────────────────────────────
 
-export interface FinancialOverview {
-  failedSyncs: number;
-  openReconciliationIssues: number;
-  pendingFinancialControls: number;
-  openExceptions: number;
-}
-
 export function getFinancialOverview(): FinancialOverview {
   const reconSummary = computeReconciliationSummary(SEED_RECONCILIATION_RECORDS);
   const exceptionSummary = computeExceptionSummary(EXCEPTION_RECORDS);
@@ -466,7 +456,11 @@ export function getFinancialOverview(): FinancialOverview {
 
   return {
     failedSyncs,
-    openReconciliationIssues: reconSummary.unmatched + reconSummary.requiresReview + reconSummary.missingInAccounting + reconSummary.missingInLedger,
+    openReconciliationIssues:
+      reconSummary.unmatched +
+      reconSummary.requiresReview +
+      reconSummary.missingInAccounting +
+      reconSummary.missingInLedger,
     pendingFinancialControls: controlSummary.pending,
     openExceptions: exceptionSummary.open + exceptionSummary.underInvestigation,
   };
@@ -493,7 +487,11 @@ export function recordExecutiveAlertOpened(alertId: string, performedBy: string)
 }
 
 export function recordExecutiveDeepLinkOpened(destination: string, performedBy: string): void {
-  _writeAudit('executive_deep_link_opened', performedBy, `Deep link opened to: ${destination}`);
+  _writeAudit(
+    'executive_deep_link_opened',
+    performedBy,
+    `Deep link opened to: ${destination}`,
+  );
 }
 
 export function getExecutiveAuditLog(): ExecutiveAuditEntry[] {
