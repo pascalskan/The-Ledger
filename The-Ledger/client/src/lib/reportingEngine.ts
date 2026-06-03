@@ -8,8 +8,8 @@
  * - executiveCommandEngine
  * - workflowEngine
  * - automationGovernanceEngine
- * - financialControlsEngine (via executiveCommandEngine)
- * - reconciliationEngine (via executiveCommandEngine)
+ * - financialControlsEngine (via SEED constants)
+ * - reconciliationEngine (via SEED constants)
  *
  * Doctrine:
  * - Reports are READ-ONLY snapshots
@@ -185,8 +185,14 @@ let _auditLog: ReportingAuditEntry[] = [];
 let _idCounter = 100;
 
 // ─────────────────────────────────────────────────────────────────────
-// INTERNAL HELPERS — aggregate from existing engines
+// INTERNAL HELPERS
 // ─────────────────────────────────────────────────────────────────────
+
+function _getGovSummary() {
+  const raw = computeGovernanceSummary(getAllGovernanceRecords());
+  // computeGovernanceSummary returns totalAutomations — normalise for local use
+  return { ...raw, total: raw.totalAutomations };
+}
 
 function _getControlsSummary() {
   return computeControlSummary(SEED_FINANCIAL_CONTROLS);
@@ -214,13 +220,14 @@ function buildSeedReports(): ReportRecord[] {
   const opOverview = getOperationalOverview();
   const finOverview = getFinancialOverview();
   const workflowSummary = computeWorkflowSummary(getAllWorkflows());
-  const govSummary = computeGovernanceSummary(getAllGovernanceRecords());
+  const govSummary = _getGovSummary();
   const controlsSummary = _getControlsSummary();
   const reconSummary = _getReconSummary();
   const risks = getCriticalRisks().slice(0, 4);
   const forecasts = getForecasts().slice(0, 3);
 
   return [
+    // ── rpt-001: Executive Summary
     {
       id: 'rpt-001',
       name: 'Executive Summary — June 2026',
@@ -248,22 +255,11 @@ function buildSeedReports(): ReportRecord[] {
         : 'No forecasts available.',
       governanceSummary: `${govSummary.requiresReview} automations require review. ${govSummary.restricted} restricted. ${govSummary.suspended} suspended. Overall compliance: ${govSummary.compliant} compliant of ${govSummary.total} total automations.`,
       sections: [
-        {
-          id: 'exec_overview',
-          title: 'Executive Overview',
-          content: `Operational health: ${execHealth.operational.label}. Financial health: ${execHealth.financial.label}. ${execSummary.criticalAlerts} critical alerts, ${execSummary.pendingReviews} pending reviews.`,
-          deepLinkRoute: '/executive-command-centre',
-          deepLinkLabel: 'Open Command Centre',
-        },
-        {
-          id: 'risk_section',
-          title: 'Risk Summary',
-          content: `${risks.length} risks identified across governance, financial, and operational categories.`,
-          deepLinkRoute: '/analytics-centre',
-          deepLinkLabel: 'View Analytics',
-        },
+        { id: 'exec_overview', title: 'Executive Overview', content: `Operational health: ${execHealth.operational.label}. Financial health: ${execHealth.financial.label}. ${execSummary.criticalAlerts} critical alerts, ${execSummary.pendingReviews} pending reviews.`, deepLinkRoute: '/executive-command-centre', deepLinkLabel: 'Open Command Centre' },
+        { id: 'risk_section', title: 'Risk Summary', content: `${risks.length} risks identified across governance, financial, and operational categories.`, deepLinkRoute: '/analytics-centre', deepLinkLabel: 'View Analytics' },
       ],
     },
+    // ── rpt-002: Board Report Q2
     {
       id: 'rpt-002',
       name: 'Board Report — Q2 2026',
@@ -285,26 +281,15 @@ function buildSeedReports(): ReportRecord[] {
         { label: 'Active Workflows', value: workflowSummary.active },
         { label: 'Governance Issues', value: govSummary.requiresReview },
       ],
-      riskSummary: `Board-level risk: ${risks.filter(r => r.severity === 'critical').length} critical risks require immediate attention. Governance risk score: ${analytics.governanceRisk.score}/100. Financial risk driven by ${controlsSummary.pending} pending financial controls.`,
+      riskSummary: `Board-level risk: ${risks.filter(r => r.severity === 'critical').length} critical risks. Governance risk score: ${analytics.governanceRisk.score}/100. Financial risk driven by ${controlsSummary.pending} pending financial controls.`,
       forecastSummary: forecasts.map(f => `${f.metric}: ${f.projectedChangePercent > 0 ? '+' : ''}${f.projectedChangePercent}% (${f.confidence} confidence)`).join('. ') + ' — Advisory projections only.',
       governanceSummary: `Automation governance: ${govSummary.compliant} compliant, ${govSummary.requiresReview} requires review, ${govSummary.restricted} restricted, ${govSummary.suspended} suspended. Financial controls: ${controlsSummary.pending} pending CEO approval.`,
       sections: [
-        {
-          id: 'board_financial',
-          title: 'Financial Overview',
-          content: `Reconciliation: ${reconSummary.totalItems} records, ${reconSummary.matchedItems} matched, ${reconSummary.unmatchedItems} unmatched.`,
-          deepLinkRoute: '/reconciliation-center',
-          deepLinkLabel: 'Reconciliation Centre',
-        },
-        {
-          id: 'board_governance',
-          title: 'Governance Summary',
-          content: `${govSummary.requiresReview} automations require governance review. Workflow health: ${execHealth.workflow.label}.`,
-          deepLinkRoute: '/automation-governance',
-          deepLinkLabel: 'Automation Governance',
-        },
+        { id: 'board_financial', title: 'Financial Overview', content: `Reconciliation: ${reconSummary.totalItems} records, ${reconSummary.matchedItems} matched, ${reconSummary.unmatchedItems} unmatched.`, deepLinkRoute: '/reconciliation-center', deepLinkLabel: 'Reconciliation Centre' },
+        { id: 'board_governance', title: 'Governance Summary', content: `${govSummary.requiresReview} automations require governance review. Workflow health: ${execHealth.workflow.label}.`, deepLinkRoute: '/automation-governance', deepLinkLabel: 'Automation Governance' },
       ],
     },
+    // ── rpt-003: Governance Report
     {
       id: 'rpt-003',
       name: 'Governance Report — June 2026',
@@ -328,22 +313,11 @@ function buildSeedReports(): ReportRecord[] {
       forecastSummary: 'Governance forecast: advisory only. Risk trajectory stable with current controls.',
       governanceSummary: `Full governance: ${govSummary.compliant} compliant, ${govSummary.requiresReview} requires review, ${govSummary.restricted} restricted, ${govSummary.suspended} suspended.`,
       sections: [
-        {
-          id: 'gov_automation',
-          title: 'Automation Governance',
-          content: `${govSummary.requiresReview} automations flagged for review. ${govSummary.suspended} suspended.`,
-          deepLinkRoute: '/automation-governance',
-          deepLinkLabel: 'Automation Governance',
-        },
-        {
-          id: 'gov_workflow',
-          title: 'Workflow Governance',
-          content: `${workflowSummary.total} workflows. ${workflowSummary.financiallySensitive} financially sensitive.`,
-          deepLinkRoute: '/workflows',
-          deepLinkLabel: 'Workflow Centre',
-        },
+        { id: 'gov_automation', title: 'Automation Governance', content: `${govSummary.requiresReview} automations flagged for review. ${govSummary.suspended} suspended.`, deepLinkRoute: '/automation-governance', deepLinkLabel: 'Automation Governance' },
+        { id: 'gov_workflow', title: 'Workflow Governance', content: `${workflowSummary.total} workflows. ${workflowSummary.financiallySensitive} financially sensitive.`, deepLinkRoute: '/workflows', deepLinkLabel: 'Workflow Centre' },
       ],
     },
+    // ── rpt-004: Financial Health Report
     {
       id: 'rpt-004',
       name: 'Financial Health Report — June 2026',
@@ -369,22 +343,11 @@ function buildSeedReports(): ReportRecord[] {
         : 'No financial forecasts available.',
       governanceSummary: `Financial controls: ${controlsSummary.pending} pending CEO approval. All overrides require explicit CEO approval per doctrine.`,
       sections: [
-        {
-          id: 'fin_controls',
-          title: 'Financial Controls',
-          content: `${controlsSummary.pending} controls pending. ${controlsSummary.approved} approved. ${controlsSummary.rejected} rejected.`,
-          deepLinkRoute: '/financial-explorer',
-          deepLinkLabel: 'Financial Explorer',
-        },
-        {
-          id: 'fin_reconciliation',
-          title: 'Reconciliation',
-          content: `${reconSummary.totalItems} records. ${reconSummary.matchedItems} matched, ${reconSummary.unmatchedItems} unmatched, ${reconSummary.requiresReviewItems} requires review.`,
-          deepLinkRoute: '/reconciliation-center',
-          deepLinkLabel: 'Reconciliation Centre',
-        },
+        { id: 'fin_controls', title: 'Financial Controls', content: `${controlsSummary.pending} controls pending. ${controlsSummary.approved} approved. ${controlsSummary.rejected} rejected.`, deepLinkRoute: '/financial-explorer', deepLinkLabel: 'Financial Explorer' },
+        { id: 'fin_reconciliation', title: 'Reconciliation', content: `${reconSummary.totalItems} records. ${reconSummary.matchedItems} matched, ${reconSummary.unmatchedItems} unmatched, ${reconSummary.requiresReviewItems} requires review.`, deepLinkRoute: '/reconciliation-center', deepLinkLabel: 'Reconciliation Centre' },
       ],
     },
+    // ── rpt-005: Operations Report
     {
       id: 'rpt-005',
       name: 'Operations Report — June 2026',
@@ -410,22 +373,11 @@ function buildSeedReports(): ReportRecord[] {
       forecastSummary: 'Operations forecast: workflow completion rate trending positive. Advisory only.',
       governanceSummary: `Workflow governance: ${workflowSummary.financiallySensitive} financially sensitive workflows under active oversight.`,
       sections: [
-        {
-          id: 'ops_workflows',
-          title: 'Workflow Summary',
-          content: `${workflowSummary.total} workflows. ${workflowSummary.active} active, ${workflowSummary.paused} paused, ${workflowSummary.requiresAction} require action.`,
-          deepLinkRoute: '/workflows',
-          deepLinkLabel: 'Workflow Centre',
-        },
-        {
-          id: 'ops_automations',
-          title: 'Automation Summary',
-          content: `${opOverview.activeAutomations} active automations. ${opOverview.scheduledAutomations} scheduled executions.`,
-          deepLinkRoute: '/automations',
-          deepLinkLabel: 'Automations',
-        },
+        { id: 'ops_workflows', title: 'Workflow Summary', content: `${workflowSummary.total} workflows. ${workflowSummary.active} active, ${workflowSummary.paused} paused, ${workflowSummary.requiresAction} require action.`, deepLinkRoute: '/workflows', deepLinkLabel: 'Workflow Centre' },
+        { id: 'ops_automations', title: 'Automation Summary', content: `${opOverview.activeAutomations} active automations. ${opOverview.scheduledAutomations} scheduled executions.`, deepLinkRoute: '/automations', deepLinkLabel: 'Automations' },
       ],
     },
+    // ── rpt-006: Monthly KPI
     {
       id: 'rpt-006',
       name: 'Monthly KPI Report — May 2026',
@@ -451,15 +403,10 @@ function buildSeedReports(): ReportRecord[] {
       forecastSummary: `KPI forecast: ${forecasts.map(f => `${f.metric} ${f.projectedChangePercent > 0 ? '+' : ''}${f.projectedChangePercent}%`).join(', ')}. Advisory projections only.`,
       governanceSummary: `Governance KPIs: ${govSummary.compliant}/${govSummary.total} compliant. ${govSummary.requiresReview} under review.`,
       sections: [
-        {
-          id: 'kpi_health',
-          title: 'Platform Health KPIs',
-          content: 'All four health dimensions tracked: operational, financial, governance, workflow.',
-          deepLinkRoute: '/analytics-centre',
-          deepLinkLabel: 'Analytics Centre',
-        },
+        { id: 'kpi_health', title: 'Platform Health KPIs', content: 'All four health dimensions tracked: operational, financial, governance, workflow.', deepLinkRoute: '/analytics-centre', deepLinkLabel: 'Analytics Centre' },
       ],
     },
+    // ── rpt-007: Archived
     {
       id: 'rpt-007',
       name: 'Board Report — Q1 2026',
@@ -481,6 +428,7 @@ function buildSeedReports(): ReportRecord[] {
       governanceSummary: 'Q1 governance: 2 automations required review, 1 suspended. All resolved.',
       sections: [],
     },
+    // ── rpt-008: Draft
     {
       id: 'rpt-008',
       name: 'Executive Summary — Draft — July 2026',
@@ -585,7 +533,7 @@ function buildReport(
   const govOverview = getGovernanceOverview();
   const finOverview = getFinancialOverview();
   const workflowSummary = computeWorkflowSummary(getAllWorkflows());
-  const govSummary = computeGovernanceSummary(getAllGovernanceRecords());
+  const govSummary = _getGovSummary();
   const risks = getCriticalRisks().slice(0, 5);
   const forecasts = getForecasts().slice(0, 3);
 
@@ -648,6 +596,10 @@ function buildReport(
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// PUBLIC API — GENERATE
+// ─────────────────────────────────────────────────────────────────────
+
 export function generateExecutiveSummary(period: ReportPeriod, sections: string[], generatedBy: string): ReportRecord {
   initIfNeeded();
   const report = buildReport('executive_summary', period, sections, generatedBy);
@@ -695,6 +647,10 @@ export function generateMonthlyKPIReport(period: ReportPeriod, sections: string[
   recordAudit('report_generated', report.id, report.name, generatedBy);
   return report;
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// PUBLIC API — ARCHIVE & AUDIT
+// ─────────────────────────────────────────────────────────────────────
 
 export function archiveReport(id: string, performedBy: string): boolean {
   initIfNeeded();
