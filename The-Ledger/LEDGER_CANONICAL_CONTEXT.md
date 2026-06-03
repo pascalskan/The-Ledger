@@ -2,16 +2,16 @@
 
 ## Canonical Context Document
 
-Version: 6.6
+Version: 6.8
 Status: Active Source of Truth
 Last Updated: June 2026
 
 Repository Baseline:
-feature/phase-6-6-business-intelligence (Phase 6.6 implementation complete)
+phase-6.8-report-exports (Phase 6.8 implementation complete)
 
 Verification Status:
-Build: Pending local verification
-Playwright: Pending local verification
+Build: PASS
+Playwright: 501 / 501 Tests PASS
 
 ---
 
@@ -471,6 +471,8 @@ It aggregates cross-module intelligence from:
 - Exception Resolution Engine
 - Reconciliation Engine
 - Financial Controls Engine
+- Reporting Engine (Phase 6.7)
+- Export Engine (Phase 6.8)
 
 The Executive Command Centre NEVER:
 - Creates financial mutations
@@ -560,6 +562,91 @@ Score ranges:
 
 ---
 
+## Reporting Doctrine (Phase 6.7)
+
+The Reporting Centre is INFORMATIONAL only.
+
+Reports MAY:
+- Aggregate and summarise data across the platform
+- Present KPI snapshots, risk summaries, forecast summaries, governance summaries
+- Be exported as informational artifacts
+- Deep-link to source modules for detail
+- Record all report generation and access in an immutable audit log
+
+Reports MAY NEVER:
+- Approve records
+- Modify records
+- Create financial mutations
+- Bypass governance controls
+- Override the Review Centre
+
+All report actions generate immutable audit entries:
+- report_generated
+- report_viewed
+- report_archived
+
+Report types: executive_summary, board_report, governance_report, financial_health_report, operations_report, monthly_kpi_report
+
+Report status lifecycle:
+- draft → generated
+- generated → archived
+
+RBAC:
+- CEO: full Reporting Centre visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+---
+
+## Export & Distribution Doctrine (Phase 6.8)
+
+Exports are INFORMATIONAL ARTIFACTS only.
+
+Exports MAY:
+- Be generated from existing reports (read-only derivatives)
+- Be downloaded as simulated PDF artifacts
+- Be distributed to recipients via email, portal, or download
+- Be archived
+- Record all export and distribution actions in an immutable audit log
+
+Exports MAY NEVER:
+- Modify the source report
+- Approve records
+- Create financial mutations
+- Bypass governance controls
+- Override the Review Centre
+
+All export actions generate immutable audit entries:
+- export_generated
+- export_downloaded
+- export_archived
+- distribution_created
+- distribution_delivered
+
+Export types: pdf, board_pack, executive_summary, governance, financial
+
+Export status lifecycle:
+- generated → downloaded
+- generated / downloaded → distributed
+- generated / downloaded / distributed → archived
+
+Distribution status lifecycle:
+- pending → delivered
+- pending → failed
+
+Distribution methods: email, portal, download
+
+Board Pack: aggregated export combining executive summary, KPI snapshot, risk summary, governance summary into a single artifact.
+
+RBAC:
+- CEO: full Export & Distribution visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+---
+
 # PRODUCT DEFINITION
 
 ## Executive Platform
@@ -590,6 +677,7 @@ The Ledger contains:
 - Workflow Centre
 - Executive Command Centre
 - Analytics Centre
+- Reporting Centre (Phase 6.7 + 6.8)
 - Settings
 - Accounting Settings
 - Reconciliation Centre
@@ -839,15 +927,11 @@ Verified: Build PASS | Playwright PASS | 173/173 Tests PASS
 
 Status: Complete
 
-PR: https://github.com/pascalskan/The-Ledger/pull/12
-
 Verified: Build PASS | Playwright PASS | 199/199 Tests PASS
 
 ## Phase 6.0E — Automation Scheduler
 
 Status: Complete
-
-PR: https://github.com/pascalskan/The-Ledger/pull/13
 
 Merged: main @ 5b4ca9a
 
@@ -855,282 +939,92 @@ Verified: Build PASS | Playwright PASS | 226/226 Tests PASS
 
 ## Phase 6.1 — Notification Centre
 
-Status: Complete — Verified
+Status: Complete
 
-Branch: feature/phase-6-1-notification-centre
-
-Verified: 254 / 254 Tests PASS
+Verified: Build PASS | Playwright PASS | 254/254 Tests PASS
 
 ## Phase 6.2 — Activity Feed & Event Stream
 
-Status: Complete — Verified
+Status: Complete
 
-Branch: feature/phase-6-2-activity-feed
-
-Verified: 279 / 279 Tests PASS
-
-Implemented:
-
-- client/src/lib/activityFeedEngine.ts: 13 event types, 25 seed events, full query API
-- client/src/pages/activity-feed.tsx: CEO-only Activity Feed page
-- Dashboard Recent Activity widget (latest 10 events)
-- Route: /activity-feed (CEO only)
-- Nav item: Activity Feed (Activity icon, CEO only)
-- tests/doctrine/activity-feed.spec.ts: 25 doctrine tests (AF-01 to AF-25)
+Verified: Build PASS | Playwright PASS | 279/279 Tests PASS
 
 ## Phase 6.3 — Real-Time Event Infrastructure
 
-Status: Complete — Verified
+Status: Complete
 
-Branch: feature/phase-6-3-event-infrastructure
-
-PR: https://github.com/pascalskan/The-Ledger/pull/16
-
-Verified: 309 / 309 Tests PASS (279 existing + 30 new, 0 regressions)
-
-Bug fixed: _suppressActivityFeedDispatch flag added to eventBusEngine.ts to prevent
-bus seed events bleeding into activityFeedEngine (AF-05 was showing 45 instead of 25).
-
-Implemented:
-
-### Event Bus Engine
-
-- client/src/lib/eventBusEngine.ts: Unified event-driven operational pipeline
-  - Types: BusEventCategory (13), BusEventPriority, BusEvent, BusEventRecord, BusAuditEntry, BusSubscriber, EventBusSummary
-  - Seed: 20 realistic events covering all 13 event categories
-  - Public API: publishEvent(), subscribe(), unsubscribe(), getEventHistory(), getRecentBusEvents(), getEventsByType(), getEventsByPriority(), searchBusEvents(), getSubscribers(), computeEventBusSummary(), getBusAuditLog(), recordEventMonitorViewed()
-  - 4 subscribers: Activity Feed, Notification, Dashboard, Automation
-  - Full audit trail: published / consumed / subscriber_triggered / viewed entries
-  - Doctrine-safe: informational and evaluative only, no financial mutations
-  - _suppressActivityFeedDispatch: seed-time guard to isolate bus seed from activity feed seed
-
-### Event Monitor Page
-
-- client/src/pages/event-monitor.tsx: CEO-only Event Monitor
-  - Doctrine notice banner
-  - KPI strip (5 cards): Total Events, Events Today, Critical Events, Subscribers, Active Event Types
-  - Event Stream: type/priority badges, action required indicator, view button
-  - Filters: Event Type (13), Priority (3)
-  - Search: title, description, event ID, job ID, source ID
-  - Event Detail panel: full info, consumed-by, Go to Source deep-link
-  - Subscriber Panel: 4 subscribers with status and event counts
-
-### Routing & Navigation
-
-- client/src/App.tsx: /event-monitor route (CEO only)
-- client/src/components/layout.tsx: Event Monitor nav item (Radio icon, testId: nav-event-monitor)
-
-### Testing
-
-- tests/doctrine/event-bus.spec.ts: 30 doctrine tests (EB-01 to EB-30)
-  - RBAC, KPI strip, event stream, filters, search, event detail, subscriber panel, doctrine notice, activity feed integration
-
-New doctrine tests: 30
+Verified: Build PASS | Playwright PASS | 309/309 Tests PASS
 
 ## Phase 6.4 — Cross-Module Workflow Automation
 
 Status: Complete
 
-Branch: feature/phase-6-4-workflow-automation
-
-Verified: 35 new doctrine tests (WF-01 to WF-35), 0 regressions
-
-Implemented:
-
-### Workflow Engine
-
-- client/src/lib/workflowEngine.ts: Cross-module workflow orchestration engine
-  - Types: WorkflowStatus, WorkflowStepStatus, WorkflowType, WorkflowStep, WorkflowExecutionRecord, WorkflowAuditEntry, WorkflowRecord, WorkflowSummary, WorkflowBusEventType
-  - Status constants/colors: WORKFLOW_STATUS_LABELS, WORKFLOW_STATUS_COLORS
-  - Type constants/colors: WORKFLOW_TYPE_LABELS, WORKFLOW_TYPE_COLORS
-  - Step constants/colors: WORKFLOW_STEP_STATUS_LABELS, WORKFLOW_STEP_STATUS_COLORS
-  - Forbidden actions list: WORKFLOW_FORBIDDEN_ACTIONS (7 doctrine-blocked actions)
-  - isWorkflowActionForbidden(): runtime doctrine enforcement at engine level
-  - Seed: 8 realistic workflows across 5 types (review, exception, governance, sync, notification)
-  - Public API: getAllWorkflows(), getWorkflowById(), createWorkflow(), updateWorkflow(), archiveWorkflow(), pauseWorkflow(), resumeWorkflow(), computeWorkflowSummary(), searchWorkflows(), getWorkflowAuditLog(), publishWorkflowEvent()
-  - Immutable audit log for all lifecycle events
-  - Event Bus integration helpers: WorkflowBusEventType (5 event types), WORKFLOW_BUS_EVENT_LABELS, publishWorkflowEvent()
-
-### Workflow Centre Page
-
-- client/src/pages/workflows.tsx: CEO-only Workflow Centre
-  - Doctrine notice banner (workflow capabilities and absolute prohibitions)
-  - KPI strip (5 cards): Total, Active, Paused, Requires Action, Financially Sensitive
-  - Workflow table: type/status badges, trigger event, step pip indicators, action required + financial indicators, inline actions
-  - Filters: Status (all/active/paused/draft/archived), Type (5 workflow types)
-  - Search: name, description, trigger event, type
-  - Workflow Detail Dialog: trigger event, step list with status pips + failure reasons, execution history, governance status panel, financial safeguard panel, action buttons (Pause/Resume/Archive)
-  - Workflow Execution Panel: live execution status, blocked/failed step indicators, per-workflow latest exec status
-
-### Routing & Navigation
-
-- client/src/App.tsx: /workflows route (CEO only, ProtectedRoute)
-- client/src/components/layout.tsx: Workflow Centre nav item (GitBranch icon, testId: nav-workflow-centre, CEO only)
-
-### Testing
-
-- tests/doctrine/workflow-automation.spec.ts: 35 doctrine tests (WF-01 to WF-35)
-  - Group 1: Rendering & Navigation (4 tests)
-  - Group 2: KPI Strip (5 tests)
-  - Group 3: Workflow Table (3 tests)
-  - Group 4: Filters & Search (6 tests)
-  - Group 5: Detail Dialog (6 tests)
-  - Group 6: Workflow Actions — Pause, Resume, Archive (3 tests)
-  - Group 7: Execution Panel (3 tests)
-  - Group 8: Governance & Financial Safeguards (2 tests)
-  - Group 9: RBAC — CEO allowed, PM denied, Worker denied (3 tests)
+Verified: Build PASS | Playwright PASS | 344/344 Tests PASS
 
 ## Phase 6.5 — Executive Command Centre
 
 Status: Complete
 
-Branch: feature/phase-6-5-executive-command-centre
-
-Verified: 35 new doctrine tests (ECC-01 to ECC-35), 0 regressions
-
-Implemented:
-
-### Executive Command Engine
-
-- client/src/lib/executiveCommandEngine.ts: Cross-module executive visibility engine
-  - Types: HealthLevel, HealthScore, ExecutiveSummary, ExecutiveHealthSnapshot, CriticalAlertItem, OperationalOverview, GovernanceOverview, FinancialOverview, ExecutiveAuditEntry
-  - Public API: getExecutiveSummary(), getOperationalHealth(), getFinancialHealth(), getGovernanceHealth(), getWorkflowHealth(), getExecutiveHealthSnapshot(), getCriticalItems(), getOperationalOverview(), getGovernanceOverview(), getFinancialOverview(), getExecutiveActivityStream(), recordExecutiveCentreViewed(), recordExecutiveAlertOpened(), recordExecutiveDeepLinkOpened(), getExecutiveAuditLog(), _resetExecutiveCommandState()
-  - Aggregates: notificationEngine, activityFeedEngine, eventBusEngine, workflowEngine, automationGovernanceEngine, automationSchedulerEngine, exceptionResolutionEngine, reconciliationEngine, financialControlsEngine
-  - Health scoring: 0–100 per dimension (operational, financial, governance, workflow) → healthy / warning / critical
-  - Critical items: aggregates critical/high notifications, action-required workflows, governance risks, reconciliation exceptions, open exceptions, pending financial controls
-  - Immutable audit log: executive_centre_viewed, executive_alert_opened, executive_deep_link_opened
-  - Doctrine-safe: read-only visibility layer, no financial mutations, no approval actions
-
-### Executive Command Centre Page
-
-- client/src/pages/executive-command-centre.tsx: CEO-only Executive Command Centre
-  - Doctrine notice banner: read-only visibility, no financial mutations
-  - KPI strip (5 cards): Operational Health, Financial Health, Governance Health, Open Exceptions, Critical Alerts
-  - Executive Alert Panel: aggregated critical/high items across all modules, priority badges, source navigation
-  - Operational Overview Panel: Active Workflows, Active Automations, Scheduled Automations, Event Volume, Activity Volume
-  - Governance Overview Panel: Requires Review, Restricted, Suspended, Financially Sensitive Workflows
-  - Financial Oversight Panel: Failed Syncs, Reconciliation Issues, Pending Controls, Open Exceptions
-  - Module Navigation Panel: deep links to Notification Centre, Workflow Centre, Automation Governance, Exception Resolution, Reconciliation Centre, Financial Explorer, Activity Feed, Event Monitor
-  - Executive Activity Stream: latest 15 activity events with priority/type badges
-  - Analytics Intelligence Section (Phase 6.6): top risks, trend indicators, forecast indicators, link to Analytics Centre
-  - Audit integration: recordExecutiveCentreViewed on mount, recordExecutiveAlertOpened on alert open, recordExecutiveDeepLinkOpened on deep link
-  - RBAC: CEO only
-
-### Dashboard Integration
-
-- client/src/pages/dashboard.tsx: Executive Snapshot widget added (CEO only)
-  - 6 tiles: Critical Alerts, Pending Reviews, Governance Issues, Open Exceptions, Recon Issues, Operational Health
-  - "Open Command Centre" button → /executive-command-centre
-  - Read-only, no inline actions
-
-### Routing & Navigation
-
-- client/src/App.tsx: /executive-command-centre route already registered (CEO only, ProtectedRoute)
-- client/src/components/layout.tsx: Executive Command Centre nav item (Terminal icon, testId: nav-executive-command-centre, CEO only)
-
-### Testing
-
-- tests/doctrine/executive-command-centre.spec.ts: 35 doctrine tests (ECC-01 to ECC-35)
-  - Group 1: Rendering & Navigation (4 tests)
-  - Group 2: KPI Strip (6 tests)
-  - Group 3: Executive Alert Panel (4 tests)
-  - Group 4: Operational Overview Panel (3 tests)
-  - Group 5: Governance Overview Panel (2 tests)
-  - Group 6: Financial Oversight Panel (3 tests)
-  - Group 7: Executive Activity Stream (2 tests)
-  - Group 8: Module Navigation / Deep Links (3 tests)
-  - Group 9: Dashboard Integration — Executive Snapshot Widget (5 tests)
-  - Group 10: RBAC — CEO allowed, PM denied, Worker denied (3 tests)
+Verified: Build PASS | Playwright PASS | 379/379 Tests PASS
 
 ## Phase 6.6 — Business Intelligence & Analytics Layer
 
-Status: Implementation Complete — Pending Verification
+Status: Complete
 
-Branch: feature/phase-6-6-business-intelligence
+Verified: Build PASS | Playwright PASS | 421/421 Tests PASS
 
-New doctrine tests: 42 (AC-01 to AC-42)
+## Phase 6.7 — Executive Reporting Centre
+
+Status: Complete
+
+Branch: feature/phase-6-7-reporting-centre
+
+Verified: Build PASS | Playwright PASS | 461/461 Tests PASS
 
 Implemented:
 
-### Analytics Engine
+- client/src/lib/reportingEngine.ts: 6 report types, 8 seed reports (rpt-001–rpt-008), full generation and audit API
+- client/src/pages/reporting-centre.tsx: CEO-only Reporting Centre page (/reporting-centre)
+  - Doctrine notice, KPI strip (5 cards), reports table with filter, Report Detail Dialog, Report Builder Dialog
+  - Deep links to source modules from report sections
+- Dashboard: Executive Reports Widget (dashboard-executive-reports-widget)
+- ECC: Reporting Snapshot section (exec-reporting-snapshot, exec-reporting-link)
+- Route: /reporting-centre (CEO only)
+- Nav: Reporting Centre (BookOpen icon, CEO only)
+- tests/doctrine/reporting-centre.spec.ts: 40 doctrine tests (RC-01 to RC-40)
 
-- client/src/lib/analyticsEngine.ts: Business Intelligence aggregation engine
-  - Types: HealthLevel, HealthScore, AnalyticsSummary, RiskItem, TrendItem, ForecastItem, BottleneckItem, AnalyticsAuditEntry
-  - Health scoring: 5 dimensions (operational, financial, governance, workflow efficiency, automation effectiveness)
-  - Public API: getAnalyticsSummary(), getOperationalHealth(), getFinancialHealth(), getGovernanceRisk(), getWorkflowEfficiency(), getAutomationEffectiveness(), getCriticalRisks(), getTrendAnalysis(), getForecasts(), getBottleneckAnalysis(), recordAnalyticsViewed(), recordForecastViewed(), recordRiskInvestigationOpened(), getAnalyticsAuditLog()
-  - Doctrine-safe: read-only, advisory-only, no financial mutations
-  - All access generates immutable audit records
+New doctrine tests: 40
 
-### Analytics Centre Page
+## Phase 6.8 — Report Exports & Distribution Centre
 
-- client/src/pages/analytics-centre.tsx: CEO-only Analytics Centre (/analytics-centre)
-  - Doctrine notice banner: advisory only, no financial mutations
-  - KPI strip (5 cards): Operational Health, Financial Health, Governance Risk, Workflow Efficiency, Automation Effectiveness — all show score/100
-  - Trend Analysis panel: direction indicators (up/down/stable), percentage change, period labels
-  - Risk Intelligence panel: severity badges (CRITICAL/HIGH/MEDIUM), deep links to source modules
-  - Forecast Intelligence panel: Advisory Only badge, confidence levels, projected change percentages
-  - Bottleneck Analysis panel: category icons, severity badges, view deep links
-  - Audit integration: recordAnalyticsViewed on mount, recordForecastViewed on forecast click, recordRiskInvestigationOpened on risk link click
-  - RBAC: CEO only
+Status: Complete
 
-### Dashboard Intelligence Widgets (Phase 6.6)
+Branch: phase-6.8-report-exports
 
-- client/src/pages/dashboard.tsx: 3 new CEO-only analytics widgets
-  - Risk Summary Widget (dashboard-risk-summary-widget): top 3 critical risks, deep link to /analytics-centre
-  - Forecast Intelligence Widget (dashboard-forecast-widget): top 2 forecasts, advisory label, deep link to full forecast
-  - Platform Trends Widget (dashboard-trend-widget): top 4 trend items with direction icons and percentage change
+Verified: Build PASS | Playwright PASS | 501/501 Tests PASS
 
-### Executive Command Centre Integration (Phase 6.6)
+Implemented:
 
-- client/src/pages/executive-command-centre.tsx: Analytics Intelligence section added
-  - exec-analytics-summary: section container
-  - exec-analytics-risks: top 4 risks with severity badges
-  - exec-analytics-trends: top 3 trend indicators with direction icons
-  - exec-analytics-forecasts: top 2 forecast indicators with advisory note
-  - exec-analytics-link: navigate to /analytics-centre button
+- client/src/lib/exportEngine.ts: Export & Distribution engine
+  - Types: ExportType, ExportStatus, DistributionMethod, DistributionStatus, ReportExport, ReportDistribution, ExportAuditEntry, ExportSummary, DistributionSummary
+  - Seed: 6 exports (exp-001–exp-006), 6 distributions (dist-001–dist-006), audit log
+  - Public API: getAllExports(), getExportById(), computeExportSummary(), getAllDistributions(), computeDistributionSummary(), generateExport(), generateBoardPack(), downloadExport(), archiveExport(), createDistribution(), getExportAuditLog()
+  - Doctrine-safe: exports are read-only derivatives, never modify source reports
+- client/src/pages/reporting-centre.tsx: Extended with Exports and Distribution tabs
+  - Tab bar: Reports | Exports | Distribution
+  - Exports tab: KPI strip (5 cards), exports table with View/Download/Archive, export status filter, Export Detail Dialog with doctrine notice and audit reference, Board Pack generator
+  - Distribution tab: KPI strip (5 cards — total, delivered, pending, failed, delivery rate), distribution table
+- client/src/pages/dashboard.tsx: Report Exports Widget added (dashboard-export-reports-widget)
+  - Total exports, distributed, downloaded, pending distributions, delivery rate KPIs
+  - Latest exports list, Open Reporting Centre button (dashboard-exports-open-btn)
+- client/src/pages/executive-command-centre.tsx: Export Status Snapshot section added
+  - ecc-export-status-snapshot: 5 KPI tiles (total, distributed, downloaded, pending dist., delivery rate)
+  - ecc-exports-link: navigates to /reporting-centre
+- tests/doctrine/report-exports.spec.ts: 40 doctrine tests (RX-01 to RX-40)
+  - RBAC, Exports tab KPIs, exports table, export actions, Export Detail Dialog, Board Pack, Distribution tab, Dashboard widget, ECC snapshot, doctrine enforcement
 
-### Routing & Navigation
-
-- client/src/App.tsx: /analytics-centre route registered (CEO only, ProtectedRoute)
-- client/src/components/layout.tsx: Analytics Centre nav item (BarChart3 icon, testId: nav-analytics-centre, CEO only)
-
-### Testing
-
-- tests/doctrine/analytics-centre.spec.ts: 42 doctrine tests (AC-01 to AC-42)
-  - Group 1: Analytics Centre Rendering & Navigation (4 tests)
-  - Group 2: KPI Strip (6 tests)
-  - Group 3: Trend Analysis Panel (4 tests)
-  - Group 4: Forecast Panel (5 tests)
-  - Group 5: Risk Intelligence Panel (5 tests)
-  - Group 6: Bottleneck Analysis Panel (3 tests)
-  - Group 7: Dashboard Intelligence Widgets (7 tests)
-  - Group 8: Executive Command Centre Integration (5 tests)
-  - Group 9: RBAC — CEO allowed, PM denied, Worker denied (3 tests)
-
----
-
-# NEXT TARGET
-
-## Phase 6.7 — Advanced Reporting & Export Intelligence
-
-Objective: CEO-level cross-module report generation, exportable financial summaries, operational health reports.
-
-Deliverables:
-
-- Report Engine: templated report generation across jobs, workers, financials, governance
-- Report Centre Page: CEO-only, listing available report types, on-demand generation
-- Export formats: CSV download capability
-- Dashboard widget: Recent Reports widget (CEO only)
-- Doctrine tests: 35+ tests
-
-Doctrine constraints:
-
-- Reports are READ-ONLY snapshots — no mutations
-- Reports never bypass Review Centre
-- All report generation is audited
-- CEO only
-
-Branch naming: feature/phase-6-7-reporting-intelligence
+New doctrine tests: 40
+Total test count: 501
 
 ---
 
@@ -1210,12 +1104,13 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.6 is complete.
-Branch: feature/phase-6-6-business-intelligence
+Phase 6.8 is complete.
+Branch: phase-6.8-report-exports
+Playwright: 501 / 501 Tests PASS
 
-Next Development Target:
+All phases 1 through 6.8 are complete and verified.
 
-Phase 6.7 — Advanced Reporting & Export Intelligence
+The platform is ready for the next development cycle.
 
 Phase 6 preserves:
 - Approval Doctrine
@@ -1229,6 +1124,8 @@ Phase 6 preserves:
 - Dashboard Intelligence Doctrine
 - Executive Command Centre Doctrine
 - Analytics Doctrine (Phase 6.6)
+- Reporting Doctrine (Phase 6.7)
+- Export & Distribution Doctrine (Phase 6.8)
 
 ---
 
@@ -1251,5 +1148,7 @@ Before making recommendations:
 13. Preserve dashboard intelligence doctrine (read-only widgets, deep-link only, no inline actions).
 14. Preserve executive command centre doctrine (read-only visibility layer, no financial mutations, no approval actions, full audit trail).
 15. Preserve analytics doctrine (advisory only — no approvals, no mutations, no record creation, forecasts labelled as projections).
+16. Preserve reporting doctrine (informational only — reports never approve, modify, or create financial mutations).
+17. Preserve export & distribution doctrine (exports are read-only derivatives of reports — never modify source reports, never create financial mutations).
 
 This document is the canonical source of truth for The Ledger.

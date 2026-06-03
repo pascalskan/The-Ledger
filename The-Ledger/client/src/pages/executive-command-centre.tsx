@@ -33,6 +33,10 @@ import {
   REPORT_STATUS_LABELS,
 } from '@/lib/reportingEngine';
 import {
+  computeExportSummary,
+  computeDistributionSummary,
+} from '@/lib/exportEngine';
+import {
   ACTIVITY_EVENT_TYPE_LABELS,
   ACTIVITY_EVENT_TYPE_COLORS,
   ACTIVITY_PRIORITY_COLORS,
@@ -56,6 +60,7 @@ import {
   Minus,
   BookOpen,
   FileText,
+  Download,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────
@@ -123,6 +128,10 @@ export default function ExecutiveCommandCentrePage() {
 
   // Reporting snapshot (Phase 6.7) — latest generated reports
   const latestReports = getAllReports().filter(r => r.status === 'generated').slice(0, 3);
+
+  // Export status snapshot (Phase 6.8)
+  const exportSummary = computeExportSummary();
+  const distributionSummary = computeDistributionSummary();
 
   useEffect(() => {
     if (user?.name) {
@@ -615,6 +624,52 @@ export default function ExecutiveCommandCentrePage() {
                   </Badge>
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── EXPORT STATUS SNAPSHOT (Phase 6.8) ── */}
+        <Card data-testid="ecc-export-status-snapshot">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Download className="h-4 w-4 text-blue-500" />
+                Export Status Snapshot
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1"
+                data-testid="ecc-exports-link"
+                onClick={() => handleDeepLink('/reporting-centre', 'Reporting Centre — Exports')}
+              >
+                <ExternalLink className="h-3 w-3" />
+                View Exports
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div data-testid="ecc-export-kpi-total" className="p-3 rounded-md border bg-card text-center">
+                <p className="text-2xl font-bold">{exportSummary.total}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Total Exports</p>
+              </div>
+              <div data-testid="ecc-export-kpi-distributed" className="p-3 rounded-md border bg-indigo-50 border-indigo-200 text-center">
+                <p className="text-2xl font-bold text-indigo-700">{exportSummary.distributed}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Distributed</p>
+              </div>
+              <div data-testid="ecc-export-kpi-downloaded" className="p-3 rounded-md border bg-blue-50 border-blue-200 text-center">
+                <p className="text-2xl font-bold text-blue-700">{exportSummary.downloaded}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Downloaded</p>
+              </div>
+              <div data-testid="ecc-export-kpi-pending-dist" className="p-3 rounded-md border bg-amber-50 border-amber-200 text-center">
+                <p className="text-2xl font-bold text-amber-700">{distributionSummary.pending}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Pending Dist.</p>
+              </div>
+              <div data-testid="ecc-export-kpi-delivery-rate" className="p-3 rounded-md border bg-emerald-50 border-emerald-200 text-center">
+                <p className="text-2xl font-bold text-emerald-700">{distributionSummary.deliveryRate}%</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Delivery Rate</p>
+              </div>
             </div>
           </CardContent>
         </Card>

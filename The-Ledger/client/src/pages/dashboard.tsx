@@ -26,6 +26,8 @@ import {
   Minus,
   FileText,
   BookOpen,
+  Download,
+  Package,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -50,6 +52,15 @@ import {
   REPORT_STATUS_LABELS,
   REPORT_STATUS_COLORS,
 } from "@/lib/reportingEngine";
+import {
+  getAllExports,
+  computeExportSummary,
+  computeDistributionSummary,
+  EXPORT_STATUS_LABELS,
+  EXPORT_STATUS_COLORS,
+  EXPORT_TYPE_LABELS,
+  EXPORT_TYPE_COLORS,
+} from "@/lib/exportEngine";
 
 // Icon map for activity event types (inline, no coupling)
 function ActivityEventIcon({ type, className }: { type: ActivityEventType; className?: string }) {
@@ -113,6 +124,11 @@ export default function Dashboard() {
   // Reporting data (CEO only widget)
   const latestReports = isCEO ? getAllReports().filter(r => r.status === 'generated').slice(0, 3) : [];
   const reportingSummary = isCEO ? computeReportingSummary() : null;
+
+  // Export data (CEO only widget — Phase 6.8)
+  const exportSummary = isCEO ? computeExportSummary() : null;
+  const distributionSummary = isCEO ? computeDistributionSummary() : null;
+  const latestExports = isCEO ? getAllExports().filter(e => e.status !== 'archived').slice(0, 3) : [];
 
   return (
     <Layout>
@@ -380,6 +396,78 @@ export default function Dashboard() {
                         className={cn('text-xs flex-shrink-0', REPORT_TYPE_COLORS[report.type])}
                       >
                         {REPORT_TYPE_LABELS[report.type]}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Report Exports Widget — CEO only (Phase 6.8) */}
+        {isCEO && exportSummary && distributionSummary && (
+          <Card
+            data-testid="dashboard-export-reports-widget"
+            className="border-slate-200/60 shadow-sm"
+          >
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="h-5 w-5 text-blue-600" />
+                  Report Exports
+                </CardTitle>
+                <CardDescription>Export status, latest exports, and pending distributions.</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1"
+                data-testid="dashboard-exports-open-btn"
+                onClick={() => setLocation("/reporting-centre")}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open Reporting Centre
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
+                <div data-testid="dashboard-exports-kpi-total" className="p-2 rounded border text-center bg-card">
+                  <p className="text-xl font-bold">{exportSummary.total}</p>
+                  <p className="text-[10px] text-muted-foreground">Total Exports</p>
+                </div>
+                <div data-testid="dashboard-exports-kpi-distributed" className="p-2 rounded border text-center bg-indigo-50 border-indigo-200">
+                  <p className="text-xl font-bold text-indigo-700">{exportSummary.distributed}</p>
+                  <p className="text-[10px] text-muted-foreground">Distributed</p>
+                </div>
+                <div data-testid="dashboard-exports-kpi-downloaded" className="p-2 rounded border text-center bg-blue-50 border-blue-200">
+                  <p className="text-xl font-bold text-blue-700">{exportSummary.downloaded}</p>
+                  <p className="text-[10px] text-muted-foreground">Downloaded</p>
+                </div>
+                <div data-testid="dashboard-exports-kpi-pending-dist" className="p-2 rounded border text-center bg-amber-50 border-amber-200">
+                  <p className="text-xl font-bold text-amber-700">{distributionSummary.pending}</p>
+                  <p className="text-[10px] text-muted-foreground">Dist. Pending</p>
+                </div>
+                <div data-testid="dashboard-exports-kpi-delivery-rate" className="p-2 rounded border text-center bg-emerald-50 border-emerald-200">
+                  <p className="text-xl font-bold text-emerald-700">{distributionSummary.deliveryRate}%</p>
+                  <p className="text-[10px] text-muted-foreground">Delivery Rate</p>
+                </div>
+              </div>
+              {latestExports.length > 0 && (
+                <div className="divide-y" data-testid="dashboard-exports-latest-list">
+                  {latestExports.map((exp) => (
+                    <div
+                      key={exp.id}
+                      data-testid={`dashboard-export-item-${exp.id}`}
+                      className="flex items-center gap-3 py-2.5 text-sm"
+                    >
+                      <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="flex-1 truncate font-medium">{exp.fileName}</span>
+                      <Badge
+                        variant="outline"
+                        className={cn('text-xs flex-shrink-0', EXPORT_STATUS_COLORS[exp.status])}
+                      >
+                        {EXPORT_STATUS_LABELS[exp.status]}
                       </Badge>
                     </div>
                   ))}
