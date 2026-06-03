@@ -3,12 +3,12 @@
  *
  * Report Export & Distribution Centre
  *
- * Handles the lifecycle of report exports: generation, download, archival,
- * and distribution tracking. All actions are audited.
+ * Manages the lifecycle of report exports and their distribution.
+ * Exports are READ-ONLY derivatives of reports — they never modify source reports.
  *
  * Doctrine:
- * - Exports are derived artefacts of reports — they do NOT modify source reports
- * - Export actions never approve, override, or mutate financial records
+ * - Exports are informational artifacts only
+ * - Exports NEVER approve, modify, or create financial mutations
  * - All export and distribution actions are audited
  * - CEO only
  */
@@ -41,28 +41,37 @@ export interface ReportExport {
   generatedBy: string;
   status: ExportStatus;
   fileName: string;
+  fileSizeKb: number;
   auditReference: string;
-  sizeKb: number;
+  distributionCount: number;
 }
 
 export interface ReportDistribution {
   id: string;
   exportId: string;
   reportId: string;
+  reportName: string;
   method: DistributionMethod;
   recipient: string;
   status: DistributionStatus;
   createdAt: string;
   deliveredAt?: string;
+  failureReason?: string;
 }
 
 export interface ExportAuditEntry {
   id: string;
-  action: 'export_generated' | 'export_downloaded' | 'export_archived' | 'distribution_created' | 'distribution_delivered';
+  action:
+    | 'export_generated'
+    | 'export_downloaded'
+    | 'export_archived'
+    | 'distribution_created'
+    | 'distribution_delivered';
   exportId: string;
   fileName: string;
   performedBy: string;
   timestamp: string;
+  notes?: string;
 }
 
 export interface ExportSummary {
@@ -75,8 +84,8 @@ export interface ExportSummary {
 
 export interface DistributionSummary {
   total: number;
-  pending: number;
   delivered: number;
+  pending: number;
   failed: number;
   deliveryRate: number;
 }
@@ -89,7 +98,7 @@ export const EXPORT_TYPE_LABELS: Record<ExportType, string> = {
   pdf: 'PDF Export',
   board_pack: 'Board Pack',
   executive_summary: 'Executive Summary',
-  governance: 'Governance Pack',
+  governance: 'Governance Report',
   financial: 'Financial Report',
 };
 
@@ -111,7 +120,7 @@ export const EXPORT_STATUS_LABELS: Record<ExportStatus, string> = {
 export const EXPORT_STATUS_COLORS: Record<ExportStatus, string> = {
   generated: 'text-emerald-700 bg-emerald-50 border-emerald-200',
   downloaded: 'text-blue-700 bg-blue-50 border-blue-200',
-  distributed: 'text-purple-700 bg-purple-50 border-purple-200',
+  distributed: 'text-indigo-700 bg-indigo-50 border-indigo-200',
   archived: 'text-slate-600 bg-slate-50 border-slate-200',
 };
 
@@ -143,7 +152,7 @@ let _exportAuditLog: ExportAuditEntry[] = [];
 let _idCounter = 200;
 
 // ─────────────────────────────────────────────────────────────────────
-// SEED — Realistic pre-generated exports and distributions
+// SEED — Pre-generated exports and distributions
 // ─────────────────────────────────────────────────────────────────────
 
 function buildSeedExports(): ReportExport[] {
@@ -157,8 +166,9 @@ function buildSeedExports(): ReportExport[] {
       generatedBy: 'Demo CEO',
       status: 'distributed',
       fileName: 'executive-summary-june-2026.pdf',
+      fileSizeKb: 142,
       auditReference: 'AUD-EXP-001',
-      sizeKb: 284,
+      distributionCount: 2,
     },
     {
       id: 'exp-002',
@@ -169,32 +179,35 @@ function buildSeedExports(): ReportExport[] {
       generatedBy: 'Demo CEO',
       status: 'distributed',
       fileName: 'board-pack-q2-2026.pdf',
+      fileSizeKb: 387,
       auditReference: 'AUD-EXP-002',
-      sizeKb: 512,
+      distributionCount: 3,
     },
     {
       id: 'exp-003',
       reportId: 'rpt-003',
       reportName: 'Governance Report — June 2026',
       exportType: 'governance',
-      generatedAt: '2026-06-02T09:00:00.000Z',
+      generatedAt: '2026-06-02T08:45:00.000Z',
       generatedBy: 'Demo CEO',
       status: 'downloaded',
       fileName: 'governance-report-june-2026.pdf',
+      fileSizeKb: 98,
       auditReference: 'AUD-EXP-003',
-      sizeKb: 198,
+      distributionCount: 0,
     },
     {
       id: 'exp-004',
       reportId: 'rpt-004',
       reportName: 'Financial Health Report — June 2026',
       exportType: 'financial',
-      generatedAt: '2026-06-02T09:30:00.000Z',
+      generatedAt: '2026-06-02T09:15:00.000Z',
       generatedBy: 'Demo CEO',
-      status: 'downloaded',
+      status: 'generated',
       fileName: 'financial-health-june-2026.pdf',
+      fileSizeKb: 215,
       auditReference: 'AUD-EXP-004',
-      sizeKb: 341,
+      distributionCount: 0,
     },
     {
       id: 'exp-005',
@@ -205,20 +218,22 @@ function buildSeedExports(): ReportExport[] {
       generatedBy: 'Demo CEO',
       status: 'generated',
       fileName: 'operations-report-june-2026.pdf',
+      fileSizeKb: 176,
       auditReference: 'AUD-EXP-005',
-      sizeKb: 156,
+      distributionCount: 0,
     },
     {
       id: 'exp-006',
       reportId: 'rpt-006',
       reportName: 'Monthly KPI Report — May 2026',
-      exportType: 'pdf',
+      exportType: 'executive_summary',
       generatedAt: '2026-06-01T07:30:00.000Z',
       generatedBy: 'Demo CEO',
       status: 'archived',
       fileName: 'monthly-kpi-may-2026.pdf',
+      fileSizeKb: 134,
       auditReference: 'AUD-EXP-006',
-      sizeKb: 223,
+      distributionCount: 1,
     },
   ];
 }
@@ -229,70 +244,130 @@ function buildSeedDistributions(): ReportDistribution[] {
       id: 'dist-001',
       exportId: 'exp-001',
       reportId: 'rpt-001',
+      reportName: 'Executive Summary — June 2026',
       method: 'email',
-      recipient: 'board@company.com',
+      recipient: 'board@theledger.internal',
       status: 'delivered',
       createdAt: '2026-06-01T09:45:00.000Z',
       deliveredAt: '2026-06-01T09:46:00.000Z',
     },
     {
       id: 'dist-002',
-      exportId: 'exp-002',
-      reportId: 'rpt-002',
+      exportId: 'exp-001',
+      reportId: 'rpt-001',
+      reportName: 'Executive Summary — June 2026',
       method: 'portal',
-      recipient: 'Board Portal',
+      recipient: 'cfo@theledger.internal',
       status: 'delivered',
-      createdAt: '2026-06-01T10:45:00.000Z',
-      deliveredAt: '2026-06-01T10:45:30.000Z',
+      createdAt: '2026-06-01T09:50:00.000Z',
+      deliveredAt: '2026-06-01T09:50:30.000Z',
     },
     {
       id: 'dist-003',
       exportId: 'exp-002',
       reportId: 'rpt-002',
+      reportName: 'Board Report — Q2 2026',
       method: 'email',
-      recipient: 'investors@company.com',
+      recipient: 'board@theledger.internal',
       status: 'delivered',
       createdAt: '2026-06-01T11:00:00.000Z',
       deliveredAt: '2026-06-01T11:01:00.000Z',
     },
     {
       id: 'dist-004',
-      exportId: 'exp-003',
-      reportId: 'rpt-003',
-      method: 'download',
-      recipient: 'Demo CEO',
+      exportId: 'exp-002',
+      reportId: 'rpt-002',
+      reportName: 'Board Report — Q2 2026',
+      method: 'portal',
+      recipient: 'investors@theledger.internal',
       status: 'delivered',
-      createdAt: '2026-06-02T09:05:00.000Z',
-      deliveredAt: '2026-06-02T09:05:01.000Z',
+      createdAt: '2026-06-01T11:05:00.000Z',
+      deliveredAt: '2026-06-01T11:05:45.000Z',
     },
     {
       id: 'dist-005',
-      exportId: 'exp-004',
-      reportId: 'rpt-004',
-      method: 'email',
-      recipient: 'finance@company.com',
+      exportId: 'exp-002',
+      reportId: 'rpt-002',
+      reportName: 'Board Report — Q2 2026',
+      method: 'download',
+      recipient: 'Demo CEO',
       status: 'pending',
-      createdAt: '2026-06-02T09:35:00.000Z',
+      createdAt: '2026-06-01T11:10:00.000Z',
     },
     {
       id: 'dist-006',
-      exportId: 'exp-005',
-      reportId: 'rpt-005',
-      method: 'portal',
-      recipient: 'Operations Portal',
-      status: 'failed',
-      createdAt: '2026-06-02T10:35:00.000Z',
+      exportId: 'exp-006',
+      reportId: 'rpt-006',
+      reportName: 'Monthly KPI Report — May 2026',
+      method: 'email',
+      recipient: 'cfo@theledger.internal',
+      status: 'delivered',
+      createdAt: '2026-06-01T07:45:00.000Z',
+      deliveredAt: '2026-06-01T07:46:00.000Z',
     },
   ];
 }
 
-// Initialise seed
+function buildSeedAuditLog(): ExportAuditEntry[] {
+  return [
+    {
+      id: 'exp-audit-001',
+      action: 'export_generated',
+      exportId: 'exp-001',
+      fileName: 'executive-summary-june-2026.pdf',
+      performedBy: 'Demo CEO',
+      timestamp: '2026-06-01T09:30:00.000Z',
+    },
+    {
+      id: 'exp-audit-002',
+      action: 'distribution_created',
+      exportId: 'exp-001',
+      fileName: 'executive-summary-june-2026.pdf',
+      performedBy: 'Demo CEO',
+      timestamp: '2026-06-01T09:45:00.000Z',
+      notes: 'Distributed to board@theledger.internal',
+    },
+    {
+      id: 'exp-audit-003',
+      action: 'distribution_delivered',
+      exportId: 'exp-001',
+      fileName: 'executive-summary-june-2026.pdf',
+      performedBy: 'System',
+      timestamp: '2026-06-01T09:46:00.000Z',
+      notes: 'Delivered to board@theledger.internal',
+    },
+    {
+      id: 'exp-audit-004',
+      action: 'export_generated',
+      exportId: 'exp-002',
+      fileName: 'board-pack-q2-2026.pdf',
+      performedBy: 'Demo CEO',
+      timestamp: '2026-06-01T10:30:00.000Z',
+    },
+    {
+      id: 'exp-audit-005',
+      action: 'export_downloaded',
+      exportId: 'exp-003',
+      fileName: 'governance-report-june-2026.pdf',
+      performedBy: 'Demo CEO',
+      timestamp: '2026-06-02T09:00:00.000Z',
+    },
+    {
+      id: 'exp-audit-006',
+      action: 'export_archived',
+      exportId: 'exp-006',
+      fileName: 'monthly-kpi-may-2026.pdf',
+      performedBy: 'Demo CEO',
+      timestamp: '2026-06-02T10:00:00.000Z',
+    },
+  ];
+}
+
 function initIfNeeded() {
   if (_exports.length === 0) {
     _exports = buildSeedExports();
-  }
-  if (_distributions.length === 0) {
     _distributions = buildSeedDistributions();
+    _exportAuditLog = buildSeedAuditLog();
   }
 }
 
@@ -304,7 +379,8 @@ function recordExportAudit(
   action: ExportAuditEntry['action'],
   exportId: string,
   fileName: string,
-  performedBy: string
+  performedBy: string,
+  notes?: string
 ): void {
   _exportAuditLog.push({
     id: `exp-audit-${Date.now()}-${++_idCounter}`,
@@ -313,11 +389,12 @@ function recordExportAudit(
     fileName,
     performedBy,
     timestamp: new Date().toISOString(),
+    notes,
   });
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// PUBLIC API — EXPORTS QUERY
+// PUBLIC API — QUERY
 // ─────────────────────────────────────────────────────────────────────
 
 export function getAllExports(): ReportExport[] {
@@ -337,6 +414,11 @@ export function getExportsByStatus(status: ExportStatus): ReportExport[] {
   return _exports.filter((e) => e.status === status);
 }
 
+export function getExportsByReportId(reportId: string): ReportExport[] {
+  initIfNeeded();
+  return _exports.filter((e) => e.reportId === reportId);
+}
+
 export function computeExportSummary(): ExportSummary {
   initIfNeeded();
   return {
@@ -348,88 +430,6 @@ export function computeExportSummary(): ExportSummary {
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────
-// PUBLIC API — EXPORTS ACTIONS (simulated)
-// ─────────────────────────────────────────────────────────────────────
-
-/**
- * Generate a new export for a given report.
- * Export actions do NOT modify source reports.
- */
-export function generateExport(
-  reportId: string,
-  exportType: ExportType,
-  generatedBy: string
-): ReportExport | null {
-  initIfNeeded();
-  const report = getReportById(reportId);
-  if (!report) return null;
-
-  const id = `exp-${Date.now()}-${++_idCounter}`;
-  const typeLabel = exportType.replace(/_/g, '-');
-  const dateStr = new Date().toISOString().slice(0, 10);
-  const fileName = `${typeLabel}-${dateStr}.pdf`;
-
-  const newExport: ReportExport = {
-    id,
-    reportId,
-    reportName: report.name,
-    exportType,
-    generatedAt: new Date().toISOString(),
-    generatedBy,
-    status: 'generated',
-    fileName,
-    auditReference: `AUD-EXP-${id.toUpperCase()}`,
-    sizeKb: Math.floor(Math.random() * 400) + 100,
-  };
-
-  _exports.unshift(newExport);
-  recordExportAudit('export_generated', id, fileName, generatedBy);
-  return newExport;
-}
-
-/**
- * Mark an export as downloaded.
- * Does NOT modify source reports.
- */
-export function downloadExport(id: string, performedBy: string): boolean {
-  initIfNeeded();
-  const exp = _exports.find((e) => e.id === id);
-  if (!exp || exp.status === 'archived') return false;
-  exp.status = 'downloaded';
-  recordExportAudit('export_downloaded', id, exp.fileName, performedBy);
-  return true;
-}
-
-/**
- * Archive an export.
- * Does NOT modify source reports.
- */
-export function archiveExport(id: string, performedBy: string): boolean {
-  initIfNeeded();
-  const exp = _exports.find((e) => e.id === id);
-  if (!exp || exp.status === 'archived') return false;
-  exp.status = 'archived';
-  recordExportAudit('export_archived', id, exp.fileName, performedBy);
-  return true;
-}
-
-/**
- * Generate a Board Pack export — aggregates executive summary, KPI snapshot,
- * risk summary, governance summary into one composite export object (simulated).
- * Does NOT modify source reports.
- */
-export function generateBoardPackExport(
-  reportId: string,
-  generatedBy: string
-): ReportExport | null {
-  return generateExport(reportId, 'board_pack', generatedBy);
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// PUBLIC API — DISTRIBUTIONS QUERY
-// ─────────────────────────────────────────────────────────────────────
-
 export function getAllDistributions(): ReportDistribution[] {
   initIfNeeded();
   return [..._distributions].sort((a, b) =>
@@ -437,7 +437,7 @@ export function getAllDistributions(): ReportDistribution[] {
   );
 }
 
-export function getDistributionsByExport(exportId: string): ReportDistribution[] {
+export function getDistributionsByExportId(exportId: string): ReportDistribution[] {
   initIfNeeded();
   return _distributions.filter((d) => d.exportId === exportId);
 }
@@ -449,17 +449,102 @@ export function computeDistributionSummary(): DistributionSummary {
   const pending = _distributions.filter((d) => d.status === 'pending').length;
   const failed = _distributions.filter((d) => d.status === 'failed').length;
   const deliveryRate = total > 0 ? Math.round((delivered / total) * 100) : 0;
-  return { total, pending, delivered, failed, deliveryRate };
+  return { total, delivered, pending, failed, deliveryRate };
+}
+
+export function getExportAuditLog(): ExportAuditEntry[] {
+  initIfNeeded();
+  return [..._exportAuditLog].sort((a, b) =>
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// PUBLIC API — DISTRIBUTIONS ACTIONS (simulated)
+// PUBLIC API — EXPORT ACTIONS (simulated, no mutation of source reports)
 // ─────────────────────────────────────────────────────────────────────
 
-/**
- * Create a distribution record for an export.
- * Does NOT modify source reports.
- */
+export function generateExport(
+  reportId: string,
+  exportType: ExportType,
+  generatedBy: string
+): ReportExport | null {
+  initIfNeeded();
+  const report = getReportById(reportId);
+  if (!report) return null;
+
+  const id = `exp-${Date.now()}-${++_idCounter}`;
+  const typeSlug = exportType.replace(/_/g, '-');
+  const reportSlug = report.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-');
+  const fileName = `${typeSlug}-${reportSlug}.pdf`;
+  const auditReference = `AUD-EXP-${String(_idCounter).padStart(3, '0')}`;
+
+  const newExport: ReportExport = {
+    id,
+    reportId,
+    reportName: report.name,
+    exportType,
+    generatedAt: new Date().toISOString(),
+    generatedBy,
+    status: 'generated',
+    fileName,
+    fileSizeKb: Math.floor(80 + Math.random() * 300),
+    auditReference,
+    distributionCount: 0,
+  };
+
+  _exports.unshift(newExport);
+  recordExportAudit('export_generated', id, fileName, generatedBy);
+  return newExport;
+}
+
+export function generateBoardPack(
+  generatedBy: string
+): ReportExport | null {
+  initIfNeeded();
+  // Aggregates executive summary, KPI snapshot, risk summary, governance summary
+  const id = `exp-${Date.now()}-${++_idCounter}`;
+  const fileName = `board-pack-${new Date().toISOString().slice(0, 10)}.pdf`;
+  const auditReference = `AUD-EXP-${String(_idCounter).padStart(3, '0')}`;
+
+  const newExport: ReportExport = {
+    id,
+    reportId: 'rpt-002',
+    reportName: 'Board Pack — Aggregated Export',
+    exportType: 'board_pack',
+    generatedAt: new Date().toISOString(),
+    generatedBy,
+    status: 'generated',
+    fileName,
+    fileSizeKb: Math.floor(300 + Math.random() * 200),
+    auditReference,
+    distributionCount: 0,
+  };
+
+  _exports.unshift(newExport);
+  recordExportAudit('export_generated', id, fileName, generatedBy, 'Board Pack — aggregated export');
+  return newExport;
+}
+
+export function downloadExport(id: string, performedBy: string): boolean {
+  initIfNeeded();
+  const exp = _exports.find((e) => e.id === id);
+  if (!exp || exp.status === 'archived') return false;
+  if (exp.status === 'generated') {
+    exp.status = 'downloaded';
+  }
+  recordExportAudit('export_downloaded', id, exp.fileName, performedBy);
+  return true;
+}
+
+export function archiveExport(id: string, performedBy: string): boolean {
+  initIfNeeded();
+  const exp = _exports.find((e) => e.id === id);
+  if (!exp || exp.status === 'archived') return false;
+  exp.status = 'archived';
+  recordExportAudit('export_archived', id, exp.fileName, performedBy);
+  return true;
+}
+
 export function createDistribution(
   exportId: string,
   method: DistributionMethod,
@@ -475,6 +560,7 @@ export function createDistribution(
     id,
     exportId,
     reportId: exp.reportId,
+    reportName: exp.reportName,
     method,
     recipient,
     status: 'pending',
@@ -482,29 +568,19 @@ export function createDistribution(
   };
 
   _distributions.unshift(dist);
-
-  // Simulate delivery for download method (instant)
-  if (method === 'download') {
-    dist.status = 'delivered';
-    dist.deliveredAt = new Date().toISOString();
-    // Mark the export as distributed
+  exp.distributionCount += 1;
+  if (exp.status !== 'archived') {
     exp.status = 'distributed';
-    recordExportAudit('distribution_delivered', exportId, exp.fileName, performedBy);
-  } else {
-    recordExportAudit('distribution_created', exportId, exp.fileName, performedBy);
   }
 
-  return dist;
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// PUBLIC API — AUDIT
-// ─────────────────────────────────────────────────────────────────────
-
-export function getExportAuditLog(): ExportAuditEntry[] {
-  return [..._exportAuditLog].sort((a, b) =>
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  recordExportAudit(
+    'distribution_created',
+    exportId,
+    exp.fileName,
+    performedBy,
+    `Distribution to ${recipient} via ${method}`
   );
+  return dist;
 }
 
 // For testing — resets in-memory state
