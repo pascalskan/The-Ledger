@@ -8,8 +8,8 @@
  * - executiveCommandEngine
  * - workflowEngine
  * - automationGovernanceEngine
- * - financialControlsEngine
- * - reconciliationEngine
+ * - financialControlsEngine (via executiveCommandEngine)
+ * - reconciliationEngine (via executiveCommandEngine)
  *
  * Doctrine:
  * - Reports are READ-ONLY snapshots
@@ -18,12 +18,36 @@
  * - CEO only
  */
 
-import { getAnalyticsSummary, getCriticalRisks, getTrendAnalysis, getForecasts, getBottleneckAnalysis } from './analyticsEngine';
-import { getExecutiveSummary, getExecutiveHealthSnapshot, getOperationalOverview, getGovernanceOverview, getFinancialOverview } from './executiveCommandEngine';
-import { computeWorkflowSummary } from './workflowEngine';
-import { computeGovernanceSummary } from './automationGovernanceEngine';
-import { getFinancialControlsSummary } from './financialControlsEngine';
-import { getReconciliationSummary } from './reconciliationEngine';
+import {
+  getAnalyticsSummary,
+  getCriticalRisks,
+  getTrendAnalysis,
+  getForecasts,
+  getBottleneckAnalysis,
+} from './analyticsEngine';
+import {
+  getExecutiveSummary,
+  getExecutiveHealthSnapshot,
+  getOperationalOverview,
+  getGovernanceOverview,
+  getFinancialOverview,
+} from './executiveCommandEngine';
+import {
+  getAllWorkflows,
+  computeWorkflowSummary,
+} from './workflowEngine';
+import {
+  getAllGovernanceRecords,
+  computeGovernanceSummary,
+} from './automationGovernanceEngine';
+import {
+  SEED_FINANCIAL_CONTROLS,
+  computeControlSummary,
+} from './financialControlsEngine';
+import {
+  SEED_RECONCILIATION_RECORDS,
+  computeReconciliationSummary,
+} from './reconciliationEngine';
 
 // ─────────────────────────────────────────────────────────────────────
 // TYPES
@@ -161,6 +185,25 @@ let _auditLog: ReportingAuditEntry[] = [];
 let _idCounter = 100;
 
 // ─────────────────────────────────────────────────────────────────────
+// INTERNAL HELPERS — aggregate from existing engines
+// ─────────────────────────────────────────────────────────────────────
+
+function _getControlsSummary() {
+  return computeControlSummary(SEED_FINANCIAL_CONTROLS);
+}
+
+function _getReconSummary() {
+  const recon = computeReconciliationSummary(SEED_RECONCILIATION_RECORDS);
+  return {
+    totalItems: recon.total,
+    matchedItems: recon.matched,
+    unmatchedItems: recon.unmatched,
+    requiresReviewItems: recon.requiresReview,
+    matchRate: recon.matchRate,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────
 // SEED — Realistic pre-generated reports
 // ─────────────────────────────────────────────────────────────────────
 
@@ -169,12 +212,11 @@ function buildSeedReports(): ReportRecord[] {
   const execSummary = getExecutiveSummary();
   const execHealth = getExecutiveHealthSnapshot();
   const opOverview = getOperationalOverview();
-  const govOverview = getGovernanceOverview();
   const finOverview = getFinancialOverview();
-  const workflowSummary = computeWorkflowSummary();
-  const govSummary = computeGovernanceSummary();
-  const controlsSummary = getFinancialControlsSummary();
-  const reconSummary = getReconciliationSummary();
+  const workflowSummary = computeWorkflowSummary(getAllWorkflows());
+  const govSummary = computeGovernanceSummary(getAllGovernanceRecords());
+  const controlsSummary = _getControlsSummary();
+  const reconSummary = _getReconSummary();
   const risks = getCriticalRisks().slice(0, 4);
   const forecasts = getForecasts().slice(0, 3);
 
@@ -239,13 +281,13 @@ function buildSeedReports(): ReportRecord[] {
         { label: 'Governance Health', value: `${execHealth.governance.score}/100`, status: execHealth.governance.level },
         { label: 'Recon Records', value: reconSummary.totalItems },
         { label: 'Unmatched Items', value: reconSummary.unmatchedItems, status: reconSummary.unmatchedItems > 0 ? 'warning' : 'healthy' },
-        { label: 'Pending Controls', value: controlsSummary.pendingApprovalCount },
+        { label: 'Pending Controls', value: controlsSummary.pending },
         { label: 'Active Workflows', value: workflowSummary.active },
         { label: 'Governance Issues', value: govSummary.requiresReview },
       ],
-      riskSummary: `Board-level risk: ${risks.filter(r => r.severity === 'critical').length} critical risks require immediate attention. Governance risk score: ${analytics.governanceRisk.score}/100. Financial risk driven by ${controlsSummary.pendingApprovalCount} pending financial controls.`,
+      riskSummary: `Board-level risk: ${risks.filter(r => r.severity === 'critical').length} critical risks require immediate attention. Governance risk score: ${analytics.governanceRisk.score}/100. Financial risk driven by ${controlsSummary.pending} pending financial controls.`,
       forecastSummary: forecasts.map(f => `${f.metric}: ${f.projectedChangePercent > 0 ? '+' : ''}${f.projectedChangePercent}% (${f.confidence} confidence)`).join('. ') + ' — Advisory projections only.',
-      governanceSummary: `Automation governance: ${govSummary.compliant} compliant, ${govSummary.requiresReview} requires review, ${govSummary.restricted} restricted, ${govSummary.suspended} suspended. Financial controls: ${controlsSummary.pendingApprovalCount} pending CEO approval.`,
+      governanceSummary: `Automation governance: ${govSummary.compliant} compliant, ${govSummary.requiresReview} requires review, ${govSummary.restricted} restricted, ${govSummary.suspended} suspended. Financial controls: ${controlsSummary.pending} pending CEO approval.`,
       sections: [
         {
           id: 'board_financial',
@@ -312,25 +354,25 @@ function buildSeedReports(): ReportRecord[] {
       generatedBy: 'Demo CEO',
       owner: 'Demo CEO',
       includedSections: ['financial_overview', 'kpi_snapshot', 'risk_summary', 'forecast_summary'],
-      executiveSummaryText: `Financial health for June 2026. Health score: ${execHealth.financial.score}/100 (${execHealth.financial.label}). ${controlsSummary.pendingApprovalCount} financial controls pending CEO approval. Reconciliation: ${reconSummary.totalItems} total records, ${reconSummary.unmatchedItems} unmatched. ${finOverview.failedSyncs} failed accounting syncs require attention.`,
+      executiveSummaryText: `Financial health for June 2026. Health score: ${execHealth.financial.score}/100 (${execHealth.financial.label}). ${controlsSummary.pending} financial controls pending CEO approval. Reconciliation: ${reconSummary.totalItems} total records, ${reconSummary.unmatchedItems} unmatched. ${finOverview.failedSyncs} failed accounting syncs require attention.`,
       kpiSnapshot: [
         { label: 'Financial Health', value: `${execHealth.financial.score}/100`, status: execHealth.financial.level },
         { label: 'Failed Syncs', value: finOverview.failedSyncs, status: finOverview.failedSyncs > 0 ? 'warning' : 'healthy' },
-        { label: 'Recon Issues', value: finOverview.reconciliationIssues, status: finOverview.reconciliationIssues > 0 ? 'warning' : 'healthy' },
-        { label: 'Pending Controls', value: finOverview.pendingControls, status: finOverview.pendingControls > 0 ? 'warning' : 'healthy' },
+        { label: 'Recon Issues', value: finOverview.openReconciliationIssues, status: finOverview.openReconciliationIssues > 0 ? 'warning' : 'healthy' },
+        { label: 'Pending Controls', value: finOverview.pendingFinancialControls, status: finOverview.pendingFinancialControls > 0 ? 'warning' : 'healthy' },
         { label: 'Open Exceptions', value: finOverview.openExceptions },
         { label: 'Matched Recon', value: reconSummary.matchedItems },
       ],
-      riskSummary: `Financial risk: ${risks.filter(r => r.category === 'financial').length} financial category risks. ${controlsSummary.pendingApprovalCount} controls pending. ${reconSummary.unmatchedItems} unmatched reconciliation items.`,
+      riskSummary: `Financial risk: ${risks.filter(r => r.category === 'financial').length} financial category risks. ${controlsSummary.pending} controls pending. ${reconSummary.unmatchedItems} unmatched reconciliation items.`,
       forecastSummary: forecasts.length > 0
         ? `Financial forecast: ${forecasts[0]?.metric}: ${forecasts[0]?.projectedChangePercent}% projected (${forecasts[0]?.confidence} confidence). Advisory only.`
         : 'No financial forecasts available.',
-      governanceSummary: `Financial controls: ${controlsSummary.pendingApprovalCount} pending CEO approval. All overrides require explicit CEO approval per doctrine.`,
+      governanceSummary: `Financial controls: ${controlsSummary.pending} pending CEO approval. All overrides require explicit CEO approval per doctrine.`,
       sections: [
         {
           id: 'fin_controls',
           title: 'Financial Controls',
-          content: `${controlsSummary.pendingApprovalCount} controls pending. ${controlsSummary.approvedCount} approved. ${controlsSummary.rejectedCount} rejected.`,
+          content: `${controlsSummary.pending} controls pending. ${controlsSummary.approved} approved. ${controlsSummary.rejected} rejected.`,
           deepLinkRoute: '/financial-explorer',
           deepLinkLabel: 'Financial Explorer',
         },
@@ -412,7 +454,7 @@ function buildSeedReports(): ReportRecord[] {
         {
           id: 'kpi_health',
           title: 'Platform Health KPIs',
-          content: `All four health dimensions tracked: operational, financial, governance, workflow.`,
+          content: 'All four health dimensions tracked: operational, financial, governance, workflow.',
           deepLinkRoute: '/analytics-centre',
           deepLinkLabel: 'Analytics Centre',
         },
@@ -487,7 +529,7 @@ function recordAudit(
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// PUBLIC API
+// PUBLIC API — QUERY
 // ─────────────────────────────────────────────────────────────────────
 
 export function getAllReports(): ReportRecord[] {
@@ -542,10 +584,8 @@ function buildReport(
   const opOverview = getOperationalOverview();
   const govOverview = getGovernanceOverview();
   const finOverview = getFinancialOverview();
-  const workflowSummary = computeWorkflowSummary();
-  const govSummary = computeGovernanceSummary();
-  const controlsSummary = getFinancialControlsSummary();
-  const reconSummary = getReconciliationSummary();
+  const workflowSummary = computeWorkflowSummary(getAllWorkflows());
+  const govSummary = computeGovernanceSummary(getAllGovernanceRecords());
   const risks = getCriticalRisks().slice(0, 5);
   const forecasts = getForecasts().slice(0, 3);
 
@@ -570,7 +610,7 @@ function buildReport(
     ? forecasts.map(f => `${f.metric}: ${f.projectedChangePercent > 0 ? '+' : ''}${f.projectedChangePercent}%`).join('; ') + '. Advisory only.'
     : 'No forecasts available.';
 
-  const govText = `${govSummary.compliant} compliant, ${govSummary.requiresReview} requires review, ${govSummary.restricted} restricted, ${govSummary.suspended} suspended. Controls pending: ${controlsSummary.pendingApprovalCount}.`;
+  const govText = `${govSummary.compliant} compliant, ${govSummary.requiresReview} requires review, ${govSummary.restricted} restricted, ${govSummary.suspended} suspended.`;
 
   const sections: ReportSection[] = [];
   if (includedSections.includes('executive_summary')) {
@@ -580,7 +620,7 @@ function buildReport(
     sections.push({ id: 'gov', title: 'Governance Summary', content: govText, deepLinkRoute: '/automation-governance', deepLinkLabel: 'Automation Governance' });
   }
   if (includedSections.includes('financial_overview')) {
-    sections.push({ id: 'fin', title: 'Financial Overview', content: `Failed syncs: ${finOverview.failedSyncs}. Recon issues: ${finOverview.reconciliationIssues}. Pending controls: ${finOverview.pendingControls}. Open exceptions: ${finOverview.openExceptions}.`, deepLinkRoute: '/financial-explorer', deepLinkLabel: 'Financial Explorer' });
+    sections.push({ id: 'fin', title: 'Financial Overview', content: `Failed syncs: ${finOverview.failedSyncs}. Recon issues: ${finOverview.openReconciliationIssues}. Pending controls: ${finOverview.pendingFinancialControls}. Open exceptions: ${finOverview.openExceptions}.`, deepLinkRoute: '/financial-explorer', deepLinkLabel: 'Financial Explorer' });
   }
   if (includedSections.includes('workflow_summary')) {
     sections.push({ id: 'wf', title: 'Workflow Summary', content: `${workflowSummary.total} workflows: ${workflowSummary.active} active, ${workflowSummary.paused} paused, ${workflowSummary.requiresAction} require action, ${workflowSummary.financiallySensitive} financially sensitive.`, deepLinkRoute: '/workflows', deepLinkLabel: 'Workflow Centre' });
