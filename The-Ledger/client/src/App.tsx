@@ -48,6 +48,12 @@ import PayrollExportPage from "@/pages/payroll-export";
 import ReconciliationCenterPage from "@/pages/reconciliation-center";
 import ExceptionResolutionCenterPage from "@/pages/exception-resolution-center";
 import NotificationCentrePage from "@/pages/notification-center";
+import ActivityFeedPage from "@/pages/activity-feed";
+import EventMonitorPage from "@/pages/event-monitor";
+import WorkflowCentrePage from "@/pages/workflows";
+import ExecutiveCommandCentrePage from "@/pages/executive-command-centre";
+import AnalyticsCentrePage from "@/pages/analytics-centre";
+import ReportingCentrePage from "@/pages/reporting-centre";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
@@ -133,6 +139,30 @@ function Router() {
       {/* Phase 6.1: Notification Centre — CEO + PM */}
       <Route path="/notifications">
         <ProtectedRoute component={NotificationCentrePage} roles={["CEO", "Project Manager"]} />
+      </Route>
+      {/* Phase 6.2: Activity Feed — CEO only */}
+      <Route path="/activity-feed">
+        <ProtectedRoute component={ActivityFeedPage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 6.3: Event Monitor — CEO only */}
+      <Route path="/event-monitor">
+        <ProtectedRoute component={EventMonitorPage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 6.4: Workflow Centre — CEO only */}
+      <Route path="/workflows">
+        <ProtectedRoute component={WorkflowCentrePage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 6.5: Executive Command Centre — CEO only */}
+      <Route path="/executive-command-centre">
+        <ProtectedRoute component={ExecutiveCommandCentrePage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 6.6: Analytics Centre — CEO only */}
+      <Route path="/analytics-centre">
+        <ProtectedRoute component={AnalyticsCentrePage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 6.7: Reporting Centre — CEO only */}
+      <Route path="/reporting-centre">
+        <ProtectedRoute component={ReportingCentrePage} roles={["CEO"]} />
       </Route>
       <Route path="/jobs">
         <ProtectedRoute component={JobsPage} />

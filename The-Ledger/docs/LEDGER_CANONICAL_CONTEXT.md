@@ -2,17 +2,16 @@
 
 ## Canonical Context Document
 
-Version: 4.9
+Version: 6.8
 Status: Active Source of Truth
 Last Updated: June 2026
 
 Repository Baseline:
-main @ a4526cb
+phase-6.8-report-exports (Phase 6.8 implementation complete)
 
 Verification Status:
-Build PASS
-Playwright 199 / 199 PASSING (pre-6.0E)
-Phase 6.0E adds 27 new tests → target 226 / 226
+Build: PASS
+Playwright: 501 / 501 Tests PASS
 
 ---
 
@@ -292,6 +291,362 @@ Every pause, resume, and disable action generates an immutable audit entry.
 
 ---
 
+## Notification Doctrine
+
+Notifications are INFORMATIONAL only.
+
+Notifications NEVER:
+- Create financial mutations
+- Approve submissions
+- Bypass approval workflows
+- Modify operational records
+
+Notification interactions (Opened, Marked Read, Dismissed) generate immutable audit records.
+
+No silent state changes.
+
+RBAC:
+- CEO: full notification visibility (all types, all jobs)
+- PM: notifications scoped to assigned jobs only
+- Worker: no access
+- Client: no access
+
+Notification status lifecycle:
+- unread → read
+- unread / read → dismissed
+
+Deep links navigate to source pages only — they never execute actions.
+
+---
+
+## Activity Feed Doctrine
+
+The Activity Feed is INFORMATIONAL only.
+
+The Activity Feed NEVER:
+- Creates Revenue, Cost, Payroll, Inventory deductions, or Financial mutations
+- Bypasses approval workflows
+- Modifies operational records
+
+Event interactions (Viewed, Opened, Navigated) generate immutable audit records.
+
+No silent state changes.
+
+RBAC:
+- CEO: full activity feed visibility (all event types, all jobs)
+- PM: no access (Phase 6.2)
+- Worker: no access
+- Client: no access
+
+Deep links navigate to source pages only — they never execute actions.
+
+Job attribution preserved on all event records.
+
+Event priority levels: info / warning / critical
+
+Event types: review_event, automation_event, governance_event, scheduler_event, notification_event, sync_event, reconciliation_event, exception_event, financial_control_event, job_event, worker_event, stock_event, asset_event
+
+---
+
+## Event Bus Doctrine
+
+The Event Bus is INFORMATIONAL and EVALUATIVE only.
+
+The Event Bus NEVER:
+- Approves submissions
+- Creates approved financial records
+- Bypasses the Review Centre
+- Bypasses the Approval Doctrine
+- Creates financial mutations of any kind
+
+The Event Bus MAY:
+- Publish events to subscribers
+- Notify the Activity Feed, Notification, Dashboard, and Automation subscribers
+- Trigger read-only automation evaluations
+- Generate immutable audit records for all processing
+
+All event processing is fully auditable.
+
+Job attribution preserved on all event records.
+
+Activity Feed dispatch is suppressed during initial seed to prevent bus seed events
+being injected into activityFeedEngine on top of its own seed data.
+Live publishEvent() calls always dispatch normally.
+
+RBAC:
+- CEO: full Event Monitor visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+Event Bus Subscribers (Phase 6.3):
+1. Activity Feed Subscriber — all events → activityFeedEngine (live events only)
+2. Notification Subscriber — warning/critical events → simulated notification creation
+3. Dashboard Subscriber — all events → dashboard reads from getRecentBusEvents()
+4. Automation Subscriber — targeted event types → read-only trigger evaluation only
+
+Event categories: review_event, automation_event, governance_event, scheduler_event, notification_event, sync_event, reconciliation_event, exception_event, financial_control_event, job_event, worker_event, stock_event, asset_event
+
+---
+
+## Workflow Automation Doctrine
+
+Workflows MAY:
+- Create notifications
+- Generate activity events
+- Escalate reviews
+- Assign investigations
+- Trigger governance reviews
+- Trigger workflow stages
+
+Workflows MAY NEVER:
+- Approve reports
+- Approve expenses
+- Approve timesheets
+- Create approved invoices
+- Create approved financial records
+- Bypass the Review Centre
+- Bypass CEO approvals
+
+Approval Doctrine remains absolute. Workflows are orchestration — not approval.
+
+All workflow lifecycle events generate immutable audit records.
+
+RBAC:
+- CEO: full Workflow Centre visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+Workflow status lifecycle:
+- Draft → Active
+- Active → Paused
+- Paused → Active (Resume)
+- Active / Paused → Archived
+
+Governance: Financially Sensitive workflows always require governance review on creation.
+
+Execution audit: every Workflow Created, Updated, Archived, Paused, Resumed, Executed generates an audit entry.
+
+Forbidden actions (blocked at engine level):
+- approve_report
+- approve_expense
+- approve_timesheet
+- create_approved_invoice
+- create_approved_financial_record
+- bypass_review_centre
+- bypass_ceo_approval
+
+---
+
+## Dashboard Intelligence Doctrine
+
+Dashboard widgets are READ-ONLY.
+
+Dashboard widgets NEVER:
+- Mutate operational records
+- Approve submissions
+- Create financial records
+- Bypass any approval workflow
+
+All KPI values are derived from existing engine seed data.
+
+Widgets deep-link to source pages only — no inline actions.
+
+RBAC: CEO only (no PM, no Worker, no Client) for intelligence widgets.
+
+---
+
+## Executive Command Centre Doctrine
+
+The Executive Command Centre is a READ-ONLY visibility layer.
+
+It aggregates cross-module intelligence from:
+- Notification Engine
+- Activity Feed Engine
+- Event Bus Engine
+- Workflow Engine
+- Automation Governance Engine
+- Automation Scheduler Engine
+- Exception Resolution Engine
+- Reconciliation Engine
+- Financial Controls Engine
+- Reporting Engine (Phase 6.7)
+- Export Engine (Phase 6.8)
+
+The Executive Command Centre NEVER:
+- Creates financial mutations
+- Approves records
+- Bypasses the Review Centre
+- Modifies operational records
+
+All executive views generate immutable audit records:
+- executive_centre_viewed
+- executive_alert_opened
+- executive_deep_link_opened
+
+Deep links navigate to source modules only — they never execute actions.
+
+RBAC:
+- CEO: full Executive Command Centre visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+Health scoring: 0–100 score per dimension (operational / financial / governance / workflow)
+- healthy: 80–100
+- warning: 50–79
+- critical: 0–49
+
+---
+
+## Analytics Doctrine (Phase 6.6)
+
+The Analytics Centre is a READ-ONLY, ADVISORY-ONLY business intelligence layer.
+
+Analytics aggregates data from:
+- executiveCommandEngine
+- workflowEngine
+- eventBusEngine
+- activityFeedEngine
+- notificationEngine
+- automationGovernanceEngine
+- automationSchedulerEngine
+- financialControlsEngine
+- reconciliationEngine
+- exceptionResolutionEngine
+
+Analytics MAY:
+- Analyse and aggregate existing platform data
+- Score platform health across 5 dimensions
+- Identify critical risks with severity classification
+- Surface trend analysis with direction and percentage change
+- Generate forecasts clearly labelled as projections / advisory only
+- Identify bottlenecks and link to source modules
+- Record all analytics access in an immutable audit log
+
+Analytics MAY NEVER:
+- Approve records
+- Change records
+- Create records
+- Trigger financial mutations
+- Override governance controls
+- Bypass the Review Centre
+
+All analytics access generates immutable audit records:
+- analytics_viewed
+- forecast_viewed
+- risk_investigation_opened
+
+Deep links navigate to source modules only — they never execute actions.
+
+Forecasts are always labelled "Projections — Advisory Only".
+
+RBAC:
+- CEO: full Analytics Centre visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+Health scoring (5 dimensions):
+- Operational Health: workflow failures, event volume, notification volume, exception volume
+- Financial Health: failed syncs, reconciliation issues, financial control exceptions
+- Governance Risk: restricted automations, suspended automations, financially sensitive workflows, pending governance reviews
+- Workflow Efficiency: completed workflows, failed workflows, blocked workflows
+- Automation Effectiveness: active automations, scheduled automations, automation failures
+
+Score ranges:
+- healthy: 80–100
+- warning: 50–79
+- critical: 0–49
+
+---
+
+## Reporting Doctrine (Phase 6.7)
+
+The Reporting Centre is INFORMATIONAL only.
+
+Reports MAY:
+- Aggregate and summarise data across the platform
+- Present KPI snapshots, risk summaries, forecast summaries, governance summaries
+- Be exported as informational artifacts
+- Deep-link to source modules for detail
+- Record all report generation and access in an immutable audit log
+
+Reports MAY NEVER:
+- Approve records
+- Modify records
+- Create financial mutations
+- Bypass governance controls
+- Override the Review Centre
+
+All report actions generate immutable audit entries:
+- report_generated
+- report_viewed
+- report_archived
+
+Report types: executive_summary, board_report, governance_report, financial_health_report, operations_report, monthly_kpi_report
+
+Report status lifecycle:
+- draft → generated
+- generated → archived
+
+RBAC:
+- CEO: full Reporting Centre visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+---
+
+## Export & Distribution Doctrine (Phase 6.8)
+
+Exports are INFORMATIONAL ARTIFACTS only.
+
+Exports MAY:
+- Be generated from existing reports (read-only derivatives)
+- Be downloaded as simulated PDF artifacts
+- Be distributed to recipients via email, portal, or download
+- Be archived
+- Record all export and distribution actions in an immutable audit log
+
+Exports MAY NEVER:
+- Modify the source report
+- Approve records
+- Create financial mutations
+- Bypass governance controls
+- Override the Review Centre
+
+All export actions generate immutable audit entries:
+- export_generated
+- export_downloaded
+- export_archived
+- distribution_created
+- distribution_delivered
+
+Export types: pdf, board_pack, executive_summary, governance, financial
+
+Export status lifecycle:
+- generated → downloaded
+- generated / downloaded → distributed
+- generated / downloaded / distributed → archived
+
+Distribution status lifecycle:
+- pending → delivered
+- pending → failed
+
+Distribution methods: email, portal, download
+
+Board Pack: aggregated export combining executive summary, KPI snapshot, risk summary, governance summary into a single artifact.
+
+RBAC:
+- CEO: full Export & Distribution visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+---
+
 # PRODUCT DEFINITION
 
 ## Executive Platform
@@ -316,6 +671,13 @@ The Ledger contains:
 - Audits
 - Automations (Automation Centre + Scheduler)
 - Automation Governance Centre
+- Notification Centre
+- Activity Feed
+- Event Monitor
+- Workflow Centre
+- Executive Command Centre
+- Analytics Centre
+- Reporting Centre (Phase 6.7 + 6.8)
 - Settings
 - Accounting Settings
 - Reconciliation Centre
@@ -495,14 +857,6 @@ Status: Complete
 
 Status: Complete
 
-Includes:
-
-- Upload Infrastructure
-- Review Centre
-- Processing Pipeline
-- Revenue Normalisation
-- Financial Mutation Infrastructure
-
 ## Phase 5.1 — Financial Foundation
 
 Status: Complete
@@ -519,370 +873,158 @@ Status: Complete
 
 Status: Complete
 
-Verified:
-
-- Build PASS
-- Playwright PASS
-- 40/40 Tests PASS
+Verified: Build PASS | Playwright PASS | 40/40 Tests PASS
 
 ## Phase 5.5 — Margin Intelligence & Forecasting
 
 Status: Complete
 
-Implemented:
-
-- Forecast Engine
-- Margin Intelligence Engine
-- Risk Classification
-- Exposure-Aware Forecasting
-- Financial Explorer Forecasting Tab
-- Portfolio Forecast KPIs
-- Job Forecast Panel
-- Margin Variance Analysis
-- Financial Risk Status Badges
-
-Verified:
-
-- Build PASS
-- Playwright PASS
-- 52/52 Tests PASS
+Verified: Build PASS | Playwright PASS | 52/52 Tests PASS
 
 ## Phase 5.6 — Accounting Synchronization Layer
 
 Status: Complete
 
-Merged: main
-
-Merge Commit: 849e9e2
-
-Implemented:
-
-- Accounting Provider Abstraction (QuickBooks, Xero, FreshBooks, Zoho Books)
-- Accounting Sync Engine (Pending, Syncing, Synced, Failed, Retry Required)
-- Sync Log Engine
-- Accounting Sync Tab in Financial Explorer (KPI strip, queue table, search, sort, filter)
-- Job Sync Panel on Job Detail page (per-job sync status, external ref, history)
-- Error Resolution Workflow (error details panel, resolution guidance, retry flow)
-- Sync Audit Trail (immutable log of all sync actions)
-- Provider Visibility (QuickBooks, Xero badges in queue and job panel)
-- External Reference Tracking (accounting system IDs visible per record)
-
-Verified:
-
-- 13 Playwright doctrine tests added
-- Build PASS
-- Playwright PASS
-- 65 / 65 Tests PASS
-- Merged into main
+Verified: Build PASS | Playwright PASS | 65/65 Tests PASS | Merged into main
 
 ## Phase 5.7 — Accounting Settings & Provider Management
 
 Status: Complete
 
-Branch: feature/phase-5-7-accounting-settings
-
-Implemented:
-
-- accountingSettingsEngine.ts: ProviderConfig, ProviderStatus, SyncPolicy, EntityMapping types + helpers
-- accountingProviders.ts: Extended with description, website, ProviderStatus support
-- pages/accounting-settings.tsx: Full 4-provider settings page (CEO only)
-  - Provider cards (QuickBooks, Xero, FreshBooks, Zoho Books)
-  - Status badges (Connected, Disconnected, Requires Reconnect, Disabled)
-  - Default provider indicator and Set Default action
-  - Connect / Disconnect / Disable / Enable actions (mock)
-  - Entity support display and last sync per provider
-- Sync Policy Centre: Automatic/Manual toggle, Retry Failed Syncs, Auto Retry Interval, Sync Notifications
-- Entity Mapping Configuration: Customers, Jobs, Invoices, Payroll with status and provider compatibility
-- Summary bar: active provider count, default provider name, sync mode
-- Navigation: Accounting Settings added to CEO sidebar
-- Route: /accounting-settings (CEO only); legacy /settings/integrations/accounting retained
-
-Verified:
-
-- Build PASS
-- Playwright PASS
-- 80 / 80 Tests PASS
-- Merged into main
+Verified: Build PASS | Playwright PASS | 80/80 Tests PASS | Merged into main
 
 ## Phase 5.8 — Reconciliation Centre
 
 Status: Complete
 
-Branch: feature/phase-5-8-reconciliation-center
-
-Implemented:
-
-- reconciliationEngine.ts: ReconciliationRecord types, status labels/colours, SEED data, computeReconciliationSummary, searchReconciliationRecords
-- syncOperationsEngine.ts: SyncHealth KPIs, FailureQueueEntry types, SEED data, mockRetryEntry, formatAvgDuration
-- components/finance/ReconciliationTab.tsx: Reconciliation tab for Financial Explorer (status table, KPI strip, filters, search)
-- components/finance/JobReconciliationPanel.tsx: Per-job reconciliation panel on Job Detail page
-- pages/reconciliation-center.tsx: Full Reconciliation Centre page (CEO only)
-  - KPI strip: Matched, Unmatched, Requires Review, Missing Records
-  - Reconciliation Table: Entity, Type, Provider, Ledger Reference, Accounting Reference, Status, Last Checked
-  - Filters: Status, Provider, Entity Type + Search
-  - Sync Operations Dashboard: KPIs (Total Syncs, Success Rate, Failures, Retries), Failure Queue, Retry Actions
-- Route: /reconciliation-center (CEO only) added to App.tsx
-- Navigation: Reconciliation Centre added to CEO sidebar with GitMerge icon
-- Financial Explorer: Reconciliation tab integrated
-- Job Detail: JobReconciliationPanel integrated
-- tests/doctrine/reconciliation-center.spec.ts: 16 doctrine tests
-
-Verified:
-
-- Build PASS
-- Playwright PASS
-- 96 / 96 Tests PASS
-- Merged into main
+Verified: Build PASS | Playwright PASS | 96/96 Tests PASS | Merged into main
 
 ## Phase 5.9 — Exception Resolution & Financial Controls
 
 Status: Complete
 
-Branch: feature/phase-5-9-exception-resolution
-
-Implemented:
-
-- lib/exceptionResolutionEngine.ts: ExceptionRecord types, SEED data (8 seed exceptions), status/type labels and colours, computeExceptionSummary, searchExceptions, filterExceptions*, resolveException, rejectException, getAssigneeNames
-- lib/financialControlsEngine.ts: FinancialControl types, SEED data (4 seed controls), control state labels/colours, computeControlSummary, approveControl, rejectControl, fmt helper
-- pages/exception-resolution-center.tsx: Full Exception Resolution Centre (CEO only)
-  - KPI strip: Open, Investigating, Awaiting Approval, Resolved
-  - Exception Queue: Exception ID, Type, Job/Client, Status, Assigned To, Created Date, View action
-  - Search: job, client, exception ID
-  - Filters: Status, Type, Assigned User
-  - Exception detail/resolution dialog: Resolve + Reject with notes
-  - Financial Controls tab: dashboard KPIs (Pending, Approved, Rejected, Financial Impact)
-  - Override Queue: Control Type, Requested By, Approval Status, Financial Impact, Approve/Reject actions
-  - Control approval dialog: notes required, audit entry generated
-- components/finance/ExceptionsTab.tsx: Exceptions tab for Financial Explorer
-- components/finance/JobExceptionPanel.tsx: Per-job exceptions panel on Job Detail page
-- App.tsx: /exception-resolution-center route (CEO only)
-- layout.tsx: CEO sidebar nav item
-- financial-explorer.tsx: Exceptions tab wired (TabsTrigger + TabsContent)
-- job-detail.tsx: JobExceptionPanel wired
-- tests/doctrine/exception-resolution.spec.ts: 17 doctrine tests
-- docs/LEDGER_CANONICAL_CONTEXT.md: v4.4, Phase 5.9 marked complete
-- docs/handoffs/phase-5-9-handoff-2026-05-31.md: handoff document
-
-Verified:
-
-- Build PASS
-- Playwright PASS
-- 113 / 113 Tests PASS
-- Merged into main
-
-Post-Merge Stabilisation:
-
-- Offline Review Sync pipeline hardened
-- Direct review item persistence added
-- Offline replay doctrine test stabilised
-- Commit: a4526cb
+Verified: Build PASS | Playwright PASS | 113/113 Tests PASS | Merged into main
 
 ## Phase 6.0A — Automation Core
 
 Status: Complete
 
-Branch: feature/phase-6-0a-automation-core
-
-Implemented:
-
-- automationEngine.ts
-- automationRuleEngine.ts
-- automationAuditEngine.ts
-- Trigger Catalogue V1
-- Action Catalogue V1
-- Automation execution model
-- Automation audit trail
-- Financial safety controls
-- Job attribution enforcement
-
-Verified:
-
-- Build PASS
-- Playwright PASS
-- 129 / 129 Tests PASS
+Verified: Build PASS | Playwright PASS | 129/129 Tests PASS
 
 ## Phase 6.0B — Automation Centre UI
 
 Status: Complete
 
-Branch: feature/phase-6-0b-automation-centre
-
-Implemented:
-
-- pages/automations.tsx: Full Automation Centre replacing stub page (CEO only)
-  - KPI strip: Total, Active, Disabled, Executions Today, Financially Sensitive
-  - Tab 1 — Automation Rules: table with search/status/category filters, Rule Detail Dialog (trigger, conditions, actions, financial safeguard, enable/disable)
-  - Tab 2 — Execution History: table with seed data, Execution Detail Dialog
-  - Tab 3 — Automation Audit: immutable read-only table with search and result filter
-  - FinanciallySensitive badge with tooltip on all category displays
-  - CEO-only RBAC (PM and Worker denied)
-- automationAuditEngine.ts: Added AUTOMATION_EXECUTION_RESULT_LABELS, AUTOMATION_EXECUTION_RESULT_COLORS, SEED_EXECUTION_HISTORY (5 seed entries)
-- App.tsx: /automations route tightened to CEO only
-- layout.tsx: Automations nav item tightened to CEO only
-- tests/doctrine/automation-centre.spec.ts: 19 doctrine tests
-- tests/doctrine/automation-core.spec.ts: 3 page-level tests updated for new UI
-
-Verified:
-
-- Build PASS
-- Playwright PASS
-- 148 / 148 Tests PASS
+Verified: Build PASS | Playwright PASS | 148/148 Tests PASS
 
 ## Phase 6.0C — Automation Builder
 
 Status: Complete
 
-Branch: feature/phase-6-0c-automation-builder
-
-Implemented:
-
-- client/src/lib/automationBuilderEngine.ts: Full builder lifecycle engine
-  - BuilderFormState, BuilderCondition, BuilderStep, BuilderValidationResult types
-  - BUILDER_FORM_DEFAULTS, BUILDER_STEP_LABELS, CONDITION_OPERATOR_LABELS constants
-  - validateBuilderForm: name, description, trigger, action, forbidden-action checks
-  - formContainsForbiddenAction: forbidden action detection
-  - createRuleFromBuilder: create + audit
-  - updateRuleFromBuilder: update + audit
-  - duplicateRule: copy to draft + audit
-  - archiveRule: soft-delete + audit
-  - getAllRules, getRuleById, ruleToBuilderForm helpers
-  - Reuses FORBIDDEN_ACTION_NAMES, TRIGGER_CATALOGUE_V1, ACTION_CATALOGUE_V1 from automationEngine.ts
-- client/src/pages/automations.tsx: Builder UI integrated
-  - Create Automation button (CEO header, data-testid: aut-btn-create-automation)
-  - AutomationBuilderDialog: 5-step guided builder
-    - Step 1: Name, Description, Category, FinanciallySensitive warning
-    - Step 2: Trigger selection from TRIGGER_CATALOGUE_V1
-    - Step 3: Conditions builder (add/remove field+operator+value rows)
-    - Step 4: Action selection from ACTION_CATALOGUE_V1 (multi-select)
-    - Step 5: Review summary with financial safeguard notice
-  - Edit mode: pre-populates via ruleToBuilderForm()
-  - RuleDetailDialog extended: Edit, Duplicate, Archive action buttons
-  - Toast notifications: Automation Created / Updated / Duplicated / Archived
-- tests/doctrine/automation-builder.spec.ts: 25 doctrine tests (AB-01 to AB-25)
-- docs/handoffs/phase-6-0c-handoff-2026-06-01.md: handoff document
-
-Verified:
-
-- Build PASS
-- Playwright PASS
-- 173 / 173 Tests PASS
+Verified: Build PASS | Playwright PASS | 173/173 Tests PASS
 
 ## Phase 6.0D — Automation Governance & Financial Safety Controls
 
 Status: Complete
 
-Branch: feature/phase-6-0d-automation-governance
-
-Merge Target: main
-
-PR: https://github.com/pascalskan/The-Ledger/pull/12
-
-Implemented:
-
-- client/src/lib/automationGovernanceEngine.ts: Full governance engine
-  - Types: AutomationRiskLevel, AutomationGovernanceStatus, AutomationGovernanceRecord, AutomationExceptionRecord, GovernanceAuditEntry
-  - Seed: 6 governance records (3 compliant, 2 requires review, 1 restricted), 3 exceptions, 4 audit entries
-  - Helpers: computeGovernanceSummary, filterGovernanceByStatus/Risk/Category, searchGovernanceRecords
-  - CEO Actions: restrictAutomation, suspendAutomation, restoreAutomation, markCompliant
-  - Exception workflow: resolveException, rejectException, escalateException
-  - Audit: getGovernanceAuditLog, searchGovernanceAudit, filterAuditByRiskImpact
-- client/src/pages/automation-governance.tsx: CEO-only Governance Centre
-  - KPI strip (7 cards): Total, Compliant, Requires Review, Restricted, Suspended, High Risk, Critical Risk
-  - Tab 1 Governance Dashboard: table, search, risk/status/category filters, View button
-  - Detail dialog: risk assessment, safeguard evaluation, execution stats, CEO governance actions
-  - Financial safety indicators: Governed badge, Approval Protected, Financial Safeguard Active
-  - Tab 2 Exceptions: exception queue, detail dialog, Resolve/Reject/Escalate
-  - Tab 3 Compliance Audit: immutable read-only table, search, risk impact filter
-- App.tsx: /automation-governance route (CEO only)
-- layout.tsx: Automation Governance nav item (ShieldCheck icon)
-- tests/doctrine/automation-governance.spec.ts: 26 doctrine tests (AG-01 to AG-26)
-
-New doctrine tests: 26
-
-Verified:
-
-- Build PASS
-- Playwright PASS
-- 199 / 199 Tests PASS ✓
+Verified: Build PASS | Playwright PASS | 199/199 Tests PASS
 
 ## Phase 6.0E — Automation Scheduler
 
 Status: Complete
 
-Branch: feature/phase-6-0e-automation-scheduler
+Merged: main @ 5b4ca9a
 
-PR: Pending — open after verification
-
-Implemented:
-
-- client/src/lib/automationSchedulerEngine.ts: Full scheduler engine
-  - Types: AutomationScheduleType (Hourly/Daily/Weekly/Monthly/Custom)
-  - Types: AutomationScheduleStatus (Active/Paused/Disabled)
-  - Types: AutomationSchedule, AutomationScheduleExecution, ScheduleAuditEntry, ScheduleConfig, ScheduleSummary
-  - Functions: computeNextRun(), computeScheduleSummary(), computeScheduleSummaryKPIs()
-  - Functions: pauseSchedule(), resumeSchedule(), disableSchedule() — all generate immutable audit entries
-  - Functions: getAllSchedules(), getScheduleById(), getScheduleAuditLog(), getScheduleExecutions()
-  - Functions: filterSchedulesByStatus(), filterSchedulesByType(), searchSchedules(), getUpcomingRuns()
-  - Seed data: 6 schedules (4 Active, 1 Paused, 1 Disabled)
-    - SCH-2026-001: Daily Review Escalation (Daily, Active)
-    - SCH-2026-002: Weekly Payroll Preparation (Weekly, Active, FinanciallySensitive, ApprovalProtected)
-    - SCH-2026-003: Monthly Asset Service Reminder (Monthly, Active)
-    - SCH-2026-004: Failed Sync Recovery Sweep (Hourly every 4h, Active)
-    - SCH-2026-005: Draft Invoice Weekly Audit (Weekly, Paused, FinanciallySensitive)
-    - SCH-2026-006: Low Stock Monthly Review (Monthly, Disabled)
-  - Seed audit entries: 5 immutable Schedule Created / Schedule Paused entries
-  - Seed executions: 4 execution records (3 success, 1 blocked_approval_required)
-- client/src/lib/automationEngine.ts: Extended with schedule_trigger type
-  - AutomationTriggerType includes schedule_trigger
-  - TRIGGER_CATALOGUE_V1 includes Scheduled Execution trigger (id: trigger-schedule)
-- client/src/pages/automations.tsx: Extended with Scheduler tab + Builder integration
-  - 4th tab: Scheduler (CalendarClock icon)
-  - Scheduler KPI strip (5 cards): Active, Paused, Disabled, Runs Today, Upcoming Executions
-  - Scheduler table: Schedule Number, Rule, Type, Next Run, Status (+ Approval Protected badge), View action
-  - Search: by schedule name, number, rule name, summary
-  - Filters: Status filter, Type filter
-  - Schedule Detail Dialog:
-    - Linked Rule section
-    - Schedule Details: type, status, schedule summary, next run, last run, total runs
-    - Upcoming Runs: next 5 run timestamps (active schedules only)
-    - Governance Status: Governance Review Recommended, Approval Protected, or clean
-    - CEO Actions: Pause, Resume, Disable (context-aware by status)
-  - Builder Step 2: Scheduled Execution trigger option with CalendarClock icon
-  - Builder Schedule Config Form: inline on trigger selection
-    - Hourly: interval selector (1/2/4/6/12 hours)
-    - Daily: hour of day selector
-    - Weekly: day of week + time selectors
-    - Monthly: day of month + time selectors
-    - Custom: free-text expression
-  - Next Run Preview: always visible when schedule trigger is selected
-  - Builder Step 5 Review: shows schedule summary when schedule trigger selected
-- tests/doctrine/automation-scheduler.spec.ts: 27 doctrine tests (AS-01 to AS-27)
-
-New doctrine tests: 27
-
-Verification Target:
-
-- Build PASS
-- Playwright PASS
-- 226 / 226 Tests PASS
-
----
-
-# NEXT TARGET
+Verified: Build PASS | Playwright PASS | 226/226 Tests PASS
 
 ## Phase 6.1 — Notification Centre
 
-Add in-app notification infrastructure to surface automation alerts,
-review center events, sync failures, and governance actions.
+Status: Complete
 
-Deliverables:
-- Notification Engine (types, SEED data, mark-read, dismiss)
-- Notification Centre page (CEO + PM access)
-- Bell icon in navigation header with unread count badge
-- Notification types: Automation Alert, Review Required, Sync Failure, Governance Action
-- Read / Unread / Dismissed status
-- Per-notification deep-link to source page
-- Doctrine tests: 20+ tests
+Verified: Build PASS | Playwright PASS | 254/254 Tests PASS
+
+## Phase 6.2 — Activity Feed & Event Stream
+
+Status: Complete
+
+Verified: Build PASS | Playwright PASS | 279/279 Tests PASS
+
+## Phase 6.3 — Real-Time Event Infrastructure
+
+Status: Complete
+
+Verified: Build PASS | Playwright PASS | 309/309 Tests PASS
+
+## Phase 6.4 — Cross-Module Workflow Automation
+
+Status: Complete
+
+Verified: Build PASS | Playwright PASS | 344/344 Tests PASS
+
+## Phase 6.5 — Executive Command Centre
+
+Status: Complete
+
+Verified: Build PASS | Playwright PASS | 379/379 Tests PASS
+
+## Phase 6.6 — Business Intelligence & Analytics Layer
+
+Status: Complete
+
+Verified: Build PASS | Playwright PASS | 421/421 Tests PASS
+
+## Phase 6.7 — Executive Reporting Centre
+
+Status: Complete
+
+Branch: feature/phase-6-7-reporting-centre
+
+Verified: Build PASS | Playwright PASS | 461/461 Tests PASS
+
+Implemented:
+
+- client/src/lib/reportingEngine.ts: 6 report types, 8 seed reports (rpt-001–rpt-008), full generation and audit API
+- client/src/pages/reporting-centre.tsx: CEO-only Reporting Centre page (/reporting-centre)
+  - Doctrine notice, KPI strip (5 cards), reports table with filter, Report Detail Dialog, Report Builder Dialog
+  - Deep links to source modules from report sections
+- Dashboard: Executive Reports Widget (dashboard-executive-reports-widget)
+- ECC: Reporting Snapshot section (exec-reporting-snapshot, exec-reporting-link)
+- Route: /reporting-centre (CEO only)
+- Nav: Reporting Centre (BookOpen icon, CEO only)
+- tests/doctrine/reporting-centre.spec.ts: 40 doctrine tests (RC-01 to RC-40)
+
+New doctrine tests: 40
+
+## Phase 6.8 — Report Exports & Distribution Centre
+
+Status: Complete
+
+Branch: phase-6.8-report-exports
+
+Verified: Build PASS | Playwright PASS | 501/501 Tests PASS
+
+Implemented:
+
+- client/src/lib/exportEngine.ts: Export & Distribution engine
+  - Types: ExportType, ExportStatus, DistributionMethod, DistributionStatus, ReportExport, ReportDistribution, ExportAuditEntry, ExportSummary, DistributionSummary
+  - Seed: 6 exports (exp-001–exp-006), 6 distributions (dist-001–dist-006), audit log
+  - Public API: getAllExports(), getExportById(), computeExportSummary(), getAllDistributions(), computeDistributionSummary(), generateExport(), generateBoardPack(), downloadExport(), archiveExport(), createDistribution(), getExportAuditLog()
+  - Doctrine-safe: exports are read-only derivatives, never modify source reports
+- client/src/pages/reporting-centre.tsx: Extended with Exports and Distribution tabs
+  - Tab bar: Reports | Exports | Distribution
+  - Exports tab: KPI strip (5 cards), exports table with View/Download/Archive, export status filter, Export Detail Dialog with doctrine notice and audit reference, Board Pack generator
+  - Distribution tab: KPI strip (5 cards — total, delivered, pending, failed, delivery rate), distribution table
+- client/src/pages/dashboard.tsx: Report Exports Widget added (dashboard-export-reports-widget)
+  - Total exports, distributed, downloaded, pending distributions, delivery rate KPIs
+  - Latest exports list, Open Reporting Centre button (dashboard-exports-open-btn)
+- client/src/pages/executive-command-centre.tsx: Export Status Snapshot section added
+  - ecc-export-status-snapshot: 5 KPI tiles (total, distributed, downloaded, pending dist., delivery rate)
+  - ecc-exports-link: navigates to /reporting-centre
+- tests/doctrine/report-exports.spec.ts: 40 doctrine tests (RX-01 to RX-40)
+  - RBAC, Exports tab KPIs, exports table, export actions, Export Detail Dialog, Board Pack, Distribution tab, Dashboard widget, ECC snapshot, doctrine enforcement
+
+New doctrine tests: 40
+Total test count: 501
 
 ---
 
@@ -962,17 +1104,28 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.0E is complete and verified.
+Phase 6.8 is complete.
+Branch: phase-6.8-report-exports
+Playwright: 501 / 501 Tests PASS
 
-Next Development Target:
+All phases 1 through 6.8 are complete and verified.
 
-Phase 6.1 — Notification Centre
+The platform is ready for the next development cycle.
 
-Phase 6 introduces controlled business automation while preserving:
+Phase 6 preserves:
 - Approval Doctrine
 - Audit Doctrine
 - Job Attribution Doctrine
 - Financial Integrity Doctrine
+- Notification Doctrine
+- Activity Feed Doctrine
+- Event Bus Doctrine
+- Workflow Automation Doctrine
+- Dashboard Intelligence Doctrine
+- Executive Command Centre Doctrine
+- Analytics Doctrine (Phase 6.6)
+- Reporting Doctrine (Phase 6.7)
+- Export & Distribution Doctrine (Phase 6.8)
 
 ---
 
@@ -988,5 +1141,14 @@ Before making recommendations:
 6. Preserve auditability.
 7. Preserve financial integrity.
 8. Preserve accounting-system independence.
+9. Preserve notification doctrine (informational only — never mutates financial records).
+10. Preserve activity feed doctrine (informational only — never mutates financial records).
+11. Preserve event bus doctrine (informational/evaluative only — never mutates financial records, never bypasses approval).
+12. Preserve workflow automation doctrine (orchestration only — never approves, never bypasses approval doctrine).
+13. Preserve dashboard intelligence doctrine (read-only widgets, deep-link only, no inline actions).
+14. Preserve executive command centre doctrine (read-only visibility layer, no financial mutations, no approval actions, full audit trail).
+15. Preserve analytics doctrine (advisory only — no approvals, no mutations, no record creation, forecasts labelled as projections).
+16. Preserve reporting doctrine (informational only — reports never approve, modify, or create financial mutations).
+17. Preserve export & distribution doctrine (exports are read-only derivatives of reports — never modify source reports, never create financial mutations).
 
 This document is the canonical source of truth for The Ledger.

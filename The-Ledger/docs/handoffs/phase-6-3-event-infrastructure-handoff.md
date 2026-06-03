@@ -1,0 +1,234 @@
+# Phase 6.3 — Real-Time Event Infrastructure
+## Handoff Document
+
+**Date:** June 2026
+**Branch:** feature/phase-6-3-event-infrastructure
+**PR:** https://github.com/pascalskan/The-Ledger/pull/16
+**Status:** Complete — Verified
+**Build:** PASS
+**Playwright:** 309 / 309 PASSING (279 existing + 30 new, 0 regressions)
+
+---
+
+## Summary
+
+Phase 6.3 implements the Event Bus Engine — The Ledger's unified real-time event infrastructure — and the Event Monitor page that gives the CEO full operational visibility into the event pipeline.
+
+All 309 tests pass. One bug was found and fixed during verification (see Bug Fixes below).
+
+---
+
+## What Was Delivered
+
+### Event Bus Engine
+
+**File:** `client/src/lib/eventBusEngine.ts`
+
+The Event Bus is the central nervous system of The Ledger's operational pipeline. All engines (Activity Feed, Notifications, Dashboard, Automation) are unified as subscribers.
+
+**Types:**
+- `BusEventCategory` — 13 event categories (review, automation, governance, scheduler, notification, sync, reconciliation, exception, financial_control, job, worker, stock, asset)
+- `BusEventPriority` — info / warning / critical
+- `BusEvent` — core event model (id, type, title, description, timestamp, priority, sourceId, sourceType, sourceRoute, jobId, actor, actionRequired)
+- `BusEventRecord` — extends BusEvent with consumedBy[], auditEntries[]
+- `BusAuditEntry` — immutable audit record (published / consumed / subscriber_triggered / viewed)
+- `BusSubscriber` — subscriber registry record (id, name, description, status, eventCount, interestedTypes)
+- `EventBusSummary` — KPI object (total, today, critical, subscriberCount, activeEventTypes)
+
+**Public API:**
+- `publishEvent()` — publishes and dispatches to all matching subscribers
+- `subscribe()` — registers a new subscriber
+- `unsubscribe()` — removes a subscriber
+- `getEventHistory()` — returns all events newest-first
+- `getRecentBusEvents(limit)` — returns N most recent events
+- `getEventsByType()` — filter by BusEventCategory
+- `getEventsByPriority()` — filter by BusEventPriority
+- `searchBusEvents()` — full-text search across title, description, IDs
+- `getSubscribers()` — returns all registered subscribers
+- `computeEventBusSummary()` — returns KPI summary
+- `getBusAuditLog()` — immutable audit log
+- `recordEventMonitorViewed()` — audit trail for Event Monitor views
+- `clearEventHistory()` / `_resetEventBusState()` — test support
+
+**Subscribers:**
+1. **Activity Feed Subscriber** — all live events → activityFeedEngine.addActivityEvent()
+2. **Notification Subscriber** — warning/critical events → simulated notification creation
+3. **Dashboard Subscriber** — all events → dashboard reads from getRecentBusEvents()
+4. **Automation Subscriber** — targeted event types → read-only trigger evaluation
+
+**Seed data:** 20 realistic events covering all 13 event categories, sourced from Review Centre, Sync Engine, Automations, Governance, Exceptions, Financial Controls, Reconciliation, Scheduler, Jobs, Workers, Stock, and Assets.
+
+**Doctrine compliance:**
+- Event Bus is INFORMATIONAL / EVALUATIVE only
+- Never approves submissions
+- Never creates approved financial records
+- Never bypasses Review Centre
+- Never bypasses Approval Doctrine
+- All processing is fully auditable
+
+---
+
+### Event Monitor Page
+
+**File:** `client/src/pages/event-monitor.tsx`
+
+**Route:** `/event-monitor` (CEO only)
+
+**Features:**
+- Doctrine notice banner (informational/evaluative only)
+- **KPI Strip** (5 cards): Total Events, Events Today, Critical Events, Subscribers, Active Event Types
+- **Event Stream**: full event list with Type badge, Priority badge, Job Ref, Action Required indicator, View button
+- **Filters**: Event Type (13 types), Priority (3 levels)
+- **Search**: title, description, event ID, job ID, source ID
+- **Event Detail panel**: Event ID, title, type/priority badges, description, actor, source, job, consumed-by list, Go to Source deep-link
+- **Subscriber Panel**: 4 subscribers with name, description, status badge, event count
+
+All interactive elements carry `data-testid` attributes.
+
+---
+
+### Routing
+
+**File:** `client/src/App.tsx`
+
+```tsx
+<Route path="/event-monitor">
+  <ProtectedRoute component={EventMonitorPage} roles={["CEO"]} />
+</Route>
+```
+
+---
+
+### Navigation
+
+**File:** `client/src/components/layout.tsx`
+
+```tsx
+{ label: "Event Monitor", href: "/event-monitor", icon: Radio, roles: ["CEO"], testId: "nav-event-monitor" }
+```
+
+---
+
+### Doctrine Tests
+
+**File:** `tests/doctrine/event-bus.spec.ts`
+
+30 tests (EB-01 to EB-30) covering:
+
+| Range | Area |
+|-------|------|
+| EB-01 to EB-03 | Page access & RBAC |
+| EB-04 to EB-08 | KPI Strip |
+| EB-09 to EB-12 | Event Stream |
+| EB-13 to EB-16 | Filters |
+| EB-17 to EB-19 | Search |
+| EB-20 to EB-23 | Event Detail |
+| EB-24 to EB-26 | Subscriber Panel |
+| EB-27 | Doctrine Notice |
+| EB-28 | Activity Feed integration |
+| EB-29 | PM RBAC |
+| EB-30 | Governance events visibility |
+
+---
+
+## Bug Fixes
+
+### AF-05: Activity Feed total showing 45 instead of 25
+
+**Root cause:** `eventBusEngine.ts` imports `addActivityEvent` and called it for all 20 seed events at module initialisation time. This injected 20 extra events into `activityFeedEngine`'s in-memory store on top of its own 25 seed events, giving 45 total.
+
+**Fix:** Added `_suppressActivityFeedDispatch` boolean flag. `_seedHistory()` sets it `true` inside a `try/finally`, suppressing the Activity Feed subscriber call during seed. The flag resets to `false` in `finally`, so all live `publishEvent()` calls dispatch normally.
+
+**Impact:** Zero. No behaviour change for live event publishing. Activity Feed seed count remains exactly 25. Event Bus seed count remains exactly 20.
+
+**Commit:** `805bfc8`
+
+---
+
+## Files Added
+
+| File | Description |
+|------|-------------|
+| `client/src/lib/eventBusEngine.ts` | Event Bus Engine |
+| `client/src/pages/event-monitor.tsx` | Event Monitor page (CEO only) |
+| `tests/doctrine/event-bus.spec.ts` | 30 doctrine tests (EB-01 to EB-30) |
+| `docs/handoffs/phase-6-3-event-infrastructure-handoff.md` | This document |
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `client/src/App.tsx` | /event-monitor route (CEO only) |
+| `client/src/components/layout.tsx` | Event Monitor nav item (Radio icon, CEO only) |
+| `The-Ledger/LEDGER_CANONICAL_CONTEXT.md` | Phase 6.3 verified, Dashboard Intelligence Doctrine added |
+
+---
+
+## Verification
+
+- Build: PASS
+- Playwright: 309 / 309 PASSING
+- Regressions: 0
+
+---
+
+## Event Bus Doctrine (Summary)
+
+The Event Bus is **informational and evaluative only**.
+
+It may:
+- Publish events
+- Notify subscribers
+- Trigger read-only evaluations
+
+It may **never**:
+- Approve submissions
+- Create approved financial records
+- Bypass the Review Centre
+- Bypass the Approval Doctrine
+
+All event processing is fully auditable. Job attribution is preserved on all records.
+
+---
+
+## Next Phase
+
+**Phase 6.4 — Dashboard Intelligence Layer**
+
+Branch: `feature/phase-6-4-dashboard-intelligence`
+
+### Objective
+
+Transform the existing dashboard from a static layout into a live operational intelligence hub surfacing actionable cross-module KPIs for the CEO.
+
+### Deliverables
+
+- **Executive Summary widget** — live counts from Review Centre (pending), Exception Resolution (open), Automation Governance (requires review), Reconciliation (unmatched)
+- **Financial Health Snapshot widget** — sync health status, reconciliation match rate, open exception count, pending financial controls
+- **Outstanding Actions widget** — aggregated action-required items across Review Centre, Exceptions, Governance, Notifications, Activity Feed
+- **Recent Automation Activity widget** — last 5 automation executions with status badges
+- **Doctrine tests** — 15+ tests covering widget rendering, KPI accuracy, RBAC
+
+### Doctrine Constraints
+
+- Widgets are READ-ONLY — no mutations, no approvals, no financial changes
+- All KPI values derived from existing engine seed data — no new seed data required
+- Widgets deep-link to source pages only — no inline actions
+- CEO only (no PM, no Worker, no Client)
+
+### Key Engines to Read From
+
+- `reconciliationEngine.ts` — computeReconciliationSummary()
+- `exceptionResolutionEngine.ts` — computeExceptionSummary()
+- `automationGovernanceEngine.ts` — computeGovernanceSummary()
+- `notificationEngine.ts` — computeNotificationSummary()
+- `activityFeedEngine.ts` — computeActivitySummary(), getActionRequiredEvents()
+- `automationAuditEngine.ts` — SEED_EXECUTION_HISTORY
+- `syncOperationsEngine.ts` — sync health KPIs
+- `financialControlsEngine.ts` — computeControlSummary()
+
+### Existing Pattern to Reuse
+
+Dashboard already imports from activityFeedEngine and renders the Recent Activity widget.
+New widgets follow the same pattern: import engine functions, compute values inline, render cards.
+No new engines required. No new seed data required.
