@@ -24,6 +24,8 @@ import {
   BarChart3,
   TrendingDown,
   Minus,
+  FileText,
+  BookOpen,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -40,6 +42,14 @@ import {
   getForecasts,
   getTrendAnalysis,
 } from "@/lib/analyticsEngine";
+import {
+  getAllReports,
+  computeReportingSummary,
+  REPORT_TYPE_LABELS,
+  REPORT_TYPE_COLORS,
+  REPORT_STATUS_LABELS,
+  REPORT_STATUS_COLORS,
+} from "@/lib/reportingEngine";
 
 // Icon map for activity event types (inline, no coupling)
 function ActivityEventIcon({ type, className }: { type: ActivityEventType; className?: string }) {
@@ -99,6 +109,10 @@ export default function Dashboard() {
   const topRisks = isCEO ? getCriticalRisks().slice(0, 3) : [];
   const recentForecasts = isCEO ? getForecasts().slice(0, 2) : [];
   const trends = isCEO ? getTrendAnalysis().slice(0, 4) : [];
+
+  // Reporting data (CEO only widget)
+  const latestReports = isCEO ? getAllReports().filter(r => r.status === 'generated').slice(0, 3) : [];
+  const reportingSummary = isCEO ? computeReportingSummary() : null;
 
   return (
     <Layout>
@@ -299,6 +313,78 @@ export default function Dashboard() {
                   <p className="text-[10px] text-muted-foreground mt-0.5">Op Health</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Executive Reports Widget — CEO only (Phase 6.7) */}
+        {isCEO && reportingSummary && (
+          <Card
+            data-testid="dashboard-executive-reports-widget"
+            className="border-slate-200/60 shadow-sm"
+          >
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-indigo-600" />
+                  Executive Reports
+                </CardTitle>
+                <CardDescription>Latest generated reports and reporting summary.</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1"
+                data-testid="dashboard-reports-widget-open-btn"
+                onClick={() => setLocation("/reporting-centre")}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open Reporting Centre
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
+                <div data-testid="dashboard-reports-kpi-total" className="p-2 rounded border text-center bg-card">
+                  <p className="text-xl font-bold">{reportingSummary.total}</p>
+                  <p className="text-[10px] text-muted-foreground">Total</p>
+                </div>
+                <div data-testid="dashboard-reports-kpi-generated" className="p-2 rounded border text-center bg-emerald-50 border-emerald-200">
+                  <p className="text-xl font-bold text-emerald-700">{reportingSummary.generated}</p>
+                  <p className="text-[10px] text-muted-foreground">Generated</p>
+                </div>
+                <div data-testid="dashboard-reports-kpi-draft" className="p-2 rounded border text-center bg-amber-50 border-amber-200">
+                  <p className="text-xl font-bold text-amber-700">{reportingSummary.draft}</p>
+                  <p className="text-[10px] text-muted-foreground">Draft</p>
+                </div>
+                <div data-testid="dashboard-reports-kpi-archived" className="p-2 rounded border text-center bg-card">
+                  <p className="text-xl font-bold text-slate-600">{reportingSummary.archived}</p>
+                  <p className="text-[10px] text-muted-foreground">Archived</p>
+                </div>
+                <div data-testid="dashboard-reports-kpi-this-month" className="p-2 rounded border text-center bg-blue-50 border-blue-200">
+                  <p className="text-xl font-bold text-blue-700">{reportingSummary.thisMonth}</p>
+                  <p className="text-[10px] text-muted-foreground">This Month</p>
+                </div>
+              </div>
+              {latestReports.length > 0 && (
+                <div className="divide-y" data-testid="dashboard-reports-latest-list">
+                  {latestReports.map((report) => (
+                    <div
+                      key={report.id}
+                      data-testid={`dashboard-report-item-${report.id}`}
+                      className="flex items-center gap-3 py-2.5 text-sm"
+                    >
+                      <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="flex-1 truncate font-medium">{report.name}</span>
+                      <Badge
+                        variant="outline"
+                        className={cn('text-xs flex-shrink-0', REPORT_TYPE_COLORS[report.type])}
+                      >
+                        {REPORT_TYPE_LABELS[report.type]}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

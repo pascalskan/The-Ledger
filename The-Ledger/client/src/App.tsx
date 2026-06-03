@@ -53,6 +53,7 @@ import EventMonitorPage from "@/pages/event-monitor";
 import WorkflowCentrePage from "@/pages/workflows";
 import ExecutiveCommandCentrePage from "@/pages/executive-command-centre";
 import AnalyticsCentrePage from "@/pages/analytics-centre";
+import ReportingCentrePage from "@/pages/reporting-centre";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
@@ -158,6 +159,10 @@ function Router() {
       {/* Phase 6.6: Analytics Centre — CEO only */}
       <Route path="/analytics-centre">
         <ProtectedRoute component={AnalyticsCentrePage} roles={["CEO"]} />
+      </Route>
+      {/* Phase 6.7: Reporting Centre — CEO only */}
+      <Route path="/reporting-centre">
+        <ProtectedRoute component={ReportingCentrePage} roles={["CEO"]} />
       </Route>
       <Route path="/jobs">
         <ProtectedRoute component={JobsPage} />

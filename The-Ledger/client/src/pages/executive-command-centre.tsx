@@ -27,6 +27,12 @@ import {
   getForecasts,
 } from '@/lib/analyticsEngine';
 import {
+  getAllReports,
+  REPORT_TYPE_LABELS,
+  REPORT_TYPE_COLORS,
+  REPORT_STATUS_LABELS,
+} from '@/lib/reportingEngine';
+import {
   ACTIVITY_EVENT_TYPE_LABELS,
   ACTIVITY_EVENT_TYPE_COLORS,
   ACTIVITY_PRIORITY_COLORS,
@@ -48,6 +54,8 @@ import {
   Terminal,
   BarChart3,
   Minus,
+  BookOpen,
+  FileText,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────
@@ -112,6 +120,9 @@ export default function ExecutiveCommandCentrePage() {
   const topRisks = getCriticalRisks().slice(0, 4);
   const topTrends = getTrendAnalysis().slice(0, 3);
   const topForecasts = getForecasts().slice(0, 2);
+
+  // Reporting snapshot (Phase 6.7) — latest generated reports
+  const latestReports = getAllReports().filter(r => r.status === 'generated').slice(0, 3);
 
   useEffect(() => {
     if (user?.name) {
@@ -447,6 +458,7 @@ export default function ExecutiveCommandCentrePage() {
                   { label: 'Financial Explorer', route: '/financial-explorer', icon: TrendingUp },
                   { label: 'Activity Feed', route: '/activity-feed', icon: Activity },
                   { label: 'Event Monitor', route: '/event-monitor', icon: Zap },
+                  { label: 'Reporting Centre', route: '/reporting-centre', icon: BookOpen },
                 ] as { label: string; route: string; icon: React.ElementType }[]).map(({ label, route, icon: Icon }) => (
                   <Button
                     key={route}
@@ -558,6 +570,51 @@ export default function ExecutiveCommandCentrePage() {
                 </div>
               </div>
 
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── REPORTING SNAPSHOT (Phase 6.7) ── */}
+        <Card data-testid="exec-reporting-snapshot">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-indigo-500" />
+                Reporting Snapshot
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1"
+                data-testid="exec-reporting-link"
+                onClick={() => handleDeepLink('/reporting-centre', 'Reporting Centre')}
+              >
+                <ExternalLink className="h-3 w-3" />
+                Reporting Centre
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {latestReports.length === 0 && (
+                <p className="text-sm text-muted-foreground py-2">No generated reports available.</p>
+              )}
+              {latestReports.map((report) => (
+                <div
+                  key={report.id}
+                  data-testid={`exec-report-item-${report.id}`}
+                  className="flex items-center gap-3 p-2 rounded border bg-card text-sm"
+                >
+                  <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="flex-1 truncate font-medium">{report.name}</span>
+                  <Badge
+                    variant="outline"
+                    className={cn('text-xs flex-shrink-0', REPORT_TYPE_COLORS[report.type])}
+                  >
+                    {REPORT_TYPE_LABELS[report.type]}
+                  </Badge>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
