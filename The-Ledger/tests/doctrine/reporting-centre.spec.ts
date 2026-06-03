@@ -50,7 +50,7 @@ test('RC-04: Reporting Centre page header renders with CEO Only badge', async ({
   await loginAsCEO(page);
   await page.goto('/reporting-centre');
   await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
-  await expect(page.locator('h1')).toContainText('Reporting Centre');
+  await expect(page.locator('[data-testid="reporting-centre-page"] h1')).toContainText('Reporting Centre');
   await expect(page.locator('text=CEO Only')).toBeVisible();
 });
 
