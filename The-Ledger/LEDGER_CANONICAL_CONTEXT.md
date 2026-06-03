@@ -2,16 +2,16 @@
 
 ## Canonical Context Document
 
-Version: 6.5
+Version: 6.6
 Status: Active Source of Truth
 Last Updated: June 2026
 
 Repository Baseline:
-feature/phase-6-5-executive-command-centre @ caae7b2 (Phase 6.5 complete)
+feature/phase-6-6-business-intelligence (Phase 6.6 implementation complete)
 
 Verification Status:
-Build PASS
-Playwright PASS (35 new doctrine tests, 0 regressions)
+Build: Pending local verification
+Playwright: Pending local verification
 
 ---
 
@@ -498,6 +498,68 @@ Health scoring: 0–100 score per dimension (operational / financial / governanc
 
 ---
 
+## Analytics Doctrine (Phase 6.6)
+
+The Analytics Centre is a READ-ONLY, ADVISORY-ONLY business intelligence layer.
+
+Analytics aggregates data from:
+- executiveCommandEngine
+- workflowEngine
+- eventBusEngine
+- activityFeedEngine
+- notificationEngine
+- automationGovernanceEngine
+- automationSchedulerEngine
+- financialControlsEngine
+- reconciliationEngine
+- exceptionResolutionEngine
+
+Analytics MAY:
+- Analyse and aggregate existing platform data
+- Score platform health across 5 dimensions
+- Identify critical risks with severity classification
+- Surface trend analysis with direction and percentage change
+- Generate forecasts clearly labelled as projections / advisory only
+- Identify bottlenecks and link to source modules
+- Record all analytics access in an immutable audit log
+
+Analytics MAY NEVER:
+- Approve records
+- Change records
+- Create records
+- Trigger financial mutations
+- Override governance controls
+- Bypass the Review Centre
+
+All analytics access generates immutable audit records:
+- analytics_viewed
+- forecast_viewed
+- risk_investigation_opened
+
+Deep links navigate to source modules only — they never execute actions.
+
+Forecasts are always labelled "Projections — Advisory Only".
+
+RBAC:
+- CEO: full Analytics Centre visibility
+- PM: no access
+- Worker: no access
+- Client: no access
+
+Health scoring (5 dimensions):
+- Operational Health: workflow failures, event volume, notification volume, exception volume
+- Financial Health: failed syncs, reconciliation issues, financial control exceptions
+- Governance Risk: restricted automations, suspended automations, financially sensitive workflows, pending governance reviews
+- Workflow Efficiency: completed workflows, failed workflows, blocked workflows
+- Automation Effectiveness: active automations, scheduled automations, automation failures
+
+Score ranges:
+- healthy: 80–100
+- warning: 50–79
+- critical: 0–49
+
+---
+
 # PRODUCT DEFINITION
 
 ## Executive Platform
@@ -527,6 +589,7 @@ The Ledger contains:
 - Event Monitor
 - Workflow Centre
 - Executive Command Centre
+- Analytics Centre
 - Settings
 - Accounting Settings
 - Reconciliation Centre
@@ -949,6 +1012,7 @@ Implemented:
   - Financial Oversight Panel: Failed Syncs, Reconciliation Issues, Pending Controls, Open Exceptions
   - Module Navigation Panel: deep links to Notification Centre, Workflow Centre, Automation Governance, Exception Resolution, Reconciliation Centre, Financial Explorer, Activity Feed, Event Monitor
   - Executive Activity Stream: latest 15 activity events with priority/type badges
+  - Analytics Intelligence Section (Phase 6.6): top risks, trend indicators, forecast indicators, link to Analytics Centre
   - Audit integration: recordExecutiveCentreViewed on mount, recordExecutiveAlertOpened on alert open, recordExecutiveDeepLinkOpened on deep link
   - RBAC: CEO only
 
@@ -978,22 +1042,86 @@ Implemented:
   - Group 9: Dashboard Integration — Executive Snapshot Widget (5 tests)
   - Group 10: RBAC — CEO allowed, PM denied, Worker denied (3 tests)
 
+## Phase 6.6 — Business Intelligence & Analytics Layer
+
+Status: Implementation Complete — Pending Verification
+
+Branch: feature/phase-6-6-business-intelligence
+
+New doctrine tests: 42 (AC-01 to AC-42)
+
+Implemented:
+
+### Analytics Engine
+
+- client/src/lib/analyticsEngine.ts: Business Intelligence aggregation engine
+  - Types: HealthLevel, HealthScore, AnalyticsSummary, RiskItem, TrendItem, ForecastItem, BottleneckItem, AnalyticsAuditEntry
+  - Health scoring: 5 dimensions (operational, financial, governance, workflow efficiency, automation effectiveness)
+  - Public API: getAnalyticsSummary(), getOperationalHealth(), getFinancialHealth(), getGovernanceRisk(), getWorkflowEfficiency(), getAutomationEffectiveness(), getCriticalRisks(), getTrendAnalysis(), getForecasts(), getBottleneckAnalysis(), recordAnalyticsViewed(), recordForecastViewed(), recordRiskInvestigationOpened(), getAnalyticsAuditLog()
+  - Doctrine-safe: read-only, advisory-only, no financial mutations
+  - All access generates immutable audit records
+
+### Analytics Centre Page
+
+- client/src/pages/analytics-centre.tsx: CEO-only Analytics Centre (/analytics-centre)
+  - Doctrine notice banner: advisory only, no financial mutations
+  - KPI strip (5 cards): Operational Health, Financial Health, Governance Risk, Workflow Efficiency, Automation Effectiveness — all show score/100
+  - Trend Analysis panel: direction indicators (up/down/stable), percentage change, period labels
+  - Risk Intelligence panel: severity badges (CRITICAL/HIGH/MEDIUM), deep links to source modules
+  - Forecast Intelligence panel: Advisory Only badge, confidence levels, projected change percentages
+  - Bottleneck Analysis panel: category icons, severity badges, view deep links
+  - Audit integration: recordAnalyticsViewed on mount, recordForecastViewed on forecast click, recordRiskInvestigationOpened on risk link click
+  - RBAC: CEO only
+
+### Dashboard Intelligence Widgets (Phase 6.6)
+
+- client/src/pages/dashboard.tsx: 3 new CEO-only analytics widgets
+  - Risk Summary Widget (dashboard-risk-summary-widget): top 3 critical risks, deep link to /analytics-centre
+  - Forecast Intelligence Widget (dashboard-forecast-widget): top 2 forecasts, advisory label, deep link to full forecast
+  - Platform Trends Widget (dashboard-trend-widget): top 4 trend items with direction icons and percentage change
+
+### Executive Command Centre Integration (Phase 6.6)
+
+- client/src/pages/executive-command-centre.tsx: Analytics Intelligence section added
+  - exec-analytics-summary: section container
+  - exec-analytics-risks: top 4 risks with severity badges
+  - exec-analytics-trends: top 3 trend indicators with direction icons
+  - exec-analytics-forecasts: top 2 forecast indicators with advisory note
+  - exec-analytics-link: navigate to /analytics-centre button
+
+### Routing & Navigation
+
+- client/src/App.tsx: /analytics-centre route registered (CEO only, ProtectedRoute)
+- client/src/components/layout.tsx: Analytics Centre nav item (BarChart3 icon, testId: nav-analytics-centre, CEO only)
+
+### Testing
+
+- tests/doctrine/analytics-centre.spec.ts: 42 doctrine tests (AC-01 to AC-42)
+  - Group 1: Analytics Centre Rendering & Navigation (4 tests)
+  - Group 2: KPI Strip (6 tests)
+  - Group 3: Trend Analysis Panel (4 tests)
+  - Group 4: Forecast Panel (5 tests)
+  - Group 5: Risk Intelligence Panel (5 tests)
+  - Group 6: Bottleneck Analysis Panel (3 tests)
+  - Group 7: Dashboard Intelligence Widgets (7 tests)
+  - Group 8: Executive Command Centre Integration (5 tests)
+  - Group 9: RBAC — CEO allowed, PM denied, Worker denied (3 tests)
+
 ---
 
 # NEXT TARGET
 
-## Phase 6.6 — Advanced Reporting & Export Intelligence
+## Phase 6.7 — Advanced Reporting & Export Intelligence
 
-Objective: CEO-level cross-module report generation, exportable financial summaries, operational health reports, and automated report scheduling.
+Objective: CEO-level cross-module report generation, exportable financial summaries, operational health reports.
 
 Deliverables:
 
 - Report Engine: templated report generation across jobs, workers, financials, governance
-- Report Centre Page: CEO-only, listing available report types, on-demand and scheduled generation
-- Export formats: PDF and CSV export capability
-- Scheduled Reports: integration with automationSchedulerEngine
+- Report Centre Page: CEO-only, listing available report types, on-demand generation
+- Export formats: CSV download capability
 - Dashboard widget: Recent Reports widget (CEO only)
-- Doctrine tests: 30+ tests
+- Doctrine tests: 35+ tests
 
 Doctrine constraints:
 
@@ -1002,7 +1130,7 @@ Doctrine constraints:
 - All report generation is audited
 - CEO only
 
-Branch naming: feature/phase-6-6-reporting-intelligence
+Branch naming: feature/phase-6-7-reporting-intelligence
 
 ---
 
@@ -1082,13 +1210,14 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.5 is complete. Branch: feature/phase-6-5-executive-command-centre.
+Phase 6.6 is complete.
+Branch: feature/phase-6-6-business-intelligence
 
 Next Development Target:
 
-Phase 6.6 — Advanced Reporting & Export Intelligence
+Phase 6.7 — Advanced Reporting & Export Intelligence
 
-Phase 6 introduces controlled business automation and operational intelligence while preserving:
+Phase 6 preserves:
 - Approval Doctrine
 - Audit Doctrine
 - Job Attribution Doctrine
@@ -1099,6 +1228,7 @@ Phase 6 introduces controlled business automation and operational intelligence w
 - Workflow Automation Doctrine
 - Dashboard Intelligence Doctrine
 - Executive Command Centre Doctrine
+- Analytics Doctrine (Phase 6.6)
 
 ---
 
@@ -1120,5 +1250,6 @@ Before making recommendations:
 12. Preserve workflow automation doctrine (orchestration only — never approves, never bypasses approval doctrine).
 13. Preserve dashboard intelligence doctrine (read-only widgets, deep-link only, no inline actions).
 14. Preserve executive command centre doctrine (read-only visibility layer, no financial mutations, no approval actions, full audit trail).
+15. Preserve analytics doctrine (advisory only — no approvals, no mutations, no record creation, forecasts labelled as projections).
 
 This document is the canonical source of truth for The Ledger.

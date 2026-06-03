@@ -21,6 +21,9 @@ import {
   ShieldAlert,
   AlertTriangle,
   Shield,
+  BarChart3,
+  TrendingDown,
+  Minus,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -31,6 +34,12 @@ import {
   getExecutiveSummary,
   getExecutiveHealthSnapshot,
 } from "@/lib/executiveCommandEngine";
+import {
+  getAnalyticsSummary,
+  getCriticalRisks,
+  getForecasts,
+  getTrendAnalysis,
+} from "@/lib/analyticsEngine";
 
 // Icon map for activity event types (inline, no coupling)
 function ActivityEventIcon({ type, className }: { type: ActivityEventType; className?: string }) {
@@ -84,6 +93,12 @@ export default function Dashboard() {
   // Executive snapshot data (CEO only widget)
   const execSummary = isCEO ? getExecutiveSummary() : null;
   const execHealth = isCEO ? getExecutiveHealthSnapshot() : null;
+
+  // Analytics intelligence data (CEO only widgets)
+  const analyticsSummary = isCEO ? getAnalyticsSummary() : null;
+  const topRisks = isCEO ? getCriticalRisks().slice(0, 3) : [];
+  const recentForecasts = isCEO ? getForecasts().slice(0, 2) : [];
+  const trends = isCEO ? getTrendAnalysis().slice(0, 4) : [];
 
   return (
     <Layout>
@@ -210,7 +225,6 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {/* Critical Alerts */}
                 <div
                   data-testid="dashboard-exec-snapshot-critical-alerts"
                   className={cn(
@@ -222,8 +236,6 @@ export default function Dashboard() {
                   <p className={cn("text-2xl font-bold", execSummary.criticalAlerts > 0 ? "text-red-600" : "")}>{execSummary.criticalAlerts}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">Critical Alerts</p>
                 </div>
-
-                {/* Pending Reviews */}
                 <div
                   data-testid="dashboard-exec-snapshot-pending-reviews"
                   className={cn(
@@ -235,8 +247,6 @@ export default function Dashboard() {
                   <p className={cn("text-2xl font-bold", execSummary.pendingReviews > 0 ? "text-amber-600" : "")}>{execSummary.pendingReviews}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">Pending Reviews</p>
                 </div>
-
-                {/* Governance Issues */}
                 <div
                   data-testid="dashboard-exec-snapshot-governance-issues"
                   className={cn(
@@ -248,8 +258,6 @@ export default function Dashboard() {
                   <p className={cn("text-2xl font-bold", execSummary.governanceRisks > 0 ? "text-purple-600" : "")}>{execSummary.governanceRisks}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">Governance Issues</p>
                 </div>
-
-                {/* Open Exceptions */}
                 <div
                   data-testid="dashboard-exec-snapshot-open-exceptions"
                   className={cn(
@@ -261,8 +269,6 @@ export default function Dashboard() {
                   <p className={cn("text-2xl font-bold", execSummary.openExceptions > 0 ? "text-rose-600" : "")}>{execSummary.openExceptions}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">Open Exceptions</p>
                 </div>
-
-                {/* Recon Issues */}
                 <div
                   data-testid="dashboard-exec-snapshot-recon-issues"
                   className={cn(
@@ -274,8 +280,6 @@ export default function Dashboard() {
                   <p className={cn("text-2xl font-bold", execSummary.reconciliationIssues > 0 ? "text-orange-600" : "")}>{execSummary.reconciliationIssues}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">Recon Issues</p>
                 </div>
-
-                {/* Operational Health */}
                 <div
                   data-testid="dashboard-exec-snapshot-op-health"
                   className={cn(
@@ -294,6 +298,174 @@ export default function Dashboard() {
                   )}>{execHealth.operational.label}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">Op Health</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Risk Summary Widget — CEO only (Phase 6.6) */}
+        {isCEO && analyticsSummary && topRisks.length > 0 && (
+          <Card
+            data-testid="dashboard-risk-summary-widget"
+            className="border-slate-200/60 shadow-sm"
+          >
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  Risk Summary
+                </CardTitle>
+                <CardDescription>Critical and governance risks requiring attention.</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1"
+                data-testid="dashboard-risk-widget-open-btn"
+                onClick={() => setLocation("/analytics-centre")}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Analytics Centre
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {topRisks.map((risk) => (
+                  <div
+                    key={risk.id}
+                    data-testid={`dashboard-risk-item-${risk.id}`}
+                    className={cn(
+                      'flex items-center gap-3 p-3 rounded-md border',
+                      risk.severity === 'critical' ? 'bg-red-50 border-red-200' :
+                      risk.severity === 'high' ? 'bg-orange-50 border-orange-200' :
+                      'bg-amber-50 border-amber-200'
+                    )}
+                  >
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'text-xs flex-shrink-0',
+                        risk.severity === 'critical' ? 'text-red-700 border-red-300' :
+                        risk.severity === 'high' ? 'text-orange-700 border-orange-300' : 'text-amber-700 border-amber-300'
+                      )}
+                    >
+                      {risk.severity.toUpperCase()}
+                    </Badge>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{risk.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{risk.category}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Forecast Widget — CEO only (Phase 6.6) */}
+        {isCEO && recentForecasts.length > 0 && (
+          <Card
+            data-testid="dashboard-forecast-widget"
+            className="border-slate-200/60 shadow-sm"
+          >
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-purple-600" />
+                  Forecast Intelligence
+                </CardTitle>
+                <CardDescription>Revenue and workload projections. Advisory only — not approved financial records.</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1"
+                data-testid="dashboard-forecast-widget-open-btn"
+                onClick={() => setLocation("/analytics-centre")}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Full Forecast
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {recentForecasts.map((forecast, idx) => (
+                  <div
+                    key={idx}
+                    data-testid={`dashboard-forecast-item-${idx}`}
+                    className="p-4 rounded-md border bg-card"
+                  >
+                    <p className="text-xs text-muted-foreground mb-1">{forecast.metric}</p>
+                    <div className="flex items-center gap-2">
+                      {forecast.projectedChange >= 0
+                        ? <TrendingUp className="h-4 w-4 text-emerald-600" />
+                        : <TrendingDown className="h-4 w-4 text-red-600" />}
+                      <span className={cn(
+                        'text-xl font-bold',
+                        forecast.projectedChange >= 0 ? 'text-emerald-700' : 'text-red-700'
+                      )}>
+                        {forecast.projectedChangePercent > 0 ? '+' : ''}{forecast.projectedChangePercent}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Projected: {forecast.projectedValue}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 italic">Projection — advisory only</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Trend Widget — CEO only (Phase 6.6) */}
+        {isCEO && trends.length > 0 && (
+          <Card
+            data-testid="dashboard-trend-widget"
+            className="border-slate-200/60 shadow-sm"
+          >
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  Platform Trends
+                </CardTitle>
+                <CardDescription>Event, workflow, and governance trends across The Ledger.</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1"
+                data-testid="dashboard-trend-widget-open-btn"
+                onClick={() => setLocation("/analytics-centre")}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Full Analysis
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {trends.map((trend, idx) => (
+                  <div
+                    key={idx}
+                    data-testid={`dashboard-trend-item-${idx}`}
+                    className="p-3 rounded-md border bg-card"
+                  >
+                    <div className="flex items-center gap-1 mb-1">
+                      {trend.direction === 'up'
+                        ? <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                        : trend.direction === 'down'
+                        ? <TrendingDown className="h-3.5 w-3.5 text-red-600" />
+                        : <Minus className="h-3.5 w-3.5 text-amber-600" />}
+                      <p className="text-xs font-medium truncate">{trend.metric}</p>
+                    </div>
+                    <p className="text-lg font-bold">{trend.value}</p>
+                    <p className={cn(
+                      'text-xs',
+                      trend.changePercent > 0 ? 'text-emerald-600' : trend.changePercent < 0 ? 'text-red-600' : 'text-muted-foreground'
+                    )}>
+                      {trend.changePercent > 0 ? '+' : ''}{trend.changePercent}%
+                    </p>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>

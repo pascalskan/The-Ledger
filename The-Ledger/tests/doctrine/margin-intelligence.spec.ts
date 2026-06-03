@@ -172,13 +172,11 @@ test("Exposure is labelled as estimate not approved data", async ({ page }) => {
 
   const panel = page.getByTestId("job-forecast-panel-dj-kitchen-extract-1");
 
+  // Wait for the panel to be visible before making text assertions
+  await expect(panel).toBeVisible();
+
   // The panel should NOT claim exposure is approved
   await expect(panel).not.toContainText(/approved exposure/i);
-
-  // It should clarify it is an estimate
-  // (either via the exposure section note or the no-exposure message)
-  // The panel renders if there's activity — just verify no "approved" framing
-  await expect(panel).toBeVisible();
 });
 
 // ──────────────────────────────────────────────────────
