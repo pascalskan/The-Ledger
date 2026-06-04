@@ -1,7 +1,7 @@
 # THE LEDGER
 ## Current Development State
 
-Last Updated: June 2026
+Last Updated: June 4, 2026
 
 ---
 
@@ -20,6 +20,7 @@ The following have been merged into main:
 
 - Phase 6.8 — Report Exports & Distribution Centre
 - Claude Project Context System (CLAUDE.md, docs/ai-context/, docs/handoffs/, docs/architecture/archive/)
+- Domain Definition Program (docs/domain/)
 
 main is up to date with origin/main.
 
@@ -33,13 +34,13 @@ Regressions: 0
 
 ---
 
-## Current Position
+## Current Stage
 
-All phases 1 through 6.8 are complete and verified.
+**Domain Definition Program — COMPLETE**
 
-The platform has entered the Architectural Audit stage.
+**Backend Architecture Specification — PENDING**
 
-The next development cycle has not yet been defined.
+The platform has completed all frontend prototype phases, the Architectural Audit, and the Domain Definition Program. The next planned phase is Backend Architecture Specification.
 
 ---
 
@@ -56,6 +57,53 @@ The next development cycle has not yet been defined.
 
 ---
 
+## Domain Definition Program
+
+Status: COMPLETE
+Date: June 4, 2026 (Round 1 + Round 2)
+
+All fourteen business domains have been fully defined and frozen. These documents are the authoritative starting point for backend domain specification.
+
+Authoritative Reference: docs/domain/DOMAIN_MODEL_SUMMARY.md
+
+### Frozen Domains
+
+| Domain | File | Status |
+|---|---|---|
+| Expense | docs/domain/EXPENSE_DOMAIN.md | FROZEN |
+| Rejection | docs/domain/REJECTION_DOMAIN.md | FROZEN |
+| Timesheet | docs/domain/TIMESHEET_DOMAIN.md | FROZEN |
+| Site | docs/domain/SITE_DOMAIN.md | FROZEN |
+| Issue | docs/domain/ISSUE_DOMAIN.md | FROZEN |
+| Financial Record Correction | docs/domain/FINANCIAL_RECORD_CORRECTION_DOMAIN.md | FROZEN |
+| Job | docs/domain/JOB_DOMAIN.md | FROZEN |
+| Report | docs/domain/REPORT_DOMAIN.md | FROZEN |
+| Stock | docs/domain/STOCK_DOMAIN.md | FROZEN |
+| Asset | docs/domain/ASSET_DOMAIN.md | FROZEN |
+| Client Request | docs/domain/CLIENT_REQUEST_DOMAIN.md | FROZEN |
+| Client Portal | docs/domain/CLIENT_PORTAL_DOMAIN.md | FROZEN |
+| Scheduling | docs/domain/SCHEDULING_DOMAIN.md | FROZEN |
+| Worker Classification | docs/domain/WORKER_CLASSIFICATION_DOMAIN.md | FROZEN |
+
+---
+
+## Architectural State
+
+The Ledger now possesses:
+
+- Frozen business domain model
+- Frozen lifecycle definitions
+- Frozen ownership definitions
+- Frozen approval authority definitions
+- Frozen rejection definitions
+- Frozen financial mutation definitions
+
+Backend implementation has not started.
+
+Backend architecture specification has not started.
+
+---
+
 ## Claude Project Context System
 
 The following Claude project context structure has been established and merged into main:
@@ -64,45 +112,39 @@ The following Claude project context structure has been established and merged i
 - docs/ai-context/ — Canonical context and current development state
 - docs/handoffs/ — Phase-by-phase handoff documents
 - docs/architecture/archive/ — Archived architecture documents
+- docs/domain/ — Frozen domain model documents
 
 This context system governs all future Claude sessions working on The Ledger.
 
 ---
 
-## Latest Completed Phase
+## Latest Completed Milestone
 
-Phase 6.8 — Report Exports & Distribution Centre
+Domain Definition Program — June 4, 2026
 
-Delivered:
-- Export Engine (exportEngine.ts)
-- Distribution Engine
-- Board Pack Generation
-- Reporting Centre — Exports and Distribution tabs
-- Dashboard Export Widget
-- Executive Command Centre Export Snapshot
-- Doctrine Test Suite: RX-01 to RX-40 (40 tests)
-
-Verified: 501 / 501 Tests PASS
-
----
-
-## Current Priority
-
-Architectural Audit
-
-Review scope:
-- Product Vision
-- User Experience
-- Frontend Architecture
-- Platform Completeness
-- Backend Requirements
-- Commercial Readiness
-
-This audit must be completed before the next development cycle is defined.
+Produced:
+- 14 frozen domain documents
+- DOMAIN_MODEL_SUMMARY.md (authoritative synthesis)
+- 25 frozen backend planning decisions
+- Complete financial mutation point map
+- Complete approval authority model
+- Complete lifecycle models for all entities
+- Complete domain invariant set (32 invariants)
+- Complete audit entry type catalogue
 
 ---
 
 ## Next Development Cycle
 
-Not Yet Defined.
-To Be Determined Following Architectural Audit.
+**Backend Architecture Specification**
+
+Scope:
+- Domain Architecture
+- Data Architecture
+- Service Architecture
+- Event Architecture
+- Multi-Tenancy Architecture
+- Authentication Architecture
+- API Architecture
+
+All 14 frozen domain documents serve as the authoritative input to this phase.
