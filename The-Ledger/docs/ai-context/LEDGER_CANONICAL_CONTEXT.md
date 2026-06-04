@@ -2,16 +2,20 @@
 
 ## Canonical Context Document
 
-Version: 6.8
+Version: 7.0
 Status: Active Source of Truth
-Last Updated: June 2026
+Last Updated: June 4, 2026
 
 Repository Baseline:
-phase-6.8-report-exports (Phase 6.8 implementation complete)
+main (Phase 6.8 merged; Domain Definition Program complete)
 
 Verification Status:
 Build: PASS
 Playwright: 501 / 501 Tests PASS
+
+Current Stage:
+Domain Definition Program — COMPLETE
+Backend Architecture Specification — PENDING
 
 ---
 
@@ -1104,15 +1108,87 @@ Never leave work stranded.
 
 # CURRENT PRIMARY OBJECTIVE
 
-Phase 6.8 is complete.
-Branch: phase-6.8-report-exports
-Playwright: 501 / 501 Tests PASS
+## Completed Milestones
+
+### Frontend Prototype Phases 1–6.8
 
 All phases 1 through 6.8 are complete and verified.
+Playwright: 501 / 501 Tests PASS
+Branch: main
 
-The platform is ready for the next development cycle.
+### Architectural Audit
 
-Phase 6 preserves:
+Status: Complete
+
+The platform underwent a full architectural audit following Phase 6.8, covering:
+- Product Vision
+- User Experience
+- Frontend Architecture
+- Platform Completeness
+- Backend Requirements
+- Commercial Readiness
+
+### Domain Definition Program
+
+Status: COMPLETE
+Date: June 4, 2026
+
+Fourteen business domains have been fully defined and frozen.
+All domain documents are authoritative and immutable.
+Authoritative reference: docs/domain/DOMAIN_MODEL_SUMMARY.md
+
+Frozen Domains:
+
+| Domain | File |
+|---|---|
+| Expense | docs/domain/EXPENSE_DOMAIN.md |
+| Rejection | docs/domain/REJECTION_DOMAIN.md |
+| Timesheet | docs/domain/TIMESHEET_DOMAIN.md |
+| Site | docs/domain/SITE_DOMAIN.md |
+| Issue | docs/domain/ISSUE_DOMAIN.md |
+| Financial Record Correction | docs/domain/FINANCIAL_RECORD_CORRECTION_DOMAIN.md |
+| Job | docs/domain/JOB_DOMAIN.md |
+| Report | docs/domain/REPORT_DOMAIN.md |
+| Stock | docs/domain/STOCK_DOMAIN.md |
+| Asset | docs/domain/ASSET_DOMAIN.md |
+| Client Request | docs/domain/CLIENT_REQUEST_DOMAIN.md |
+| Client Portal | docs/domain/CLIENT_PORTAL_DOMAIN.md |
+| Scheduling | docs/domain/SCHEDULING_DOMAIN.md |
+| Worker Classification | docs/domain/WORKER_CLASSIFICATION_DOMAIN.md |
+
+## Architectural State
+
+The Ledger now possesses:
+
+- Frozen business domain model
+- Frozen lifecycle definitions
+- Frozen ownership definitions
+- Frozen approval authority definitions
+- Frozen rejection definitions
+- Frozen financial mutation definitions
+
+Backend implementation has not started.
+
+Backend architecture specification has not started.
+
+## Next Planned Phase
+
+Backend Architecture Specification
+
+Including:
+
+- Domain Architecture
+- Data Architecture
+- Service Architecture
+- Event Architecture
+- Multi-Tenancy Architecture
+- Authentication Architecture
+- API Architecture
+
+All frozen domain documents serve as the authoritative input to this phase.
+
+## Doctrines Preserved Through All Phases
+
 - Approval Doctrine
 - Audit Doctrine
 - Job Attribution Doctrine
