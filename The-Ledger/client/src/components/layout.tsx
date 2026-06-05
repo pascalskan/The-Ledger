@@ -7,26 +7,32 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { 
-  LayoutDashboard, 
-  Briefcase, 
-  Users, 
-  Map as MapIcon, 
-  ShieldAlert, 
-  Settings, 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  LayoutDashboard,
+  Briefcase,
+  Users,
+  Map as MapIcon,
+  ShieldAlert,
+  Settings,
   LogOut,
   Menu,
   FileText,
   Building2,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   UserCog,
   Info,
   Calendar,
   ReceiptText,
   TrendingUp,
   Zap,
-  Package, Blocks,
+  Package,
   ClipboardCheck,
   Layers,
   Wallet,
@@ -53,14 +59,14 @@ import {
   getAllNotifications,
   markNotificationRead,
   NOTIFICATION_TYPE_LABELS,
-  NOTIFICATION_PRIORITY_COLORS,
 } from "@/lib/notificationEngine";
+import { getExecutiveSummary } from "@/lib/executiveCommandEngine";
 
 // ──────────────────────────────────────────────────────
 // NOTIFICATION BELL COMPONENT
 // ──────────────────────────────────────────────────────
 
-function NotificationBell({ userId }: { userId: string }) {
+function NotificationBell({ userId, testId = "notif-bell-btn" }: { userId: string; testId?: string }) {
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(() => getAllNotifications());
@@ -94,7 +100,7 @@ function NotificationBell({ userId }: { userId: string }) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          data-testid="notif-bell-btn"
+          data-testid={testId}
           variant="ghost"
           size="icon"
           className="relative text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
@@ -181,17 +187,70 @@ function NotificationBell({ userId }: { userId: string }) {
 }
 
 // ──────────────────────────────────────────────────────
+// SYSTEM ALERT INDICATOR
+// ──────────────────────────────────────────────────────
+
+function SystemAlertIndicator() {
+  const [, setLocation] = useLocation();
+  const summary = getExecutiveSummary();
+  const count = summary.criticalAlerts ?? 0;
+  if (count === 0) return null;
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="relative text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+      onClick={() => setLocation('/executive-command-centre')}
+      title={`${count} critical alert${count === 1 ? '' : 's'}`}
+      aria-label="System alerts"
+    >
+      <TriangleAlert className="h-5 w-5" />
+      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+        {count > 9 ? '9+' : count}
+      </span>
+    </Button>
+  );
+}
+
+// ──────────────────────────────────────────────────────
+// NAV SECTION LABEL
+// ──────────────────────────────────────────────────────
+
+function NavSectionLabel({ label, collapsed }: { label: string; collapsed: boolean }) {
+  if (collapsed) return <div className="h-px bg-sidebar-border mx-2 my-2" />;
+  return (
+    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none">
+      {label}
+    </p>
+  );
+}
+
+// ──────────────────────────────────────────────────────
+// NAV ITEM DEFINITION
+// ──────────────────────────────────────────────────────
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles: string[];
+  testId?: string;
+  badge?: number;
+}
+
+// ──────────────────────────────────────────────────────
 // MAIN LAYOUT
 // ──────────────────────────────────────────────────────
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { logout, user } = useAuth();
-  const { roles } = useStore();
+  const { roles, reviewItems } = useStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem("sidebar-collapsed") === "true";
   });
+  const [adminExpanded, setAdminExpanded] = useState(false);
 
   const isDemo = user?.companyId === DEMO_COMPANY_ID;
 
@@ -223,38 +282,98 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const isCEOorPM = hasAnyRole(["CEO", "Project Manager"]);
 
-  const NAV_ITEMS = [
-    { label: "Dashboard", href: "/", icon: LayoutDashboard, roles: ["CEO", "Project Manager", "Worker"] },
-    { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: ["CEO", "Project Manager"] },
+  const pendingReviewCount = reviewItems.filter(r => r.status === 'pending').length;
+
+  // ── CORE section ──────────────────────────────────────
+  const CORE_ITEMS: NavItem[] = [
+    { label: "Command", href: "/", icon: LayoutDashboard, roles: ["CEO", "Project Manager"] },
+    { label: "Review", href: "/review", icon: ClipboardCheck, roles: ["CEO", "Project Manager"], testId: "nav-review", badge: pendingReviewCount },
+  ].filter((item) => hasAnyRole(item.roles));
+
+  // ── OPERATIONAL section ───────────────────────────────
+  const OPERATIONAL_ITEMS: NavItem[] = [
     { label: "Jobs", href: "/jobs", icon: Briefcase, roles: ["CEO", "Project Manager", "Worker"] },
-    { label: "Review Center", href: "/review", icon: ClipboardCheck, roles: ["CEO", "Project Manager"] },
-    { label: "Clients", href: "/clients", icon: Building2, roles: ["CEO", "Project Manager"] },
+    { label: "Schedule", href: "/schedule", icon: Calendar, roles: ["CEO", "Project Manager", "Worker"] },
     { label: "Workers", href: "/workers", icon: Users, roles: ["CEO", "Project Manager"] },
-    { label: "Stock & Assets", href: "/equipment", icon: Package, Blocks, roles: ["CEO", "Project Manager"] },
+    { label: "Clients", href: "/clients", icon: Building2, roles: ["CEO", "Project Manager"] },
+    { label: "Map", href: "/map", icon: MapIcon, roles: ["CEO", "Project Manager", "Worker"] },
+    { label: "Stock & Assets", href: "/equipment", icon: Package, roles: ["CEO", "Project Manager"] },
+    { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: ["CEO", "Project Manager"] },
     { label: "Invoices", href: "/invoices", icon: FileText, roles: ["CEO", "Project Manager"] },
     { label: "Invoice Builder", href: "/invoice-builder", icon: ReceiptText, roles: ["CEO", "Project Manager"] },
-    { label: "Financial Insights", href: "/expenses", icon: ReceiptText, roles: ["CEO", "Admin", "Project Manager", "Worker"] },
-    { label: "Map", href: "/map", icon: MapIcon, roles: ["CEO", "Project Manager", "Worker"] },
-    { label: "Schedule", href: "/schedule", icon: Calendar, roles: ["CEO", "Project Manager", "Worker"] },
-    { label: "Manage Roles", href: "/roles", icon: UserCog, roles: ["CEO", "Admin"] },
-    { label: "Audit Log", href: "/audit", icon: ShieldAlert, roles: ["CEO"] },
-    { label: "Financial Explorer", href: "/financial-explorer", icon: Layers, roles: ["CEO"] },
-    { label: "Payroll Staging", href: "/payroll", icon: Wallet, roles: ["CEO"] },
-    { label: "Payroll Export", href: "/payroll-export", icon: FileDown, roles: ["CEO"] },
-    { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO"] },
-    { label: "Automation Governance", href: "/automation-governance", icon: ShieldCheck, roles: ["CEO"], testId: "nav-automation-governance" },
-    { label: "Notifications", href: "/notifications", icon: Bell, roles: ["CEO", "Project Manager"], testId: "nav-notifications" },
-    { label: "Activity Feed", href: "/activity-feed", icon: Activity, roles: ["CEO"], testId: "nav-activity-feed" },
-    { label: "Event Monitor", href: "/event-monitor", icon: Radio, roles: ["CEO"], testId: "nav-event-monitor" },
-    { label: "Workflow Centre", href: "/workflows", icon: GitBranch, roles: ["CEO"], testId: "nav-workflow-centre" },
-    { label: "Executive Command Centre", href: "/executive-command-centre", icon: Terminal, roles: ["CEO"], testId: "nav-executive-command-centre" },
+    { label: "Expenses", href: "/expenses", icon: ReceiptText, roles: ["CEO", "Admin", "Project Manager", "Worker"] },
+    { label: "Financial Records", href: "/financial-explorer", icon: Layers, roles: ["CEO"], testId: "nav-financial-explorer" },
+    { label: "Payroll Processing", href: "/payroll", icon: Wallet, roles: ["CEO"], testId: "nav-payroll-staging" },
+    { label: "Payroll Export", href: "/payroll-export", icon: FileDown, roles: ["CEO"], testId: "nav-payroll-export" },
+    { label: "Reconciliation Centre", href: "/reconciliation-center", icon: GitMerge, roles: ["CEO"], testId: "nav-reconciliation-centre" },
+    { label: "Exceptions", href: "/exception-resolution-center", icon: TriangleAlert, roles: ["CEO"], testId: "nav-exception-resolution-centre" },
+  ].filter((item) => hasAnyRole(item.roles));
+
+  // ── INTELLIGENCE section ──────────────────────────────
+  const INTELLIGENCE_ITEMS: NavItem[] = [
+    { label: "Command Centre", href: "/executive-command-centre", icon: Terminal, roles: ["CEO"], testId: "nav-executive-command-centre" },
     { label: "Analytics Centre", href: "/analytics-centre", icon: BarChart3, roles: ["CEO"], testId: "nav-analytics-centre" },
     { label: "Reporting Centre", href: "/reporting-centre", icon: BookOpen, roles: ["CEO"], testId: "nav-reporting-centre" },
-    { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"] },
-    { label: "Reconciliation Centre", href: "/reconciliation-center", icon: GitMerge, roles: ["CEO"], testId: "nav-reconciliation-centre" },
-    { label: "Exception Resolution", href: "/exception-resolution-center", icon: TriangleAlert, roles: ["CEO"], testId: "nav-exception-resolution-centre" },
-    { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"] },
+    { label: "Activity", href: "/activity-feed", icon: Activity, roles: ["CEO"], testId: "nav-activity-feed" },
+    { label: "Notifications", href: "/notifications", icon: Bell, roles: ["CEO", "Project Manager"], testId: "nav-notifications" },
   ].filter((item) => hasAnyRole(item.roles));
+
+  // ── AUTOMATION section ────────────────────────────────
+  const AUTOMATION_ITEMS: NavItem[] = [
+    { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO"] },
+    { label: "Workflows", href: "/workflows", icon: GitBranch, roles: ["CEO"], testId: "nav-workflow-centre" },
+    { label: "Automation Controls", href: "/automation-governance", icon: ShieldCheck, roles: ["CEO"], testId: "nav-automation-governance" },
+  ].filter((item) => hasAnyRole(item.roles));
+
+  // ── ADMINISTRATION section ────────────────────────────
+  const ADMIN_ITEMS: NavItem[] = [
+    { label: "Manage Roles", href: "/roles", icon: UserCog, roles: ["CEO", "Admin"], testId: "nav-manage-roles" },
+    { label: "Audit Log", href: "/audit", icon: ShieldAlert, roles: ["CEO"], testId: "nav-audit-log" },
+    { label: "Platform Events", href: "/event-monitor", icon: Radio, roles: ["CEO"], testId: "nav-event-monitor" },
+    { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"], testId: "nav-accounting-settings" },
+    { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"], testId: "nav-settings" },
+  ].filter((item) => hasAnyRole(item.roles));
+
+  function NavLink({ item }: { item: NavItem }) {
+    const isActive = location === item.href;
+    const content = (
+      <Link href={item.href}>
+        <a
+          className={cn(
+            "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+            isActive ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            collapsed && "justify-center px-0"
+          )}
+          data-testid={item.testId}
+        >
+          <item.icon className="h-5 w-5 flex-shrink-0" />
+          {!collapsed && <span className="flex-1">{item.label}</span>}
+          {!collapsed && item.badge != null && item.badge > 0 && (
+            <span className="h-5 min-w-5 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              {item.badge > 99 ? '99+' : item.badge}
+            </span>
+          )}
+          {collapsed && item.badge != null && item.badge > 0 && (
+            <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500" />
+          )}
+        </a>
+      </Link>
+    );
+
+    if (collapsed) {
+      return (
+        <Tooltip key={item.href}>
+          <TooltipTrigger asChild>
+            <div className="relative">{content}</div>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {item.label}{item.badge != null && item.badge > 0 ? ` (${item.badge})` : ''}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+    return content;
+  }
 
   const SidebarContent = () => (
     <div className={cn("flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300", collapsed ? "w-16" : "w-64")}>
@@ -271,36 +390,76 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </Button>
       </div>
 
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-2 py-4 overflow-y-auto">
         <TooltipProvider delayDuration={0}>
-          {NAV_ITEMS.map((item) => {
-            const isActive = location === item.href;
-            const content = (
-              <Link key={item.href} href={item.href}>
-                <a
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    isActive ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                    collapsed && "justify-center px-0"
-                  )}
-                  data-testid={(item as any).testId}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {!collapsed && <span>{item.label}</span>}
-                </a>
-              </Link>
-            );
 
-            if (collapsed) {
-              return (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>{content}</TooltipTrigger>
-                  <TooltipContent side="right">{item.label}</TooltipContent>
-                </Tooltip>
-              );
-            }
-            return content;
-          })}
+          {/* CORE */}
+          {CORE_ITEMS.length > 0 && (
+            <>
+              <NavSectionLabel label="Core" collapsed={collapsed} />
+              <div className="space-y-0.5">
+                {CORE_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+              </div>
+            </>
+          )}
+
+          {/* OPERATIONAL */}
+          {OPERATIONAL_ITEMS.length > 0 && (
+            <>
+              <NavSectionLabel label="Operational" collapsed={collapsed} />
+              <div className="space-y-0.5">
+                {OPERATIONAL_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+              </div>
+            </>
+          )}
+
+          {/* INTELLIGENCE */}
+          {INTELLIGENCE_ITEMS.length > 0 && (
+            <>
+              <NavSectionLabel label="Intelligence" collapsed={collapsed} />
+              <div className="space-y-0.5">
+                {INTELLIGENCE_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+              </div>
+            </>
+          )}
+
+          {/* AUTOMATION */}
+          {AUTOMATION_ITEMS.length > 0 && (
+            <>
+              <NavSectionLabel label="Automation" collapsed={collapsed} />
+              <div className="space-y-0.5">
+                {AUTOMATION_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+              </div>
+            </>
+          )}
+
+          {/* ADMINISTRATION (collapsible) */}
+          {ADMIN_ITEMS.length > 0 && (
+            <>
+              <NavSectionLabel label="Administration" collapsed={collapsed} />
+              {collapsed ? (
+                <div className="space-y-0.5">
+                  {ADMIN_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+                </div>
+              ) : (
+                <Collapsible open={adminExpanded} onOpenChange={setAdminExpanded}>
+                  <CollapsibleTrigger asChild>
+                    <button data-testid="nav-admin-toggle" className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium w-full text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
+                      <Settings className="h-5 w-5 flex-shrink-0" />
+                      <span className="flex-1 text-left">Administration</span>
+                      <ChevronDown className={cn("h-4 w-4 transition-transform", adminExpanded && "rotate-180")} />
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-0.5 ml-2 border-l border-sidebar-border pl-2 mt-1">
+                      {ADMIN_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+            </>
+          )}
+
         </TooltipProvider>
       </nav>
 
@@ -342,6 +501,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           The Ledger
         </div>
         <div className="flex items-center gap-1">
+          {isCEOorPM && <SystemAlertIndicator />}
           {isCEOorPM && user?.id && (
             <NotificationBell userId={user.id} />
           )}
@@ -353,7 +513,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Sheet>
         </div>
       </div>
-      <main className={cn("flex-1 p-6 md:p-8 pt-20 md:pt-8 transition-all duration-300 relative", collapsed ? "md:ml-16" : "md:ml-64")}>
+
+      {/* Desktop header bar */}
+      <div className={cn(
+        "hidden md:flex fixed top-0 right-0 h-16 z-40 items-center justify-end px-6 gap-2 border-b bg-background/95 backdrop-blur",
+        collapsed ? "left-16" : "left-64"
+      )}>
+        {isCEOorPM && <SystemAlertIndicator />}
+        {isCEOorPM && user?.id && (
+          <NotificationBell userId={user.id} testId="notif-bell-btn-desktop" />
+        )}
+      </div>
+
+      <main className={cn("flex-1 p-6 md:p-8 pt-20 md:pt-24 transition-all duration-300 relative", collapsed ? "md:ml-16" : "md:ml-64")}>
         {isDemo && (
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-6 flex items-center gap-3 text-blue-700 dark:text-blue-300">
             <Info className="h-5 w-5 flex-shrink-0" />

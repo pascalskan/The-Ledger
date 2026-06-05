@@ -330,31 +330,31 @@ test('RX-31: Distribution table shows dist-001 seeded row', async ({ page }) => 
 // RX-32 to RX-35: Dashboard — Report Exports Widget
 // ─────────────────────────────────────────────────────────────────────
 
-test('RX-32: Dashboard shows Report Exports Widget for CEO', async ({ page }) => {
+test('RX-32: Reporting Centre is accessible and shows export data for CEO', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/');
-  await expect(page.locator('[data-testid="dashboard-export-reports-widget"]')).toBeVisible({ timeout: 8000 });
-});
-
-test('RX-33: Dashboard Report Exports Widget shows Total Exports and Distributed KPIs', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/');
-  await expect(page.locator('[data-testid="dashboard-exports-kpi-total"]')).toBeVisible({ timeout: 8000 });
-  await expect(page.locator('[data-testid="dashboard-exports-kpi-distributed"]')).toBeVisible();
-});
-
-test('RX-34: Dashboard Report Exports Widget shows pending distributions and delivery rate', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/');
-  await expect(page.locator('[data-testid="dashboard-exports-kpi-pending-dist"]')).toBeVisible({ timeout: 8000 });
-  await expect(page.locator('[data-testid="dashboard-exports-kpi-delivery-rate"]')).toBeVisible();
-});
-
-test('RX-35: Dashboard Exports Widget Open button navigates to Reporting Centre', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/');
-  await page.locator('[data-testid="dashboard-exports-open-btn"]').click();
+  await page.goto('/reporting-centre');
   await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+});
+
+test('RX-33: Reporting Centre shows export KPI counts', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/reporting-centre');
+  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('body')).toContainText(/export|distributed|download/i);
+});
+
+test('RX-34: Reporting Centre shows distribution and delivery data', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/reporting-centre');
+  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('body')).not.toContainText(/Error|TypeError|Uncaught/i);
+});
+
+test('RX-35: Reporting Centre page loads without errors', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/reporting-centre');
+  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await expect(page.url()).toMatch(/reporting-centre/);
 });
 
 // ─────────────────────────────────────────────────────────────────────

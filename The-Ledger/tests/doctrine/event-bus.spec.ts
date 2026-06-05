@@ -36,6 +36,7 @@ test('EB-01: Event Monitor page loads for CEO', async ({ page }) => {
 test('EB-02: CEO can navigate via sidebar to Event Monitor', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/');
+  await page.getByTestId('nav-admin-toggle').click();
   await page.getByTestId('nav-event-monitor').click();
   await expect(page.getByTestId('event-monitor-page')).toBeVisible();
 });

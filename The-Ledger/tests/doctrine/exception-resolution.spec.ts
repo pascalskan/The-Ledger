@@ -35,7 +35,7 @@ test('Exception Resolution Centre: page loads for CEO', async ({ page }) => {
 
 test('Exception Resolution Centre: CEO can navigate via sidebar', async ({ page }) => {
   await loginAsCEO(page);
-  await page.locator('a').filter({ hasText: /Exception Resolution/i }).first().click();
+  await page.getByTestId('nav-exception-resolution-centre').click();
   await expect(page).toHaveURL(/exception-resolution-center/i);
   await expect(
     page.getByRole('heading', { name: /Exception Resolution Centre/i })

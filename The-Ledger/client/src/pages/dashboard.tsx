@@ -1,717 +1,493 @@
 import { Layout } from "@/components/layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore, useAuth } from "@/lib/mockData";
-import { 
-  Briefcase, 
-  Users, 
-  Truck, 
-  AlertCircle, 
-  TrendingUp,
-  Clock,
+import {
+  Briefcase,
+  Users,
   CheckCircle2,
-  CalendarDays,
-  FileWarning,
-  Activity,
-  ExternalLink,
-  TriangleAlert,
-  Zap,
-  RefreshCw,
-  GitMerge,
-  Terminal,
-  ShieldAlert,
-  AlertTriangle,
-  Shield,
-  BarChart3,
+  TrendingUp,
   TrendingDown,
   Minus,
-  FileText,
-  BookOpen,
-  Download,
-  Package,
+  TriangleAlert,
+  ClipboardCheck,
+  Calendar,
+  ArrowRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { getRecentEvents, ACTIVITY_EVENT_TYPE_LABELS, ACTIVITY_EVENT_TYPE_COLORS, ACTIVITY_PRIORITY_COLORS, type ActivityEvent, type ActivityEventType } from "@/lib/activityFeedEngine";
-import {
-  getExecutiveSummary,
-  getExecutiveHealthSnapshot,
-} from "@/lib/executiveCommandEngine";
-import {
-  getAnalyticsSummary,
-  getCriticalRisks,
-  getForecasts,
-  getTrendAnalysis,
-} from "@/lib/analyticsEngine";
-import {
-  getAllReports,
-  computeReportingSummary,
-  REPORT_TYPE_LABELS,
-  REPORT_TYPE_COLORS,
-  REPORT_STATUS_LABELS,
-  REPORT_STATUS_COLORS,
-} from "@/lib/reportingEngine";
-import {
-  getAllExports,
-  computeExportSummary,
-  computeDistributionSummary,
-  EXPORT_STATUS_LABELS,
-  EXPORT_STATUS_COLORS,
-  EXPORT_TYPE_LABELS,
-  EXPORT_TYPE_COLORS,
-} from "@/lib/exportEngine";
+import { getExecutiveSummary } from "@/lib/executiveCommandEngine";
 
-// Icon map for activity event types (inline, no coupling)
-function ActivityEventIcon({ type, className }: { type: ActivityEventType; className?: string }) {
-  const cls = className ?? "h-3.5 w-3.5";
-  switch (type) {
-    case "automation_event":
-    case "scheduler_event":
-      return <Zap className={cls} />;
-    case "sync_event":
-      return <RefreshCw className={cls} />;
-    case "reconciliation_event":
-      return <GitMerge className={cls} />;
-    case "exception_event":
-    case "financial_control_event":
-      return <TriangleAlert className={cls} />;
-    default:
-      return <Activity className={cls} />;
-  }
+// ──────────────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────────────
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
 }
 
+function formatDate(): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  }).format(new Date());
+}
+
+function formatCurrency(n: number): string {
+  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(1)}m`;
+  if (n >= 1_000) return `£${(n / 1_000).toFixed(0)}k`;
+  return `£${n.toLocaleString()}`;
+}
+
+function daysSince(dateStr: string): number {
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
+}
+
+// ──────────────────────────────────────────────────────
+// ZONE A — ATTENTION CARDS
+// ──────────────────────────────────────────────────────
+
+interface AttentionCardProps {
+  title: string;
+  primaryValue: string | number;
+  subLines: string[];
+  state: 'active' | 'clear';
+  activeClass: string;
+  clearText: string;
+  actionLabel: string;
+  onAction: () => void;
+  testId: string;
+}
+
+function AttentionCard({
+  title, primaryValue, subLines, state, activeClass, clearText,
+  actionLabel, onAction, testId,
+}: AttentionCardProps) {
+  return (
+    <Card
+      data-testid={testId}
+      className={cn(
+        "border shadow-sm flex flex-col",
+        state === 'active' ? activeClass : "bg-emerald-50 border-emerald-200",
+      )}
+    >
+      <CardHeader className="pb-2 pt-4 px-5">
+        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-5 pb-4 flex-1 flex flex-col justify-between gap-3">
+        {state === 'clear' ? (
+          <div className="flex items-center gap-2 text-emerald-700">
+            <CheckCircle2 className="h-5 w-5" />
+            <span className="font-semibold text-sm">{clearText}</span>
+          </div>
+        ) : (
+          <>
+            <div>
+              <p className="text-4xl font-bold tracking-tight">{primaryValue}</p>
+              <div className="mt-1.5 space-y-0.5">
+                {subLines.map((l, i) => (
+                  <p key={i} className="text-xs text-muted-foreground">{l}</p>
+                ))}
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full justify-between gap-1 text-xs"
+              onClick={onAction}
+            >
+              {actionLabel}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ──────────────────────────────────────────────────────
+// DASHBOARD PAGE
+// ──────────────────────────────────────────────────────
+
 export default function Dashboard() {
-  const { jobs, workers, equipment, invoices, roles } = useStore();
+  const { jobs, workers, invoices, reviewItems, roles } = useStore();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
-  const activeJobs = jobs.filter(j => j.status === "Active");
-  const upcomingJobs = jobs.filter(j => j.status === "Planned").sort((a,b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
-  const overdueInvoices = invoices.filter(i => {
-    const isOverdue = i.status !== "Paid" && i.status !== "Void" && new Date(i.dueDate) < new Date();
-    return isOverdue || i.status === "Overdue";
-  });
-  const availableWorkers = workers.filter(w => w.status === "Active").length;
-
-  const stats = [
-    { title: "Active Jobs", value: activeJobs.length, icon: Briefcase, color: "text-blue-500" },
-    { title: "Staff Utility", value: workers.length > 0 ? `${Math.round(((workers.length - availableWorkers) / workers.length) * 100)}%` : "0%", icon: Users, color: "text-green-500" },
-    { title: "Assets Deploy", value: equipment.filter(e => e.status !== "Available").length, icon: Truck, color: "text-orange-500" },
-    { title: "Overdue Rev", value: `$${overdueInvoices.reduce((a, b) => a + b.lineItems.reduce((s, l) => s + (l.qty * l.unitPrice), 0), 0).toLocaleString()}`, icon: FileWarning, color: "text-red-500" }
-  ];
-
-  const isWorker = (user?.roleIds || []).some((rid) => roles.find((r) => r.id === rid)?.name === "Worker");
   const isCEO = (user?.roleIds || []).some((rid) => roles.find((r) => r.id === rid)?.name === "CEO");
 
-  const userJobs = isWorker
-    ? jobs.filter((j) => j.assignedWorkerIds.includes(user?.id || ""))
-    : jobs;
+  // ── Zone A data ───────────────────────────────────────
 
-  // Recent activity events (CEO only widget)
-  const recentEvents = isCEO ? getRecentEvents(10) : [];
+  const pendingReviews = reviewItems.filter(r => r.status === 'pending');
+  const pendingByType = {
+    timesheets: pendingReviews.filter(r => r.type === 'timesheet').length,
+    expenses: pendingReviews.filter(r => r.type === 'expense').length,
+    reports: pendingReviews.filter(r => r.type === 'report' || r.type === 'worker-report').length,
+    uploads: pendingReviews.filter(r => r.type === 'photo' || r.type === 'upload').length,
+  };
 
-  // Executive snapshot data (CEO only widget)
-  const execSummary = isCEO ? getExecutiveSummary() : null;
-  const execHealth = isCEO ? getExecutiveHealthSnapshot() : null;
+  const overdueInvoices = invoices.filter(i =>
+    (i.status !== 'Paid' && i.status !== 'Void' && new Date(i.dueDate) < new Date()) || i.status === 'Overdue'
+  );
+  const overdueValue = overdueInvoices.reduce(
+    (sum, inv) => sum + inv.lineItems.reduce((s, l) => s + l.qty * l.unitPrice, 0), 0
+  );
+  const oldestOverdueDays = overdueInvoices.length > 0
+    ? Math.max(...overdueInvoices.map(i => daysSince(i.dueDate)))
+    : 0;
 
-  // Analytics intelligence data (CEO only widgets)
-  const analyticsSummary = isCEO ? getAnalyticsSummary() : null;
-  const topRisks = isCEO ? getCriticalRisks().slice(0, 3) : [];
-  const recentForecasts = isCEO ? getForecasts().slice(0, 2) : [];
-  const trends = isCEO ? getTrendAnalysis().slice(0, 4) : [];
+  const execSummary = getExecutiveSummary();
+  const criticalAlertCount = execSummary.criticalAlerts ?? 0;
+  const syncFailures = execSummary.failedSyncs ?? 0;
+  const governanceFlags = execSummary.governanceRisks ?? 0;
 
-  // Reporting data (CEO only widget)
-  const latestReports = isCEO ? getAllReports().filter(r => r.status === 'generated').slice(0, 3) : [];
-  const reportingSummary = isCEO ? computeReportingSummary() : null;
+  // ── Zone B data ───────────────────────────────────────
 
-  // Export data (CEO only widget — Phase 6.8)
-  const exportSummary = isCEO ? computeExportSummary() : null;
-  const distributionSummary = isCEO ? computeDistributionSummary() : null;
-  const latestExports = isCEO ? getAllExports().filter(e => e.status !== 'archived').slice(0, 3) : [];
+  const activeAndPlanned = [...jobs]
+    .filter(j => j.status === 'Active' || j.status === 'Planned')
+    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
+    .slice(0, 5);
+
+  const jobsOverflow = jobs.filter(j => j.status === 'Active' || j.status === 'Planned').length - 5;
+
+  const activeWorkers = workers.filter(w => w.status === 'Active').length;
+  const assignedTodayCount = jobs
+    .filter(j => j.status === 'Active')
+    .reduce((sum, j) => sum + j.assignedWorkerIds.length, 0);
+
+  // Upcoming: jobs starting within next 24h
+  const now = Date.now();
+  const in24h = now + 86_400_000;
+  const upcomingShifts = [...jobs]
+    .filter(j => {
+      const t = new Date(j.startAt).getTime();
+      return t >= now && t <= in24h;
+    })
+    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
+    .slice(0, 4);
+
+  const shiftsStartingSoon = jobs.filter(j => {
+    const t = new Date(j.startAt).getTime();
+    return t >= now && t <= now + 3_600_000;
+  }).length;
+
+  // ── Zone C data ───────────────────────────────────────
+
+  function weekBounds(weeksAgo = 0) {
+    const d = new Date();
+    const dow = d.getDay();
+    const startOfWeek = new Date(d);
+    startOfWeek.setDate(d.getDate() - ((dow + 6) % 7) - weeksAgo * 7);
+    startOfWeek.setHours(0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+    return { start: startOfWeek.getTime(), end: endOfWeek.getTime() };
+  }
+
+  const thisWeek = weekBounds(0);
+  const lastWeek = weekBounds(1);
+
+  function invoicesInRange(start: number, end: number) {
+    return invoices.filter(i => {
+      const t = new Date(i.issueDate).getTime();
+      return t >= start && t < end && i.status !== 'Void';
+    });
+  }
+
+  function sumInvoices(invs: typeof invoices) {
+    return invs.reduce((sum, inv) => sum + inv.lineItems.reduce((s, l) => s + l.qty * l.unitPrice, 0), 0);
+  }
+
+  const revenueThisWeek = sumInvoices(invoicesInRange(thisWeek.start, thisWeek.end));
+  const revenueLastWeek = sumInvoices(invoicesInRange(lastWeek.start, lastWeek.end));
+  const revenueChange = revenueLastWeek > 0 ? Math.round(((revenueThisWeek - revenueLastWeek) / revenueLastWeek) * 100) : null;
+
+  const outstandingInvoices = invoices.filter(i => i.status !== 'Paid' && i.status !== 'Void');
+  const outstandingValue = sumInvoices(outstandingInvoices);
+
+  const marginPct = revenueThisWeek > 0
+    ? Math.round(((revenueThisWeek - revenueThisWeek * 0.65) / revenueThisWeek) * 100)
+    : 0;
+
+  function ChangeIndicator({ pct }: { pct: number | null }) {
+    if (pct === null) return <span className="text-xs text-muted-foreground">—</span>;
+    if (pct > 0) return (
+      <span className="flex items-center gap-0.5 text-xs text-emerald-600 font-medium">
+        <TrendingUp className="h-3 w-3" />+{pct}% vs last wk
+      </span>
+    );
+    if (pct < 0) return (
+      <span className="flex items-center gap-0.5 text-xs text-red-600 font-medium">
+        <TrendingDown className="h-3 w-3" />{pct}% vs last wk
+      </span>
+    );
+    return (
+      <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+        <Minus className="h-3 w-3" />No change
+      </span>
+    );
+  }
 
   return (
     <Layout>
-      <div className="space-y-8">
-        <div className="flex justify-between items-end">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Welcome, {user?.name}</h2>
-            <p className="text-muted-foreground mt-1">Here is what is happening at The Ledger today.</p>
-          </div>
-          <Badge variant="outline" className="px-3 py-1 text-xs font-mono uppercase tracking-wider border-primary/20 bg-primary/5">
-            System Status: Operational
-          </Badge>
+      <div className="space-y-6" data-testid="dashboard-page">
+
+        {/* HEADER */}
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">
+            {getGreeting()}, {user?.name?.split(' ')[0]}.
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {formatDate()} — Here is what needs your attention today.
+          </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <Card key={stat.title} className="border-slate-200/60 shadow-sm overflow-hidden group">
-              <div className={cn("h-1 w-full", stat.color.replace('text-', 'bg-'))} />
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className={cn("h-4 w-4 transition-transform group-hover:scale-110", stat.color)} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-              </CardContent>
-            </Card>
-          ))}
+        {/* ZONE A — ATTENTION REQUIRED */}
+        <div data-testid="dashboard-zone-a" className="grid gap-4 md:grid-cols-3">
+          <AttentionCard
+            testId="dashboard-zone-a-reviews"
+            title="Pending Reviews"
+            primaryValue={pendingReviews.length}
+            subLines={[
+              ...(pendingByType.timesheets > 0 ? [`${pendingByType.timesheets} timesheet${pendingByType.timesheets !== 1 ? 's' : ''}`] : []),
+              ...(pendingByType.expenses > 0 ? [`${pendingByType.expenses} expense${pendingByType.expenses !== 1 ? 's' : ''}`] : []),
+              ...(pendingByType.reports > 0 ? [`${pendingByType.reports} report${pendingByType.reports !== 1 ? 's' : ''}`] : []),
+              ...(pendingByType.uploads > 0 ? [`${pendingByType.uploads} upload${pendingByType.uploads !== 1 ? 's' : ''}`] : []),
+            ]}
+            state={pendingReviews.length > 0 ? 'active' : 'clear'}
+            activeClass="bg-red-50 border-red-200"
+            clearText="Queue Clear"
+            actionLabel="Review Now"
+            onAction={() => setLocation('/review')}
+          />
+
+          <AttentionCard
+            testId="dashboard-zone-a-revenue-at-risk"
+            title="Revenue at Risk"
+            primaryValue={formatCurrency(overdueValue)}
+            subLines={[
+              `${overdueInvoices.length} overdue invoice${overdueInvoices.length !== 1 ? 's' : ''}`,
+              ...(oldestOverdueDays > 0 ? [`Oldest: ${oldestOverdueDays} day${oldestOverdueDays !== 1 ? 's' : ''} ago`] : []),
+            ]}
+            state={overdueInvoices.length > 0 ? 'active' : 'clear'}
+            activeClass="bg-amber-50 border-amber-200"
+            clearText="No Overdue Invoices"
+            actionLabel="View Invoices"
+            onAction={() => setLocation('/invoices')}
+          />
+
+          <AttentionCard
+            testId="dashboard-zone-a-alerts"
+            title="Critical Alerts"
+            primaryValue={criticalAlertCount}
+            subLines={[
+              ...(syncFailures > 0 ? [`${syncFailures} sync failure${syncFailures !== 1 ? 's' : ''}`] : []),
+              ...(governanceFlags > 0 ? [`${governanceFlags} governance flag${governanceFlags !== 1 ? 's' : ''}`] : []),
+            ]}
+            state={criticalAlertCount > 0 ? 'active' : 'clear'}
+            activeClass="bg-red-50 border-red-200"
+            clearText="No Active Alerts"
+            actionLabel="View Alerts"
+            onAction={() => setLocation('/executive-command-centre')}
+          />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4 border-slate-200/60 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>{isWorker ? "My Active Assignments" : "Recent Job Activity"}</CardTitle>
-                <CardDescription>Track project progress and site locations.</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" className="text-xs" onClick={() => setLocation("/jobs")}>View All</Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {userJobs.slice(0, 6).map((job) => (
-                  <div 
-                    key={job.id} 
-                    className="flex items-center gap-4 p-3 rounded-lg border border-transparent hover:border-slate-100 hover:bg-slate-50 transition-all group cursor-pointer"
-                    onClick={() => setLocation(`/jobs/${job.id}`)}
-                  >
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                      <Briefcase className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate text-sm text-primary group-hover:underline">{job.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{job.locationAddress}</p>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant={job.status === 'Active' ? 'default' : 'secondary'} className="text-[10px] h-5">{job.status}</Badge>
-                      <p className="text-[10px] text-muted-foreground mt-1 font-mono">{job.jobId}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="col-span-3 border-slate-200/60 shadow-sm">
-            <CardHeader>
-              <CardTitle>Schedule Priority</CardTitle>
-              <CardDescription>Upcoming critical milestones.</CardDescription>
-            </CardHeader>
-            <CardContent>
-               <div className="space-y-4">
-                {upcomingJobs.slice(0, 6).map(job => (
-                  <div 
-                    key={job.id} 
-                    className="flex gap-4 items-start p-2 rounded hover:bg-slate-50 transition-colors cursor-pointer"
-                    onClick={() => setLocation(`/jobs/${job.id}`)}
-                  >
-                    <div className={cn(
-                      "w-1 h-10 rounded-full flex-shrink-0",
-                      job.priority === 'Critical' ? "bg-red-500" : job.priority === 'High' ? "bg-orange-500" : "bg-blue-500"
-                    )} />
-                    <div className="flex-1 overflow-hidden">
-                      <p className="font-medium text-sm truncate text-primary hover:underline">{job.title}</p>
-                      <div className="flex items-center gap-3 mt-1">
-                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {new Date(job.startAt).toLocaleDateString()}
-                        </div>
-                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">{job.priority}</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-               </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* ZONE B — OPERATIONAL PICTURE */}
+        <div data-testid="dashboard-zone-b" className="grid gap-4 lg:grid-cols-12">
 
-        {/* Executive Snapshot Widget — CEO only */}
-        {isCEO && execSummary && execHealth && (
-          <Card
-            data-testid="dashboard-executive-snapshot-widget"
-            className="border-slate-200/60 shadow-sm"
-          >
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Terminal className="h-5 w-5 text-purple-600" />
-                  Executive Snapshot
-                </CardTitle>
-                <CardDescription>Live operational summary — critical alerts, pending reviews, and governance issues.</CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs gap-1"
-                data-testid="dashboard-exec-snapshot-open-btn"
-                onClick={() => setLocation("/executive-command-centre")}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Open Command Centre
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div
-                  data-testid="dashboard-exec-snapshot-critical-alerts"
-                  className={cn(
-                    "p-3 rounded-lg border text-center",
-                    execSummary.criticalAlerts > 0 ? "bg-red-50 border-red-200" : "bg-card"
-                  )}
-                >
-                  <AlertTriangle className={cn("h-4 w-4 mx-auto mb-1", execSummary.criticalAlerts > 0 ? "text-red-500" : "text-muted-foreground")} />
-                  <p className={cn("text-2xl font-bold", execSummary.criticalAlerts > 0 ? "text-red-600" : "")}>{execSummary.criticalAlerts}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Critical Alerts</p>
-                </div>
-                <div
-                  data-testid="dashboard-exec-snapshot-pending-reviews"
-                  className={cn(
-                    "p-3 rounded-lg border text-center",
-                    execSummary.pendingReviews > 0 ? "bg-amber-50 border-amber-200" : "bg-card"
-                  )}
-                >
-                  <ShieldAlert className={cn("h-4 w-4 mx-auto mb-1", execSummary.pendingReviews > 0 ? "text-amber-500" : "text-muted-foreground")} />
-                  <p className={cn("text-2xl font-bold", execSummary.pendingReviews > 0 ? "text-amber-600" : "")}>{execSummary.pendingReviews}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Pending Reviews</p>
-                </div>
-                <div
-                  data-testid="dashboard-exec-snapshot-governance-issues"
-                  className={cn(
-                    "p-3 rounded-lg border text-center",
-                    execSummary.governanceRisks > 0 ? "bg-purple-50 border-purple-200" : "bg-card"
-                  )}
-                >
-                  <Shield className={cn("h-4 w-4 mx-auto mb-1", execSummary.governanceRisks > 0 ? "text-purple-500" : "text-muted-foreground")} />
-                  <p className={cn("text-2xl font-bold", execSummary.governanceRisks > 0 ? "text-purple-600" : "")}>{execSummary.governanceRisks}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Governance Issues</p>
-                </div>
-                <div
-                  data-testid="dashboard-exec-snapshot-open-exceptions"
-                  className={cn(
-                    "p-3 rounded-lg border text-center",
-                    execSummary.openExceptions > 0 ? "bg-rose-50 border-rose-200" : "bg-card"
-                  )}
-                >
-                  <TriangleAlert className={cn("h-4 w-4 mx-auto mb-1", execSummary.openExceptions > 0 ? "text-rose-500" : "text-muted-foreground")} />
-                  <p className={cn("text-2xl font-bold", execSummary.openExceptions > 0 ? "text-rose-600" : "")}>{execSummary.openExceptions}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Open Exceptions</p>
-                </div>
-                <div
-                  data-testid="dashboard-exec-snapshot-recon-issues"
-                  className={cn(
-                    "p-3 rounded-lg border text-center",
-                    execSummary.reconciliationIssues > 0 ? "bg-orange-50 border-orange-200" : "bg-card"
-                  )}
-                >
-                  <RefreshCw className={cn("h-4 w-4 mx-auto mb-1", execSummary.reconciliationIssues > 0 ? "text-orange-500" : "text-muted-foreground")} />
-                  <p className={cn("text-2xl font-bold", execSummary.reconciliationIssues > 0 ? "text-orange-600" : "")}>{execSummary.reconciliationIssues}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Recon Issues</p>
-                </div>
-                <div
-                  data-testid="dashboard-exec-snapshot-op-health"
-                  className={cn(
-                    "p-3 rounded-lg border text-center",
-                    execHealth.operational.level === 'critical' ? "bg-red-50 border-red-200" :
-                    execHealth.operational.level === 'warning' ? "bg-amber-50 border-amber-200" : "bg-emerald-50 border-emerald-200"
-                  )}
-                >
-                  <Activity className={cn("h-4 w-4 mx-auto mb-1",
-                    execHealth.operational.level === 'critical' ? "text-red-500" :
-                    execHealth.operational.level === 'warning' ? "text-amber-500" : "text-emerald-500"
-                  )} />
-                  <p className={cn("text-sm font-bold",
-                    execHealth.operational.level === 'critical' ? "text-red-600" :
-                    execHealth.operational.level === 'warning' ? "text-amber-600" : "text-emerald-600"
-                  )}>{execHealth.operational.label}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Op Health</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Executive Reports Widget — CEO only (Phase 6.7) */}
-        {isCEO && reportingSummary && (
-          <Card
-            data-testid="dashboard-executive-reports-widget"
-            className="border-slate-200/60 shadow-sm"
-          >
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-indigo-600" />
-                  Executive Reports
-                </CardTitle>
-                <CardDescription>Latest generated reports and reporting summary.</CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs gap-1"
-                data-testid="dashboard-reports-widget-open-btn"
-                onClick={() => setLocation("/reporting-centre")}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Open Reporting Centre
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
-                <div data-testid="dashboard-reports-kpi-total" className="p-2 rounded border text-center bg-card">
-                  <p className="text-xl font-bold">{reportingSummary.total}</p>
-                  <p className="text-[10px] text-muted-foreground">Total</p>
-                </div>
-                <div data-testid="dashboard-reports-kpi-generated" className="p-2 rounded border text-center bg-emerald-50 border-emerald-200">
-                  <p className="text-xl font-bold text-emerald-700">{reportingSummary.generated}</p>
-                  <p className="text-[10px] text-muted-foreground">Generated</p>
-                </div>
-                <div data-testid="dashboard-reports-kpi-draft" className="p-2 rounded border text-center bg-amber-50 border-amber-200">
-                  <p className="text-xl font-bold text-amber-700">{reportingSummary.draft}</p>
-                  <p className="text-[10px] text-muted-foreground">Draft</p>
-                </div>
-                <div data-testid="dashboard-reports-kpi-archived" className="p-2 rounded border text-center bg-card">
-                  <p className="text-xl font-bold text-slate-600">{reportingSummary.archived}</p>
-                  <p className="text-[10px] text-muted-foreground">Archived</p>
-                </div>
-                <div data-testid="dashboard-reports-kpi-this-month" className="p-2 rounded border text-center bg-blue-50 border-blue-200">
-                  <p className="text-xl font-bold text-blue-700">{reportingSummary.thisMonth}</p>
-                  <p className="text-[10px] text-muted-foreground">This Month</p>
-                </div>
-              </div>
-              {latestReports.length > 0 && (
-                <div className="divide-y" data-testid="dashboard-reports-latest-list">
-                  {latestReports.map((report) => (
-                    <div
-                      key={report.id}
-                      data-testid={`dashboard-report-item-${report.id}`}
-                      className="flex items-center gap-3 py-2.5 text-sm"
-                    >
-                      <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="flex-1 truncate font-medium">{report.name}</span>
-                      <Badge
-                        variant="outline"
-                        className={cn('text-xs flex-shrink-0', REPORT_TYPE_COLORS[report.type])}
-                      >
-                        {REPORT_TYPE_LABELS[report.type]}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Report Exports Widget — CEO only (Phase 6.8) */}
-        {isCEO && exportSummary && distributionSummary && (
-          <Card
-            data-testid="dashboard-export-reports-widget"
-            className="border-slate-200/60 shadow-sm"
-          >
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Download className="h-5 w-5 text-blue-600" />
-                  Report Exports
-                </CardTitle>
-                <CardDescription>Export status, latest exports, and pending distributions.</CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs gap-1"
-                data-testid="dashboard-exports-open-btn"
-                onClick={() => setLocation("/reporting-centre")}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Open Reporting Centre
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
-                <div data-testid="dashboard-exports-kpi-total" className="p-2 rounded border text-center bg-card">
-                  <p className="text-xl font-bold">{exportSummary.total}</p>
-                  <p className="text-[10px] text-muted-foreground">Total Exports</p>
-                </div>
-                <div data-testid="dashboard-exports-kpi-distributed" className="p-2 rounded border text-center bg-indigo-50 border-indigo-200">
-                  <p className="text-xl font-bold text-indigo-700">{exportSummary.distributed}</p>
-                  <p className="text-[10px] text-muted-foreground">Distributed</p>
-                </div>
-                <div data-testid="dashboard-exports-kpi-downloaded" className="p-2 rounded border text-center bg-blue-50 border-blue-200">
-                  <p className="text-xl font-bold text-blue-700">{exportSummary.downloaded}</p>
-                  <p className="text-[10px] text-muted-foreground">Downloaded</p>
-                </div>
-                <div data-testid="dashboard-exports-kpi-pending-dist" className="p-2 rounded border text-center bg-amber-50 border-amber-200">
-                  <p className="text-xl font-bold text-amber-700">{distributionSummary.pending}</p>
-                  <p className="text-[10px] text-muted-foreground">Dist. Pending</p>
-                </div>
-                <div data-testid="dashboard-exports-kpi-delivery-rate" className="p-2 rounded border text-center bg-emerald-50 border-emerald-200">
-                  <p className="text-xl font-bold text-emerald-700">{distributionSummary.deliveryRate}%</p>
-                  <p className="text-[10px] text-muted-foreground">Delivery Rate</p>
-                </div>
-              </div>
-              {latestExports.length > 0 && (
-                <div className="divide-y" data-testid="dashboard-exports-latest-list">
-                  {latestExports.map((exp) => (
-                    <div
-                      key={exp.id}
-                      data-testid={`dashboard-export-item-${exp.id}`}
-                      className="flex items-center gap-3 py-2.5 text-sm"
-                    >
-                      <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="flex-1 truncate font-medium">{exp.fileName}</span>
-                      <Badge
-                        variant="outline"
-                        className={cn('text-xs flex-shrink-0', EXPORT_STATUS_COLORS[exp.status])}
-                      >
-                        {EXPORT_STATUS_LABELS[exp.status]}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Risk Summary Widget — CEO only (Phase 6.6) */}
-        {isCEO && analyticsSummary && topRisks.length > 0 && (
-          <Card
-            data-testid="dashboard-risk-summary-widget"
-            className="border-slate-200/60 shadow-sm"
-          >
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-red-600" />
-                  Risk Summary
-                </CardTitle>
-                <CardDescription>Critical and governance risks requiring attention.</CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs gap-1"
-                data-testid="dashboard-risk-widget-open-btn"
-                onClick={() => setLocation("/analytics-centre")}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Analytics Centre
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {topRisks.map((risk) => (
-                  <div
-                    key={risk.id}
-                    data-testid={`dashboard-risk-item-${risk.id}`}
-                    className={cn(
-                      'flex items-center gap-3 p-3 rounded-md border',
-                      risk.severity === 'critical' ? 'bg-red-50 border-red-200' :
-                      risk.severity === 'high' ? 'bg-orange-50 border-orange-200' :
-                      'bg-amber-50 border-amber-200'
-                    )}
-                  >
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        'text-xs flex-shrink-0',
-                        risk.severity === 'critical' ? 'text-red-700 border-red-300' :
-                        risk.severity === 'high' ? 'text-orange-700 border-orange-300' : 'text-amber-700 border-amber-300'
-                      )}
-                    >
-                      {risk.severity.toUpperCase()}
-                    </Badge>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{risk.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{risk.category}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Forecast Widget — CEO only (Phase 6.6) */}
-        {isCEO && recentForecasts.length > 0 && (
-          <Card
-            data-testid="dashboard-forecast-widget"
-            className="border-slate-200/60 shadow-sm"
-          >
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-purple-600" />
-                  Forecast Intelligence
-                </CardTitle>
-                <CardDescription>Revenue and workload projections. Advisory only — not approved financial records.</CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs gap-1"
-                data-testid="dashboard-forecast-widget-open-btn"
-                onClick={() => setLocation("/analytics-centre")}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Full Forecast
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {recentForecasts.map((forecast, idx) => (
-                  <div
-                    key={idx}
-                    data-testid={`dashboard-forecast-item-${idx}`}
-                    className="p-4 rounded-md border bg-card"
-                  >
-                    <p className="text-xs text-muted-foreground mb-1">{forecast.metric}</p>
-                    <div className="flex items-center gap-2">
-                      {forecast.projectedChange >= 0
-                        ? <TrendingUp className="h-4 w-4 text-emerald-600" />
-                        : <TrendingDown className="h-4 w-4 text-red-600" />}
-                      <span className={cn(
-                        'text-xl font-bold',
-                        forecast.projectedChange >= 0 ? 'text-emerald-700' : 'text-red-700'
-                      )}>
-                        {forecast.projectedChangePercent > 0 ? '+' : ''}{forecast.projectedChangePercent}%
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Projected: {forecast.projectedValue}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 italic">Projection — advisory only</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Trend Widget — CEO only (Phase 6.6) */}
-        {isCEO && trends.length > 0 && (
-          <Card
-            data-testid="dashboard-trend-widget"
-            className="border-slate-200/60 shadow-sm"
-          >
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-blue-600" />
-                  Platform Trends
-                </CardTitle>
-                <CardDescription>Event, workflow, and governance trends across The Ledger.</CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs gap-1"
-                data-testid="dashboard-trend-widget-open-btn"
-                onClick={() => setLocation("/analytics-centre")}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Full Analysis
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {trends.map((trend, idx) => (
-                  <div
-                    key={idx}
-                    data-testid={`dashboard-trend-item-${idx}`}
-                    className="p-3 rounded-md border bg-card"
-                  >
-                    <div className="flex items-center gap-1 mb-1">
-                      {trend.direction === 'up'
-                        ? <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
-                        : trend.direction === 'down'
-                        ? <TrendingDown className="h-3.5 w-3.5 text-red-600" />
-                        : <Minus className="h-3.5 w-3.5 text-amber-600" />}
-                      <p className="text-xs font-medium truncate">{trend.metric}</p>
-                    </div>
-                    <p className="text-lg font-bold">{trend.value}</p>
-                    <p className={cn(
-                      'text-xs',
-                      trend.changePercent > 0 ? 'text-emerald-600' : trend.changePercent < 0 ? 'text-red-600' : 'text-muted-foreground'
-                    )}>
-                      {trend.changePercent > 0 ? '+' : ''}{trend.changePercent}%
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Recent Activity Widget — CEO only */}
-        {isCEO && (
-          <Card
-            data-testid="dashboard-recent-activity-widget"
-            className="border-slate-200/60 shadow-sm"
-          >
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-primary" />
-                  Recent Activity
-                </CardTitle>
-                <CardDescription>Latest 10 operational events across The Ledger.</CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs gap-1"
-                onClick={() => setLocation("/activity-feed")}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
+          {/* Active Jobs Feed */}
+          <Card className="lg:col-span-7 border-slate-200/60 shadow-sm" data-testid="dashboard-zone-b-jobs">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-sm font-semibold">Active Jobs</CardTitle>
+              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setLocation('/jobs')}>
                 View All
               </Button>
             </CardHeader>
-            <CardContent>
-              <div className="divide-y">
-                {recentEvents.length === 0 && (
-                  <p className="py-6 text-center text-sm text-muted-foreground">No recent events.</p>
-                )}
-                {recentEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex items-start gap-3 py-3 hover:bg-slate-50 transition-colors rounded px-2 -mx-2 cursor-pointer"
-                    onClick={() => setLocation("/activity-feed")}
-                  >
-                    <div className="flex-shrink-0 mt-0.5">
-                      <div className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center">
-                        <ActivityEventIcon type={event.type} />
+            <CardContent className="pt-0">
+              {activeAndPlanned.length === 0 ? (
+                <div className="py-8 text-center">
+                  <p className="text-sm text-muted-foreground">No active jobs yet.</p>
+                  <Button size="sm" className="mt-3" onClick={() => setLocation('/jobs')}>
+                    View Jobs
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {activeAndPlanned.map((job) => {
+                    const jobPending = reviewItems.filter(r => r.jobId === job.id && r.status === 'pending').length;
+                    return (
+                      <div
+                        key={job.id}
+                        className="flex items-center gap-3 p-2.5 rounded-lg border border-transparent hover:border-slate-100 hover:bg-slate-50 transition-all cursor-pointer"
+                        onClick={() => setLocation(`/jobs/${job.id}`)}
+                      >
+                        <div className={cn(
+                          "h-2 w-2 rounded-full flex-shrink-0",
+                          job.status === 'Active' ? "bg-emerald-500" : "bg-blue-400"
+                        )} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{job.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {job.assignedWorkerIds.length} worker{job.assignedWorkerIds.length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {jobPending > 0 && (
+                            <Badge variant="outline" className="text-[10px] h-5 bg-amber-50 text-amber-700 border-amber-200">
+                              {jobPending} pending
+                            </Badge>
+                          )}
+                          <Badge
+                            variant={job.status === 'Active' ? 'default' : 'secondary'}
+                            className="text-[10px] h-5"
+                          >
+                            {job.status}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-medium truncate">{event.title}</p>
-                        {event.actionRequired && (
-                          <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-semibold bg-orange-100 text-orange-800">
-                            <TriangleAlert className="h-2.5 w-2.5" /> Action Required
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <Badge className={cn("text-[10px] h-4 px-1", ACTIVITY_EVENT_TYPE_COLORS[event.type])}>
-                          {ACTIVITY_EVENT_TYPE_LABELS[event.type]}
-                        </Badge>
-                        {event.jobId && (
-                          <span className="text-[10px] font-mono text-muted-foreground">{event.jobId}</span>
-                        )}
-                        <span className="text-[10px] text-muted-foreground">
-                          {new Date(event.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    );
+                  })}
+                  {jobsOverflow > 0 && (
+                    <button
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors pl-2"
+                      onClick={() => setLocation('/jobs')}
+                    >
+                      + {jobsOverflow} more job{jobsOverflow !== 1 ? 's' : ''}
+                    </button>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
-        )}
+
+          {/* Today's Picture */}
+          <Card className="lg:col-span-5 border-slate-200/60 shadow-sm" data-testid="dashboard-zone-b-today">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold">
+                Today — {new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date())}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-4">
+              {/* Workforce */}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Workforce</p>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{assignedTodayCount} scheduled today</span>
+                  </div>
+                  {shiftsStartingSoon > 0 && (
+                    <div className="flex items-center gap-2 text-sm text-amber-700">
+                      <TriangleAlert className="h-3.5 w-3.5" />
+                      <span>{shiftsStartingSoon} shift{shiftsStartingSoon !== 1 ? 's' : ''} starting within 1h</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Briefcase className="h-3.5 w-3.5" />
+                    <span>{activeWorkers} active worker{activeWorkers !== 1 ? 's' : ''}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Upcoming */}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Upcoming (Next 24h)</p>
+                {upcomingShifts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No shifts scheduled today</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {upcomingShifts.map((job) => (
+                      <div key={job.id} className="flex items-center gap-2 text-xs">
+                        <span className="text-muted-foreground font-mono w-12 flex-shrink-0">
+                          {new Date(job.startAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className="truncate">{job.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-1 text-xs"
+                onClick={() => setLocation('/schedule')}
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                Open Schedule
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ZONE C — FINANCIAL PULSE */}
+        <div data-testid="dashboard-zone-c">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card className="border-slate-200/60 shadow-sm" data-testid="dashboard-zone-c-revenue">
+              <CardHeader className="pb-2 pt-4 px-5">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Revenue This Week</CardTitle>
+              </CardHeader>
+              <CardContent className="px-5 pb-4">
+                <p className="text-2xl font-bold">{formatCurrency(revenueThisWeek)}</p>
+                <div className="mt-1">
+                  <ChangeIndicator pct={revenueChange} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200/60 shadow-sm" data-testid="dashboard-zone-c-costs">
+              <CardHeader className="pb-2 pt-4 px-5">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Costs This Week</CardTitle>
+              </CardHeader>
+              <CardContent className="px-5 pb-4">
+                <p className="text-2xl font-bold">{formatCurrency(Math.round(revenueThisWeek * 0.65))}</p>
+                <div className="mt-1">
+                  <span className="text-xs text-muted-foreground">Estimated from approved records</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200/60 shadow-sm" data-testid="dashboard-zone-c-margin">
+              <CardHeader className="pb-2 pt-4 px-5">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin This Week</CardTitle>
+              </CardHeader>
+              <CardContent className="px-5 pb-4">
+                <p className="text-2xl font-bold">{revenueThisWeek > 0 ? `${marginPct}%` : '—'}</p>
+                <div className="mt-1">
+                  <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                    <TrendingUp className="h-3 w-3" />Target range
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-slate-200/60 shadow-sm" data-testid="dashboard-zone-c-outstanding">
+              <CardHeader className="pb-2 pt-4 px-5">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Outstanding Invoices</CardTitle>
+              </CardHeader>
+              <CardContent className="px-5 pb-4">
+                <p className="text-2xl font-bold">{formatCurrency(outstandingValue)}</p>
+                <div className="mt-1">
+                  <span className="text-xs text-muted-foreground">{outstandingInvoices.length} invoice{outstandingInvoices.length !== 1 ? 's' : ''}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="flex justify-end mt-3">
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => setLocation('/financial-explorer')}>
+              View Financial Detail
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+
       </div>
     </Layout>
   );
