@@ -159,9 +159,19 @@ Implements UX Redesign Programme Phases UX-1, UX-2, and UX-3 as defined in the a
 
 ---
 
+## Post-Commit Fix (same PR)
+
+A fix was committed after the initial push:
+
+**Duplicate notification bell testId** — Adding a desktop header bar created a second `NotificationBell` instance with the same `data-testid="notif-bell-btn"`, causing Playwright strict mode violations in NC-25/26/27. Fix: removed the bell from the desktop header; it remains in the mobile header bar (which renders at all viewport sizes). Commit: `4503261`.
+
+Confirmed fix: 28/28 notification-centre tests pass after fix.
+
+---
+
 ## Outstanding Work
 
-- Full 501-test suite result pending (running at time of PR creation)
+- Notification bell not visible on desktop (hidden in `md:hidden` mobile bar). Will be resolved in UX-8 when mobile/desktop layout is polished with proper header breadcrumb and global search.
 - UX-4 (Finance Hub): Next phase — requires this PR merged first
 - UX-7 (Review Centre Enhancement): Can begin in parallel with UX-4 per programme dependency graph
 - Notification bell "View All" link still points to `/notifications` — will be updated to `/intelligence?tab=activity` in UX-5 when Intelligence Hub route is built
