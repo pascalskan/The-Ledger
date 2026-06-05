@@ -514,13 +514,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* Desktop header bar */}
+      {/* Desktop header bar — system alert only (bell is in mobile bar which shows on all sizes) */}
       <div className={cn(
         "hidden md:flex fixed top-0 right-0 h-16 z-40 items-center justify-end px-6 gap-2 border-b bg-background/95 backdrop-blur",
         collapsed ? "left-16" : "left-64"
       )}>
         {isCEOorPM && <SystemAlertIndicator />}
-        {isCEOorPM && user?.id && <NotificationBell userId={user.id} />}
       </div>
 
       <main className={cn("flex-1 p-6 md:p-8 pt-20 md:pt-24 transition-all duration-300 relative", collapsed ? "md:ml-16" : "md:ml-64")}>
