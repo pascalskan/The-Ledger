@@ -7,17 +7,13 @@ export async function openJobs(page: Page) {
 }
 
 export async function openReviewCenter(page: Page) {
-  await page
-    .locator('a')
-    .filter({ hasText: 'Review Center' })
-    .nth(1)
-    .click();
+  await page.getByTestId('nav-review').click();
 }
 
 export async function openAuditLog(page: Page) {
-  await page
-    .locator('a')
-    .filter({ hasText: 'Audit Log' })
-    .nth(1)
-    .click();
+  const adminToggle = page.getByTestId('nav-admin-toggle');
+  if (await adminToggle.isVisible()) {
+    await adminToggle.click();
+  }
+  await page.getByTestId('nav-audit-log').click();
 }

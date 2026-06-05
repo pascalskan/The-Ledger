@@ -64,7 +64,7 @@ test('Approval creates normalized financial records in Financial Explorer', asyn
   await page.waitForTimeout(500);
 
   // Navigate to Financial Explorer to verify records were created
-  await page.locator('a').filter({ hasText: 'Financial Explorer' }).first().click();
+  await page.getByTestId('nav-financial-explorer').click();
   await expect(page).toHaveURL(/financial-explorer/i);
 
   // The Financial Explorer header shows counts of records — at least one must exist
@@ -94,7 +94,7 @@ test('Financial Explorer Audit Log tab shows normalized financial mutations', as
   // CEO views the Financial Explorer Audit Log tab
   await softLoginAsCEO(page);
 
-  await page.locator('a').filter({ hasText: 'Financial Explorer' }).first().click();
+  await page.getByTestId('nav-financial-explorer').click();
   await expect(page).toHaveURL(/financial-explorer/i);
 
   // The "Audit Log" tab in Financial Explorer shows FinancialMutation records

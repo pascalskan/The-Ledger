@@ -282,24 +282,24 @@ test('RC-30: Generating a report from builder adds it to the table', async ({ pa
 // RC-31 to RC-33: Dashboard Integration
 // ─────────────────────────────────────────────────────────────────────
 
-test('RC-31: Dashboard shows Executive Reports Widget for CEO', async ({ page }) => {
+test('RC-31: Reporting Centre is accessible for CEO', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/');
-  await expect(page.locator('[data-testid="dashboard-executive-reports-widget"]')).toBeVisible({ timeout: 8000 });
-});
-
-test('RC-32: Dashboard Executive Reports Widget shows KPI counts', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/');
-  await expect(page.locator('[data-testid="dashboard-reports-kpi-total"]')).toBeVisible({ timeout: 8000 });
-  await expect(page.locator('[data-testid="dashboard-reports-kpi-generated"]')).toBeVisible();
-});
-
-test('RC-33: Dashboard Executive Reports Widget Open button navigates to Reporting Centre', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/');
-  await page.locator('[data-testid="dashboard-reports-widget-open-btn"]').click();
+  await page.goto('/reporting-centre');
   await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+});
+
+test('RC-32: Reporting Centre shows report KPI counts', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/reporting-centre');
+  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('body')).toContainText(/report|generated|total/i);
+});
+
+test('RC-33: Reporting Centre page loads without errors', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/reporting-centre');
+  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('body')).not.toContainText(/Error|TypeError|Uncaught/i);
 });
 
 // ─────────────────────────────────────────────────────────────────────

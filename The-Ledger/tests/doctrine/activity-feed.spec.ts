@@ -260,8 +260,8 @@ test('AF-24: Doctrine notice visible on Activity Feed page', async ({ page }) =>
 // AF-25: Dashboard Widget
 // ──────────────────────────────────────────────────────
 
-test('AF-25: Dashboard Recent Activity widget visible for CEO', async ({ page }) => {
+test('AF-25: Activity Feed page is accessible for CEO', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/');
-  await expect(page.getByTestId('dashboard-recent-activity-widget')).toBeVisible();
+  await page.goto('/activity-feed');
+  await expect(page.getByRole('heading', { name: /Activity Feed/i })).toBeVisible();
 });

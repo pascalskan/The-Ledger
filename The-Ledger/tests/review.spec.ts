@@ -11,11 +11,7 @@ test('PM can access review center', async ({ page }) => {
     name: /Sign in/i,
   }).click();
 
-  await page
-    .locator('a')
-    .filter({ hasText: 'Review Center' })
-    .nth(1)
-    .click();
+  await page.getByTestId('nav-review').click();
 
   await expect(page).toHaveURL(/review/i);
 });

@@ -33,7 +33,7 @@ test("Payroll Export page is accessible to CEO and renders without error", async
   await loginAsCEO(page);
 
   // Navigate via sidebar link
-  await page.locator("a").filter({ hasText: "Payroll Export" }).first().click();
+  await page.getByTestId("nav-payroll-export").click();
 
   await expect(page).toHaveURL(/payroll-export/i);
 
@@ -196,8 +196,8 @@ test("Payroll Export is accessible as a separate nav item from Payroll Staging",
   await loginAsCEO(page);
 
   // Both nav items should be present in sidebar
-  const stagingLink = page.locator("a").filter({ hasText: "Payroll Staging" }).first();
-  const exportLink  = page.locator("a").filter({ hasText: "Payroll Export" }).first();
+  const stagingLink = page.getByTestId("nav-payroll-staging");
+  const exportLink  = page.getByTestId("nav-payroll-export");
 
   await expect(stagingLink).toBeVisible();
   await expect(exportLink).toBeVisible();
@@ -209,3 +209,4 @@ test("Payroll Export is accessible as a separate nav item from Payroll Staging",
   await stagingLink.click();
   await expect(page).toHaveURL(/\/payroll$/i);
 });
+

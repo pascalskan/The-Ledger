@@ -44,11 +44,14 @@ test('Review creation generates audit entry', async ({ page }) => {
     name: /Sign in/i,
   }).click();
 
-  await page
-    .locator('a')
-    .filter({ hasText: 'Audit Log' })
-    .nth(1)
-    .click();
+  // Wait for app to load after auth (800ms timer in auth.tsx + navigation)
+  await page.waitForTimeout(1200);
+  // Expand admin section then navigate via client-side nav to preserve store state
+  const adminToggle = page.getByTestId('nav-admin-toggle');
+  if (await adminToggle.isVisible()) {
+    await adminToggle.click();
+  }
+  await page.getByTestId('nav-audit-log').click();
 
   await expect(page.locator('body')).toContainText(
     'Created new review item'

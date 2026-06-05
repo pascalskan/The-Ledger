@@ -28,7 +28,7 @@ test.beforeEach(async ({ page }) => {
 // ──────────────────────────────────────────────────────
 test("Financial Explorer has a Forecasting tab", async ({ page }) => {
   await loginAsCEO(page);
-  await page.locator("a").filter({ hasText: "Financial Explorer" }).first().click();
+  await page.getByTestId("nav-financial-explorer").click();
   await expect(page).toHaveURL(/financial-explorer/i);
 
   await expect(
@@ -41,7 +41,7 @@ test("Financial Explorer has a Forecasting tab", async ({ page }) => {
 // ──────────────────────────────────────────────────────
 test("Forecasting tab loads without error", async ({ page }) => {
   await loginAsCEO(page);
-  await page.locator("a").filter({ hasText: "Financial Explorer" }).first().click();
+  await page.getByTestId("nav-financial-explorer").click();
   await expect(page).toHaveURL(/financial-explorer/i);
 
   await page.getByTestId("tab-forecasting").click();
@@ -58,7 +58,7 @@ test("Forecasting tab loads without error", async ({ page }) => {
 // ──────────────────────────────────────────────────────
 test("Forecast tab shows portfolio KPI cards", async ({ page }) => {
   await loginAsCEO(page);
-  await page.locator("a").filter({ hasText: "Financial Explorer" }).first().click();
+  await page.getByTestId("nav-financial-explorer").click();
   await page.getByTestId("tab-forecasting").click();
 
   // All five KPI cards should be present
@@ -74,7 +74,7 @@ test("Forecast tab shows portfolio KPI cards", async ({ page }) => {
 // ──────────────────────────────────────────────────────
 test("Forecast table contains the seeded kitchen extraction job", async ({ page }) => {
   await loginAsCEO(page);
-  await page.locator("a").filter({ hasText: "Financial Explorer" }).first().click();
+  await page.getByTestId("nav-financial-explorer").click();
   await page.getByTestId("tab-forecasting").click();
 
   // The seeded job is "Kitchen extraction & ventilation install"
@@ -86,7 +86,7 @@ test("Forecast table contains the seeded kitchen extraction job", async ({ page 
 // ──────────────────────────────────────────────────────
 test("Forecast table search filters job rows", async ({ page }) => {
   await loginAsCEO(page);
-  await page.locator("a").filter({ hasText: "Financial Explorer" }).first().click();
+  await page.getByTestId("nav-financial-explorer").click();
   await page.getByTestId("tab-forecasting").click();
 
   // Type a search term that matches the seeded job
@@ -186,7 +186,7 @@ test("Exposure is labelled as estimate not approved data", async ({ page }) => {
 // ──────────────────────────────────────────────────────
 test("Forecast current revenue matches approved financial records", async ({ page }) => {
   await loginAsCEO(page);
-  await page.locator("a").filter({ hasText: "Financial Explorer" }).first().click();
+  await page.getByTestId("nav-financial-explorer").click();
 
   // Read revenue from Profitability tab (current approved)
   await page.getByRole("tab", { name: /Profitability/i }).click();

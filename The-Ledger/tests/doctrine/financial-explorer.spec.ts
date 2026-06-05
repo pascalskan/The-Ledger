@@ -19,7 +19,7 @@ test('Financial Explorer loads and all tabs render', async ({ page }) => {
   await loginAsCEO(page);
 
   // Navigate to Financial Explorer via the sidebar link
-  await page.locator('a').filter({ hasText: 'Financial Explorer' }).first().click();
+  await page.getByTestId('nav-financial-explorer').click();
 
   await expect(page).toHaveURL(/financial-explorer/i);
 
@@ -42,7 +42,7 @@ test('Financial Explorer loads and all tabs render', async ({ page }) => {
 test('Financial Explorer Profitability tab is the default and renders content', async ({ page }) => {
   await loginAsCEO(page);
 
-  await page.locator('a').filter({ hasText: 'Financial Explorer' }).first().click();
+  await page.getByTestId('nav-financial-explorer').click();
 
   await expect(page).toHaveURL(/financial-explorer/i);
 
@@ -59,7 +59,7 @@ test('Financial Explorer Profitability tab is the default and renders content', 
 test('Financial Explorer Timesheets tab renders without error', async ({ page }) => {
   await loginAsCEO(page);
 
-  await page.locator('a').filter({ hasText: 'Financial Explorer' }).first().click();
+  await page.getByTestId('nav-financial-explorer').click();
   await expect(page).toHaveURL(/financial-explorer/i);
 
   await page.getByRole('tab', { name: /Timesheets/i }).click();

@@ -44,8 +44,12 @@ export default function AuthPage() {
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">The Ledger</CardTitle>
           <CardDescription>
-            Omnisoftware Operations Management
+            Operational Intelligence for Field Service Businesses
           </CardDescription>
+          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+            Transform operational activity into auditable financial records.
+            Every timesheet, expense, and report — reviewed, approved, and ready for your accounting system.
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

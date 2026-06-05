@@ -23,7 +23,7 @@ test('Payroll Staging page is accessible to CEO and renders without error', asyn
   await loginAsCEO(page);
 
   // Navigate via sidebar link
-  await page.locator('a').filter({ hasText: 'Payroll Staging' }).first().click();
+  await page.getByTestId('nav-payroll-staging').click();
 
   await expect(page).toHaveURL(/payroll/i);
 
@@ -42,7 +42,7 @@ test('Payroll Staging page is accessible to CEO and renders without error', asyn
 test('Payroll Staging page shows seeded worker payroll records', async ({ page }) => {
   await loginAsCEO(page);
 
-  await page.locator('a').filter({ hasText: 'Payroll Staging' }).first().click();
+  await page.getByTestId('nav-payroll-staging').click();
   await expect(page).toHaveURL(/payroll/i);
 
   // The Phase 4.5 seed data creates TimesheetEntry records for Sophie Taylor and Ben Hughes
@@ -53,7 +53,7 @@ test('Payroll Staging page shows seeded worker payroll records', async ({ page }
 test('Payroll Staging period filter renders All / Current / Previous options', async ({ page }) => {
   await loginAsCEO(page);
 
-  await page.locator('a').filter({ hasText: 'Payroll Staging' }).first().click();
+  await page.getByTestId('nav-payroll-staging').click();
   await expect(page).toHaveURL(/payroll/i);
 
   // Verify the period selector is present

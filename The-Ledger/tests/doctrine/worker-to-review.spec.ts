@@ -54,11 +54,7 @@ test('Worker review pipeline basic flow', async ({ page }) => {
   }).click();
 
   // 6. Navigate to Review Center
-  await page
-    .locator('a')
-    .filter({ hasText: 'Review Center' })
-    .nth(1)
-    .click();
+  await page.getByTestId('nav-review').click();
 
   // 7. Verify review item appears
   await expect(page.locator('body')).toContainText(/pending/i);
