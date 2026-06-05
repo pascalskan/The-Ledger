@@ -1,9 +1,18 @@
 # THE LEDGER — BACKEND DOMAIN ARCHITECTURE
 
-Version: 1.0
+Version: 2.0
 Status: AUTHORITATIVE
 Date: June 4, 2026
-Authority: Backend Architecture Definition Phase
+Authority: Backend Architecture Refinement Pass
+
+---
+
+## CHANGE LOG
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.0 | June 4, 2026 | Initial architecture definition — 9 bounded contexts |
+| 2.0 | June 4, 2026 | Refinement pass: Tenant Context extracted from Identity; Financial Intelligence Context added; Notification Centre promoted to defined sub-domain; total 11 bounded contexts |
 
 ---
 
@@ -17,40 +26,79 @@ All decisions derive from the frozen domain model (docs/domain/) and the canonic
 
 ## BOUNDED CONTEXTS
 
-The Ledger backend is organised into nine bounded contexts. Each context owns its aggregates, enforces its invariants, and communicates with other contexts exclusively through domain events or well-defined API contracts.
+The Ledger backend is organised into eleven bounded contexts. Each context owns its aggregates, enforces its invariants, and communicates with other contexts exclusively through domain events or well-defined API contracts.
 
 ---
 
-### 1. Identity & Access Context
+### 1. Tenant Context
 
 **Owns:**
-- Company (Tenant)
-- User (CEO, PM, Worker, Client Portal User)
-- Role
-- Permission
-- Session / Refresh Token
+- Company
+- Subscription
+- Plan
+- TenantConfiguration
+- TenantMetadata
+- TenantLifecycle record
 
 **Responsibilities:**
-- Authenticate all platform users
+- Own the fundamental unit of tenancy: the Company
+- Manage tenant provisioning lifecycle (active → suspended → terminated)
+- Own subscription and plan details (feature flags, limits, tier)
+- Own tenant-level configuration (default currency, notification preferences, feature toggles)
+- Provide `TenantContext` to all other contexts (company_id, plan, configuration)
+- Enforce: demo company data never mixes with real company data (Domain Invariant #24)
+
+**Source of Truth for:** What tenants exist, their lifecycle state, their configuration, and their plan
+
+**Produces Events:**
+- `TenantProvisioned`
+- `TenantSuspended`
+- `TenantReactivated`
+- `TenantTerminated`
+- `TenantConfigurationUpdated`
+- `TenantPlanChanged`
+
+**Consumes Events:** None (authoritative source for tenancy)
+
+**Rationale for extraction from Identity:**
+Company (Tenant) has a distinct lifecycle (active/suspended/terminated), subscription model, plan tier, and configuration that have nothing to do with authentication. Identity's single responsibility is: who is the user and what are they allowed to do. Tenant's responsibility is: which business entity does this user belong to, and what is that entity's operational state. These are separate concerns that will grow independently (subscription management, billing, plan enforcement) without polluting the authentication domain.
+
+---
+
+### 2. Identity & Access Context
+
+**Owns:**
+- User (CEO, PM, Worker)
+- Role
+- Permission
+- Session
+- Refresh Token
+
+**Responsibilities:**
+- Authenticate all primary platform users (CEO, PM, Worker)
 - Issue JWT access tokens and refresh tokens
 - Resolve role and permission for every inbound request
-- Enforce multi-tenant isolation at the context boundary
+- Enforce RBAC rules across the platform
+- Provide `UserContext` to all other contexts (user_id, role, company_id)
 
-**Source of Truth for:** Who may act, and under what role
+**Source of Truth for:** Who may act, under what role, within which tenant
 
 **Produces Events:**
 - `UserCreated`
 - `UserRoleChanged`
+- `UserDeactivated`
 - `SessionStarted`
 - `SessionRevoked`
 
-**Consumes Events:** None (authoritative source)
+**Consumes Events:**
+- `TenantProvisioned` (from Tenant) — to initialise the first CEO user for a new tenant
+- `TenantSuspended` (from Tenant) — to revoke all active sessions for the tenant
 
-**Isolated from:** Financial data, operational data, audit records
+**Isolated from:** Financial data, operational data, audit records, tenant business configuration
 
 ---
 
-### 2. Operational Core Context
+### 3. Operational Core Context
 
 **Owns:**
 - Job (aggregate root)
@@ -85,7 +133,7 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 
 ---
 
-### 3. Submission & Review Context
+### 4. Submission & Review Context
 
 **Owns:**
 - TimesheetSubmission
@@ -118,7 +166,7 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 
 ---
 
-### 4. Financial Normalization Context
+### 5. Financial Normalization Context
 
 **Owns:**
 - TimesheetEntry
@@ -159,7 +207,49 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 
 ---
 
-### 5. Inventory & Asset Context
+### 6. Financial Intelligence Context
+
+**Owns:**
+- MarginSnapshot
+- ForecastRecord
+- ExposureRecord
+- FinancialKPISnapshot
+- PortfolioInsight
+- FinancialExplorerView (read model)
+
+**Responsibilities:**
+- Aggregate approved financial records into advisory intelligence
+- Compute job-level and portfolio-level margin analysis
+- Compute exposure analysis (approved costs vs. projected revenue)
+- Produce financial forecasts (clearly labelled as advisory projections)
+- Maintain financial KPI snapshots (labour cost ratio, expense ratio, revenue per job, gross margin)
+- Maintain Financial Explorer read models for CEO navigation
+- Enforce: all outputs are advisory and informational only
+- Enforce: Financial Intelligence never creates, modifies, or approves financial records
+- Enforce: forecasts are always labelled "Advisory Projection — Not Financial Advice"
+
+**Source of Truth for:** Advisory financial analysis and projections (informational layer over Financial Normalization)
+
+**Produces Events:**
+- `MarginSnapshotComputed`
+- `ForecastUpdated`
+- `ExposureAlertTriggered` (when exposure exceeds threshold)
+- `FinancialKPISnapshotRefreshed`
+
+**Consumes Events:**
+- `TimesheetEntryCreated`, `ExpenseEntryCreated`, `InventoryMutationCreated`, `EquipmentUsageRecorded`, `InvoiceLineItemCreated`, `VoidRecordCreated`, `AdjustmentRecordCreated` (from Financial Normalization) — to update intelligence models
+- `JobClosed` (from Operational Core) — to finalise job-level profitability analysis
+
+**Rationale:**
+Financial Normalization transforms operational events into financial records — this is a write concern. Financial Intelligence analyses those records to produce advisory insights — this is a read/analysis concern. Combining them in a single context would conflate two very different responsibilities. The Financial Explorer, Margin Intelligence, Exposure Tracking, Forecasting, and Profitability Analysis capabilities in the platform frontend each require dedicated analytical models that are derived from but separate from the normalized financial records.
+
+**Never to be confused with:**
+- Financial Normalization (transforms; creates records) — Financial Intelligence only reads from it
+- Reporting (produces distributable artifacts) — Financial Intelligence produces live advisory views, not reports
+
+---
+
+### 7. Inventory & Asset Context
 
 **Owns:**
 - Stock Item (catalogue)
@@ -190,7 +280,7 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 
 ---
 
-### 6. Client Portal Context
+### 8. Client Portal Context
 
 **Owns:**
 - Client Portal Account
@@ -200,7 +290,7 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 
 **Responsibilities:**
 - Provision and manage client portal accounts (CEO-only)
-- Authenticate portal users (separate credential model)
+- Authenticate portal users (separate credential model from Identity Context)
 - Enforce client data visibility rules: own sites and jobs only
 - Process client request submissions and route to PM
 - Enforce: access notes never visible to portal users
@@ -221,7 +311,7 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 
 ---
 
-### 7. Accounting Integration Context
+### 9. Accounting Integration Context
 
 **Owns:**
 - Accounting Provider Configuration
@@ -229,7 +319,6 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 - Reconciliation Record
 - Exception Record
 - Financial Control Record
-- Distribution Record
 
 **Responsibilities:**
 - Manage accounting provider connections (QuickBooks, Xero, FreshBooks, Zoho)
@@ -241,7 +330,7 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 - Enforce: sync never creates or modifies financial records in The Ledger
 - Enforce: accounting systems are downstream consumers only
 
-**Source of Truth for:** Sync state — what has been exported to accounting systems
+**Source of Truth for:** Sync state — what has been exported to accounting systems; what reconciliation discrepancies exist
 
 **Produces Events:**
 - `AccountingSyncRequested`, `AccountingSyncSucceeded`, `AccountingSyncFailed`
@@ -254,7 +343,7 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 
 ---
 
-### 8. Intelligence & Automation Context
+### 10. Intelligence & Automation Context
 
 **Owns:**
 - Automation Rule
@@ -262,16 +351,17 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 - Automation Governance Record
 - Workflow Definition
 - Workflow Execution Record
-- Notification Record
 - Activity Feed Event
 - Event Bus Record
+
+**Sub-domain: Notification Centre** (formally defined below)
 
 **Responsibilities:**
 - Evaluate automation rules against platform events (read-only evaluation)
 - Execute scheduled evaluations and queued actions (never approve, never create financial records)
 - Enforce governance over automation rules (CEO-managed risk levels)
 - Coordinate cross-module workflow orchestration (escalation, notification, assignment)
-- Publish events to Activity Feed and Notification Centre
+- Publish events to Activity Feed
 - Enforce all forbidden actions at engine level
 
 **Source of Truth for:** Automation state and platform event history (informational)
@@ -279,32 +369,89 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 **Produces Events:**
 - `AutomationTriggered`, `AutomationExecutionAudited`
 - `WorkflowStarted`, `WorkflowCompleted`, `WorkflowFailed`
-- `NotificationCreated`, `NotificationRead`, `NotificationDismissed`
 - `ActivityFeedEventPublished`
 
-**Consumes Events:** All domain events from all contexts (for evaluation, notification routing, activity feed population)
+**Consumes Events:** All domain events from all contexts (for evaluation, activity feed population)
 
 ---
 
-### 9. Reporting & Analytics Context
+#### Notification Centre Sub-Domain
+
+**Formally defined as a sub-domain of Intelligence & Automation.** The Notification Centre has sufficient complexity to warrant explicit architectural definition with its own schema, API surface, lifecycle, and delivery model. It may be extracted to an independent bounded context in a future architecture revision if delivery channel complexity or notification volume warrants it.
+
+**Owns:**
+- NotificationRecord
+- NotificationDeliveryRecord
+- NotificationPreference
+
+**Notification Lifecycle:**
+```
+created (unread) → read → dismissed (terminal)
+created (unread) → dismissed (terminal, without reading)
+```
+
+**Notification Types:**
+
+| Type | Trigger Source | Recipients |
+|---|---|---|
+| `review_required` | TimesheetSubmitted, ReportSubmitted, ExpenseSubmitted | PM (own jobs), CEO |
+| `review_approved` | TimesheetApproved, ReportApproved, ExpenseApproved | Submitting worker |
+| `review_rejected` | TimesheetRejected, ReportRejected, ExpenseRejected | Submitting worker |
+| `sync_failed` | AccountingSyncFailed | CEO |
+| `sync_succeeded` | AccountingSyncSucceeded | CEO (optional, configurable) |
+| `governance_action` | GovernanceStatusChanged | CEO |
+| `automation_alert` | AutomationTriggered (high/critical risk) | CEO |
+| `financial_alert` | ExposureAlertTriggered, ReconciliationExceptionDetected | CEO |
+| `client_portal_event` | ClientRequestSubmitted | PM (relevant job), CEO |
+| `scheduling_conflict` | SchedulingConflictDetected | PM (relevant job), CEO |
+| `stock_alert` | StockLowAlertTriggered | PM (relevant job), CEO |
+
+**Notification RBAC:**
+- CEO: all notification types, all jobs
+- PM: notifications scoped to assigned jobs only
+- Worker: no notification access
+- Client Portal User: no notification access
+
+**Delivery Channels (v1):** In-platform only (Notification Centre inbox)
+**Delivery Channels (future):** Email, mobile push
+
+**Produces Events (within Intelligence sub-domain):**
+- `NotificationCreated`
+- `NotificationRead`
+- `NotificationDismissed`
+- `NotificationDelivered` (for each delivery channel)
+
+**Doctrine:**
+- Notifications are informational only — they never create financial mutations
+- Notifications never approve submissions
+- Notifications never bypass approval workflows
+- Notification interactions generate immutable audit records
+- Deep links navigate to source pages only — they never execute actions
+
+---
+
+### 11. Reporting & Analytics Context
 
 **Owns:**
 - Report Definition
 - Generated Report
 - Export Record
 - Distribution Record
-- Analytics Snapshot
+- Operational Analytics Snapshot
 
 **Responsibilities:**
 - Generate executive, governance, financial, and operational reports
 - Export reports as PDF/board-pack artifacts
 - Distribute exports (email, portal, download)
-- Produce analytics scores across 5 health dimensions
-- Surface forecasts (labelled as advisory projections)
+- Produce operational health scores across 5 dimensions (workflow, automation, governance, operational, financial operations)
+- Surface operational analytics and trends
 - Enforce: reports are read-only; exports are read-only derivatives
 - Enforce: no report, export, or analytics action approves, modifies, or creates financial records
 
-**Source of Truth for:** Report and export state (informational artifacts)
+**Note on Analytics Division:**
+Operational/governance/workflow analytics live here. Financial analytics (margin, exposure, profitability forecasts) live in the Financial Intelligence Context (Context 6). The 5-dimension health scoring model in this context covers operational dimensions, not financial profitability analysis.
+
+**Source of Truth for:** Report and export state (informational artifacts); operational health scoring
 
 **Produces Events:**
 - `ReportGenerated`, `ReportArchived`
@@ -318,47 +465,59 @@ The Ledger backend is organised into nine bounded contexts. Each context owns it
 ## CONTEXT MAP
 
 ```
+Tenant Context
+  ├── authoritative source for company existence and configuration
+  └── publishes TenantProvisioned → Identity (to create initial CEO user)
+
 Identity & Access Context
-  ├── provides AuthN/AuthZ to all other contexts
-  └── tenant context injected into every request
+  ├── provides UserContext (user_id, role, company_id) to all other contexts
+  └── consumes TenantProvisioned → creates initial CEO user
 
 Operational Core Context
   ├── Client → Site → Job hierarchy (authoritative)
   ├── Shift lifecycle (owned here)
-  └── publishes → Submission & Review, Financial Normalization, Intelligence & Automation
+  └── publishes → Review Centre, Intelligence, Client Portal
 
 Submission & Review Context
   ├── all worker submissions live here (pre-approval)
   ├── receives from → Operational Core (job/shift context)
-  └── publishes approved events → Financial Normalization
+  └── publishes approved events → Financial Normalization, Intelligence (notifications)
 
 Financial Normalization Context
   ├── all financial records live here (post-approval)
-  ├── receives from → Submission & Review (approval events)
-  └── publishes to → Accounting Integration, Intelligence & Automation
+  ├── receives from → Review Centre (approval events)
+  └── publishes to → Accounting Integration, Financial Intelligence, Intelligence, Reporting
+
+Financial Intelligence Context
+  ├── advisory analysis layer over Financial Normalization
+  ├── reads from → Financial Normalization (financial records), Operational Core (job context)
+  ├── never writes to → any operational or financial context
+  └── publishes advisory insights → Intelligence (alerts), Reporting (financial KPIs)
 
 Inventory & Asset Context
   ├── physical resources (stock, assets)
   ├── receives from → Financial Normalization (mutation events)
-  └── publishes to → Intelligence & Automation (low stock alerts)
+  └── publishes to → Intelligence (low stock alerts, asset events)
 
 Client Portal Context
-  ├── client-facing access layer
+  ├── client-facing access layer (separate auth from Identity)
   ├── reads from → Operational Core (job/site data)
   └── publishes requests → Operational Core (client requests)
 
 Accounting Integration Context
   ├── downstream sync layer
   ├── reads from → Financial Normalization (approved records)
-  └── publishes sync/reconciliation events → Intelligence & Automation
+  └── publishes sync/reconciliation events → Intelligence (notifications, activity)
 
-Intelligence & Automation Context
+Intelligence & Automation Context (incl. Notification Centre sub-domain)
   ├── consumes events from all contexts
+  ├── Notification Centre routes events to user inboxes (advisory only)
   ├── never produces financial mutations
   └── publishes notifications, activity, workflow events
 
 Reporting & Analytics Context
   ├── reads from all contexts (aggregate data)
+  ├── reads from Financial Intelligence (financial KPIs for reports)
   ├── never produces financial mutations
   └── produces informational report/export artifacts
 ```
@@ -369,7 +528,8 @@ Reporting & Analytics Context
 
 | Aggregate Root | Owning Context | Key Invariants Enforced |
 |---|---|---|
-| Company (Tenant) | Identity & Access | Tenant isolation |
+| Company | **Tenant** | Tenant isolation, lifecycle state |
+| TenantConfiguration | **Tenant** | Plan-based feature flags |
 | User | Identity & Access | Role assignment, RBAC |
 | Job | Operational Core | Lifecycle, attribution, closure rules |
 | Site | Operational Core | Client hierarchy, archive irreversibility |
@@ -386,6 +546,9 @@ Reporting & Analytics Context
 | EquipmentUsageRecord | Financial Normalization | Immutability, job attribution |
 | VoidRecord | Financial Normalization | CEO-only, append-only |
 | AdjustmentRecord | Financial Normalization | CEO-only, append-only |
+| MarginSnapshot | **Financial Intelligence** | Advisory only, never modifies financial records |
+| ForecastRecord | **Financial Intelligence** | Advisory projection, clearly labelled |
+| ExposureRecord | **Financial Intelligence** | Advisory only |
 | StockItem | Inventory & Asset | Catalogue master |
 | StockLevel | Inventory & Asset | Per-item per-location |
 | Asset | Inventory & Asset | Assignment exclusivity, retirement terminal |
@@ -395,6 +558,7 @@ Reporting & Analytics Context
 | SyncRecord | Accounting Integration | Sync lifecycle |
 | AutomationRule | Intelligence & Automation | Forbidden actions blocked |
 | Workflow | Intelligence & Automation | Approval doctrine preserved |
+| NotificationRecord | Intelligence & Automation (Notification sub-domain) | Informational only |
 | GeneratedReport | Reporting & Analytics | Read-only artifact |
 
 ---
@@ -403,15 +567,19 @@ Reporting & Analytics Context
 
 | Truth Domain | Owning Context |
 |---|---|
+| What tenants exist and their lifecycle state | **Tenant** |
+| Tenant configuration and plan | **Tenant** |
 | Who is authenticated and what role they hold | Identity & Access |
 | What clients, sites, and jobs exist | Operational Core |
 | What workers are assigned and scheduled | Operational Core |
 | What submissions are pending review | Submission & Review |
 | What has been financially approved and normalized | Financial Normalization |
+| Advisory financial analysis and projections | **Financial Intelligence** |
 | What stock exists and at what levels | Inventory & Asset |
 | What assets exist and where they are assigned | Inventory & Asset |
 | What has been exported to accounting systems | Accounting Integration |
 | What reconciliation discrepancies exist | Accounting Integration |
+| What notification records exist and their state | Intelligence & Automation (Notification sub-domain) |
 | What automation rules and workflows are configured | Intelligence & Automation |
 | What platform events have occurred | Intelligence & Automation |
 | What reports and exports exist | Reporting & Analytics |
@@ -424,8 +592,11 @@ Reporting & Analytics Context
 Reporting & Analytics
   └── reads from all (no writes to operational contexts)
 
-Intelligence & Automation
+Intelligence & Automation (incl. Notification Centre)
   └── reads from all, writes only to own context (notification, activity, audit)
+
+Financial Intelligence
+  └── reads from Financial Normalization and Operational Core; writes only to own context
 
 Accounting Integration
   └── reads from Financial Normalization; never writes to it
@@ -443,10 +614,14 @@ Client Portal
   └── reads from Operational Core; publishes requests back
 
 Operational Core
-  └── reads identity context from Identity & Access
+  └── reads identity/user context from Identity & Access
+  └── reads tenant context from Tenant
 
 Identity & Access
+  └── consumes TenantProvisioned from Tenant; otherwise independent
+
+Tenant
   └── authoritative source; reads nothing from other contexts
 ```
 
-The dependency direction is strictly: downward from operational to financial. No financial context writes back to operational contexts. No intelligence context writes to financial contexts.
+The dependency direction is strictly: Tenant → Identity → Operational → Review → Financial → (Intelligence reads all). No financial context writes back to operational contexts. No intelligence context writes to financial contexts. Financial Intelligence is a read-only analytical layer over Financial Normalization.

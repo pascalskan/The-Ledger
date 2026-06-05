@@ -1,9 +1,18 @@
 # THE LEDGER — BACKEND DATA ARCHITECTURE
 
-Version: 1.0
+Version: 2.0
 Status: AUTHORITATIVE
 Date: June 4, 2026
-Authority: Backend Architecture Definition Phase
+Authority: Backend Architecture Refinement Pass
+
+---
+
+## CHANGE LOG
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.0 | June 4, 2026 | Initial data architecture — 10 schemas |
+| 2.0 | June 4, 2026 | Refinement pass: `tenant` schema added (Company extracted from `identity`); `financial_intelligence` schema added; `notification` schema extracted from `intelligence`; aggregate ownership table updated; total 12 schemas |
 
 ---
 
@@ -21,17 +30,28 @@ The Ledger uses a single **PostgreSQL** database with a modular schema layout. E
 
 ```
 PostgreSQL (single instance)
-  ├── identity schema        — users, companies, roles, sessions
-  ├── operational schema     — clients, sites, jobs, shifts, workers, assignments
-  ├── review schema          — submissions (timesheet, report, expense, issue), rejections
-  ├── financial schema       — financial records (entries, mutations, corrections, payroll)
-  ├── inventory schema       — stock items, locations, levels, assets, assignments
-  ├── portal schema          — portal accounts, sessions, document shares, client requests
-  ├── accounting schema      — provider configs, sync records, reconciliation, exceptions
-  ├── intelligence schema    — automation rules, schedules, workflows, notifications, events
-  ├── reporting schema       — report definitions, generated reports, exports, distributions
-  └── audit schema           — audit log (append-only, globally shared)
+  ├── tenant schema               — companies, subscriptions, plans, tenant configuration
+  ├── identity schema             — users, roles, sessions, refresh tokens
+  ├── operational schema          — clients, sites, jobs, shifts, workers, assignments
+  ├── review schema               — submissions (timesheet, report, expense, issue), rejections
+  ├── financial schema            — financial records (entries, mutations, corrections, payroll)
+  ├── financial_intelligence schema — margin snapshots, forecasts, exposure records, KPI snapshots
+  ├── inventory schema            — stock items, locations, levels, assets, assignments
+  ├── portal schema               — portal accounts, sessions, document shares, client requests
+  ├── accounting schema           — provider configs, sync records, reconciliation, exceptions
+  ├── intelligence schema         — automation rules, schedules, workflows, activity events
+  ├── notification schema         — notification records, delivery records, preferences
+  ├── reporting schema            — report definitions, generated reports, exports, distributions
+  └── audit schema                — audit log (append-only, globally shared)
 ```
+
+**Schema count: 13** (was 10)
+
+**Changes from v1.0:**
+- `tenant` schema: Company extracted from `identity` — Company is a tenancy concern, not an authentication concern
+- `financial_intelligence` schema: New schema for advisory financial analysis (margin, exposure, forecasts, KPIs)
+- `notification` schema: Extracted from `intelligence` — Notification Centre has sufficient complexity and distinct lifecycle to warrant its own schema namespace
+- `identity` schema: No longer contains Company; contains Users, Roles, Sessions, RefreshTokens only
 
 ORM: **Drizzle ORM** (TypeScript-first, type-safe, migration-managed)
 
@@ -43,7 +63,9 @@ Each aggregate root is persisted in the schema owned by its module. No other mod
 
 | Aggregate Root | Schema | Module Owner |
 |---|---|---|
-| Company | identity | Identity Module |
+| Company | **tenant** | **Tenant Module** |
+| Subscription | **tenant** | **Tenant Module** |
+| TenantConfiguration | **tenant** | **Tenant Module** |
 | User | identity | Identity Module |
 | Role, Permission | identity | Identity Module |
 | RefreshToken | identity | Identity Module |
@@ -67,6 +89,11 @@ Each aggregate root is persisted in the schema owned by its module. No other mod
 | VoidRecord | financial | Financial Normalization Module |
 | AdjustmentRecord | financial | Financial Normalization Module |
 | PayrollRecord | financial | Financial Normalization Module |
+| MarginSnapshot | **financial_intelligence** | **Financial Intelligence Module** |
+| ForecastRecord | **financial_intelligence** | **Financial Intelligence Module** |
+| ExposureRecord | **financial_intelligence** | **Financial Intelligence Module** |
+| FinancialKPISnapshot | **financial_intelligence** | **Financial Intelligence Module** |
+| PortfolioInsight | **financial_intelligence** | **Financial Intelligence Module** |
 | StockItem | inventory | Inventory & Asset Module |
 | StockLocation | inventory | Inventory & Asset Module |
 | StockLevel | inventory | Inventory & Asset Module |
@@ -85,7 +112,9 @@ Each aggregate root is persisted in the schema owned by its module. No other mod
 | GovernanceRecord | intelligence | Intelligence & Automation Module |
 | WorkflowDefinition | intelligence | Intelligence & Automation Module |
 | WorkflowExecution | intelligence | Intelligence & Automation Module |
-| NotificationRecord | intelligence | Intelligence & Automation Module |
+| NotificationRecord | **notification** | Intelligence & Automation Module (Notification Centre sub-domain) |
+| NotificationDeliveryRecord | **notification** | Intelligence & Automation Module (Notification Centre sub-domain) |
+| NotificationPreference | **notification** | Intelligence & Automation Module (Notification Centre sub-domain) |
 | ActivityFeedEvent | intelligence | Intelligence & Automation Module |
 | EventOutbox | intelligence | Intelligence & Automation Module |
 | EventLog | intelligence | Intelligence & Automation Module |
@@ -100,8 +129,11 @@ Each aggregate root is persisted in the schema owned by its module. No other mod
 
 | Data Domain | Source of Truth | Who May Write |
 |---|---|---|
-| Tenant and user identity | identity.companies, identity.users | Identity Module only |
+| Tenant lifecycle and configuration | **tenant.companies**, tenant.subscriptions, tenant.configurations | **Tenant Module only** |
+| User identity and credentials | identity.users | Identity Module only |
 | Roles and permissions | identity.roles, identity.permissions | Identity Module only |
+| Advisory financial intelligence | **financial_intelligence.*** | **Financial Intelligence Module only** |
+| Notification records and delivery | **notification.*** | **Intelligence & Automation Module only** |
 | Client and site hierarchy | operational.clients, operational.sites | Operational Module only |
 | Job state | operational.jobs | Operational Module only |
 | Shift state | operational.shifts | Operational Module only |

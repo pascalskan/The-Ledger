@@ -1,9 +1,18 @@
 # THE LEDGER — BACKEND EVENT ARCHITECTURE
 
-Version: 1.0
+Version: 2.0
 Status: AUTHORITATIVE
 Date: June 4, 2026
-Authority: Backend Architecture Definition Phase
+Authority: Backend Architecture Refinement Pass
+
+---
+
+## CHANGE LOG
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.0 | June 4, 2026 | Initial event architecture |
+| 2.0 | June 4, 2026 | Refinement pass: Tenant Module events added; Financial Intelligence Module events added; Notification Centre events formalised as distinct sub-section; subscriber registry updated |
 
 ---
 
@@ -117,14 +126,28 @@ Outbox record marked delivered
 
 ## EVENT CATALOGUE
 
+### Tenant Module Events
+
+| Event | Producer | Consumers |
+|---|---|---|
+| `TenantProvisioned` | Tenant Module | Identity (create initial CEO user), Intelligence (audit) |
+| `TenantSuspended` | Tenant Module | Identity (revoke all sessions), Intelligence (alert) |
+| `TenantReactivated` | Tenant Module | Identity (restore access), Intelligence (audit) |
+| `TenantTerminated` | Tenant Module | Identity (revoke all sessions), Intelligence (audit) |
+| `TenantConfigurationUpdated` | Tenant Module | Intelligence (audit) |
+| `TenantPlanChanged` | Tenant Module | Intelligence (audit) |
+
+---
+
 ### Identity Module Events
 
 | Event | Producer | Consumers |
 |---|---|---|
-| `UserCreated` | Identity Module | Automation & Intelligence (audit) |
-| `UserRoleChanged` | Identity Module | Automation & Intelligence (audit) |
-| `SessionStarted` | Identity Module | Automation & Intelligence (audit) |
-| `SessionRevoked` | Identity Module | Automation & Intelligence (audit) |
+| `UserCreated` | Identity Module | Intelligence & Automation (audit) |
+| `UserRoleChanged` | Identity Module | Intelligence & Automation (audit) |
+| `UserDeactivated` | Identity Module | Intelligence & Automation (audit) |
+| `SessionStarted` | Identity Module | Intelligence & Automation (audit) |
+| `SessionRevoked` | Identity Module | Intelligence & Automation (audit) |
 
 ---
 
@@ -181,17 +204,17 @@ Outbox record marked delivered
 
 | Event | Producer | Consumers |
 |---|---|---|
-| `TimesheetEntryCreated` | Financial Normalization | Accounting Integration (queue sync), Intelligence, Reporting |
-| `ExpenseEntryCreated` | Financial Normalization | Accounting Integration (queue sync), Intelligence, Reporting |
-| `InventoryMutationCreated` | Financial Normalization | Inventory & Asset (update stock levels), Accounting Integration, Intelligence |
-| `EquipmentUsageRecorded` | Financial Normalization | Inventory & Asset (update asset history), Accounting Integration, Intelligence |
-| `InvoiceLineItemCreated` | Financial Normalization | Accounting Integration, Intelligence, Reporting |
+| `TimesheetEntryCreated` | Financial Normalization | Accounting Integration (queue sync), **Financial Intelligence** (update margin/KPI models), Intelligence, Reporting |
+| `ExpenseEntryCreated` | Financial Normalization | Accounting Integration (queue sync), **Financial Intelligence** (update margin/KPI models), Intelligence, Reporting |
+| `InventoryMutationCreated` | Financial Normalization | Inventory & Asset (update stock levels), Accounting Integration, **Financial Intelligence**, Intelligence |
+| `EquipmentUsageRecorded` | Financial Normalization | Inventory & Asset (update asset history), Accounting Integration, **Financial Intelligence**, Intelligence |
+| `InvoiceLineItemCreated` | Financial Normalization | Accounting Integration, **Financial Intelligence** (update revenue models), Intelligence, Reporting |
 | `FinancialMutationCreated` | Financial Normalization | Accounting Integration, Intelligence |
-| `VoidRecordCreated` | Financial Normalization | Accounting Integration (sync correction), Intelligence, Reporting |
-| `AdjustmentRecordCreated` | Financial Normalization | Accounting Integration (sync correction), Intelligence, Reporting |
-| `PayrollRecordContributed` | Financial Normalization | Intelligence, Reporting |
+| `VoidRecordCreated` | Financial Normalization | Accounting Integration (sync correction), **Financial Intelligence** (recalculate net values), Intelligence, Reporting |
+| `AdjustmentRecordCreated` | Financial Normalization | Accounting Integration (sync correction), **Financial Intelligence** (recalculate net values), Intelligence, Reporting |
+| `PayrollRecordContributed` | Financial Normalization | **Financial Intelligence** (update labour cost models), Intelligence, Reporting |
 | `CorrectionRequestCreated` | Financial Normalization | Intelligence (pending CEO approval notification) |
-| `CorrectionApproved` | Financial Normalization | Accounting Integration, Intelligence |
+| `CorrectionApproved` | Financial Normalization | Accounting Integration, **Financial Intelligence**, Intelligence |
 
 ---
 
@@ -244,7 +267,20 @@ Outbox record marked delivered
 
 ---
 
+### Financial Intelligence Module Events
+
+| Event | Producer | Consumers |
+|---|---|---|
+| `MarginSnapshotComputed` | Financial Intelligence | Intelligence (activity feed), Reporting (financial KPI data) |
+| `ForecastUpdated` | Financial Intelligence | Intelligence (activity feed), Reporting |
+| `ExposureAlertTriggered` | Financial Intelligence | Intelligence (notification to CEO — `financial_alert` type) |
+| `FinancialKPISnapshotRefreshed` | Financial Intelligence | Reporting, Intelligence (dashboard) |
+
+---
+
 ### Automation & Intelligence Module Events
+
+**Automation & Workflow Events:**
 
 | Event | Producer | Consumers |
 |---|---|---|
@@ -254,12 +290,18 @@ Outbox record marked delivered
 | `WorkflowCompleted` | Intelligence | Intelligence (self — audit log) |
 | `WorkflowFailed` | Intelligence | Intelligence (self — alert) |
 | `WorkflowBlocked` | Intelligence | Intelligence (self — governance alert) |
-| `NotificationCreated` | Intelligence | (delivered to user) |
-| `NotificationRead` | Intelligence | Intelligence (self — audit log) |
-| `NotificationDismissed` | Intelligence | Intelligence (self — audit log) |
 | `ActivityFeedEventPublished` | Intelligence | (available for dashboard reads) |
-| `GovernanceStatusChanged` | Intelligence | Intelligence (self — audit log) |
+| `GovernanceStatusChanged` | Intelligence | Notification Centre (notification to CEO), Intelligence (self — audit log) |
 | `ScheduledEvaluationTriggered` | Intelligence | Intelligence (self — evaluation log) |
+
+**Notification Centre Sub-Domain Events:**
+
+| Event | Producer | Consumers |
+|---|---|---|
+| `NotificationCreated` | Intelligence (Notification Centre) | Delivered to user notification inbox |
+| `NotificationRead` | Intelligence (Notification Centre) | Intelligence (self — audit log) |
+| `NotificationDismissed` | Intelligence (Notification Centre) | Intelligence (self — audit log) |
+| `NotificationDelivered` | Intelligence (Notification Centre) | Intelligence (self — delivery record) |
 
 ---
 
@@ -307,15 +349,19 @@ Within the modular monolith, subscribers are registered at application startup:
 
 | Subscriber | Subscribed Events | Action |
 |---|---|---|
+| Identity Module | `TenantProvisioned` | Create initial CEO user for new tenant |
+| Identity Module | `TenantSuspended` | Revoke all active sessions for tenant |
 | Financial Normalization | `TimesheetApproved`, `ReportApproved`, `ExpenseApproved` | Create financial records |
+| **Financial Intelligence** | All `*EntryCreated`, `*RecordCreated`, `VoidRecordCreated`, `AdjustmentRecordCreated` | Update margin, KPI, exposure, and forecast models |
+| **Financial Intelligence** | `JobClosed` | Finalise job-level profitability analysis |
 | Inventory & Asset | `InventoryMutationCreated`, `EquipmentUsageRecorded` | Update stock levels / asset history |
 | Accounting Integration | `*EntryCreated`, `*RecordCreated`, `VoidRecordCreated`, `AdjustmentRecordCreated` | Queue for sync |
 | Client Portal | `JobCreated`, `JobClosed`, `SiteCreated` | Update portal visibility |
-| Intelligence (Activity) | All events | Populate activity feed |
-| Intelligence (Notification) | Warning/critical severity events | Create notifications |
+| Intelligence (Activity Feed) | All events | Populate activity feed |
+| **Intelligence (Notification Centre)** | Submission submitted events, approval/rejection events, `AccountingSyncFailed`, `ReconciliationExceptionDetected`, `ExposureAlertTriggered`, `GovernanceStatusChanged`, `ClientRequestSubmitted`, `SchedulingConflictDetected`, `StockLowAlertTriggered` | Create typed notifications routed to appropriate user inboxes |
 | Intelligence (Automation Eval) | Configured trigger event types | Trigger read-only rule evaluation |
 | Intelligence (Dashboard) | All events | Update dashboard read model |
-| Reporting | Financial and operational events | Update reporting aggregates |
+| Reporting | Financial and operational events, `MarginSnapshotComputed`, `FinancialKPISnapshotRefreshed` | Update reporting aggregates |
 
 ---
 

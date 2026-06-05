@@ -1,9 +1,18 @@
 # THE LEDGER — BACKEND AUTHENTICATION & AUTHORIZATION ARCHITECTURE
 
-Version: 1.0
+Version: 2.0
 Status: AUTHORITATIVE
 Date: June 4, 2026
-Authority: Backend Architecture Definition Phase
+Authority: Backend Architecture Refinement Pass
+
+---
+
+## CHANGE LOG
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.0 | June 4, 2026 | Initial auth architecture |
+| 2.0 | June 4, 2026 | Refinement pass: Company ownership moved to Tenant Context; Identity Context owns Users/Auth/Roles/Permissions only; authentication flow updated to validate tenant active status via Tenant Module before issuing tokens |
 
 ---
 
@@ -32,11 +41,15 @@ The Ledger has four distinct user types. Each has different authentication paths
 
 **Mechanism:** JWT (JSON Web Tokens)
 
+**Ownership Note:** Company (Tenant) is now owned by the Tenant Context, not the Identity Context. The authentication flow validates tenant active status via the Tenant Module before issuing tokens. A suspended tenant's users cannot authenticate.
+
 **Flow:**
 
 ```
 1. User submits email + password to POST /auth/login
 2. Server validates credentials against identity.users table (bcrypt hash comparison)
+2a. Server validates tenant status via Tenant Module: getTenantContext(companyId).status must be 'active'
+2b. If tenant is suspended or terminated: return 403 (account suspended)
 3. On success: issue Access Token + Refresh Token
 4. Access Token: short-lived (15 minutes), signed with private key, contains identity claims
 5. Refresh Token: long-lived (7 days), stored in identity.refresh_tokens table, sent as HTTP-only cookie

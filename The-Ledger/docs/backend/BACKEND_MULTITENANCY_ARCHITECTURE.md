@@ -1,9 +1,18 @@
 # THE LEDGER — BACKEND MULTI-TENANCY ARCHITECTURE
 
-Version: 1.0
+Version: 2.0
 Status: AUTHORITATIVE
 Date: June 4, 2026
-Authority: Backend Architecture Definition Phase
+Authority: Backend Architecture Refinement Pass
+
+---
+
+## CHANGE LOG
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.0 | June 4, 2026 | Initial multi-tenancy architecture |
+| 2.0 | June 4, 2026 | Refinement pass: Company (Tenant) moved to dedicated Tenant Context/Module; provisioning routed through Tenant Module; tenant suspension triggers Identity Module session revocation; TenantContext is the primary tenancy source-of-truth |
 
 ---
 
@@ -42,17 +51,36 @@ The Ledger uses **row-level multi-tenancy**:
 
 ---
 
+## TENANT OWNERSHIP
+
+The **Tenant Module** (not the Identity Module) is the authoritative owner of tenancy:
+
+- `tenant.companies` — the company record; lifecycle state; metadata
+- `tenant.subscriptions` — plan and subscription details
+- `tenant.configurations` — per-tenant feature flags, currency, notification preferences
+
+The Identity Module owns `identity.users` — the users who belong to a tenant. It depends on the Tenant Module to validate that a company is active before issuing authentication tokens.
+
+**The `company_id` on every record in every schema is a foreign key to `tenant.companies.company_id`.**
+
+---
+
 ## TENANT PROVISIONING MODEL
 
 ### Creating a Tenant
 
-Tenants are provisioned through a controlled administrative process:
+Tenants are provisioned through the Tenant Module:
 
 ```
-1. Admin creates a Company record (identity.companies)
-2. Admin creates the initial CEO User record (identity.users, role = ceo)
+1. Admin calls TenantModule.provisionTenant(companyData)
+   → Creates tenant.companies record (status: active)
+   → Creates tenant.configurations record (default configuration)
+   → Publishes TenantProvisioned event
+2. Identity Module consumes TenantProvisioned event
+   → Creates initial CEO user (identity.users, role = ceo)
 3. CEO receives onboarding email with credentials
-4. CEO logs in and configures the company
+4. CEO logs in (Tenant Module validates tenant is active; Identity Module issues JWT)
+5. CEO configures the company via TenantModule.updateTenantConfiguration()
 ```
 
 In v1, tenant provisioning is a manual or semi-automated admin operation, not self-service. Self-service signup is a future feature.
@@ -62,8 +90,8 @@ In v1, tenant provisioning is a manual or semi-automated admin operation, not se
 | State | Description |
 |---|---|
 | `active` | Fully operational |
-| `suspended` | Access blocked; data retained |
-| `terminated` | Access blocked; data deletion scheduled |
+| `suspended` | Access blocked; data retained; TenantSuspended event triggers Identity to revoke all sessions |
+| `terminated` | Access blocked; data deletion scheduled; all sessions revoked |
 
 Tenant suspension and termination are administrative operations not accessible to any in-tenant user including the CEO.
 

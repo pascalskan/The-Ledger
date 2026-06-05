@@ -148,3 +148,71 @@ Scope:
 - API Architecture
 
 All 14 frozen domain documents serve as the authoritative input to this phase.
+
+---
+
+## Backend Architecture Phase
+
+Status: **COMPLETE**
+Date: June 4, 2026
+
+### Architecture Specification (v1.0)
+
+Thirteen architecture documents produced and committed to branch `feature/backend-architecture-specification`:
+
+- BACKEND_ARCHITECTURE_SUMMARY.md
+- BACKEND_DOMAIN_ARCHITECTURE.md
+- BACKEND_LAYERING_ARCHITECTURE.md
+- BACKEND_SERVICE_ARCHITECTURE.md
+- BACKEND_EVENT_ARCHITECTURE.md
+- BACKEND_DATA_ARCHITECTURE.md
+- BACKEND_AUTH_ARCHITECTURE.md
+- BACKEND_MULTITENANCY_ARCHITECTURE.md
+- BACKEND_API_ARCHITECTURE.md
+- BACKEND_INFRASTRUCTURE_ARCHITECTURE.md
+- BACKEND_DOCUMENT_INTELLIGENCE_ARCHITECTURE.md
+- BACKEND_OBSERVABILITY_ARCHITECTURE.md
+- BACKEND_IMPLEMENTATION_ROADMAP.md
+
+### Architecture Refinement Pass (v2.0)
+
+Eight documents updated and committed to branch `feature/backend-architecture-refinement`:
+
+| Document | Change |
+|---|---|
+| BACKEND_ARCHITECTURE_SUMMARY.md | Full update — new context map, service map, event map, data ownership, tenant model, notification model, financial intelligence model, AI boundaries |
+| BACKEND_DOMAIN_ARCHITECTURE.md | Tenant Context extracted (was in Identity); Financial Intelligence Context added; Notification Centre formalised as sub-domain; 9 → 11 bounded contexts |
+| BACKEND_SERVICE_ARCHITECTURE.md | Tenant Module added; Financial Intelligence Module added; Notification Centre sub-module defined with full lifecycle and notification type registry |
+| BACKEND_EVENT_ARCHITECTURE.md | Tenant events added; Financial Intelligence events added; Notification Centre events formalised; subscriber registry updated |
+| BACKEND_DATA_ARCHITECTURE.md | `tenant` schema added; `financial_intelligence` schema added; `notification` schema extracted from `intelligence`; 10 → 13 schemas |
+| BACKEND_AUTH_ARCHITECTURE.md | Company ownership moved to Tenant Context; tenant status check added to authentication flow |
+| BACKEND_MULTITENANCY_ARCHITECTURE.md | Tenant Module owns Company; provisioning routed through Tenant Module; suspension triggers session revocation |
+| BACKEND_DOCUMENT_INTELLIGENCE_ARCHITECTURE.md | AI Limitations Covenant added; processing pipeline stages defined; security boundaries expanded; financial mutation restrictions explicit |
+
+### Architecture Decision Summary
+
+- Deployment model: Modular Monolith
+- Event strategy: Hybrid Event Architecture (transactional outbox)
+- Layering: 4-layer DDD
+- Multi-tenancy: Row-level isolation + PostgreSQL RLS
+- Bounded contexts: 11
+- Database schemas: 13
+- Auth: JWT + separate portal JWT
+- Service modules: 11
+
+### Current Repository State
+
+Backend implementation: Not started
+Architecture documents: Frozen at v2.0
+Branch: feature/backend-architecture-refinement (pending PR merge)
+
+---
+
+## Current Stage
+
+**Backend Architecture Specification — COMPLETE**
+
+**Next Development Target: Phase 6.1 — Notification Centre (backend implementation)**
+
+All architecture documents serve as the authoritative foundation for backend implementation.
+The frozen domain model (docs/domain/) and frozen architecture (docs/backend/) are the two authoritative inputs for all future backend development sessions.
