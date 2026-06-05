@@ -1227,4 +1227,62 @@ Before making recommendations:
 16. Preserve reporting doctrine (informational only — reports never approve, modify, or create financial mutations).
 17. Preserve export & distribution doctrine (exports are read-only derivatives of reports — never modify source reports, never create financial mutations).
 
+18. Preserve financial intelligence doctrine (advisory analysis only — Financial Intelligence Context never creates, modifies, or approves financial records; all outputs are advisory projections).
+19. Preserve AI advisory doctrine (AI systems never approve records, create approved financial records, override review decisions, or bypass the approval doctrine; AI outputs are advisory only).
+
 This document is the canonical source of truth for The Ledger.
+
+---
+
+# BACKEND ARCHITECTURE PHASE
+
+Version: 7.1
+Date: June 4, 2026
+Status: COMPLETE
+
+The Backend Architecture Specification and Refinement phases are complete. All architecture documents are authoritative and stored in docs/backend/.
+
+## Architecture Decision Summary
+
+- **Deployment model:** Modular Monolith (single Express application, single PostgreSQL database)
+- **Event strategy:** Hybrid Event Architecture (CRUD primary state + domain events via transactional outbox)
+- **Layering:** Domain-Driven Design — 4 layers (API → Application → Domain → Infrastructure)
+- **Multi-tenancy:** Row-level isolation with `company_id` on all records + PostgreSQL Row Level Security
+- **Bounded contexts:** 11 contexts (up from 9 after refinement pass)
+- **Database schemas:** 13 schemas
+- **Authentication:** JWT (access + refresh) + separate portal JWT for Client Portal users
+- **Service modules:** 11 modules mirroring bounded contexts
+
+## Bounded Context Summary (v2.0)
+
+| # | Context | Key Responsibility |
+|---|---|---|
+| 1 | Tenant | Company lifecycle, subscription, plan, configuration |
+| 2 | Identity & Access | Users, authentication, RBAC |
+| 3 | Operational Core | Jobs, Sites, Clients, Shifts, Workers |
+| 4 | Submission & Review | Review Centre, all submissions, approval/rejection |
+| 5 | Financial Normalization | Approved financial records, Job Mini-Ledger |
+| 6 | Financial Intelligence | Margin analysis, forecasting, exposure, KPIs |
+| 7 | Inventory & Asset | Stock, assets |
+| 8 | Client Portal | Portal accounts, client requests |
+| 9 | Accounting Integration | Sync, reconciliation, exceptions, controls |
+| 10 | Intelligence & Automation | Automation, workflows, Notification Centre, activity feed |
+| 11 | Reporting & Analytics | Reports, exports, operational analytics |
+
+## Architecture Documents
+
+All architecture documents located at: docs/backend/
+Master summary: docs/backend/BACKEND_ARCHITECTURE_SUMMARY.md
+
+## Current Platform State
+
+Frontend Prototype: Complete through Phase 6.8 — Report Exports & Distribution Centre
+Playwright Tests: 501 / 501 PASS
+Architectural Audit: Complete
+Domain Definition Program: Complete (14 frozen domains)
+Backend Architecture Specification: Complete (13 documents, v1.0)
+Backend Architecture Refinement: Complete (8 documents updated to v2.0)
+
+## Next Development Target
+
+Phase 6.1 — Notification Centre (backend implementation)
