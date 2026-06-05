@@ -532,9 +532,10 @@ The UX Redesign Programme is successful when the following conditions are met:
 
 | Phase | Name | Status | Branch | Completed |
 |---|---|---|---|---|
-| UX-1 | Critical Credibility Fixes | ☐ Not Started | — | — |
-| UX-2 | Navigation Restructuring | ☐ Not Started | — | — |
-| UX-3 | Dashboard Redesign | ☐ Not Started | — | — |
+| UX-1 | Critical Credibility Fixes | ✓ Complete | feature/ux-phases-1-2-3 | 5 Jun 2026 |
+| UX-2 | Navigation Restructuring | ✓ Complete | feature/ux-phases-1-2-3 | 5 Jun 2026 |
+| UX-3 | Dashboard Redesign | ✓ Complete | feature/ux-phases-1-2-3 | 5 Jun 2026 |
+| UX-QW | Quick Wins (post-audit) | ✓ Complete | feature/ux-phases-1-2-3 | 5 Jun 2026 |
 | UX-4 | Finance Hub | ☐ Not Started | — | — |
 | UX-5 | Intelligence Hub | ☐ Not Started | — | — |
 | UX-6 | Automation Hub | ☐ Not Started | — | — |
@@ -569,8 +570,8 @@ Example of a completed row:
 
 | Milestone | Required Phases | Status |
 |---|---|---|
-| Demo-safe minimum | UX-1 | ☐ Pending |
-| Customer demonstration ready | UX-1, UX-2, UX-3 | ☐ Pending |
+| Demo-safe minimum | UX-1 | ✓ Complete |
+| Customer demonstration ready | UX-1, UX-2, UX-3 | ✓ Complete |
 | Investor demonstration ready | UX-1 through UX-7 | ☐ Pending |
 | Programme complete | UX-1 through UX-8 | ☐ Pending |
 
@@ -583,6 +584,8 @@ Example of a completed row:
 | Playwright tests passing | 501 / 501 | 501 / 501 |
 | Build status | PASS | PASS |
 | Regressions introduced | 0 | 0 |
+
+*Last updated: June 5, 2026 — UX-1, UX-2, UX-3, and UX-QW complete.*
 
 *Update after each phase completion.*
 

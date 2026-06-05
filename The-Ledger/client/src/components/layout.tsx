@@ -66,7 +66,7 @@ import { getExecutiveSummary } from "@/lib/executiveCommandEngine";
 // NOTIFICATION BELL COMPONENT
 // ──────────────────────────────────────────────────────
 
-function NotificationBell({ userId }: { userId: string }) {
+function NotificationBell({ userId, testId = "notif-bell-btn" }: { userId: string; testId?: string }) {
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(() => getAllNotifications());
@@ -100,7 +100,7 @@ function NotificationBell({ userId }: { userId: string }) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          data-testid="notif-bell-btn"
+          data-testid={testId}
           variant="ghost"
           size="icon"
           className="relative text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
@@ -301,7 +301,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: ["CEO", "Project Manager"] },
     { label: "Invoices", href: "/invoices", icon: FileText, roles: ["CEO", "Project Manager"] },
     { label: "Invoice Builder", href: "/invoice-builder", icon: ReceiptText, roles: ["CEO", "Project Manager"] },
-    { label: "Financial Insights", href: "/expenses", icon: ReceiptText, roles: ["CEO", "Admin", "Project Manager", "Worker"] },
+    { label: "Expenses", href: "/expenses", icon: ReceiptText, roles: ["CEO", "Admin", "Project Manager", "Worker"] },
     { label: "Financial Records", href: "/financial-explorer", icon: Layers, roles: ["CEO"], testId: "nav-financial-explorer" },
     { label: "Payroll Processing", href: "/payroll", icon: Wallet, roles: ["CEO"], testId: "nav-payroll-staging" },
     { label: "Payroll Export", href: "/payroll-export", icon: FileDown, roles: ["CEO"], testId: "nav-payroll-export" },
@@ -311,11 +311,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // ── INTELLIGENCE section ──────────────────────────────
   const INTELLIGENCE_ITEMS: NavItem[] = [
-    { label: "Executive Command Centre", href: "/executive-command-centre", icon: Terminal, roles: ["CEO"], testId: "nav-executive-command-centre" },
+    { label: "Command Centre", href: "/executive-command-centre", icon: Terminal, roles: ["CEO"], testId: "nav-executive-command-centre" },
     { label: "Analytics Centre", href: "/analytics-centre", icon: BarChart3, roles: ["CEO"], testId: "nav-analytics-centre" },
     { label: "Reporting Centre", href: "/reporting-centre", icon: BookOpen, roles: ["CEO"], testId: "nav-reporting-centre" },
     { label: "Activity", href: "/activity-feed", icon: Activity, roles: ["CEO"], testId: "nav-activity-feed" },
-    { label: "Platform Events", href: "/event-monitor", icon: Radio, roles: ["CEO"], testId: "nav-event-monitor" },
     { label: "Notifications", href: "/notifications", icon: Bell, roles: ["CEO", "Project Manager"], testId: "nav-notifications" },
   ].filter((item) => hasAnyRole(item.roles));
 
@@ -330,6 +329,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const ADMIN_ITEMS: NavItem[] = [
     { label: "Manage Roles", href: "/roles", icon: UserCog, roles: ["CEO", "Admin"], testId: "nav-manage-roles" },
     { label: "Audit Log", href: "/audit", icon: ShieldAlert, roles: ["CEO"], testId: "nav-audit-log" },
+    { label: "Platform Events", href: "/event-monitor", icon: Radio, roles: ["CEO"], testId: "nav-event-monitor" },
     { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"], testId: "nav-accounting-settings" },
     { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"], testId: "nav-settings" },
   ].filter((item) => hasAnyRole(item.roles));
@@ -514,12 +514,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* Desktop header bar — system alert only (bell is in mobile bar which shows on all sizes) */}
+      {/* Desktop header bar */}
       <div className={cn(
         "hidden md:flex fixed top-0 right-0 h-16 z-40 items-center justify-end px-6 gap-2 border-b bg-background/95 backdrop-blur",
         collapsed ? "left-16" : "left-64"
       )}>
         {isCEOorPM && <SystemAlertIndicator />}
+        {isCEOorPM && user?.id && (
+          <NotificationBell userId={user.id} testId="notif-bell-btn-desktop" />
+        )}
       </div>
 
       <main className={cn("flex-1 p-6 md:p-8 pt-20 md:pt-24 transition-all duration-300 relative", collapsed ? "md:ml-16" : "md:ml-64")}>
