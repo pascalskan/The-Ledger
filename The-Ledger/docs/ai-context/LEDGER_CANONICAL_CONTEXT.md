@@ -2,9 +2,9 @@
 
 ## Canonical Context Document
 
-Version: 7.0
+Version: 7.1
 Status: Active Source of Truth
-Last Updated: June 4, 2026
+Last Updated: June 5, 2026
 
 Repository Baseline:
 main (Phase 6.8 merged; Domain Definition Program complete)
@@ -1032,17 +1032,109 @@ Total test count: 501
 
 ---
 
+# AI GOVERNANCE FRAMEWORK
+
+## Claude Skills Framework
+
+The Ledger operates a native Claude Skills framework for all AI-assisted development.
+
+Skills are located at: `.claude/skills/`
+
+Workflows are located at: `.claude/workflows/`
+
+Master reference: `.claude/skills/LEDGER_SKILLS_OVERVIEW.md`
+
+---
+
+## Available Skills
+
+| Skill | Role | Invocation Path |
+|---|---|---|
+| `ledger-product-manager` | Senior Product Manager | `.claude/skills/ledger-product-manager/SKILL.md` |
+| `ledger-architect` | Chief Architect | `.claude/skills/ledger-architect/SKILL.md` |
+| `ledger-ux-auditor` | Senior UX Auditor | `.claude/skills/ledger-ux-auditor/SKILL.md` |
+| `ledger-design-system-guardian` | Design System Guardian | `.claude/skills/ledger-design-system-guardian/SKILL.md` |
+| `ledger-test-architect` | Test Architect | `.claude/skills/ledger-test-architect/SKILL.md` |
+| `ledger-financial-doctrine-guardian` | Financial Doctrine Guardian | `.claude/skills/ledger-financial-doctrine-guardian/SKILL.md` |
+| `ledger-rbac-workflow-auditor` | RBAC and Workflow Auditor | `.claude/skills/ledger-rbac-workflow-auditor/SKILL.md` |
+
+---
+
+## Skill Selection Guidance
+
+Use this table to select the appropriate agent pipeline for the work at hand.
+
+**Small Bug Fix**
+→ Implement directly
+
+**Medium Feature**
+→ ledger-product-manager
+→ ledger-architect
+→ ledger-test-architect
+
+**Financial Feature**
+→ ledger-product-manager
+→ ledger-architect
+→ ledger-financial-doctrine-guardian
+→ ledger-rbac-workflow-auditor
+→ ledger-test-architect
+
+**Major UX Change**
+→ ledger-product-manager
+→ ledger-ux-auditor
+→ ledger-design-system-guardian
+→ ledger-architect
+→ ledger-test-architect
+
+**Major Platform Initiative**
+→ Full 7-Agent Pipeline (see LEDGER_SKILLS_OVERVIEW.md)
+
+Do not invoke the full pipeline for small or well-scoped changes.
+Do invoke the full pipeline for: Finance Hub, Intelligence Hub, PM Experience, Client Portal, Backend Architecture.
+
+---
+
+## Available Workflows
+
+| Workflow | Purpose |
+|---|---|
+| `feature-planning.md` | Pre-implementation: scope → architecture → doctrine → RBAC → tests |
+| `feature-review.md` | Post-implementation: architecture → doctrine → RBAC → test coverage |
+| `ux-audit.md` | UX quality audit across roles with design and RBAC confirmation |
+| `release-audit.md` | Full 7-agent pre-release quality gate |
+| `financial-audit.md` | Targeted financial doctrine compliance audit |
+
+---
+
+## AI Advisory Doctrine
+
+AI systems operating within The Ledger must observe the following:
+
+AI MAY:
+- Recommend
+- Plan
+- Review
+- Audit
+- Generate test cases
+- Produce handoff documents
+- Analyse architecture
+- Identify risks
+
+AI MAY NEVER:
+- Approve timesheets, expenses, reports, or invoices
+- Create approved financial records
+- Override Review Centre decisions
+- Bypass the Approval Doctrine
+- Grant or remove RBAC permissions
+- Commit directly to main
+
+Human approval remains mandatory for all financial mutations.
+
+---
+
 # CLAUDE WORKFLOW DOCTRINE
 
-Claude is used for implementation.
-
-ChatGPT is used for:
-
-- Architecture
-- Roadmap management
-- Planning
-- Auditing
-- Prompt generation
+Claude is the primary AI platform for The Ledger.
 
 Claude is used for:
 
@@ -1052,8 +1144,13 @@ Claude is used for:
 - Playwright validation
 - Git workflow
 - PR creation
+- Multi-agent skill orchestration via `.claude/skills/`
 
 Every Claude session must be self-contained.
+
+Every Claude session must read:
+1. LEDGER_CANONICAL_CONTEXT.md
+2. Latest handoff in docs/handoffs/
 
 ---
 
@@ -1202,6 +1299,7 @@ All frozen domain documents serve as the authoritative input to this phase.
 - Analytics Doctrine (Phase 6.6)
 - Reporting Doctrine (Phase 6.7)
 - Export & Distribution Doctrine (Phase 6.8)
+- AI Advisory Doctrine (June 2026)
 
 ---
 
@@ -1229,6 +1327,7 @@ Before making recommendations:
 
 18. Preserve financial intelligence doctrine (advisory analysis only — Financial Intelligence Context never creates, modifies, or approves financial records; all outputs are advisory projections).
 19. Preserve AI advisory doctrine (AI systems never approve records, create approved financial records, override review decisions, or bypass the approval doctrine; AI outputs are advisory only).
+20. Use the Claude Skills framework (`.claude/skills/`) for all non-trivial development work — select the appropriate pipeline from the Skill Selection Guidance above.
 
 This document is the canonical source of truth for The Ledger.
 
