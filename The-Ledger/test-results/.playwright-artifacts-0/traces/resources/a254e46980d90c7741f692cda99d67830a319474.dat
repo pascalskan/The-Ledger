@@ -1,0 +1,121 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/schedule/JobScheduleCard.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=eb91a722"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Users, AlertTriangle } from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/lucide-react.js?v=eb91a722";
+export function JobScheduleCard({ job, onClick, isSelected }) {
+  const formatCur = (val) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(val);
+  let borderClass = "border-slate-200";
+  let bgClass = "bg-white";
+  let statusDotClass = "bg-slate-300";
+  if (job.marginStatus === "Green") {
+    borderClass = "border-emerald-200";
+    statusDotClass = "bg-emerald-500";
+  } else if (job.marginStatus === "Yellow") {
+    borderClass = "border-amber-200";
+    bgClass = "bg-amber-50/10";
+    statusDotClass = "bg-amber-500";
+  } else if (job.marginStatus === "Red") {
+    borderClass = "border-rose-200";
+    bgClass = "bg-rose-50/30";
+    statusDotClass = "bg-rose-500";
+  }
+  if (isSelected) {
+    borderClass = "border-blue-500 ring-1 ring-blue-500";
+  }
+  return /* @__PURE__ */ jsxDEV(
+    "div",
+    {
+      onClick,
+      className: `p-2.5 rounded-md border shadow-sm cursor-pointer transition-all hover:shadow-md relative ${borderClass} ${bgClass}`,
+      children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "absolute top-3 right-2.5 flex gap-1", children: [
+          job.hasConflict && /* @__PURE__ */ jsxDEV(AlertTriangle, { className: "h-3.5 w-3.5 text-rose-500" }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx",
+            lineNumber: 47,
+            columnNumber: 29
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: `h-2.5 w-2.5 rounded-full ${statusDotClass} shadow-sm` }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx",
+            lineNumber: 48,
+            columnNumber: 9
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx",
+          lineNumber: 46,
+          columnNumber: 7
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "pr-6", children: /* @__PURE__ */ jsxDEV("h4", { className: "font-semibold text-xs text-slate-900 truncate leading-tight", children: job.title }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx",
+          lineNumber: 52,
+          columnNumber: 9
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx",
+          lineNumber: 51,
+          columnNumber: 7
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "mt-2 flex items-center justify-between", children: [
+          /* @__PURE__ */ jsxDEV(Badge, { variant: "outline", className: "text-[9px] font-medium px-1.5 py-0 h-4 bg-slate-50 text-slate-600 border-slate-200", children: [
+            job.scheduledHours,
+            " hrs"
+          ] }, void 0, true, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx",
+            lineNumber: 56,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-1 text-[10px] text-slate-500 font-medium", children: [
+            /* @__PURE__ */ jsxDEV(Users, { className: "h-3 w-3" }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx",
+              lineNumber: 60,
+              columnNumber: 11
+            }, this),
+            " ",
+            job.crewCount
+          ] }, void 0, true, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx",
+            lineNumber: 59,
+            columnNumber: 9
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx",
+          lineNumber: 55,
+          columnNumber: 7
+        }, this)
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx",
+      lineNumber: 42,
+      columnNumber: 5
+    },
+    this
+  );
+}
+_c = JobScheduleCard;
+var _c;
+$RefreshReg$(_c, "JobScheduleCard");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/JobScheduleCard.tsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBOEM0QjtBQTlDNUIsU0FBU0EsYUFBYTtBQUN0QixTQUFTQyxPQUFPQyxxQkFBcUI7QUFjOUIsZ0JBQVNDLGdCQUFnQixFQUFFQyxLQUFLQyxTQUFTQyxXQUFpQyxHQUFHO0FBQ2xGLFFBQU1DLFlBQVlBLENBQUNDLFFBQWdCLElBQUlDLEtBQUtDLGFBQWEsU0FBUyxFQUFFQyxPQUFPLFlBQVlDLFVBQVUsT0FBT0MsdUJBQXVCLEVBQUUsQ0FBQyxFQUFFQyxPQUFPTixHQUFHO0FBRzlJLE1BQUlPLGNBQWM7QUFDbEIsTUFBSUMsVUFBVTtBQUNkLE1BQUlDLGlCQUFpQjtBQUVyQixNQUFJYixJQUFJYyxpQkFBaUIsU0FBUztBQUNoQ0gsa0JBQWM7QUFDZEUscUJBQWlCO0FBQUEsRUFDbkIsV0FBV2IsSUFBSWMsaUJBQWlCLFVBQVU7QUFDeENILGtCQUFjO0FBQ2RDLGNBQVU7QUFDVkMscUJBQWlCO0FBQUEsRUFDbkIsV0FBV2IsSUFBSWMsaUJBQWlCLE9BQU87QUFDckNILGtCQUFjO0FBQ2RDLGNBQVU7QUFDVkMscUJBQWlCO0FBQUEsRUFDbkI7QUFFQSxNQUFJWCxZQUFZO0FBQ2RTLGtCQUFjO0FBQUEsRUFDaEI7QUFFQSxTQUNFO0FBQUEsSUFBQztBQUFBO0FBQUEsTUFDQztBQUFBLE1BQ0EsV0FBVyw0RkFBNEZBLFdBQVcsSUFBSUMsT0FBTztBQUFBLE1BRTdIO0FBQUEsK0JBQUMsU0FBSSxXQUFVLHVDQUNaWjtBQUFBQSxjQUFJZSxlQUFlLHVCQUFDLGlCQUFjLFdBQVUsK0JBQXpCO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBQW9EO0FBQUEsVUFDeEUsdUJBQUMsU0FBSSxXQUFXLDRCQUE0QkYsY0FBYyxnQkFBMUQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBdUU7QUFBQSxhQUZ6RTtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBR0E7QUFBQSxRQUVBLHVCQUFDLFNBQUksV0FBVSxRQUNiLGlDQUFDLFFBQUcsV0FBVSwrREFBK0RiLGNBQUlnQixTQUFqRjtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQXVGLEtBRHpGO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFFQTtBQUFBLFFBRUEsdUJBQUMsU0FBSSxXQUFVLDBDQUNiO0FBQUEsaUNBQUMsU0FBTSxTQUFRLFdBQVUsV0FBVSxzRkFDaENoQjtBQUFBQSxnQkFBSWlCO0FBQUFBLFlBQWU7QUFBQSxlQUR0QjtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUVBO0FBQUEsVUFDQSx1QkFBQyxTQUFJLFdBQVUsa0VBQ2I7QUFBQSxtQ0FBQyxTQUFNLFdBQVUsYUFBakI7QUFBQTtBQUFBO0FBQUE7QUFBQSxtQkFBMEI7QUFBQSxZQUFHO0FBQUEsWUFBRWpCLElBQUlrQjtBQUFBQSxlQURyQztBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUVBO0FBQUEsYUFORjtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBT0E7QUFBQTtBQUFBO0FBQUEsSUFwQkY7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLEVBcUJBO0FBRUo7QUFBQ0MsS0FqRGVwQjtBQUFlLElBQUFvQjtBQUFBQyxhQUFBRCxJQUFBIiwibmFtZXMiOlsiQmFkZ2UiLCJVc2VycyIsIkFsZXJ0VHJpYW5nbGUiLCJKb2JTY2hlZHVsZUNhcmQiLCJqb2IiLCJvbkNsaWNrIiwiaXNTZWxlY3RlZCIsImZvcm1hdEN1ciIsInZhbCIsIkludGwiLCJOdW1iZXJGb3JtYXQiLCJzdHlsZSIsImN1cnJlbmN5IiwibWF4aW11bUZyYWN0aW9uRGlnaXRzIiwiZm9ybWF0IiwiYm9yZGVyQ2xhc3MiLCJiZ0NsYXNzIiwic3RhdHVzRG90Q2xhc3MiLCJtYXJnaW5TdGF0dXMiLCJoYXNDb25mbGljdCIsInRpdGxlIiwic2NoZWR1bGVkSG91cnMiLCJjcmV3Q291bnQiLCJfYyIsIiRSZWZyZXNoUmVnJCJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJKb2JTY2hlZHVsZUNhcmQudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IEJhZGdlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9iYWRnZVwiO1xuaW1wb3J0IHsgVXNlcnMsIEFsZXJ0VHJpYW5nbGUgfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XG5cbmludGVyZmFjZSBKb2JTY2hlZHVsZUNhcmRQcm9wcyB7XG4gIGpvYjoge1xuICAgIHRpdGxlOiBzdHJpbmc7XG4gICAgc2NoZWR1bGVkSG91cnM6IG51bWJlcjtcbiAgICBjcmV3Q291bnQ6IG51bWJlcjtcbiAgICBtYXJnaW5TdGF0dXM6ICdHcmVlbicgfCAnWWVsbG93JyB8ICdSZWQnO1xuICAgIGhhc0NvbmZsaWN0OiBib29sZWFuO1xuICB9O1xuICBvbkNsaWNrOiAoKSA9PiB2b2lkO1xuICBpc1NlbGVjdGVkOiBib29sZWFuO1xufVxuXG5leHBvcnQgZnVuY3Rpb24gSm9iU2NoZWR1bGVDYXJkKHsgam9iLCBvbkNsaWNrLCBpc1NlbGVjdGVkIH06IEpvYlNjaGVkdWxlQ2FyZFByb3BzKSB7XG4gIGNvbnN0IGZvcm1hdEN1ciA9ICh2YWw6IG51bWJlcikgPT4gbmV3IEludGwuTnVtYmVyRm9ybWF0KCdlbi1HQicsIHsgc3R5bGU6ICdjdXJyZW5jeScsIGN1cnJlbmN5OiAnR0JQJywgbWF4aW11bUZyYWN0aW9uRGlnaXRzOiAwIH0pLmZvcm1hdCh2YWwpO1xuXG4gIC8vIFN0YXR1cyBzdHlsaW5nIGxvZ2ljXG4gIGxldCBib3JkZXJDbGFzcyA9IFwiYm9yZGVyLXNsYXRlLTIwMFwiO1xuICBsZXQgYmdDbGFzcyA9IFwiYmctd2hpdGVcIjtcbiAgbGV0IHN0YXR1c0RvdENsYXNzID0gXCJiZy1zbGF0ZS0zMDBcIjtcbiAgXG4gIGlmIChqb2IubWFyZ2luU3RhdHVzID09PSAnR3JlZW4nKSB7XG4gICAgYm9yZGVyQ2xhc3MgPSBcImJvcmRlci1lbWVyYWxkLTIwMFwiO1xuICAgIHN0YXR1c0RvdENsYXNzID0gXCJiZy1lbWVyYWxkLTUwMFwiO1xuICB9IGVsc2UgaWYgKGpvYi5tYXJnaW5TdGF0dXMgPT09ICdZZWxsb3cnKSB7XG4gICAgYm9yZGVyQ2xhc3MgPSBcImJvcmRlci1hbWJlci0yMDBcIjtcbiAgICBiZ0NsYXNzID0gXCJiZy1hbWJlci01MC8xMFwiO1xuICAgIHN0YXR1c0RvdENsYXNzID0gXCJiZy1hbWJlci01MDBcIjtcbiAgfSBlbHNlIGlmIChqb2IubWFyZ2luU3RhdHVzID09PSAnUmVkJykge1xuICAgIGJvcmRlckNsYXNzID0gXCJib3JkZXItcm9zZS0yMDBcIjtcbiAgICBiZ0NsYXNzID0gXCJiZy1yb3NlLTUwLzMwXCI7XG4gICAgc3RhdHVzRG90Q2xhc3MgPSBcImJnLXJvc2UtNTAwXCI7XG4gIH1cblxuICBpZiAoaXNTZWxlY3RlZCkge1xuICAgIGJvcmRlckNsYXNzID0gXCJib3JkZXItYmx1ZS01MDAgcmluZy0xIHJpbmctYmx1ZS01MDBcIjtcbiAgfVxuXG4gIHJldHVybiAoXG4gICAgPGRpdiBcbiAgICAgIG9uQ2xpY2s9e29uQ2xpY2t9XG4gICAgICBjbGFzc05hbWU9e2BwLTIuNSByb3VuZGVkLW1kIGJvcmRlciBzaGFkb3ctc20gY3Vyc29yLXBvaW50ZXIgdHJhbnNpdGlvbi1hbGwgaG92ZXI6c2hhZG93LW1kIHJlbGF0aXZlICR7Ym9yZGVyQ2xhc3N9ICR7YmdDbGFzc31gfVxuICAgID5cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgdG9wLTMgcmlnaHQtMi41IGZsZXggZ2FwLTFcIj5cbiAgICAgICAge2pvYi5oYXNDb25mbGljdCAmJiA8QWxlcnRUcmlhbmdsZSBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSB0ZXh0LXJvc2UtNTAwXCIgLz59XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPXtgaC0yLjUgdy0yLjUgcm91bmRlZC1mdWxsICR7c3RhdHVzRG90Q2xhc3N9IHNoYWRvdy1zbWB9IC8+XG4gICAgICA8L2Rpdj5cblxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJwci02XCI+XG4gICAgICAgIDxoNCBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQteHMgdGV4dC1zbGF0ZS05MDAgdHJ1bmNhdGUgbGVhZGluZy10aWdodFwiPntqb2IudGl0bGV9PC9oND5cbiAgICAgIDwvZGl2PlxuXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cIm10LTIgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuXCI+XG4gICAgICAgIDxCYWRnZSB2YXJpYW50PVwib3V0bGluZVwiIGNsYXNzTmFtZT1cInRleHQtWzlweF0gZm9udC1tZWRpdW0gcHgtMS41IHB5LTAgaC00IGJnLXNsYXRlLTUwIHRleHQtc2xhdGUtNjAwIGJvcmRlci1zbGF0ZS0yMDBcIj5cbiAgICAgICAgICB7am9iLnNjaGVkdWxlZEhvdXJzfSBocnNcbiAgICAgICAgPC9CYWRnZT5cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMSB0ZXh0LVsxMHB4XSB0ZXh0LXNsYXRlLTUwMCBmb250LW1lZGl1bVwiPlxuICAgICAgICAgIDxVc2VycyBjbGFzc05hbWU9XCJoLTMgdy0zXCIgLz4ge2pvYi5jcmV3Q291bnR9XG4gICAgICAgIDwvZGl2PlxuICAgICAgPC9kaXY+XG4gICAgPC9kaXY+XG4gICk7XG59Il0sImZpbGUiOiJDOi9Vc2Vycy9wc2thbi9Eb2N1bWVudHMvVGhlLUxlZGdlci9UaGUtTGVkZ2VyL1RoZS1MZWRnZXIvY2xpZW50L3NyYy9jb21wb25lbnRzL3NjaGVkdWxlL0pvYlNjaGVkdWxlQ2FyZC50c3gifQ==

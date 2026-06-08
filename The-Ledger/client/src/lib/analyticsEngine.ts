@@ -393,7 +393,7 @@ export function getCriticalRisks(): RiskItem[] {
       description: `${reconSummary.unmatched} record(s) are unmatched between The Ledger and accounting systems.`,
       category: 'financial',
       severity: 'critical',
-      sourceRoute: '/reconciliation-center',
+      sourceRoute: '/finance?tab=accounting&sub=reconciliation',
       recommendation: 'Investigate unmatched records in Reconciliation Centre immediately.',
     });
   }
@@ -405,7 +405,7 @@ export function getCriticalRisks(): RiskItem[] {
       description: `${controlSummary.pending} financial control override(s) awaiting CEO approval.`,
       category: 'financial',
       severity: 'high',
-      sourceRoute: '/exception-resolution-center',
+      sourceRoute: '/finance?tab=accounting&sub=exceptions',
       recommendation: 'Review and action pending financial controls.',
     });
   }
@@ -419,7 +419,7 @@ export function getCriticalRisks(): RiskItem[] {
       description: `${failedSyncs} sync failure(s) require attention before next accounting period.`,
       category: 'financial',
       severity: 'high',
-      sourceRoute: '/financial-explorer',
+      sourceRoute: '/finance?tab=records',
       recommendation: 'Retry failed syncs from the Financial Explorer accounting sync panel.',
     });
   }
@@ -433,7 +433,7 @@ export function getCriticalRisks(): RiskItem[] {
       description: `${exceptionSummary.open} exception(s) are open and unassigned.`,
       category: 'operational',
       severity: exceptionSummary.open >= 3 ? 'high' : 'medium',
-      sourceRoute: '/exception-resolution-center',
+      sourceRoute: '/finance?tab=accounting&sub=exceptions',
       recommendation: 'Assign and begin investigation on open exceptions.',
     });
   }
@@ -678,7 +678,7 @@ export function getBottleneckAnalysis(): BottleneckItem[] {
       category: 'exception',
       severity: exceptionSummary.open >= 3 ? 'high' : 'medium',
       impact: `${exceptionSummary.open} exception(s) unassigned — financial resolution delayed.`,
-      sourceRoute: '/exception-resolution-center',
+      sourceRoute: '/finance?tab=accounting&sub=exceptions',
     });
   }
 

@@ -110,7 +110,7 @@ function ExceptionStatusBadge({ status }: { status: ExceptionStatus }) {
   );
 }
 
-export default function ExceptionResolutionCenterPage() {
+export function ExceptionResolutionContent() {
   const [exceptions, setExceptions] = useState<ExceptionRecord[]>(SEED_EXCEPTIONS);
   const [controls, setControls] = useState<FinancialControl[]>(SEED_FINANCIAL_CONTROLS);
 
@@ -238,7 +238,7 @@ export default function ExceptionResolutionCenterPage() {
   ];
 
   return (
-    <Layout>
+    <>
       <div className="space-y-6" data-testid="exception-resolution-center-page">
         {/* Header */}
         <div>
@@ -803,6 +803,10 @@ export default function ExceptionResolutionCenterPage() {
           </DialogContent>
         </Dialog>
       )}
-    </Layout>
+    </>
   );
+}
+
+export default function ExceptionResolutionCenterPage() {
+  return <Layout><ExceptionResolutionContent /></Layout>;
 }

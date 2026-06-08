@@ -235,12 +235,12 @@ test('EB-22: Event detail shows Action Required badge for flagged events', async
 test('EB-23: Event detail Go to Source button navigates to source page', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/event-monitor');
-  // bus-004 is a sync_event → sourceRoute /financial-explorer
+  // bus-004 is a sync_event → sourceRoute /finance?tab=records (Finance Hub)
   await page.getByTestId('em-btn-view-bus-004').click();
   await expect(page.getByTestId('em-event-detail')).toBeVisible();
   await expect(page.getByTestId('em-detail-btn-deep-link')).toBeVisible();
   await page.getByTestId('em-detail-btn-deep-link').click();
-  await expect(page).toHaveURL(/\/financial-explorer/);
+  await expect(page).toHaveURL(/\/finance/);
 });
 
 // ──────────────────────────────────────────────────────

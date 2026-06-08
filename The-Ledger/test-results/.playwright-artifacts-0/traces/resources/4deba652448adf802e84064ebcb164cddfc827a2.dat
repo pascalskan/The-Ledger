@@ -1,0 +1,125 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/schedule/SmartFilters.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=eb91a722"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "/src/components/ui/select.tsx";
+import { Filter } from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/lucide-react.js?v=eb91a722";
+export function SmartFilters({ filters, setFilters }) {
+  return /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 bg-white p-1 rounded-md border border-slate-200 shadow-sm", children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "flex items-center pl-2 pr-1 text-slate-400", children: /* @__PURE__ */ jsxDEV(Filter, { className: "h-4 w-4" }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+      lineNumber: 19,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+      lineNumber: 18,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Select, { value: filters.margin, onValueChange: (v) => setFilters({ ...filters, margin: v }), children: [
+      /* @__PURE__ */ jsxDEV(SelectTrigger, { className: "h-8 border-0 bg-transparent text-xs font-medium w-[130px] focus:ring-0", children: /* @__PURE__ */ jsxDEV(SelectValue, { placeholder: "Margin Status" }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+        lineNumber: 24,
+        columnNumber: 11
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+        lineNumber: 23,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV(SelectContent, { children: [
+        /* @__PURE__ */ jsxDEV(SelectItem, { value: "all", children: "All Margins" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+          lineNumber: 27,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV(SelectItem, { value: "healthy", children: "Healthy Only" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+          lineNumber: 28,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV(SelectItem, { value: "risk", children: "At Risk (Red/Yellow)" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+          lineNumber: 29,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+        lineNumber: 26,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+      lineNumber: 22,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "w-px h-4 bg-slate-200 mx-1" }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+      lineNumber: 33,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Select, { value: filters.client, onValueChange: (v) => setFilters({ ...filters, client: v }), children: [
+      /* @__PURE__ */ jsxDEV(SelectTrigger, { className: "h-8 border-0 bg-transparent text-xs font-medium w-[120px] focus:ring-0", children: /* @__PURE__ */ jsxDEV(SelectValue, { placeholder: "All Clients" }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+        lineNumber: 37,
+        columnNumber: 11
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+        lineNumber: 36,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV(SelectContent, { children: [
+        /* @__PURE__ */ jsxDEV(SelectItem, { value: "all", children: "All Clients" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+          lineNumber: 40,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV(SelectItem, { value: "c1", children: "HSS Limited" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+          lineNumber: 42,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV(SelectItem, { value: "c2", children: "Acme Corp" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+          lineNumber: 43,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+        lineNumber: 39,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+      lineNumber: 35,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx",
+    lineNumber: 17,
+    columnNumber: 5
+  }, this);
+}
+_c = SmartFilters;
+var _c;
+$RefreshReg$(_c, "SmartFilters");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/SmartFilters.tsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBa0JRO0FBbEJSLFNBQVNBLFFBQVFDLGVBQWVDLFlBQVlDLGVBQWVDLG1CQUFtQjtBQUM5RSxTQUFTQyxjQUFjO0FBYWhCLGdCQUFTQyxhQUFhLEVBQUVDLFNBQVNDLFdBQThCLEdBQUc7QUFDdkUsU0FDRSx1QkFBQyxTQUFJLFdBQVUscUZBQ2I7QUFBQSwyQkFBQyxTQUFJLFdBQVUsOENBQ2IsaUNBQUMsVUFBTyxXQUFVLGFBQWxCO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0FBMkIsS0FEN0I7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQUVBO0FBQUEsSUFFQSx1QkFBQyxVQUFPLE9BQU9ELFFBQVFFLFFBQVEsZUFBZSxDQUFDQyxNQUFNRixXQUFXLEVBQUMsR0FBR0QsU0FBU0UsUUFBUUMsRUFBQyxDQUFDLEdBQ3JGO0FBQUEsNkJBQUMsaUJBQWMsV0FBVSwwRUFDdkIsaUNBQUMsZUFBWSxhQUFZLG1CQUF6QjtBQUFBO0FBQUE7QUFBQTtBQUFBLGFBQXdDLEtBRDFDO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFFQTtBQUFBLE1BQ0EsdUJBQUMsaUJBQ0M7QUFBQSwrQkFBQyxjQUFXLE9BQU0sT0FBTSwyQkFBeEI7QUFBQTtBQUFBO0FBQUE7QUFBQSxlQUFtQztBQUFBLFFBQ25DLHVCQUFDLGNBQVcsT0FBTSxXQUFVLDRCQUE1QjtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQXdDO0FBQUEsUUFDeEMsdUJBQUMsY0FBVyxPQUFNLFFBQU8sb0NBQXpCO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFBNkM7QUFBQSxXQUgvQztBQUFBO0FBQUE7QUFBQTtBQUFBLGFBSUE7QUFBQSxTQVJGO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0FTQTtBQUFBLElBRUEsdUJBQUMsU0FBSSxXQUFVLGdDQUFmO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0FBNEM7QUFBQSxJQUU1Qyx1QkFBQyxVQUFPLE9BQU9ILFFBQVFJLFFBQVEsZUFBZSxDQUFDRCxNQUFNRixXQUFXLEVBQUMsR0FBR0QsU0FBU0ksUUFBUUQsRUFBQyxDQUFDLEdBQ3JGO0FBQUEsNkJBQUMsaUJBQWMsV0FBVSwwRUFDdkIsaUNBQUMsZUFBWSxhQUFZLGlCQUF6QjtBQUFBO0FBQUE7QUFBQTtBQUFBLGFBQXNDLEtBRHhDO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFFQTtBQUFBLE1BQ0EsdUJBQUMsaUJBQ0M7QUFBQSwrQkFBQyxjQUFXLE9BQU0sT0FBTSwyQkFBeEI7QUFBQTtBQUFBO0FBQUE7QUFBQSxlQUFtQztBQUFBLFFBRW5DLHVCQUFDLGNBQVcsT0FBTSxNQUFLLDJCQUF2QjtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQWtDO0FBQUEsUUFDbEMsdUJBQUMsY0FBVyxPQUFNLE1BQUsseUJBQXZCO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFBZ0M7QUFBQSxXQUpsQztBQUFBO0FBQUE7QUFBQTtBQUFBLGFBS0E7QUFBQSxTQVRGO0FBQUE7QUFBQTtBQUFBO0FBQUEsV0FVQTtBQUFBLE9BNUJGO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0E2QkE7QUFFSjtBQUFDRSxLQWpDZU47QUFBWSxJQUFBTTtBQUFBQyxhQUFBRCxJQUFBIiwibmFtZXMiOlsiU2VsZWN0IiwiU2VsZWN0Q29udGVudCIsIlNlbGVjdEl0ZW0iLCJTZWxlY3RUcmlnZ2VyIiwiU2VsZWN0VmFsdWUiLCJGaWx0ZXIiLCJTbWFydEZpbHRlcnMiLCJmaWx0ZXJzIiwic2V0RmlsdGVycyIsIm1hcmdpbiIsInYiLCJjbGllbnQiLCJfYyIsIiRSZWZyZXNoUmVnJCJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJTbWFydEZpbHRlcnMudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IFNlbGVjdCwgU2VsZWN0Q29udGVudCwgU2VsZWN0SXRlbSwgU2VsZWN0VHJpZ2dlciwgU2VsZWN0VmFsdWUgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3NlbGVjdFwiO1xuaW1wb3J0IHsgRmlsdGVyIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xuXG5pbnRlcmZhY2UgU21hcnRGaWx0ZXJzU3RhdGUge1xuICBtYXJnaW46IHN0cmluZztcbiAgY3Jldzogc3RyaW5nO1xuICBjbGllbnQ6IHN0cmluZztcbn1cblxuaW50ZXJmYWNlIFNtYXJ0RmlsdGVyc1Byb3BzIHtcbiAgZmlsdGVyczogU21hcnRGaWx0ZXJzU3RhdGU7XG4gIHNldEZpbHRlcnM6IChmaWx0ZXJzOiBTbWFydEZpbHRlcnNTdGF0ZSkgPT4gdm9pZDtcbn1cblxuZXhwb3J0IGZ1bmN0aW9uIFNtYXJ0RmlsdGVycyh7IGZpbHRlcnMsIHNldEZpbHRlcnMgfTogU21hcnRGaWx0ZXJzUHJvcHMpIHtcbiAgcmV0dXJuIChcbiAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIGJnLXdoaXRlIHAtMSByb3VuZGVkLW1kIGJvcmRlciBib3JkZXItc2xhdGUtMjAwIHNoYWRvdy1zbVwiPlxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBwbC0yIHByLTEgdGV4dC1zbGF0ZS00MDBcIj5cbiAgICAgICAgPEZpbHRlciBjbGFzc05hbWU9XCJoLTQgdy00XCIgLz5cbiAgICAgIDwvZGl2PlxuICAgICAgXG4gICAgICA8U2VsZWN0IHZhbHVlPXtmaWx0ZXJzLm1hcmdpbn0gb25WYWx1ZUNoYW5nZT17KHYpID0+IHNldEZpbHRlcnMoey4uLmZpbHRlcnMsIG1hcmdpbjogdn0pfT5cbiAgICAgICAgPFNlbGVjdFRyaWdnZXIgY2xhc3NOYW1lPVwiaC04IGJvcmRlci0wIGJnLXRyYW5zcGFyZW50IHRleHQteHMgZm9udC1tZWRpdW0gdy1bMTMwcHhdIGZvY3VzOnJpbmctMFwiPlxuICAgICAgICAgIDxTZWxlY3RWYWx1ZSBwbGFjZWhvbGRlcj1cIk1hcmdpbiBTdGF0dXNcIiAvPlxuICAgICAgICA8L1NlbGVjdFRyaWdnZXI+XG4gICAgICAgIDxTZWxlY3RDb250ZW50PlxuICAgICAgICAgIDxTZWxlY3RJdGVtIHZhbHVlPVwiYWxsXCI+QWxsIE1hcmdpbnM8L1NlbGVjdEl0ZW0+XG4gICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJoZWFsdGh5XCI+SGVhbHRoeSBPbmx5PC9TZWxlY3RJdGVtPlxuICAgICAgICAgIDxTZWxlY3RJdGVtIHZhbHVlPVwicmlza1wiPkF0IFJpc2sgKFJlZC9ZZWxsb3cpPC9TZWxlY3RJdGVtPlxuICAgICAgICA8L1NlbGVjdENvbnRlbnQ+XG4gICAgICA8L1NlbGVjdD5cblxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LXB4IGgtNCBiZy1zbGF0ZS0yMDAgbXgtMVwiPjwvZGl2PlxuXG4gICAgICA8U2VsZWN0IHZhbHVlPXtmaWx0ZXJzLmNsaWVudH0gb25WYWx1ZUNoYW5nZT17KHYpID0+IHNldEZpbHRlcnMoey4uLmZpbHRlcnMsIGNsaWVudDogdn0pfT5cbiAgICAgICAgPFNlbGVjdFRyaWdnZXIgY2xhc3NOYW1lPVwiaC04IGJvcmRlci0wIGJnLXRyYW5zcGFyZW50IHRleHQteHMgZm9udC1tZWRpdW0gdy1bMTIwcHhdIGZvY3VzOnJpbmctMFwiPlxuICAgICAgICAgIDxTZWxlY3RWYWx1ZSBwbGFjZWhvbGRlcj1cIkFsbCBDbGllbnRzXCIgLz5cbiAgICAgICAgPC9TZWxlY3RUcmlnZ2VyPlxuICAgICAgICA8U2VsZWN0Q29udGVudD5cbiAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cImFsbFwiPkFsbCBDbGllbnRzPC9TZWxlY3RJdGVtPlxuICAgICAgICAgIHsvKiBXZSB3b3VsZCBtYXAgY2xpZW50cyBoZXJlIGluIHJlYWwgYXBwICovfVxuICAgICAgICAgIDxTZWxlY3RJdGVtIHZhbHVlPVwiYzFcIj5IU1MgTGltaXRlZDwvU2VsZWN0SXRlbT5cbiAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cImMyXCI+QWNtZSBDb3JwPC9TZWxlY3RJdGVtPlxuICAgICAgICA8L1NlbGVjdENvbnRlbnQ+XG4gICAgICA8L1NlbGVjdD5cbiAgICA8L2Rpdj5cbiAgKTtcbn0iXSwiZmlsZSI6IkM6L1VzZXJzL3Bza2FuL0RvY3VtZW50cy9UaGUtTGVkZ2VyL1RoZS1MZWRnZXIvVGhlLUxlZGdlci9jbGllbnQvc3JjL2NvbXBvbmVudHMvc2NoZWR1bGUvU21hcnRGaWx0ZXJzLnRzeCJ9

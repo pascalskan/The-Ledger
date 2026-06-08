@@ -279,7 +279,7 @@ export default function Dashboard() {
             activeClass="bg-amber-50 border-amber-200"
             clearText="No Overdue Invoices"
             actionLabel="View Invoices"
-            onAction={() => setLocation('/invoices')}
+            onAction={() => setLocation('/finance?tab=invoicing&filter=overdue')}
           />
 
           <AttentionCard
@@ -481,7 +481,7 @@ export default function Dashboard() {
             </Card>
           </div>
           <div className="flex justify-end mt-3">
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => setLocation('/financial-explorer')}>
+            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => setLocation('/finance?tab=records')}>
               View Financial Detail
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>

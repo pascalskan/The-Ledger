@@ -1,0 +1,23 @@
+import {
+  require_jsx_runtime
+} from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/chunk-2YVA4HRZ.js?v=eb91a722";
+import {
+  require_react
+} from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/chunk-WUR7D6NS.js?v=eb91a722";
+import {
+  __toESM
+} from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/chunk-G3PMV62Z.js?v=eb91a722";
+
+// node_modules/@radix-ui/react-direction/dist/index.mjs
+var React = __toESM(require_react(), 1);
+var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
+var DirectionContext = React.createContext(void 0);
+function useDirection(localDir) {
+  const globalDir = React.useContext(DirectionContext);
+  return localDir || globalDir || "ltr";
+}
+
+export {
+  useDirection
+};
+//# sourceMappingURL=chunk-5OJTMOQ5.js.map

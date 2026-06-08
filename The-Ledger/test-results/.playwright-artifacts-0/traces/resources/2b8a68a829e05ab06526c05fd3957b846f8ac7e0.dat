@@ -1,0 +1,173 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/schedule/WeeklyIntelligenceStrip.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=eb91a722"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import { Card, CardContent } from "/src/components/ui/card.tsx";
+import { Users, PoundSterling, Clock, Activity, AlertTriangle } from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/lucide-react.js?v=eb91a722";
+export function WeeklyIntelligenceStrip({ metrics }) {
+  const formatCur = (val) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(val);
+  return /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-2 md:grid-cols-4 gap-3 mb-4", children: [
+    /* @__PURE__ */ jsxDEV(Card, { className: "shadow-sm border-slate-200", children: /* @__PURE__ */ jsxDEV(CardContent, { className: "p-3", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5", children: [
+        /* @__PURE__ */ jsxDEV(Users, { className: "h-3.5 w-3.5" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+          lineNumber: 22,
+          columnNumber: 13
+        }, this),
+        " Workforce Util."
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+        lineNumber: 21,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "flex items-end justify-between", children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "text-xl font-bold text-slate-900", children: [
+          metrics.workforceUtil,
+          "%"
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+          lineNumber: 25,
+          columnNumber: 13
+        }, this),
+        metrics.overtimeRisk && /* @__PURE__ */ jsxDEV("span", { className: "text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 font-medium flex items-center gap-1", children: [
+          /* @__PURE__ */ jsxDEV(AlertTriangle, { className: "h-3 w-3" }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+            lineNumber: 28,
+            columnNumber: 17
+          }, this),
+          " Risk"
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+          lineNumber: 27,
+          columnNumber: 13
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+        lineNumber: 24,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+      lineNumber: 20,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+      lineNumber: 19,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Card, { className: "shadow-sm border-slate-200 bg-slate-50/50", children: /* @__PURE__ */ jsxDEV(CardContent, { className: "p-3", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5", children: [
+        /* @__PURE__ */ jsxDEV(PoundSterling, { className: "h-3.5 w-3.5" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+          lineNumber: 38,
+          columnNumber: 13
+        }, this),
+        " Scheduled Rev."
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+        lineNumber: 37,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "text-xl font-bold text-slate-900", children: formatCur(metrics.scheduledRevenue) }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+        lineNumber: 40,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+      lineNumber: 36,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+      lineNumber: 35,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Card, { className: "shadow-sm border-slate-200 bg-slate-50/50", children: /* @__PURE__ */ jsxDEV(CardContent, { className: "p-3", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5", children: [
+        /* @__PURE__ */ jsxDEV(Clock, { className: "h-3.5 w-3.5" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+          lineNumber: 47,
+          columnNumber: 13
+        }, this),
+        " Est. Labor"
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+        lineNumber: 46,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "text-xl font-bold text-slate-700", children: formatCur(metrics.forecastedLaborCost) }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+        lineNumber: 49,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+      lineNumber: 45,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+      lineNumber: 44,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Card, { className: "shadow-sm border-slate-200 bg-blue-50/50 border-blue-100", children: /* @__PURE__ */ jsxDEV(CardContent, { className: "p-3 flex justify-between items-center h-full", children: /* @__PURE__ */ jsxDEV("div", { children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-xs font-semibold text-blue-700 uppercase tracking-wider mb-1", children: [
+        /* @__PURE__ */ jsxDEV(Activity, { className: "h-3.5 w-3.5" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+          lineNumber: 57,
+          columnNumber: 15
+        }, this),
+        " Net Contribution"
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+        lineNumber: 56,
+        columnNumber: 13
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "text-2xl font-bold text-blue-900", children: formatCur(metrics.netForecastContribution) }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+        lineNumber: 59,
+        columnNumber: 13
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+      lineNumber: 55,
+      columnNumber: 11
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+      lineNumber: 54,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+      lineNumber: 53,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx",
+    lineNumber: 18,
+    columnNumber: 5
+  }, this);
+}
+_c = WeeklyIntelligenceStrip;
+var _c;
+$RefreshReg$(_c, "WeeklyIntelligenceStrip");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/schedule/WeeklyIntelligenceStrip.tsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBcUJZO0FBckJaLFNBQVNBLE1BQU1DLG1CQUFtQjtBQUNsQyxTQUFTQyxPQUFjQyxlQUFlQyxPQUFPQyxVQUFVQyxxQkFBcUI7QUFZckUsZ0JBQVNDLHdCQUF3QixFQUFFQyxRQUFzQyxHQUFHO0FBQ2pGLFFBQU1DLFlBQVlBLENBQUNDLFFBQWdCLElBQUlDLEtBQUtDLGFBQWEsU0FBUyxFQUFFQyxPQUFPLFlBQVlDLFVBQVUsT0FBT0MsdUJBQXVCLEVBQUUsQ0FBQyxFQUFFQyxPQUFPTixHQUFHO0FBRTlJLFNBQ0UsdUJBQUMsU0FBSSxXQUFVLDhDQUNiO0FBQUEsMkJBQUMsUUFBSyxXQUFVLDhCQUNkLGlDQUFDLGVBQVksV0FBVSxPQUNyQjtBQUFBLDZCQUFDLFNBQUksV0FBVSxnR0FDYjtBQUFBLCtCQUFDLFNBQU0sV0FBVSxpQkFBakI7QUFBQTtBQUFBO0FBQUE7QUFBQSxlQUE4QjtBQUFBLFFBQUc7QUFBQSxXQURuQztBQUFBO0FBQUE7QUFBQTtBQUFBLGFBRUE7QUFBQSxNQUNBLHVCQUFDLFNBQUksV0FBVSxrQ0FDYjtBQUFBLCtCQUFDLFNBQUksV0FBVSxvQ0FBb0NGO0FBQUFBLGtCQUFRUztBQUFBQSxVQUFjO0FBQUEsYUFBekU7QUFBQTtBQUFBO0FBQUE7QUFBQSxlQUEwRTtBQUFBLFFBQ3pFVCxRQUFRVSxnQkFDUCx1QkFBQyxVQUFLLFdBQVUsNEhBQ2Q7QUFBQSxpQ0FBQyxpQkFBYyxXQUFVLGFBQXpCO0FBQUE7QUFBQTtBQUFBO0FBQUEsaUJBQWtDO0FBQUEsVUFBRztBQUFBLGFBRHZDO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFFQTtBQUFBLFdBTEo7QUFBQTtBQUFBO0FBQUE7QUFBQSxhQU9BO0FBQUEsU0FYRjtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBWUEsS0FiRjtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBY0E7QUFBQSxJQUVBLHVCQUFDLFFBQUssV0FBVSw2Q0FDZCxpQ0FBQyxlQUFZLFdBQVUsT0FDckI7QUFBQSw2QkFBQyxTQUFJLFdBQVUsZ0dBQ2I7QUFBQSwrQkFBQyxpQkFBYyxXQUFVLGlCQUF6QjtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQXNDO0FBQUEsUUFBRztBQUFBLFdBRDNDO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFFQTtBQUFBLE1BQ0EsdUJBQUMsU0FBSSxXQUFVLG9DQUFvQ1Qsb0JBQVVELFFBQVFXLGdCQUFnQixLQUFyRjtBQUFBO0FBQUE7QUFBQTtBQUFBLGFBQXVGO0FBQUEsU0FKekY7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQUtBLEtBTkY7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQU9BO0FBQUEsSUFFQSx1QkFBQyxRQUFLLFdBQVUsNkNBQ2QsaUNBQUMsZUFBWSxXQUFVLE9BQ3JCO0FBQUEsNkJBQUMsU0FBSSxXQUFVLGdHQUNiO0FBQUEsK0JBQUMsU0FBTSxXQUFVLGlCQUFqQjtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQThCO0FBQUEsUUFBRztBQUFBLFdBRG5DO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFFQTtBQUFBLE1BQ0EsdUJBQUMsU0FBSSxXQUFVLG9DQUFvQ1Ysb0JBQVVELFFBQVFZLG1CQUFtQixLQUF4RjtBQUFBO0FBQUE7QUFBQTtBQUFBLGFBQTBGO0FBQUEsU0FKNUY7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQUtBLEtBTkY7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQU9BO0FBQUEsSUFFQSx1QkFBQyxRQUFLLFdBQVUsNERBQ2QsaUNBQUMsZUFBWSxXQUFVLGdEQUNyQixpQ0FBQyxTQUNDO0FBQUEsNkJBQUMsU0FBSSxXQUFVLDZGQUNiO0FBQUEsK0JBQUMsWUFBUyxXQUFVLGlCQUFwQjtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQWlDO0FBQUEsUUFBRztBQUFBLFdBRHRDO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFFQTtBQUFBLE1BQ0EsdUJBQUMsU0FBSSxXQUFVLG9DQUFvQ1gsb0JBQVVELFFBQVFhLHVCQUF1QixLQUE1RjtBQUFBO0FBQUE7QUFBQTtBQUFBLGFBQThGO0FBQUEsU0FKaEc7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQUtBLEtBTkY7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQU9BLEtBUkY7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQVNBO0FBQUEsT0E1Q0Y7QUFBQTtBQUFBO0FBQUE7QUFBQSxTQTZDQTtBQUVKO0FBQUNDLEtBbkRlZjtBQUF1QixJQUFBZTtBQUFBQyxhQUFBRCxJQUFBIiwibmFtZXMiOlsiQ2FyZCIsIkNhcmRDb250ZW50IiwiVXNlcnMiLCJQb3VuZFN0ZXJsaW5nIiwiQ2xvY2siLCJBY3Rpdml0eSIsIkFsZXJ0VHJpYW5nbGUiLCJXZWVrbHlJbnRlbGxpZ2VuY2VTdHJpcCIsIm1ldHJpY3MiLCJmb3JtYXRDdXIiLCJ2YWwiLCJJbnRsIiwiTnVtYmVyRm9ybWF0Iiwic3R5bGUiLCJjdXJyZW5jeSIsIm1heGltdW1GcmFjdGlvbkRpZ2l0cyIsImZvcm1hdCIsIndvcmtmb3JjZVV0aWwiLCJvdmVydGltZVJpc2siLCJzY2hlZHVsZWRSZXZlbnVlIiwiZm9yZWNhc3RlZExhYm9yQ29zdCIsIm5ldEZvcmVjYXN0Q29udHJpYnV0aW9uIiwiX2MiLCIkUmVmcmVzaFJlZyQiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiV2Vla2x5SW50ZWxsaWdlbmNlU3RyaXAudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IENhcmQsIENhcmRDb250ZW50IH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9jYXJkXCI7XG5pbXBvcnQgeyBVc2VycywgVHJ1Y2ssIFBvdW5kU3RlcmxpbmcsIENsb2NrLCBBY3Rpdml0eSwgQWxlcnRUcmlhbmdsZSB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcblxuaW50ZXJmYWNlIFdlZWtseUludGVsbGlnZW5jZVN0cmlwUHJvcHMge1xuICBtZXRyaWNzOiB7XG4gICAgd29ya2ZvcmNlVXRpbDogbnVtYmVyO1xuICAgIG92ZXJ0aW1lUmlzazogYm9vbGVhbjtcbiAgICBzY2hlZHVsZWRSZXZlbnVlOiBudW1iZXI7XG4gICAgZm9yZWNhc3RlZExhYm9yQ29zdDogbnVtYmVyO1xuICAgIG5ldEZvcmVjYXN0Q29udHJpYnV0aW9uOiBudW1iZXI7XG4gIH07XG59XG5cbmV4cG9ydCBmdW5jdGlvbiBXZWVrbHlJbnRlbGxpZ2VuY2VTdHJpcCh7IG1ldHJpY3MgfTogV2Vla2x5SW50ZWxsaWdlbmNlU3RyaXBQcm9wcykge1xuICBjb25zdCBmb3JtYXRDdXIgPSAodmFsOiBudW1iZXIpID0+IG5ldyBJbnRsLk51bWJlckZvcm1hdCgnZW4tR0InLCB7IHN0eWxlOiAnY3VycmVuY3knLCBjdXJyZW5jeTogJ0dCUCcsIG1heGltdW1GcmFjdGlvbkRpZ2l0czogMCB9KS5mb3JtYXQodmFsKTtcblxuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBtZDpncmlkLWNvbHMtNCBnYXAtMyBtYi00XCI+XG4gICAgICA8Q2FyZCBjbGFzc05hbWU9XCJzaGFkb3ctc20gYm9yZGVyLXNsYXRlLTIwMFwiPlxuICAgICAgICA8Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicC0zXCI+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiB0ZXh0LXhzIGZvbnQtc2VtaWJvbGQgdGV4dC1zbGF0ZS01MDAgdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVyIG1iLTEuNVwiPlxuICAgICAgICAgICAgPFVzZXJzIGNsYXNzTmFtZT1cImgtMy41IHctMy41XCIgLz4gV29ya2ZvcmNlIFV0aWwuXG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWVuZCBqdXN0aWZ5LWJldHdlZW5cIj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14bCBmb250LWJvbGQgdGV4dC1zbGF0ZS05MDBcIj57bWV0cmljcy53b3JrZm9yY2VVdGlsfSU8L2Rpdj5cbiAgICAgICAgICAgIHttZXRyaWNzLm92ZXJ0aW1lUmlzayAmJiAoXG4gICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIGJnLWFtYmVyLTUwIHRleHQtYW1iZXItNzAwIHB4LTEuNSBweS0wLjUgcm91bmRlZCBib3JkZXIgYm9yZGVyLWFtYmVyLTIwMCBmb250LW1lZGl1bSBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMVwiPlxuICAgICAgICAgICAgICAgIDxBbGVydFRyaWFuZ2xlIGNsYXNzTmFtZT1cImgtMyB3LTNcIiAvPiBSaXNrXG4gICAgICAgICAgICAgIDwvc3Bhbj5cbiAgICAgICAgICAgICl9XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvQ2FyZENvbnRlbnQ+XG4gICAgICA8L0NhcmQ+XG5cbiAgICAgIDxDYXJkIGNsYXNzTmFtZT1cInNoYWRvdy1zbSBib3JkZXItc2xhdGUtMjAwIGJnLXNsYXRlLTUwLzUwXCI+XG4gICAgICAgIDxDYXJkQ29udGVudCBjbGFzc05hbWU9XCJwLTNcIj5cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIHRleHQteHMgZm9udC1zZW1pYm9sZCB0ZXh0LXNsYXRlLTUwMCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgbWItMS41XCI+XG4gICAgICAgICAgICA8UG91bmRTdGVybGluZyBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+IFNjaGVkdWxlZCBSZXYuXG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LXhsIGZvbnQtYm9sZCB0ZXh0LXNsYXRlLTkwMFwiPntmb3JtYXRDdXIobWV0cmljcy5zY2hlZHVsZWRSZXZlbnVlKX08L2Rpdj5cbiAgICAgICAgPC9DYXJkQ29udGVudD5cbiAgICAgIDwvQ2FyZD5cblxuICAgICAgPENhcmQgY2xhc3NOYW1lPVwic2hhZG93LXNtIGJvcmRlci1zbGF0ZS0yMDAgYmctc2xhdGUtNTAvNTBcIj5cbiAgICAgICAgPENhcmRDb250ZW50IGNsYXNzTmFtZT1cInAtM1wiPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgdGV4dC14cyBmb250LXNlbWlib2xkIHRleHQtc2xhdGUtNTAwIHVwcGVyY2FzZSB0cmFja2luZy13aWRlciBtYi0xLjVcIj5cbiAgICAgICAgICAgIDxDbG9jayBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+IEVzdC4gTGFib3JcbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQteGwgZm9udC1ib2xkIHRleHQtc2xhdGUtNzAwXCI+e2Zvcm1hdEN1cihtZXRyaWNzLmZvcmVjYXN0ZWRMYWJvckNvc3QpfTwvZGl2PlxuICAgICAgICA8L0NhcmRDb250ZW50PlxuICAgICAgPC9DYXJkPlxuXG4gICAgICA8Q2FyZCBjbGFzc05hbWU9XCJzaGFkb3ctc20gYm9yZGVyLXNsYXRlLTIwMCBiZy1ibHVlLTUwLzUwIGJvcmRlci1ibHVlLTEwMFwiPlxuICAgICAgICA8Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicC0zIGZsZXgganVzdGlmeS1iZXR3ZWVuIGl0ZW1zLWNlbnRlciBoLWZ1bGxcIj5cbiAgICAgICAgICA8ZGl2PlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiB0ZXh0LXhzIGZvbnQtc2VtaWJvbGQgdGV4dC1ibHVlLTcwMCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgbWItMVwiPlxuICAgICAgICAgICAgICA8QWN0aXZpdHkgY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjVcIiAvPiBOZXQgQ29udHJpYnV0aW9uXG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC0yeGwgZm9udC1ib2xkIHRleHQtYmx1ZS05MDBcIj57Zm9ybWF0Q3VyKG1ldHJpY3MubmV0Rm9yZWNhc3RDb250cmlidXRpb24pfTwvZGl2PlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICA8L0NhcmRDb250ZW50PlxuICAgICAgPC9DYXJkPlxuICAgIDwvZGl2PlxuICApO1xufSJdLCJmaWxlIjoiQzovVXNlcnMvcHNrYW4vRG9jdW1lbnRzL1RoZS1MZWRnZXIvVGhlLUxlZGdlci9UaGUtTGVkZ2VyL2NsaWVudC9zcmMvY29tcG9uZW50cy9zY2hlZHVsZS9XZWVrbHlJbnRlbGxpZ2VuY2VTdHJpcC50c3gifQ==

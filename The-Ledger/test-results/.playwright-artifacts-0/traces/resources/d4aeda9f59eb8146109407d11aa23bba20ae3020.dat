@@ -1,0 +1,202 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/pages/qa.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=eb91a722"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import { Layout } from "/src/components/layout.tsx?t=1780933895280";
+import { CheckCircle2, AlertTriangle, ExternalLink } from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/lucide-react.js?v=eb91a722";
+import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Link } from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/wouter.js?v=eb91a722";
+export default function QAPage() {
+  const checks = [
+    {
+      category: "Auth & Navigation",
+      items: [
+        { task: "Logout redirects immediately to /auth", status: "Pass" },
+        { task: "Sidebar collapses/expands with persistence", status: "Pass" },
+        { task: "Protected routes redirect unauthenticated users", status: "Pass" }
+      ]
+    },
+    {
+      category: "Client & Invoicing",
+      items: [
+        { task: "Invoice requires client selection", status: "Pass" },
+        { task: "Job-to-Invoice template pre-populates line items", status: "Pass" },
+        { task: "Bank details show on printed invoices", status: "Pass" },
+        { task: "Invoice full CRUD (Create, View, Delete, Status)", status: "Pass" }
+      ]
+    },
+    {
+      category: "Operations",
+      items: [
+        { task: "Worker/Equipment CRUD and status tracking", status: "Pass" },
+        { task: "Job assignments and status updates", status: "Pass" },
+        { task: "Conflict detection logged in Audit Log", status: "Pass" }
+      ]
+    },
+    {
+      category: "Roles",
+      items: [
+        { task: "Manage Roles page accessible to CEO/Admin", status: "Pass" },
+        { task: "Sidebar hides unauthorized links", status: "Pass" }
+      ]
+    }
+  ];
+  return /* @__PURE__ */ jsxDEV(Layout, { children: /* @__PURE__ */ jsxDEV("div", { className: "space-y-6", children: [
+    /* @__PURE__ */ jsxDEV("div", { children: [
+      /* @__PURE__ */ jsxDEV("h2", { className: "text-3xl font-bold tracking-tight", children: "QA Center" }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+        lineNumber: 35,
+        columnNumber: 11
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { className: "text-muted-foreground mt-1", children: "Verification of core application flows and enterprise hardening." }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+        lineNumber: 36,
+        columnNumber: 11
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+      lineNumber: 34,
+      columnNumber: 9
+    }, this),
+    /* @__PURE__ */ jsxDEV(Card, { children: [
+      /* @__PURE__ */ jsxDEV(CardHeader, { children: /* @__PURE__ */ jsxDEV(CardTitle, { className: "text-lg flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxDEV(AlertTriangle, { className: "w-5 h-5 text-orange-500" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+          lineNumber: 42,
+          columnNumber: 21
+        }, this),
+        "Phase 2 Hardening & Validation"
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+        lineNumber: 41,
+        columnNumber: 17
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+        lineNumber: 40,
+        columnNumber: 13
+      }, this),
+      /* @__PURE__ */ jsxDEV(CardContent, { children: [
+        /* @__PURE__ */ jsxDEV("p", { className: "text-sm text-muted-foreground mb-4", children: "This checklist validates the enterprise-grade hardening of the Phase 2 field operations system. It covers offline persistence, replay batching, governance, and doctrine compliance." }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+          lineNumber: 47,
+          columnNumber: 17
+        }, this),
+        /* @__PURE__ */ jsxDEV(Link, { href: "/qa/validation", children: /* @__PURE__ */ jsxDEV(Button, { children: [
+          "Open Phase 2 Validation Checklist ",
+          /* @__PURE__ */ jsxDEV(ExternalLink, { className: "w-4 h-4 ml-2" }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+            lineNumber: 53,
+            columnNumber: 59
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+          lineNumber: 52,
+          columnNumber: 21
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+          lineNumber: 51,
+          columnNumber: 17
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+        lineNumber: 46,
+        columnNumber: 13
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+      lineNumber: 39,
+      columnNumber: 9
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "grid gap-6 md:grid-cols-2", children: checks.map(
+      (cat) => /* @__PURE__ */ jsxDEV(Card, { children: [
+        /* @__PURE__ */ jsxDEV(CardHeader, { children: /* @__PURE__ */ jsxDEV(CardTitle, { className: "text-lg", children: cat.category }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+          lineNumber: 62,
+          columnNumber: 27
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+          lineNumber: 62,
+          columnNumber: 15
+        }, this),
+        /* @__PURE__ */ jsxDEV(CardContent, { className: "space-y-4", children: cat.items.map(
+          (item) => /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-3 text-sm", children: [
+            /* @__PURE__ */ jsxDEV(CheckCircle2, { className: "h-4 w-4 text-green-500" }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+              lineNumber: 66,
+              columnNumber: 21
+            }, this),
+            /* @__PURE__ */ jsxDEV("span", { className: "flex-1", children: item.task }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+              lineNumber: 67,
+              columnNumber: 21
+            }, this),
+            /* @__PURE__ */ jsxDEV(Badge, { variant: "outline", className: "bg-green-50 text-green-700 border-green-200", children: "PASS" }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+              lineNumber: 68,
+              columnNumber: 21
+            }, this)
+          ] }, item.task, true, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+            lineNumber: 65,
+            columnNumber: 15
+          }, this)
+        ) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+          lineNumber: 63,
+          columnNumber: 15
+        }, this)
+      ] }, cat.category, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+        lineNumber: 61,
+        columnNumber: 11
+      }, this)
+    ) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+      lineNumber: 59,
+      columnNumber: 9
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+    lineNumber: 33,
+    columnNumber: 7
+  }, this) }, void 0, false, {
+    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+    lineNumber: 32,
+    columnNumber: 5
+  }, this);
+}
+_c = QAPage;
+function Badge({ children, className }) {
+  return /* @__PURE__ */ jsxDEV("span", { className: `px-2 py-0.5 rounded text-[10px] font-bold ${className}`, children }, void 0, false, {
+    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx",
+    lineNumber: 81,
+    columnNumber: 10
+  }, this);
+}
+_c2 = Badge;
+var _c, _c2;
+$RefreshReg$(_c, "QAPage");
+$RefreshReg$(_c2, "Badge");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/pages/qa.tsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,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QUFBQTtBQUFBLGVBQTZDLEtBQXpEO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFBcUU7QUFBQSxRQUNyRSx1QkFBQyxlQUFZLFdBQVUsYUFDcEJLLGNBQUlKLE1BQU1HO0FBQUFBLFVBQUksQ0FBQ0UsU0FDZCx1QkFBQyxTQUFvQixXQUFVLG1DQUM3QjtBQUFBLG1DQUFDLGdCQUFhLFdBQVUsNEJBQXhCO0FBQUE7QUFBQTtBQUFBO0FBQUEsbUJBQWdEO0FBQUEsWUFDaEQsdUJBQUMsVUFBSyxXQUFVLFVBQVVBLGVBQUtKLFFBQS9CO0FBQUE7QUFBQTtBQUFBO0FBQUEsbUJBQW9DO0FBQUEsWUFDcEMsdUJBQUMsU0FBTSxTQUFRLFdBQVUsV0FBVSwrQ0FBOEMsb0JBQWpGO0FBQUE7QUFBQTtBQUFBO0FBQUEsbUJBQXFGO0FBQUEsZUFIN0VJLEtBQUtKLE1BQWY7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFJQTtBQUFBLFFBQ0QsS0FQSDtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBUUE7QUFBQSxXQVZTRyxJQUFJTCxVQUFmO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFXQTtBQUFBLElBQ0QsS0FkSDtBQUFBO0FBQUE7QUFBQTtBQUFBLFdBZUE7QUFBQSxPQXpDRjtBQUFBO0FBQUE7QUFBQTtBQUFBLFNBMENBLEtBM0NGO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0E0Q0E7QUFFSjtBQUFDTyxLQXZFdUJUO0FBeUV4QixTQUFTVSxNQUFNLEVBQUVDLFVBQVVDLFVBQWUsR0FBRztBQUMzQyxTQUFPLHVCQUFDLFVBQUssV0FBVyw2Q0FBNkNBLFNBQVMsSUFBS0QsWUFBNUU7QUFBQTtBQUFBO0FBQUE7QUFBQSxTQUFxRjtBQUM5RjtBQUFDRSxNQUZRSDtBQUFLLElBQUFELElBQUFJO0FBQUFDLGFBQUFMLElBQUE7QUFBQUssYUFBQUQsS0FBQSIsIm5hbWVzIjpbIkxheW91dCIsIkNoZWNrQ2lyY2xlMiIsIkFsZXJ0VHJpYW5nbGUiLCJFeHRlcm5hbExpbmsiLCJDYXJkIiwiQ2FyZENvbnRlbnQiLCJDYXJkSGVhZGVyIiwiQ2FyZFRpdGxlIiwiQnV0dG9uIiwiTGluayIsIlFBUGFnZSIsImNoZWNrcyIsImNhdGVnb3J5IiwiaXRlbXMiLCJ0YXNrIiwic3RhdHVzIiwibWFwIiwiY2F0IiwiaXRlbSIsIl9jIiwiQmFkZ2UiLCJjaGlsZHJlbiIsImNsYXNzTmFtZSIsIl9jMiIsIiRSZWZyZXNoUmVnJCJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJxYS50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgTGF5b3V0IH0gZnJvbSBcIkAvY29tcG9uZW50cy9sYXlvdXRcIjtcbmltcG9ydCB7IENoZWNrQ2lyY2xlMiwgQWxlcnRUcmlhbmdsZSwgRXh0ZXJuYWxMaW5rIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xuaW1wb3J0IHsgQ2FyZCwgQ2FyZENvbnRlbnQsIENhcmRIZWFkZXIsIENhcmRUaXRsZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvY2FyZFwiO1xuaW1wb3J0IHsgQnV0dG9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9idXR0b25cIjtcbmltcG9ydCB7IExpbmsgfSBmcm9tIFwid291dGVyXCI7XG5cbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIFFBUGFnZSgpIHtcbiAgY29uc3QgY2hlY2tzID0gW1xuICAgIHsgY2F0ZWdvcnk6IFwiQXV0aCAmIE5hdmlnYXRpb25cIiwgaXRlbXM6IFtcbiAgICAgIHsgdGFzazogXCJMb2dvdXQgcmVkaXJlY3RzIGltbWVkaWF0ZWx5IHRvIC9hdXRoXCIsIHN0YXR1czogXCJQYXNzXCIgfSxcbiAgICAgIHsgdGFzazogXCJTaWRlYmFyIGNvbGxhcHNlcy9leHBhbmRzIHdpdGggcGVyc2lzdGVuY2VcIiwgc3RhdHVzOiBcIlBhc3NcIiB9LFxuICAgICAgeyB0YXNrOiBcIlByb3RlY3RlZCByb3V0ZXMgcmVkaXJlY3QgdW5hdXRoZW50aWNhdGVkIHVzZXJzXCIsIHN0YXR1czogXCJQYXNzXCIgfVxuICAgIF19LFxuICAgIHsgY2F0ZWdvcnk6IFwiQ2xpZW50ICYgSW52b2ljaW5nXCIsIGl0ZW1zOiBbXG4gICAgICB7IHRhc2s6IFwiSW52b2ljZSByZXF1aXJlcyBjbGllbnQgc2VsZWN0aW9uXCIsIHN0YXR1czogXCJQYXNzXCIgfSxcbiAgICAgIHsgdGFzazogXCJKb2ItdG8tSW52b2ljZSB0ZW1wbGF0ZSBwcmUtcG9wdWxhdGVzIGxpbmUgaXRlbXNcIiwgc3RhdHVzOiBcIlBhc3NcIiB9LFxuICAgICAgeyB0YXNrOiBcIkJhbmsgZGV0YWlscyBzaG93IG9uIHByaW50ZWQgaW52b2ljZXNcIiwgc3RhdHVzOiBcIlBhc3NcIiB9LFxuICAgICAgeyB0YXNrOiBcIkludm9pY2UgZnVsbCBDUlVEIChDcmVhdGUsIFZpZXcsIERlbGV0ZSwgU3RhdHVzKVwiLCBzdGF0dXM6IFwiUGFzc1wiIH1cbiAgICBdfSxcbiAgICB7IGNhdGVnb3J5OiBcIk9wZXJhdGlvbnNcIiwgaXRlbXM6IFtcbiAgICAgIHsgdGFzazogXCJXb3JrZXIvRXF1aXBtZW50IENSVUQgYW5kIHN0YXR1cyB0cmFja2luZ1wiLCBzdGF0dXM6IFwiUGFzc1wiIH0sXG4gICAgICB7IHRhc2s6IFwiSm9iIGFzc2lnbm1lbnRzIGFuZCBzdGF0dXMgdXBkYXRlc1wiLCBzdGF0dXM6IFwiUGFzc1wiIH0sXG4gICAgICB7IHRhc2s6IFwiQ29uZmxpY3QgZGV0ZWN0aW9uIGxvZ2dlZCBpbiBBdWRpdCBMb2dcIiwgc3RhdHVzOiBcIlBhc3NcIiB9XG4gICAgXX0sXG4gICAgeyBjYXRlZ29yeTogXCJSb2xlc1wiLCBpdGVtczogW1xuICAgICAgeyB0YXNrOiBcIk1hbmFnZSBSb2xlcyBwYWdlIGFjY2Vzc2libGUgdG8gQ0VPL0FkbWluXCIsIHN0YXR1czogXCJQYXNzXCIgfSxcbiAgICAgIHsgdGFzazogXCJTaWRlYmFyIGhpZGVzIHVuYXV0aG9yaXplZCBsaW5rc1wiLCBzdGF0dXM6IFwiUGFzc1wiIH1cbiAgICBdfVxuICBdO1xuXG4gIHJldHVybiAoXG4gICAgPExheW91dD5cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS02XCI+XG4gICAgICAgIDxkaXY+XG4gICAgICAgICAgPGgyIGNsYXNzTmFtZT1cInRleHQtM3hsIGZvbnQtYm9sZCB0cmFja2luZy10aWdodFwiPlFBIENlbnRlcjwvaDI+XG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTFcIj5WZXJpZmljYXRpb24gb2YgY29yZSBhcHBsaWNhdGlvbiBmbG93cyBhbmQgZW50ZXJwcmlzZSBoYXJkZW5pbmcuPC9wPlxuICAgICAgICA8L2Rpdj5cblxuICAgICAgICA8Q2FyZD5cbiAgICAgICAgICAgIDxDYXJkSGVhZGVyPlxuICAgICAgICAgICAgICAgIDxDYXJkVGl0bGUgY2xhc3NOYW1lPVwidGV4dC1sZyBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxuICAgICAgICAgICAgICAgICAgICA8QWxlcnRUcmlhbmdsZSBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQtb3JhbmdlLTUwMFwiIC8+XG4gICAgICAgICAgICAgICAgICAgIFBoYXNlIDIgSGFyZGVuaW5nICYgVmFsaWRhdGlvblxuICAgICAgICAgICAgICAgIDwvQ2FyZFRpdGxlPlxuICAgICAgICAgICAgPC9DYXJkSGVhZGVyPlxuICAgICAgICAgICAgPENhcmRDb250ZW50PlxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG1iLTRcIj5cbiAgICAgICAgICAgICAgICAgICAgVGhpcyBjaGVja2xpc3QgdmFsaWRhdGVzIHRoZSBlbnRlcnByaXNlLWdyYWRlIGhhcmRlbmluZyBvZiB0aGUgUGhhc2UgMiBmaWVsZCBvcGVyYXRpb25zIHN5c3RlbS5cbiAgICAgICAgICAgICAgICAgICAgSXQgY292ZXJzIG9mZmxpbmUgcGVyc2lzdGVuY2UsIHJlcGxheSBiYXRjaGluZywgZ292ZXJuYW5jZSwgYW5kIGRvY3RyaW5lIGNvbXBsaWFuY2UuXG4gICAgICAgICAgICAgICAgPC9wPlxuICAgICAgICAgICAgICAgIDxMaW5rIGhyZWY9XCIvcWEvdmFsaWRhdGlvblwiPlxuICAgICAgICAgICAgICAgICAgICA8QnV0dG9uPlxuICAgICAgICAgICAgICAgICAgICAgICAgT3BlbiBQaGFzZSAyIFZhbGlkYXRpb24gQ2hlY2tsaXN0IDxFeHRlcm5hbExpbmsgY2xhc3NOYW1lPVwidy00IGgtNCBtbC0yXCIgLz5cbiAgICAgICAgICAgICAgICAgICAgPC9CdXR0b24+XG4gICAgICAgICAgICAgICAgPC9MaW5rPlxuICAgICAgICAgICAgPC9DYXJkQ29udGVudD5cbiAgICAgICAgPC9DYXJkPlxuXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBnYXAtNiBtZDpncmlkLWNvbHMtMlwiPlxuICAgICAgICAgIHtjaGVja3MubWFwKChjYXQpID0+IChcbiAgICAgICAgICAgIDxDYXJkIGtleT17Y2F0LmNhdGVnb3J5fT5cbiAgICAgICAgICAgICAgPENhcmRIZWFkZXI+PENhcmRUaXRsZSBjbGFzc05hbWU9XCJ0ZXh0LWxnXCI+e2NhdC5jYXRlZ29yeX08L0NhcmRUaXRsZT48L0NhcmRIZWFkZXI+XG4gICAgICAgICAgICAgIDxDYXJkQ29udGVudCBjbGFzc05hbWU9XCJzcGFjZS15LTRcIj5cbiAgICAgICAgICAgICAgICB7Y2F0Lml0ZW1zLm1hcCgoaXRlbSkgPT4gKFxuICAgICAgICAgICAgICAgICAgPGRpdiBrZXk9e2l0ZW0udGFza30gY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgdGV4dC1zbVwiPlxuICAgICAgICAgICAgICAgICAgICA8Q2hlY2tDaXJjbGUyIGNsYXNzTmFtZT1cImgtNCB3LTQgdGV4dC1ncmVlbi01MDBcIiAvPlxuICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmbGV4LTFcIj57aXRlbS50YXNrfTwvc3Bhbj5cbiAgICAgICAgICAgICAgICAgICAgPEJhZGdlIHZhcmlhbnQ9XCJvdXRsaW5lXCIgY2xhc3NOYW1lPVwiYmctZ3JlZW4tNTAgdGV4dC1ncmVlbi03MDAgYm9yZGVyLWdyZWVuLTIwMFwiPlBBU1M8L0JhZGdlPlxuICAgICAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgICAgKSl9XG4gICAgICAgICAgICAgIDwvQ2FyZENvbnRlbnQ+XG4gICAgICAgICAgICA8L0NhcmQ+XG4gICAgICAgICAgKSl9XG4gICAgICAgIDwvZGl2PlxuICAgICAgPC9kaXY+XG4gICAgPC9MYXlvdXQ+XG4gICk7XG59XG5cbmZ1bmN0aW9uIEJhZGdlKHsgY2hpbGRyZW4sIGNsYXNzTmFtZSB9OiBhbnkpIHtcbiAgcmV0dXJuIDxzcGFuIGNsYXNzTmFtZT17YHB4LTIgcHktMC41IHJvdW5kZWQgdGV4dC1bMTBweF0gZm9udC1ib2xkICR7Y2xhc3NOYW1lfWB9PntjaGlsZHJlbn08L3NwYW4+O1xufSJdLCJmaWxlIjoiQzovVXNlcnMvcHNrYW4vRG9jdW1lbnRzL1RoZS1MZWRnZXIvVGhlLUxlZGdlci9UaGUtTGVkZ2VyL2NsaWVudC9zcmMvcGFnZXMvcWEudHN4In0=

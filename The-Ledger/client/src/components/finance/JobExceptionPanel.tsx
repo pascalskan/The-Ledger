@@ -113,7 +113,7 @@ export function JobExceptionPanel({ jobId }: JobExceptionPanelProps) {
               size="sm"
               variant="ghost"
               className="h-7 text-xs"
-              onClick={() => setLocation("/exception-resolution-center")}
+              onClick={() => setLocation("/finance?tab=accounting&sub=exceptions")}
               data-testid={`job-exception-link-${jobId}`}
             >
               <ExternalLink className="h-3 w-3 mr-1" /> Resolution Centre

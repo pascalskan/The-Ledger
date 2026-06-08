@@ -7,7 +7,7 @@ import { useLocation } from "wouter";
 import { ExternalLink, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function InvoicesPage() {
+export function InvoicesContent({ statusFilter }: { statusFilter?: string }) {
   const { invoices, clients, companySettings } = useStore();
   const [, setLocation] = useLocation();
 
@@ -45,7 +45,6 @@ export default function InvoicesPage() {
   };
 
   return (
-    <Layout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -146,6 +145,9 @@ export default function InvoicesPage() {
           </CardContent>
         </Card>
       </div>
-    </Layout>
   );
+}
+
+export default function InvoicesPage() {
+  return <Layout><InvoicesContent /></Layout>;
 }

@@ -50,6 +50,7 @@ import {
   Terminal,
   BarChart3,
   BookOpen,
+  DollarSign,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -299,14 +300,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Map", href: "/map", icon: MapIcon, roles: ["CEO", "Project Manager", "Worker"] },
     { label: "Stock & Assets", href: "/equipment", icon: Package, roles: ["CEO", "Project Manager"] },
     { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: ["CEO", "Project Manager"] },
-    { label: "Invoices", href: "/invoices", icon: FileText, roles: ["CEO", "Project Manager"] },
-    { label: "Invoice Builder", href: "/invoice-builder", icon: ReceiptText, roles: ["CEO", "Project Manager"] },
     { label: "Expenses", href: "/expenses", icon: ReceiptText, roles: ["CEO", "Admin", "Project Manager", "Worker"] },
-    { label: "Financial Records", href: "/financial-explorer", icon: Layers, roles: ["CEO"], testId: "nav-financial-explorer" },
-    { label: "Payroll Processing", href: "/payroll", icon: Wallet, roles: ["CEO"], testId: "nav-payroll-staging" },
-    { label: "Payroll Export", href: "/payroll-export", icon: FileDown, roles: ["CEO"], testId: "nav-payroll-export" },
-    { label: "Reconciliation Centre", href: "/reconciliation-center", icon: GitMerge, roles: ["CEO"], testId: "nav-reconciliation-centre" },
-    { label: "Exceptions", href: "/exception-resolution-center", icon: TriangleAlert, roles: ["CEO"], testId: "nav-exception-resolution-centre" },
+    { label: "Finance", href: "/finance", icon: DollarSign, roles: ["CEO"], testId: "nav-finance-hub" },
   ].filter((item) => hasAnyRole(item.roles));
 
   // ── INTELLIGENCE section ──────────────────────────────
@@ -330,12 +325,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Manage Roles", href: "/roles", icon: UserCog, roles: ["CEO", "Admin"], testId: "nav-manage-roles" },
     { label: "Audit Log", href: "/audit", icon: ShieldAlert, roles: ["CEO"], testId: "nav-audit-log" },
     { label: "Platform Events", href: "/event-monitor", icon: Radio, roles: ["CEO"], testId: "nav-event-monitor" },
-    { label: "Accounting Settings", href: "/accounting-settings", icon: Link2Icon, roles: ["CEO"], testId: "nav-accounting-settings" },
+    { label: "Accounting Settings", href: "/finance?tab=accounting", icon: Link2Icon, roles: ["CEO"], testId: "nav-admin-accounting-settings" },
     { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"], testId: "nav-settings" },
   ].filter((item) => hasAnyRole(item.roles));
 
   function NavLink({ item }: { item: NavItem }) {
-    const isActive = location === item.href;
+    const isActive = location === item.href
+      || location.startsWith(item.href + "?")
+      || location.startsWith(item.href + "/");
     const content = (
       <Link href={item.href}>
         <a

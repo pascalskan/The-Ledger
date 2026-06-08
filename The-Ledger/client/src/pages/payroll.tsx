@@ -22,7 +22,7 @@ function fmt(n: number) {
   })}`;
 }
 
-export default function PayrollStagingPage() {
+export function PayrollProcessingContent() {
   const { timesheets, jobs } = useStore();
   const [period, setPeriod] = useState<"all" | "current-month" | "last-month">("all");
 
@@ -57,7 +57,6 @@ export default function PayrollStagingPage() {
   ];
 
   return (
-    <Layout>
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -236,6 +235,9 @@ export default function PayrollStagingPage() {
           </div>
         )}
       </div>
-    </Layout>
   );
+}
+
+export default function PayrollStagingPage() {
+  return <Layout><PayrollProcessingContent /></Layout>;
 }

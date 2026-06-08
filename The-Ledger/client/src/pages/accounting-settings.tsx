@@ -246,7 +246,7 @@ function ProviderCard({
 // MAIN PAGE
 // ──────────────────────────────────────────────────────
 
-export default function AccountingSettingsPage() {
+export function AccountingSettingsContent() {
   const [settings, setSettings] = useState<AccountingSettings>(
     DEFAULT_ACCOUNTING_SETTINGS
   );
@@ -295,7 +295,6 @@ export default function AccountingSettingsPage() {
   const defaultProvider = getDefaultProvider(settings);
 
   return (
-    <Layout>
       <div data-testid="accounting-settings-page" className="space-y-8 max-w-5xl mx-auto">
         {/* Page header */}
         <div>
@@ -509,6 +508,9 @@ export default function AccountingSettingsPage() {
           </Card>
         </section>
       </div>
-    </Layout>
   );
+}
+
+export default function AccountingSettingsPage() {
+  return <Layout><AccountingSettingsContent /></Layout>;
 }

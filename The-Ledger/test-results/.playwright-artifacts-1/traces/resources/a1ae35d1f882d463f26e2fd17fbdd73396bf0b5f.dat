@@ -1,0 +1,55 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/ui/textarea.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=eb91a722"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import __vite__cjsImport1_react from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react.js?v=eb91a722"; const React = ((m) => m?.__esModule ? m : {	...typeof m === "object" && !Array.isArray(m) || typeof m === "function" ? m : {},	default: m})(__vite__cjsImport1_react);
+import { cn } from "/src/lib/utils.ts";
+const Textarea = React.forwardRef(_c = ({ className, ...props }, ref) => {
+  return /* @__PURE__ */ jsxDEV(
+    "textarea",
+    {
+      className: cn(
+        "flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        className
+      ),
+      ref,
+      ...props
+    },
+    void 0,
+    false,
+    {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/ui/textarea.tsx",
+      lineNumber: 10,
+      columnNumber: 5
+    },
+    this
+  );
+});
+_c2 = Textarea;
+Textarea.displayName = "Textarea";
+export { Textarea };
+var _c, _c2;
+$RefreshReg$(_c, "Textarea$React.forwardRef");
+$RefreshReg$(_c2, "Textarea");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/ui/textarea.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/ui/textarea.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/ui/textarea.tsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBU0k7QUFUSixZQUFZQSxXQUFXO0FBRXZCLFNBQVNDLFVBQVU7QUFFbkIsTUFBTUMsV0FBV0YsTUFBTUcsV0FHdEJDLEtBQUNBLENBQUMsRUFBRUMsV0FBVyxHQUFHQyxNQUFNLEdBQUdDLFFBQVE7QUFDbEMsU0FDRTtBQUFBLElBQUM7QUFBQTtBQUFBLE1BQ0MsV0FBV047QUFBQUEsUUFDVDtBQUFBLFFBQ0FJO0FBQUFBLE1BQ0Y7QUFBQSxNQUNBO0FBQUEsTUFDQSxHQUFJQztBQUFBQTtBQUFBQSxJQU5OO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQSxFQU1ZO0FBR2hCLENBQUM7QUFBQ0UsTUFkSU47QUFlTkEsU0FBU08sY0FBYztBQUV2QixTQUFTUDtBQUFVLElBQUFFLElBQUFJO0FBQUFFLGFBQUFOLElBQUE7QUFBQU0sYUFBQUYsS0FBQSIsIm5hbWVzIjpbIlJlYWN0IiwiY24iLCJUZXh0YXJlYSIsImZvcndhcmRSZWYiLCJfYyIsImNsYXNzTmFtZSIsInByb3BzIiwicmVmIiwiX2MyIiwiZGlzcGxheU5hbWUiLCIkUmVmcmVzaFJlZyQiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsidGV4dGFyZWEudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCAqIGFzIFJlYWN0IGZyb20gXCJyZWFjdFwiXG5cbmltcG9ydCB7IGNuIH0gZnJvbSBcIkAvbGliL3V0aWxzXCJcblxuY29uc3QgVGV4dGFyZWEgPSBSZWFjdC5mb3J3YXJkUmVmPFxuICBIVE1MVGV4dEFyZWFFbGVtZW50LFxuICBSZWFjdC5Db21wb25lbnRQcm9wczxcInRleHRhcmVhXCI+XG4+KCh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiB7XG4gIHJldHVybiAoXG4gICAgPHRleHRhcmVhXG4gICAgICBjbGFzc05hbWU9e2NuKFxuICAgICAgICBcImZsZXggbWluLWgtWzYwcHhdIHctZnVsbCByb3VuZGVkLW1kIGJvcmRlciBib3JkZXItaW5wdXQgYmctdHJhbnNwYXJlbnQgcHgtMyBweS0yIHRleHQtYmFzZSBzaGFkb3ctc20gcGxhY2Vob2xkZXI6dGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGZvY3VzLXZpc2libGU6b3V0bGluZS1ub25lIGZvY3VzLXZpc2libGU6cmluZy0xIGZvY3VzLXZpc2libGU6cmluZy1yaW5nIGRpc2FibGVkOmN1cnNvci1ub3QtYWxsb3dlZCBkaXNhYmxlZDpvcGFjaXR5LTUwIG1kOnRleHQtc21cIixcbiAgICAgICAgY2xhc3NOYW1lXG4gICAgICApfVxuICAgICAgcmVmPXtyZWZ9XG4gICAgICB7Li4ucHJvcHN9XG4gICAgLz5cbiAgKVxufSlcblRleHRhcmVhLmRpc3BsYXlOYW1lID0gXCJUZXh0YXJlYVwiXG5cbmV4cG9ydCB7IFRleHRhcmVhIH1cbiJdLCJmaWxlIjoiQzovVXNlcnMvcHNrYW4vRG9jdW1lbnRzL1RoZS1MZWRnZXIvVGhlLUxlZGdlci9UaGUtTGVkZ2VyL2NsaWVudC9zcmMvY29tcG9uZW50cy91aS90ZXh0YXJlYS50c3gifQ==

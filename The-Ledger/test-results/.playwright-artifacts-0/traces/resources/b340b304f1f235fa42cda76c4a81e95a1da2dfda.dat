@@ -1,0 +1,135 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/finance/EquipmentContribution.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=eb91a722"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import { Card, CardHeader, CardTitle, CardContent } from "/src/components/ui/card.tsx";
+import { Truck } from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/lucide-react.js?v=eb91a722";
+export function EquipmentContribution({ data }) {
+  const formatCur = (val) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(val);
+  return /* @__PURE__ */ jsxDEV(Card, { className: "shadow-sm border-slate-200", children: [
+    /* @__PURE__ */ jsxDEV(CardHeader, { className: "border-b border-slate-100 bg-slate-50/50", children: /* @__PURE__ */ jsxDEV(CardTitle, { className: "text-lg text-slate-900 flex items-center gap-2", children: [
+      /* @__PURE__ */ jsxDEV(Truck, { className: "h-5 w-5 text-slate-500" }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+        lineNumber: 11,
+        columnNumber: 11
+      }, this),
+      "Equipment Contribution"
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+      lineNumber: 10,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+      lineNumber: 9,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(CardContent, { className: "pt-6 space-y-4", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-2 gap-4", children: [
+        /* @__PURE__ */ jsxDEV("div", { className: "p-3 bg-slate-50 rounded-lg border border-slate-100", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "text-xs text-slate-500 uppercase font-semibold mb-1", children: "Linked Revenue" }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+            lineNumber: 18,
+            columnNumber: 13
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "text-xl font-bold text-slate-800", children: formatCur(data.revenue) }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+            lineNumber: 19,
+            columnNumber: 13
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+          lineNumber: 17,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "p-3 bg-slate-50 rounded-lg border border-slate-100", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "text-xs text-slate-500 uppercase font-semibold mb-1", children: "Linked Spend" }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+            lineNumber: 22,
+            columnNumber: 13
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "text-xl font-bold text-slate-800", children: formatCur(data.spend) }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+            lineNumber: 23,
+            columnNumber: 13
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+          lineNumber: 21,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+        lineNumber: 16,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "flex items-center justify-between py-2 border-t border-slate-100", children: [
+        /* @__PURE__ */ jsxDEV("span", { className: "text-sm font-medium text-slate-700", children: "Net Contribution" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+          lineNumber: 28,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("span", { className: "text-lg font-bold text-emerald-600", children: formatCur(data.revenue - data.spend) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+          lineNumber: 29,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+        lineNumber: 27,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "flex items-center justify-between py-2 border-t border-slate-100", children: [
+        /* @__PURE__ */ jsxDEV("span", { className: "text-sm font-medium text-slate-700", children: "Utilisation" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+          lineNumber: 33,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("span", { className: "text-sm font-bold text-slate-800", children: [
+          data.utilisation,
+          "%"
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+          lineNumber: 34,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+        lineNumber: 32,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+      lineNumber: 15,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx",
+    lineNumber: 8,
+    columnNumber: 5
+  }, this);
+}
+_c = EquipmentContribution;
+var _c;
+$RefreshReg$(_c, "EquipmentContribution");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/EquipmentContribution.tsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBVVU7QUFWVixTQUFTQSxNQUFNQyxZQUFZQyxXQUFXQyxtQkFBbUI7QUFDekQsU0FBU0MsYUFBYTtBQUVmLGdCQUFTQyxzQkFBc0IsRUFBRUMsS0FBb0IsR0FBRztBQUM3RCxRQUFNQyxZQUFZQSxDQUFDQyxRQUFnQixJQUFJQyxLQUFLQyxhQUFhLFNBQVMsRUFBRUMsT0FBTyxZQUFZQyxVQUFVLE9BQU9DLHVCQUF1QixFQUFFLENBQUMsRUFBRUMsT0FBT04sR0FBRztBQUU5SSxTQUNFLHVCQUFDLFFBQUssV0FBVSw4QkFDZDtBQUFBLDJCQUFDLGNBQVcsV0FBVSw0Q0FDcEIsaUNBQUMsYUFBVSxXQUFVLGtEQUNuQjtBQUFBLDZCQUFDLFNBQU0sV0FBVSw0QkFBakI7QUFBQTtBQUFBO0FBQUE7QUFBQSxhQUF5QztBQUFBO0FBQUEsU0FEM0M7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQUdBLEtBSkY7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQUtBO0FBQUEsSUFDQSx1QkFBQyxlQUFZLFdBQVUsa0JBQ3JCO0FBQUEsNkJBQUMsU0FBSSxXQUFVLDBCQUNiO0FBQUEsK0JBQUMsU0FBSSxXQUFVLHNEQUNiO0FBQUEsaUNBQUMsU0FBSSxXQUFVLHVEQUFzRCw4QkFBckU7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBbUY7QUFBQSxVQUNuRix1QkFBQyxTQUFJLFdBQVUsb0NBQW9DRCxvQkFBVUQsS0FBS1MsT0FBTyxLQUF6RTtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUEyRTtBQUFBLGFBRjdFO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFHQTtBQUFBLFFBQ0EsdUJBQUMsU0FBSSxXQUFVLHNEQUNiO0FBQUEsaUNBQUMsU0FBSSxXQUFVLHVEQUFzRCw0QkFBckU7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBaUY7QUFBQSxVQUNqRix1QkFBQyxTQUFJLFdBQVUsb0NBQW9DUixvQkFBVUQsS0FBS1UsS0FBSyxLQUF2RTtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUF5RTtBQUFBLGFBRjNFO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFHQTtBQUFBLFdBUkY7QUFBQTtBQUFBO0FBQUE7QUFBQSxhQVNBO0FBQUEsTUFFQSx1QkFBQyxTQUFJLFdBQVUsb0VBQ2I7QUFBQSwrQkFBQyxVQUFLLFdBQVUsc0NBQXFDLGdDQUFyRDtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQXFFO0FBQUEsUUFDckUsdUJBQUMsVUFBSyxXQUFVLHNDQUFzQ1Qsb0JBQVVELEtBQUtTLFVBQVVULEtBQUtVLEtBQUssS0FBekY7QUFBQTtBQUFBO0FBQUE7QUFBQSxlQUEyRjtBQUFBLFdBRjdGO0FBQUE7QUFBQTtBQUFBO0FBQUEsYUFHQTtBQUFBLE1BRUEsdUJBQUMsU0FBSSxXQUFVLG9FQUNiO0FBQUEsK0JBQUMsVUFBSyxXQUFVLHNDQUFxQywyQkFBckQ7QUFBQTtBQUFBO0FBQUE7QUFBQSxlQUFnRTtBQUFBLFFBQ2hFLHVCQUFDLFVBQUssV0FBVSxvQ0FBb0NWO0FBQUFBLGVBQUtXO0FBQUFBLFVBQVk7QUFBQSxhQUFyRTtBQUFBO0FBQUE7QUFBQTtBQUFBLGVBQXNFO0FBQUEsV0FGeEU7QUFBQTtBQUFBO0FBQUE7QUFBQSxhQUdBO0FBQUEsU0FwQkY7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQXFCQTtBQUFBLE9BNUJGO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0E2QkE7QUFFSjtBQUFDQyxLQW5DZWI7QUFBcUIsSUFBQWE7QUFBQUMsYUFBQUQsSUFBQSIsIm5hbWVzIjpbIkNhcmQiLCJDYXJkSGVhZGVyIiwiQ2FyZFRpdGxlIiwiQ2FyZENvbnRlbnQiLCJUcnVjayIsIkVxdWlwbWVudENvbnRyaWJ1dGlvbiIsImRhdGEiLCJmb3JtYXRDdXIiLCJ2YWwiLCJJbnRsIiwiTnVtYmVyRm9ybWF0Iiwic3R5bGUiLCJjdXJyZW5jeSIsIm1heGltdW1GcmFjdGlvbkRpZ2l0cyIsImZvcm1hdCIsInJldmVudWUiLCJzcGVuZCIsInV0aWxpc2F0aW9uIiwiX2MiLCIkUmVmcmVzaFJlZyQiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiRXF1aXBtZW50Q29udHJpYnV0aW9uLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBDYXJkLCBDYXJkSGVhZGVyLCBDYXJkVGl0bGUsIENhcmRDb250ZW50IH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9jYXJkXCI7XG5pbXBvcnQgeyBUcnVjayB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcblxuZXhwb3J0IGZ1bmN0aW9uIEVxdWlwbWVudENvbnRyaWJ1dGlvbih7IGRhdGEgfTogeyBkYXRhOiBhbnkgfSkge1xuICBjb25zdCBmb3JtYXRDdXIgPSAodmFsOiBudW1iZXIpID0+IG5ldyBJbnRsLk51bWJlckZvcm1hdCgnZW4tR0InLCB7IHN0eWxlOiAnY3VycmVuY3knLCBjdXJyZW5jeTogJ0dCUCcsIG1heGltdW1GcmFjdGlvbkRpZ2l0czogMCB9KS5mb3JtYXQodmFsKTtcblxuICByZXR1cm4gKFxuICAgIDxDYXJkIGNsYXNzTmFtZT1cInNoYWRvdy1zbSBib3JkZXItc2xhdGUtMjAwXCI+XG4gICAgICA8Q2FyZEhlYWRlciBjbGFzc05hbWU9XCJib3JkZXItYiBib3JkZXItc2xhdGUtMTAwIGJnLXNsYXRlLTUwLzUwXCI+XG4gICAgICAgIDxDYXJkVGl0bGUgY2xhc3NOYW1lPVwidGV4dC1sZyB0ZXh0LXNsYXRlLTkwMCBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxuICAgICAgICAgIDxUcnVjayBjbGFzc05hbWU9XCJoLTUgdy01IHRleHQtc2xhdGUtNTAwXCIgLz5cbiAgICAgICAgICBFcXVpcG1lbnQgQ29udHJpYnV0aW9uXG4gICAgICAgIDwvQ2FyZFRpdGxlPlxuICAgICAgPC9DYXJkSGVhZGVyPlxuICAgICAgPENhcmRDb250ZW50IGNsYXNzTmFtZT1cInB0LTYgc3BhY2UteS00XCI+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBnYXAtNFwiPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicC0zIGJnLXNsYXRlLTUwIHJvdW5kZWQtbGcgYm9yZGVyIGJvcmRlci1zbGF0ZS0xMDBcIj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXNsYXRlLTUwMCB1cHBlcmNhc2UgZm9udC1zZW1pYm9sZCBtYi0xXCI+TGlua2VkIFJldmVudWU8L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14bCBmb250LWJvbGQgdGV4dC1zbGF0ZS04MDBcIj57Zm9ybWF0Q3VyKGRhdGEucmV2ZW51ZSl9PC9kaXY+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJwLTMgYmctc2xhdGUtNTAgcm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLXNsYXRlLTEwMFwiPlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtc2xhdGUtNTAwIHVwcGVyY2FzZSBmb250LXNlbWlib2xkIG1iLTFcIj5MaW5rZWQgU3BlbmQ8L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14bCBmb250LWJvbGQgdGV4dC1zbGF0ZS04MDBcIj57Zm9ybWF0Q3VyKGRhdGEuc3BlbmQpfTwvZGl2PlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICA8L2Rpdj5cbiAgICAgICAgXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIHB5LTIgYm9yZGVyLXQgYm9yZGVyLXNsYXRlLTEwMFwiPlxuICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1zbGF0ZS03MDBcIj5OZXQgQ29udHJpYnV0aW9uPC9zcGFuPlxuICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtbGcgZm9udC1ib2xkIHRleHQtZW1lcmFsZC02MDBcIj57Zm9ybWF0Q3VyKGRhdGEucmV2ZW51ZSAtIGRhdGEuc3BlbmQpfTwvc3Bhbj5cbiAgICAgICAgPC9kaXY+XG4gICAgICAgIFxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBweS0yIGJvcmRlci10IGJvcmRlci1zbGF0ZS0xMDBcIj5cbiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtc2xhdGUtNzAwXCI+VXRpbGlzYXRpb248L3NwYW4+XG4gICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LWJvbGQgdGV4dC1zbGF0ZS04MDBcIj57ZGF0YS51dGlsaXNhdGlvbn0lPC9zcGFuPlxuICAgICAgICA8L2Rpdj5cbiAgICAgIDwvQ2FyZENvbnRlbnQ+XG4gICAgPC9DYXJkPlxuICApO1xufVxuIl0sImZpbGUiOiJDOi9Vc2Vycy9wc2thbi9Eb2N1bWVudHMvVGhlLUxlZGdlci9UaGUtTGVkZ2VyL1RoZS1MZWRnZXIvY2xpZW50L3NyYy9jb21wb25lbnRzL2ZpbmFuY2UvRXF1aXBtZW50Q29udHJpYnV0aW9uLnRzeCJ9

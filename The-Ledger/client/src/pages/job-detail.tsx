@@ -206,15 +206,6 @@ export default function JobDetailPage() {
               </>
             )}
 
-            {existingInvoice && (
-              <Button
-                variant="outline"
-                onClick={() => setLocation(`/invoices/${existingInvoice.id}`)}
-                data-testid="button-view-invoice"
-              >
-                <ReceiptText className="h-4 w-4 mr-2" /> View Invoice
-              </Button>
-            )}
           </div>
         </div>
 
@@ -358,11 +349,6 @@ export default function JobDetailPage() {
                   <span className="font-semibold" data-testid={`job-draft-total-${job.id}`}>
                     £{draft.total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
-                </div>
-                <div className="pt-1">
-                  <Button size="sm" variant="outline" onClick={() => setLocation('/invoice-builder')}>
-                    Open Invoice Builder
-                  </Button>
                 </div>
               </CardContent>
             </Card>

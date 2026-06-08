@@ -1,0 +1,76 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/ui/checkbox.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=eb91a722"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import __vite__cjsImport1_react from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react.js?v=eb91a722"; const React = ((m) => m?.__esModule ? m : {	...typeof m === "object" && !Array.isArray(m) || typeof m === "function" ? m : {},	default: m})(__vite__cjsImport1_react);
+import * as CheckboxPrimitive from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/@radix-ui_react-checkbox.js?v=eb91a722";
+import { Check } from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/lucide-react.js?v=eb91a722";
+import { cn } from "/src/lib/utils.ts";
+const Checkbox = React.forwardRef(
+  _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV(
+    CheckboxPrimitive.Root,
+    {
+      ref,
+      className: cn(
+        "grid place-content-center peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
+        className
+      ),
+      ...props,
+      children: /* @__PURE__ */ jsxDEV(
+        CheckboxPrimitive.Indicator,
+        {
+          className: cn("grid place-content-center text-current"),
+          children: /* @__PURE__ */ jsxDEV(Check, { className: "h-4 w-4" }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/ui/checkbox.tsx",
+            lineNumber: 22,
+            columnNumber: 7
+          }, this)
+        },
+        void 0,
+        false,
+        {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/ui/checkbox.tsx",
+          lineNumber: 19,
+          columnNumber: 5
+        },
+        this
+      )
+    },
+    void 0,
+    false,
+    {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/ui/checkbox.tsx",
+      lineNumber: 11,
+      columnNumber: 1
+    },
+    this
+  )
+);
+_c2 = Checkbox;
+Checkbox.displayName = CheckboxPrimitive.Root.displayName;
+export { Checkbox };
+var _c, _c2;
+$RefreshReg$(_c, "Checkbox$React.forwardRef");
+$RefreshReg$(_c2, "Checkbox");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/ui/checkbox.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/ui/checkbox.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/ui/checkbox.tsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJtYXBwaW5ncyI6IkFBcUJNO0FBckJOLFlBQVlBLFdBQVc7QUFDdkIsWUFBWUMsdUJBQXVCO0FBQ25DLFNBQVNDLGFBQWE7QUFFdEIsU0FBU0MsVUFBVTtBQUVuQixNQUFNQyxXQUFXSixNQUFNSztBQUFBQSxFQUd0QkMsS0FBQ0EsQ0FBQyxFQUFFQyxXQUFXLEdBQUdDLE1BQU0sR0FBR0MsUUFDMUI7QUFBQSxJQUFDLGtCQUFrQjtBQUFBLElBQWxCO0FBQUEsTUFDQztBQUFBLE1BQ0EsV0FBV047QUFBQUEsUUFDVDtBQUFBLFFBQ0FJO0FBQUFBLE1BQ0Y7QUFBQSxNQUNBLEdBQUlDO0FBQUFBLE1BRUo7QUFBQSxRQUFDLGtCQUFrQjtBQUFBLFFBQWxCO0FBQUEsVUFDQyxXQUFXTCxHQUFHLHdDQUF3QztBQUFBLFVBRXRELGlDQUFDLFNBQU0sV0FBVSxhQUFqQjtBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUEwQjtBQUFBO0FBQUEsUUFINUI7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLE1BSUE7QUFBQTtBQUFBLElBWkY7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBLEVBYUE7QUFDRDtBQUFDTyxNQWxCSU47QUFtQk5BLFNBQVNPLGNBQWNWLGtCQUFrQlcsS0FBS0Q7QUFFOUMsU0FBU1A7QUFBVSxJQUFBRSxJQUFBSTtBQUFBRyxhQUFBUCxJQUFBO0FBQUFPLGFBQUFILEtBQUEiLCJuYW1lcyI6WyJSZWFjdCIsIkNoZWNrYm94UHJpbWl0aXZlIiwiQ2hlY2siLCJjbiIsIkNoZWNrYm94IiwiZm9yd2FyZFJlZiIsIl9jIiwiY2xhc3NOYW1lIiwicHJvcHMiLCJyZWYiLCJfYzIiLCJkaXNwbGF5TmFtZSIsIlJvb3QiLCIkUmVmcmVzaFJlZyQiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsiY2hlY2tib3gudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCAqIGFzIFJlYWN0IGZyb20gXCJyZWFjdFwiXG5pbXBvcnQgKiBhcyBDaGVja2JveFByaW1pdGl2ZSBmcm9tIFwiQHJhZGl4LXVpL3JlYWN0LWNoZWNrYm94XCJcbmltcG9ydCB7IENoZWNrIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiXG5cbmltcG9ydCB7IGNuIH0gZnJvbSBcIkAvbGliL3V0aWxzXCJcblxuY29uc3QgQ2hlY2tib3ggPSBSZWFjdC5mb3J3YXJkUmVmPFxuICBSZWFjdC5FbGVtZW50UmVmPHR5cGVvZiBDaGVja2JveFByaW1pdGl2ZS5Sb290PixcbiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPHR5cGVvZiBDaGVja2JveFByaW1pdGl2ZS5Sb290PlxuPigoeyBjbGFzc05hbWUsIC4uLnByb3BzIH0sIHJlZikgPT4gKFxuICA8Q2hlY2tib3hQcmltaXRpdmUuUm9vdFxuICAgIHJlZj17cmVmfVxuICAgIGNsYXNzTmFtZT17Y24oXG4gICAgICBcImdyaWQgcGxhY2UtY29udGVudC1jZW50ZXIgcGVlciBoLTQgdy00IHNocmluay0wIHJvdW5kZWQtc20gYm9yZGVyIGJvcmRlci1wcmltYXJ5IHNoYWRvdyBmb2N1cy12aXNpYmxlOm91dGxpbmUtbm9uZSBmb2N1cy12aXNpYmxlOnJpbmctMSBmb2N1cy12aXNpYmxlOnJpbmctcmluZyBkaXNhYmxlZDpjdXJzb3Itbm90LWFsbG93ZWQgZGlzYWJsZWQ6b3BhY2l0eS01MCBkYXRhLVtzdGF0ZT1jaGVja2VkXTpiZy1wcmltYXJ5IGRhdGEtW3N0YXRlPWNoZWNrZWRdOnRleHQtcHJpbWFyeS1mb3JlZ3JvdW5kXCIsXG4gICAgICBjbGFzc05hbWVcbiAgICApfVxuICAgIHsuLi5wcm9wc31cbiAgPlxuICAgIDxDaGVja2JveFByaW1pdGl2ZS5JbmRpY2F0b3JcbiAgICAgIGNsYXNzTmFtZT17Y24oXCJncmlkIHBsYWNlLWNvbnRlbnQtY2VudGVyIHRleHQtY3VycmVudFwiKX1cbiAgICA+XG4gICAgICA8Q2hlY2sgY2xhc3NOYW1lPVwiaC00IHctNFwiIC8+XG4gICAgPC9DaGVja2JveFByaW1pdGl2ZS5JbmRpY2F0b3I+XG4gIDwvQ2hlY2tib3hQcmltaXRpdmUuUm9vdD5cbikpXG5DaGVja2JveC5kaXNwbGF5TmFtZSA9IENoZWNrYm94UHJpbWl0aXZlLlJvb3QuZGlzcGxheU5hbWVcblxuZXhwb3J0IHsgQ2hlY2tib3ggfVxuIl0sImZpbGUiOiJDOi9Vc2Vycy9wc2thbi9Eb2N1bWVudHMvVGhlLUxlZGdlci9UaGUtTGVkZ2VyL1RoZS1MZWRnZXIvY2xpZW50L3NyYy9jb21wb25lbnRzL3VpL2NoZWNrYm94LnRzeCJ9

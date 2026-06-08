@@ -1,11 +1,14 @@
 /**
  * PHASE 5.3 DOCTRINE TEST — Invoice Generation Pipeline
  *
+ * UX-4: Invoice Builder moved to Finance Hub at /finance?tab=invoicing.
+ * Financial Explorer Invoice Pipeline tab now at /finance?tab=records.
+ *
  * Validates:
- *  1. Invoice Builder page loads and shows seed draft INV-2026-0001
+ *  1. Finance Hub Invoicing tab loads and shows seed draft INV-2026-0001
  *  2. Pipeline strip shows correct counts per status
  *  3. Status workflow advances: draft → ready → sent → paid
- *  4. Financial Explorer "Invoice Pipeline" tab renders correctly
+ *  4. Finance Hub Records tab "Invoice Pipeline" tab renders correctly
  *  5. Job Detail shows invoice draft status for seeded job
  *
  * Data source: seed draft seeded by the IIFE in mockData.ts for
@@ -21,11 +24,11 @@ test.beforeEach(async ({ page }) => {
 });
 
 // ─────────────────────────────────────────────────────────────────
-// TEST 1: Invoice Builder page loads with seed data
+// TEST 1: Invoice Builder content loads with seed data
 // ─────────────────────────────────────────────────────────────────
 test("Invoice Builder page loads and shows seed draft INV-2026-0001", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/invoice-builder");
+  await page.goto("http://localhost:5000/finance?tab=invoicing");
 
   await expect(page.getByTestId("page-title-invoice-builder")).toBeVisible();
   await expect(page.getByTestId("invoice-pipeline-strip")).toBeVisible();
@@ -48,7 +51,7 @@ test("Invoice Builder page loads and shows seed draft INV-2026-0001", async ({ p
 // ─────────────────────────────────────────────────────────────────
 test("Pipeline strip shows correct counts from seed data", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/invoice-builder");
+  await page.goto("http://localhost:5000/finance?tab=invoicing");
 
   await expect(page.getByTestId("pipeline-count-draft")).toHaveText("1");
   await expect(page.getByTestId("pipeline-count-ready")).toHaveText("0");
@@ -61,7 +64,7 @@ test("Pipeline strip shows correct counts from seed data", async ({ page }) => {
 // ─────────────────────────────────────────────────────────────────
 test("Invoice draft can be advanced from draft to ready", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/invoice-builder");
+  await page.goto("http://localhost:5000/finance?tab=invoicing");
 
   const advanceBtn = page.getByTestId("btn-advance-seed-draft-kex-1");
   await expect(advanceBtn).toBeVisible();
@@ -82,7 +85,7 @@ test("Invoice draft can be advanced from draft to ready", async ({ page }) => {
 // ─────────────────────────────────────────────────────────────────
 test("Invoice draft completes full workflow draft → ready → sent → paid", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/invoice-builder");
+  await page.goto("http://localhost:5000/finance?tab=invoicing");
 
   // draft → ready
   await page.getByTestId("btn-advance-seed-draft-kex-1").click();
@@ -105,11 +108,11 @@ test("Invoice draft completes full workflow draft → ready → sent → paid", 
 });
 
 // ─────────────────────────────────────────────────────────────────
-// TEST 5: Financial Explorer Invoice Pipeline tab
+// TEST 5: Finance Hub Records tab — Invoice Pipeline tab
 // ─────────────────────────────────────────────────────────────────
-test("Financial Explorer shows Invoice Pipeline tab with seed data", async ({ page }) => {
+test("Finance Hub Records tab shows Invoice Pipeline tab with seed data", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/financial-explorer");
+  await page.goto("http://localhost:5000/finance?tab=records");
 
   const tab = page.getByTestId("tab-invoice-pipeline");
   await expect(tab).toBeVisible();

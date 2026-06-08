@@ -1,0 +1,1067 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/finance/AccountingSyncTab.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=eb91a722"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react.js?v=eb91a722"; const useState = __vite__cjsImport1_react["useState"]; const useMemo = __vite__cjsImport1_react["useMemo"];
+import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "/src/components/ui/table.tsx";
+import {
+  Clock,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  AlertTriangle,
+  Search,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp
+} from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/lucide-react.js?v=eb91a722";
+import {
+  SYNC_STATUS_LABELS,
+  SYNC_STATUS_COLORS,
+  SEED_SYNC_RECORDS,
+  SEED_SYNC_AUDIT,
+  computeSyncKPIs,
+  simulateMockSync,
+  advanceSyncRecord,
+  SYNC_ERROR_LABELS,
+  SYNC_ERROR_RESOLUTIONS
+} from "/src/lib/accountingSyncEngine.ts";
+import {
+  PROVIDER_LABELS,
+  ENTITY_TYPE_LABELS,
+  getProviderMeta
+} from "/src/lib/accountingProviders.ts";
+function fmtDateTime(iso) {
+  if (!iso) return /* @__PURE__ */ jsxDEV("span", { className: "text-muted-foreground text-xs", children: "—" }, void 0, false, {
+    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+    lineNumber: 66,
+    columnNumber: 20
+  }, this);
+  return /* @__PURE__ */ jsxDEV("span", { className: "font-mono text-xs text-muted-foreground whitespace-nowrap", children: new Date(iso).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }) }, void 0, false, {
+    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+    lineNumber: 68,
+    columnNumber: 5
+  }, this);
+}
+function ProviderBadge({ provider }) {
+  const meta = getProviderMeta(provider);
+  return /* @__PURE__ */ jsxDEV(
+    "span",
+    {
+      className: `inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded border ${meta.bgColor} ${meta.borderColor} ${meta.color}`,
+      "data-testid": `provider-badge-${provider}`,
+      children: [
+        /* @__PURE__ */ jsxDEV("span", { className: "font-bold", children: meta.logoInitials }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 89,
+          columnNumber: 7
+        }, this),
+        meta.name
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+      lineNumber: 83,
+      columnNumber: 5
+    },
+    this
+  );
+}
+_c = ProviderBadge;
+function StatusBadge({ status }) {
+  return /* @__PURE__ */ jsxDEV(
+    Badge,
+    {
+      variant: "outline",
+      className: SYNC_STATUS_COLORS[status],
+      "data-testid": `sync-status-badge-${status}`,
+      children: SYNC_STATUS_LABELS[status]
+    },
+    void 0,
+    false,
+    {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+      lineNumber: 97,
+      columnNumber: 5
+    },
+    this
+  );
+}
+_c2 = StatusBadge;
+export function AccountingSyncTab() {
+  _s();
+  const [records, setRecords] = useState(SEED_SYNC_RECORDS);
+  const [auditEntries, setAuditEntries] = useState(SEED_SYNC_AUDIT);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortField, setSortField] = useState("lastAttemptAt");
+  const [sortDir, setSortDir] = useState("desc");
+  const [expandedError, setExpandedError] = useState(null);
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [syncingIds, setSyncingIds] = useState(/* @__PURE__ */ new Set());
+  const kpis = useMemo(() => computeSyncKPIs(records), [records]);
+  const filtered = useMemo(() => {
+    let result = records;
+    if (statusFilter !== "all") {
+      result = result.filter((r) => r.status === statusFilter);
+    }
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter(
+        (r) => r.jobTitle.toLowerCase().includes(q) || PROVIDER_LABELS[r.provider].toLowerCase().includes(q) || ENTITY_TYPE_LABELS[r.entityType].toLowerCase().includes(q) || (r.externalId?.toLowerCase().includes(q) ?? false) || SYNC_STATUS_LABELS[r.status].toLowerCase().includes(q)
+      );
+    }
+    return [...result].sort((a, b) => {
+      let av = "";
+      let bv = "";
+      switch (sortField) {
+        case "provider":
+          av = a.provider;
+          bv = b.provider;
+          break;
+        case "entityType":
+          av = a.entityType;
+          bv = b.entityType;
+          break;
+        case "job":
+          av = a.jobTitle;
+          bv = b.jobTitle;
+          break;
+        case "status":
+          av = a.status;
+          bv = b.status;
+          break;
+        case "lastAttemptAt":
+          av = a.lastAttemptAt ?? "";
+          bv = b.lastAttemptAt ?? "";
+          break;
+      }
+      if (av < bv) return sortDir === "asc" ? -1 : 1;
+      if (av > bv) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [records, search, statusFilter, sortField, sortDir]);
+  const toggleSort = (field) => {
+    if (sortField === field) {
+      setSortDir((d) => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+  const handleSync = (record) => {
+    if (record.status === "syncing") return;
+    setSyncingIds((s) => new Set(s).add(record.id));
+    const succeed = !record.errorType || record.entityType !== "payroll";
+    setRecords(
+      (prev) => prev.map(
+        (r) => r.id === record.id ? { ...r, status: "syncing", lastAttemptAt: (/* @__PURE__ */ new Date()).toISOString() } : r
+      )
+    );
+    setTimeout(() => {
+      const steps = simulateMockSync(record, succeed);
+      const finalStep = steps[steps.length - 1];
+      if (finalStep) {
+        setRecords(
+          (prev) => prev.map((r) => r.id === record.id ? finalStep.updated : r)
+        );
+        setAuditEntries((prev) => [...prev, ...steps.map((s) => s.auditEntry)]);
+      }
+      setSyncingIds((s) => {
+        const next = new Set(s);
+        next.delete(record.id);
+        return next;
+      });
+    }, 1500);
+  };
+  const handleRetry = (record) => {
+    const step = advanceSyncRecord(record, "retry_required");
+    if (!step) return;
+    setRecords(
+      (prev) => prev.map((r) => r.id === record.id ? step.updated : r)
+    );
+    setAuditEntries((prev) => [...prev, step.auditEntry]);
+    setTimeout(() => handleSync(step.updated), 200);
+  };
+  const SortIcon = ({ field }) => {
+    if (sortField !== field)
+      return /* @__PURE__ */ jsxDEV(ChevronDown, { className: "h-3 w-3 opacity-30" }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+        lineNumber: 239,
+        columnNumber: 12
+      }, this);
+    return sortDir === "asc" ? /* @__PURE__ */ jsxDEV(ChevronUp, { className: "h-3 w-3" }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+      lineNumber: 241,
+      columnNumber: 5
+    }, this) : /* @__PURE__ */ jsxDEV(ChevronDown, { className: "h-3 w-3" }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+      lineNumber: 243,
+      columnNumber: 5
+    }, this);
+  };
+  const kpiCards = [
+    {
+      label: "Pending Sync",
+      value: kpis.pending,
+      icon: Clock,
+      color: "text-slate-600",
+      testId: "kpi-sync-pending",
+      filter: "pending"
+    },
+    {
+      label: "Synced",
+      value: kpis.synced,
+      icon: CheckCircle2,
+      color: "text-emerald-600",
+      testId: "kpi-sync-synced",
+      filter: "synced"
+    },
+    {
+      label: "Failed",
+      value: kpis.failed,
+      icon: XCircle,
+      color: "text-red-600",
+      testId: "kpi-sync-failed",
+      filter: "failed"
+    },
+    {
+      label: "Retry Required",
+      value: kpis.retryRequired,
+      icon: RefreshCw,
+      color: "text-amber-600",
+      testId: "kpi-sync-retry",
+      filter: "retry_required"
+    }
+  ];
+  return /* @__PURE__ */ jsxDEV("div", { className: "mt-4 space-y-6", "data-testid": "accounting-sync-tab-panel", children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "rounded-md bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-700", children: [
+      /* @__PURE__ */ jsxDEV("span", { className: "font-semibold", children: "Sync Doctrine: " }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+        lineNumber: 286,
+        columnNumber: 9
+      }, this),
+      "Synchronization exports approved financial truth to downstream accounting systems. The Ledger remains the source of operational truth. Sync never creates or modifies financial records."
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+      lineNumber: 285,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-3", children: kpiCards.map(
+      ({ label, value, icon: Icon, color, testId, filter }) => /* @__PURE__ */ jsxDEV(
+        Card,
+        {
+          className: `cursor-pointer transition-all ${statusFilter === filter ? "ring-2 ring-primary" : ""}`,
+          onClick: () => setStatusFilter((prev) => prev === filter ? "all" : filter),
+          children: [
+            /* @__PURE__ */ jsxDEV(CardHeader, { className: "pb-1 pt-4 px-4", children: /* @__PURE__ */ jsxDEV(CardTitle, { className: "text-xs font-medium text-muted-foreground uppercase tracking-wide", children: label }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+              lineNumber: 305,
+              columnNumber: 15
+            }, this) }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+              lineNumber: 304,
+              columnNumber: 13
+            }, this),
+            /* @__PURE__ */ jsxDEV(CardContent, { className: "px-4 pb-4 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxDEV(Icon, { className: `h-5 w-5 flex-shrink-0 ${color}` }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 310,
+                columnNumber: 15
+              }, this),
+              /* @__PURE__ */ jsxDEV(
+                "span",
+                {
+                  className: "text-2xl font-bold",
+                  "data-testid": testId,
+                  children: value
+                },
+                void 0,
+                false,
+                {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 311,
+                  columnNumber: 15
+                },
+                this
+              )
+            ] }, void 0, true, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+              lineNumber: 309,
+              columnNumber: 13
+            }, this)
+          ]
+        },
+        label,
+        true,
+        {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 295,
+          columnNumber: 9
+        },
+        this
+      )
+    ) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+      lineNumber: 293,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "relative w-full sm:w-72", children: [
+        /* @__PURE__ */ jsxDEV(Search, { className: "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 325,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV(
+          Input,
+          {
+            placeholder: "Search provider, job, status…",
+            value: search,
+            onChange: (e) => setSearch(e.target.value),
+            className: "pl-9",
+            "data-testid": "sync-queue-search"
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 326,
+            columnNumber: 11
+          },
+          this
+        )
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+        lineNumber: 324,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2", children: [
+        statusFilter !== "all" && /* @__PURE__ */ jsxDEV(
+          Badge,
+          {
+            variant: "outline",
+            className: "cursor-pointer",
+            onClick: () => setStatusFilter("all"),
+            children: [
+              SYNC_STATUS_LABELS[statusFilter],
+              " ×"
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 336,
+            columnNumber: 11
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV(
+          Button,
+          {
+            variant: "outline",
+            size: "sm",
+            onClick: () => setAuditOpen((o) => !o),
+            "data-testid": "btn-toggle-sync-audit",
+            children: [
+              "Sync Audit Trail (",
+              auditEntries.length,
+              ")"
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 344,
+            columnNumber: 11
+          },
+          this
+        )
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+        lineNumber: 334,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+      lineNumber: 323,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "border rounded-md", "data-testid": "sync-queue-table", children: filtered.length === 0 ? /* @__PURE__ */ jsxDEV("div", { className: "flex flex-col items-center justify-center py-16 text-muted-foreground", children: [
+      /* @__PURE__ */ jsxDEV(RefreshCw, { className: "h-10 w-10 mb-3 opacity-20" }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+        lineNumber: 359,
+        columnNumber: 13
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { className: "text-sm", children: "No sync records match the current filter." }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+        lineNumber: 360,
+        columnNumber: 13
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+      lineNumber: 358,
+      columnNumber: 9
+    }, this) : /* @__PURE__ */ jsxDEV(Table, { children: [
+      /* @__PURE__ */ jsxDEV(TableHeader, { children: /* @__PURE__ */ jsxDEV(TableRow, { children: [
+        /* @__PURE__ */ jsxDEV(TableHead, { children: /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            className: "flex items-center gap-1 hover:text-foreground",
+            onClick: () => toggleSort("provider"),
+            "data-testid": "sort-provider",
+            children: [
+              "Provider ",
+              /* @__PURE__ */ jsxDEV(SortIcon, { field: "provider" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 372,
+                columnNumber: 30
+              }, this)
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 367,
+            columnNumber: 19
+          },
+          this
+        ) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 366,
+          columnNumber: 17
+        }, this),
+        /* @__PURE__ */ jsxDEV(TableHead, { children: /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            className: "flex items-center gap-1 hover:text-foreground",
+            onClick: () => toggleSort("entityType"),
+            "data-testid": "sort-entity-type",
+            children: [
+              "Entity Type ",
+              /* @__PURE__ */ jsxDEV(SortIcon, { field: "entityType" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 381,
+                columnNumber: 33
+              }, this)
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 376,
+            columnNumber: 19
+          },
+          this
+        ) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 375,
+          columnNumber: 17
+        }, this),
+        /* @__PURE__ */ jsxDEV(TableHead, { children: /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            className: "flex items-center gap-1 hover:text-foreground",
+            onClick: () => toggleSort("job"),
+            children: [
+              "Job ",
+              /* @__PURE__ */ jsxDEV(SortIcon, { field: "job" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 389,
+                columnNumber: 25
+              }, this)
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 385,
+            columnNumber: 19
+          },
+          this
+        ) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 384,
+          columnNumber: 17
+        }, this),
+        /* @__PURE__ */ jsxDEV(TableHead, { children: /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            className: "flex items-center gap-1 hover:text-foreground",
+            onClick: () => toggleSort("status"),
+            "data-testid": "sort-status",
+            children: [
+              "Status ",
+              /* @__PURE__ */ jsxDEV(SortIcon, { field: "status" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 398,
+                columnNumber: 28
+              }, this)
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 393,
+            columnNumber: 19
+          },
+          this
+        ) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 392,
+          columnNumber: 17
+        }, this),
+        /* @__PURE__ */ jsxDEV(TableHead, { children: /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            className: "flex items-center gap-1 hover:text-foreground",
+            onClick: () => toggleSort("lastAttemptAt"),
+            children: [
+              "Last Attempt ",
+              /* @__PURE__ */ jsxDEV(SortIcon, { field: "lastAttemptAt" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 406,
+                columnNumber: 34
+              }, this)
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 402,
+            columnNumber: 19
+          },
+          this
+        ) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 401,
+          columnNumber: 17
+        }, this),
+        /* @__PURE__ */ jsxDEV(TableHead, { children: "External ID" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 409,
+          columnNumber: 17
+        }, this),
+        /* @__PURE__ */ jsxDEV(TableHead, { children: "Action" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 410,
+          columnNumber: 17
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+        lineNumber: 365,
+        columnNumber: 15
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+        lineNumber: 364,
+        columnNumber: 13
+      }, this),
+      /* @__PURE__ */ jsxDEV(TableBody, { children: filtered.map(
+        (record) => /* @__PURE__ */ jsxDEV(Fragment, { children: [
+          /* @__PURE__ */ jsxDEV(
+            TableRow,
+            {
+              "data-testid": `sync-row-${record.id}`,
+              children: [
+                /* @__PURE__ */ jsxDEV(TableCell, { children: /* @__PURE__ */ jsxDEV(ProviderBadge, { provider: record.provider }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 421,
+                  columnNumber: 23
+                }, this) }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 420,
+                  columnNumber: 21
+                }, this),
+                /* @__PURE__ */ jsxDEV(TableCell, { className: "text-sm", children: ENTITY_TYPE_LABELS[record.entityType] }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 423,
+                  columnNumber: 21
+                }, this),
+                /* @__PURE__ */ jsxDEV(TableCell, { className: "text-sm max-w-[160px] truncate", children: record.jobTitle }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 426,
+                  columnNumber: 21
+                }, this),
+                /* @__PURE__ */ jsxDEV(TableCell, { children: /* @__PURE__ */ jsxDEV(StatusBadge, { status: record.status }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 430,
+                  columnNumber: 23
+                }, this) }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 429,
+                  columnNumber: 21
+                }, this),
+                /* @__PURE__ */ jsxDEV(TableCell, { children: fmtDateTime(record.lastAttemptAt) }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 432,
+                  columnNumber: 21
+                }, this),
+                /* @__PURE__ */ jsxDEV(TableCell, { children: record.externalId ? /* @__PURE__ */ jsxDEV(
+                  "span",
+                  {
+                    className: "font-mono text-xs flex items-center gap-1",
+                    "data-testid": `external-id-${record.id}`,
+                    children: [
+                      /* @__PURE__ */ jsxDEV(ExternalLink, { className: "h-3 w-3 text-muted-foreground" }, void 0, false, {
+                        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                        lineNumber: 439,
+                        columnNumber: 27
+                      }, this),
+                      record.externalId
+                    ]
+                  },
+                  void 0,
+                  true,
+                  {
+                    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                    lineNumber: 435,
+                    columnNumber: 19
+                  },
+                  this
+                ) : /* @__PURE__ */ jsxDEV("span", { className: "text-muted-foreground text-xs", children: "—" }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 443,
+                  columnNumber: 19
+                }, this) }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 433,
+                  columnNumber: 21
+                }, this),
+                /* @__PURE__ */ jsxDEV(TableCell, { children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-1", children: [
+                  (record.status === "pending" || record.status === "retry_required") && /* @__PURE__ */ jsxDEV(
+                    Button,
+                    {
+                      size: "sm",
+                      variant: "outline",
+                      className: "text-xs h-7",
+                      onClick: () => handleSync(record),
+                      disabled: syncingIds.has(record.id),
+                      "data-testid": `btn-sync-${record.id}`,
+                      children: [
+                        /* @__PURE__ */ jsxDEV(RefreshCw, { className: "h-3 w-3 mr-1" }, void 0, false, {
+                          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                          lineNumber: 457,
+                          columnNumber: 29
+                        }, this),
+                        "Sync"
+                      ]
+                    },
+                    void 0,
+                    true,
+                    {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 449,
+                      columnNumber: 21
+                    },
+                    this
+                  ),
+                  record.status === "failed" && /* @__PURE__ */ jsxDEV(Fragment, { children: [
+                    /* @__PURE__ */ jsxDEV(
+                      Button,
+                      {
+                        size: "sm",
+                        variant: "outline",
+                        className: "text-xs h-7 text-amber-700 border-amber-300",
+                        onClick: () => handleRetry(record),
+                        "data-testid": `btn-retry-${record.id}`,
+                        children: [
+                          /* @__PURE__ */ jsxDEV(RefreshCw, { className: "h-3 w-3 mr-1" }, void 0, false, {
+                            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                            lineNumber: 470,
+                            columnNumber: 31
+                          }, this),
+                          "Retry"
+                        ]
+                      },
+                      void 0,
+                      true,
+                      {
+                        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                        lineNumber: 463,
+                        columnNumber: 29
+                      },
+                      this
+                    ),
+                    /* @__PURE__ */ jsxDEV(
+                      Button,
+                      {
+                        size: "sm",
+                        variant: "ghost",
+                        className: "text-xs h-7",
+                        onClick: () => setExpandedError(
+                          (e) => e === record.id ? null : record.id
+                        ),
+                        "data-testid": `btn-error-details-${record.id}`,
+                        children: [
+                          /* @__PURE__ */ jsxDEV(AlertTriangle, { className: "h-3 w-3 mr-1 text-red-500" }, void 0, false, {
+                            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                            lineNumber: 484,
+                            columnNumber: 31
+                          }, this),
+                          "Details"
+                        ]
+                      },
+                      void 0,
+                      true,
+                      {
+                        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                        lineNumber: 473,
+                        columnNumber: 29
+                      },
+                      this
+                    )
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                    lineNumber: 462,
+                    columnNumber: 21
+                  }, this),
+                  record.status === "syncing" && /* @__PURE__ */ jsxDEV("span", { className: "text-xs text-blue-600 animate-pulse", children: "Syncing…" }, void 0, false, {
+                    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                    lineNumber: 490,
+                    columnNumber: 21
+                  }, this),
+                  record.status === "synced" && /* @__PURE__ */ jsxDEV("span", { className: "text-xs text-emerald-600", children: "✓ Synced" }, void 0, false, {
+                    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                    lineNumber: 495,
+                    columnNumber: 21
+                  }, this)
+                ] }, void 0, true, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 447,
+                  columnNumber: 23
+                }, this) }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 446,
+                  columnNumber: 21
+                }, this)
+              ]
+            },
+            record.id,
+            true,
+            {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+              lineNumber: 416,
+              columnNumber: 19
+            },
+            this
+          ),
+          expandedError === record.id && record.errorType && /* @__PURE__ */ jsxDEV(TableRow, { children: /* @__PURE__ */ jsxDEV(TableCell, { colSpan: 7, className: "bg-red-50 border-t-0", children: /* @__PURE__ */ jsxDEV(
+            "div",
+            {
+              className: "p-3 space-y-2",
+              "data-testid": `error-panel-${record.id}`,
+              children: [
+                /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxDEV(XCircle, { className: "h-4 w-4 text-red-600" }, void 0, false, {
+                    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                    lineNumber: 510,
+                    columnNumber: 29
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("span", { className: "font-semibold text-sm text-red-700", children: SYNC_ERROR_LABELS[record.errorType] }, void 0, false, {
+                    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                    lineNumber: 511,
+                    columnNumber: 29
+                  }, this)
+                ] }, void 0, true, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 509,
+                  columnNumber: 27
+                }, this),
+                /* @__PURE__ */ jsxDEV("p", { className: "text-sm text-red-700", children: record.errorMessage }, void 0, false, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 515,
+                  columnNumber: 27
+                }, this),
+                /* @__PURE__ */ jsxDEV("div", { className: "mt-2 flex items-start gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2", children: [
+                  /* @__PURE__ */ jsxDEV(AlertTriangle, { className: "h-4 w-4 mt-0.5 flex-shrink-0" }, void 0, false, {
+                    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                    lineNumber: 519,
+                    columnNumber: 29
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("div", { children: [
+                    /* @__PURE__ */ jsxDEV("span", { className: "font-semibold", children: "Suggested Resolution: " }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 521,
+                      columnNumber: 31
+                    }, this),
+                    /* @__PURE__ */ jsxDEV("span", { "data-testid": `error-resolution-${record.id}`, children: SYNC_ERROR_RESOLUTIONS[record.errorType] }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 522,
+                      columnNumber: 31
+                    }, this)
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                    lineNumber: 520,
+                    columnNumber: 29
+                  }, this)
+                ] }, void 0, true, {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 518,
+                  columnNumber: 27
+                }, this)
+              ]
+            },
+            void 0,
+            true,
+            {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+              lineNumber: 505,
+              columnNumber: 25
+            },
+            this
+          ) }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 504,
+            columnNumber: 23
+          }, this) }, `${record.id}-error`, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 503,
+            columnNumber: 15
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+          lineNumber: 415,
+          columnNumber: 13
+        }, this)
+      ) }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+        lineNumber: 413,
+        columnNumber: 13
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+      lineNumber: 363,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+      lineNumber: 356,
+      columnNumber: 7
+    }, this),
+    auditOpen && /* @__PURE__ */ jsxDEV(
+      "div",
+      {
+        className: "border rounded-md",
+        "data-testid": "sync-audit-trail",
+        children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "px-4 py-3 border-b bg-muted/30", children: [
+            /* @__PURE__ */ jsxDEV("h3", { className: "text-sm font-semibold", children: "Sync Audit Trail" }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+              lineNumber: 545,
+              columnNumber: 13
+            }, this),
+            /* @__PURE__ */ jsxDEV("p", { className: "text-xs text-muted-foreground", children: "All sync actions are immutably logged below." }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+              lineNumber: 546,
+              columnNumber: 13
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 544,
+            columnNumber: 11
+          }, this),
+          auditEntries.length === 0 ? /* @__PURE__ */ jsxDEV("div", { className: "py-8 text-center text-sm text-muted-foreground", children: "No audit entries yet." }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 551,
+            columnNumber: 9
+          }, this) : /* @__PURE__ */ jsxDEV(Table, { children: [
+            /* @__PURE__ */ jsxDEV(TableHeader, { children: /* @__PURE__ */ jsxDEV(TableRow, { children: [
+              /* @__PURE__ */ jsxDEV(TableHead, { children: "Timestamp" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 558,
+                columnNumber: 19
+              }, this),
+              /* @__PURE__ */ jsxDEV(TableHead, { children: "Provider" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 559,
+                columnNumber: 19
+              }, this),
+              /* @__PURE__ */ jsxDEV(TableHead, { children: "Entity" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 560,
+                columnNumber: 19
+              }, this),
+              /* @__PURE__ */ jsxDEV(TableHead, { children: "Transition" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 561,
+                columnNumber: 19
+              }, this),
+              /* @__PURE__ */ jsxDEV(TableHead, { children: "Message" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 562,
+                columnNumber: 19
+              }, this),
+              /* @__PURE__ */ jsxDEV(TableHead, { children: "External ID" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                lineNumber: 563,
+                columnNumber: 19
+              }, this)
+            ] }, void 0, true, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+              lineNumber: 557,
+              columnNumber: 17
+            }, this) }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+              lineNumber: 556,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV(TableBody, { children: [...auditEntries].reverse().map(
+              (entry) => /* @__PURE__ */ jsxDEV(
+                TableRow,
+                {
+                  "data-testid": `sync-audit-entry-${entry.id}`,
+                  children: [
+                    /* @__PURE__ */ jsxDEV(TableCell, { children: fmtDateTime(entry.timestamp) }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 572,
+                      columnNumber: 21
+                    }, this),
+                    /* @__PURE__ */ jsxDEV(TableCell, { children: /* @__PURE__ */ jsxDEV(ProviderBadge, { provider: entry.provider }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 574,
+                      columnNumber: 23
+                    }, this) }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 573,
+                      columnNumber: 21
+                    }, this),
+                    /* @__PURE__ */ jsxDEV(TableCell, { className: "text-xs", children: ENTITY_TYPE_LABELS[entry.entityType] }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 576,
+                      columnNumber: 21
+                    }, this),
+                    /* @__PURE__ */ jsxDEV(TableCell, { className: "text-xs", children: entry.fromStatus ? /* @__PURE__ */ jsxDEV("span", { children: [
+                      /* @__PURE__ */ jsxDEV(StatusBadge, { status: entry.fromStatus }, void 0, false, {
+                        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                        lineNumber: 582,
+                        columnNumber: 27
+                      }, this),
+                      " → ",
+                      /* @__PURE__ */ jsxDEV(StatusBadge, { status: entry.toStatus }, void 0, false, {
+                        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                        lineNumber: 584,
+                        columnNumber: 27
+                      }, this)
+                    ] }, void 0, true, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 581,
+                      columnNumber: 17
+                    }, this) : /* @__PURE__ */ jsxDEV(StatusBadge, { status: entry.toStatus }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 587,
+                      columnNumber: 17
+                    }, this) }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 579,
+                      columnNumber: 21
+                    }, this),
+                    /* @__PURE__ */ jsxDEV(TableCell, { className: "text-xs max-w-[240px] truncate", children: entry.message }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 590,
+                      columnNumber: 21
+                    }, this),
+                    /* @__PURE__ */ jsxDEV(TableCell, { children: entry.externalId ? /* @__PURE__ */ jsxDEV("span", { className: "font-mono text-xs", children: entry.externalId }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 595,
+                      columnNumber: 17
+                    }, this) : /* @__PURE__ */ jsxDEV("span", { className: "text-muted-foreground text-xs", children: "—" }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 599,
+                      columnNumber: 17
+                    }, this) }, void 0, false, {
+                      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                      lineNumber: 593,
+                      columnNumber: 21
+                    }, this)
+                  ]
+                },
+                entry.id,
+                true,
+                {
+                  fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+                  lineNumber: 568,
+                  columnNumber: 13
+                },
+                this
+              )
+            ) }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+              lineNumber: 566,
+              columnNumber: 15
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+            lineNumber: 555,
+            columnNumber: 9
+          }, this)
+        ]
+      },
+      void 0,
+      true,
+      {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+        lineNumber: 540,
+        columnNumber: 7
+      },
+      this
+    )
+  ] }, void 0, true, {
+    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx",
+    lineNumber: 283,
+    columnNumber: 5
+  }, this);
+}
+_s(AccountingSyncTab, "qBul/0o1jgjx59Fc7CskDjuUVck=");
+_c3 = AccountingSyncTab;
+var _c, _c2, _c3;
+$RefreshReg$(_c, "ProviderBadge");
+$RefreshReg$(_c2, "StatusBadge");
+$RefreshReg$(_c3, "AccountingSyncTab");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/finance/AccountingSyncTab.tsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,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U0FzVUE7QUFFSjtBQUFDN0MsR0F0ZmVELG1CQUFpQjtBQUFBb0YsTUFBakJwRjtBQUFpQixJQUFBSixJQUFBRyxLQUFBcUY7QUFBQUMsYUFBQXpGLElBQUE7QUFBQXlGLGFBQUF0RixLQUFBO0FBQUFzRixhQUFBRCxLQUFBIiwibmFtZXMiOlsidXNlU3RhdGUiLCJ1c2VNZW1vIiwiQ2FyZCIsIkNhcmRDb250ZW50IiwiQ2FyZEhlYWRlciIsIkNhcmRUaXRsZSIsIkJhZGdlIiwiQnV0dG9uIiwiSW5wdXQiLCJUYWJsZSIsIlRhYmxlQm9keSIsIlRhYmxlQ2VsbCIsIlRhYmxlSGVhZCIsIlRhYmxlSGVhZGVyIiwiVGFibGVSb3ciLCJDbG9jayIsIkNoZWNrQ2lyY2xlMiIsIlhDaXJjbGUiLCJSZWZyZXNoQ3ciLCJBbGVydFRyaWFuZ2xlIiwiU2VhcmNoIiwiRXh0ZXJuYWxMaW5rIiwiQ2hldnJvbkRvd24iLCJDaGV2cm9uVXAiLCJTWU5DX1NUQVRVU19MQUJFTFMiLCJTWU5DX1NUQVRVU19DT0xPUlMiLCJTRUVEX1NZTkNfUkVDT1JEUyIsIlNFRURfU1lOQ19BVURJVCIsImNvbXB1dGVTeW5jS1BJcyIsInNpbXVsYXRlTW9ja1N5bmMiLCJhZHZhbmNlU3luY1JlY29yZCIsIlNZTkNfRVJST1JfTEFCRUxTIiwiU1lOQ19FUlJPUl9SRVNPTFVUSU9OUyIsIlBST1ZJREVSX0xBQkVMUyIsIkVOVElUWV9UWVBFX0xBQkVMUyIsImdldFByb3ZpZGVyTWV0YSIsImZtdERhdGVUaW1lIiwiaXNvIiwiRGF0ZSIsInRvTG9jYWxlU3RyaW5nIiwiZGF5IiwibW9udGgiLCJ5ZWFyIiwiaG91ciIsIm1pbnV0ZSIsIlByb3ZpZGVyQmFkZ2UiLCJwcm92aWRlciIsIm1ldGEiLCJiZ0NvbG9yIiwiYm9yZGVyQ29sb3IiLCJjb2xvciIsImxvZ29Jbml0aWFscyIsIm5hbWUiLCJfYyIsIlN0YXR1c0JhZGdlIiwic3RhdHVzIiwiX2MyIiwiQWNjb3VudGluZ1N5bmNUYWIiLCJfcyIsInJlY29yZHMiLCJzZXRSZWNvcmRzIiwiYXVkaXRFbnRyaWVzIiwic2V0QXVkaXRFbnRyaWVzIiwic2VhcmNoIiwic2V0U2VhcmNoIiwic3RhdHVzRmlsdGVyIiwic2V0U3RhdHVzRmlsdGVyIiwic29ydEZpZWxkIiwic2V0U29ydEZpZWxkIiwic29ydERpciIsInNldFNvcnREaXIiLCJleHBhbmRlZEVycm9yIiwic2V0RXhwYW5kZWRFcnJvciIsImF1ZGl0T3BlbiIsInNldEF1ZGl0T3BlbiIsInN5bmNpbmdJZHMiLCJzZXRTeW5jaW5nSWRzIiwiU2V0Iiwia3BpcyIsImZpbHRlcmVkIiwicmVzdWx0IiwiZmlsdGVyIiwiciIsInRyaW0iLCJxIiwidG9Mb3dlckNhc2UiLCJqb2JUaXRsZSIsImluY2x1ZGVzIiwiZW50aXR5VHlwZSIsImV4dGVybmFsSWQiLCJzb3J0IiwiYSIsImIiLCJhdiIsImJ2IiwibGFzdEF0dGVtcHRBdCIsInRvZ2dsZVNvcnQiLCJmaWVsZCIsImQiLCJoYW5kbGVTeW5jIiwicmVjb3JkIiwicyIsImFkZCIsImlkIiwic3VjY2VlZCIsImVycm9yVHlwZSIsInByZXYiLCJtYXAiLCJ0b0lTT1N0cmluZyIsInNldFRpbWVvdXQiLCJzdGVwcyIsImZpbmFsU3RlcCIsImxlbmd0aCIsInVwZGF0ZWQiLCJhdWRpdEVudHJ5IiwibmV4dCIsImRlbGV0ZSIsImhhbmRsZVJldHJ5Iiwic3RlcCIsIlNvcnRJY29uIiwia3BpQ2FyZHMiLCJsYWJlbCIsInZhbHVlIiwicGVuZGluZyIsImljb24iLCJ0ZXN0SWQiLCJzeW5jZWQiLCJmYWlsZWQiLCJyZXRyeVJlcXVpcmVkIiwiSWNvbiIsImUiLCJ0YXJnZXQiLCJvIiwiaGFzIiwiZXJyb3JNZXNzYWdlIiwicmV2ZXJzZSIsImVudHJ5IiwidGltZXN0YW1wIiwiZnJvbVN0YXR1cyIsInRvU3RhdHVzIiwibWVzc2FnZSIsIl9jMyIsIiRSZWZyZXNoUmVnJCJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJBY2NvdW50aW5nU3luY1RhYi50c3giXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXHJcbiAqIFBIQVNFIDUuNiDigJQgQUNDT1VOVElORyBTWU5DIFRBQlxyXG4gKlxyXG4gKiBGaW5hbmNpYWwgRXhwbG9yZXIgdGFiOiBBY2NvdW50aW5nIFN5bmMgQ2VudHJlLlxyXG4gKlxyXG4gKiBEaXNwbGF5czpcclxuICogICAtIFN5bmMgS1BJIHN0cmlwIChQZW5kaW5nLCBTeW5jZWQsIEZhaWxlZCwgUmV0cnkgUmVxdWlyZWQpXHJcbiAqICAgLSBTeW5jIFF1ZXVlIHRhYmxlIHdpdGggcHJvdmlkZXIsIGVudGl0eSB0eXBlLCBqb2IsIHN0YXR1cyxcclxuICogICAgIGxhc3QgYXR0ZW1wdCwgZXh0ZXJuYWwgSUQgY29sdW1uc1xyXG4gKiAgIC0gU2VhcmNoLCBmaWx0ZXIsIHNvcnRcclxuICogICAtIEVycm9yIHJlc29sdXRpb24gd29ya2Zsb3cgZm9yIGZhaWxlZCByZWNvcmRzXHJcbiAqICAgLSBNb2NrIHN5bmMgYWN0aW9uIChTeW5jIOKGkiBQZW5kaW5nIOKGkiBTeW5jaW5nIOKGkiBTeW5jZWQgfCBGYWlsZWQpXHJcbiAqICAgLSBBdWRpdCB0cmFpbCBwYW5lbFxyXG4gKlxyXG4gKiBEb2N0cmluZTpcclxuICogICBTeW5jIG5ldmVyIGNyZWF0ZXMgZmluYW5jaWFsIHJlY29yZHMuXHJcbiAqICAgT25seSBhcHByb3ZlZCBmaW5hbmNpYWwgdHJ1dGggaXMgZXhwb3J0ZWQuXHJcbiAqICAgQWxsIGFjdGlvbnMgYXJlIGF1ZGl0YWJsZS5cclxuICovXHJcblxyXG5pbXBvcnQgeyB1c2VTdGF0ZSwgdXNlTWVtbyB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyBDYXJkLCBDYXJkQ29udGVudCwgQ2FyZEhlYWRlciwgQ2FyZFRpdGxlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9jYXJkXCI7XHJcbmltcG9ydCB7IEJhZGdlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9iYWRnZVwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBJbnB1dCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvaW5wdXRcIjtcclxuaW1wb3J0IHtcclxuICBUYWJsZSxcclxuICBUYWJsZUJvZHksXHJcbiAgVGFibGVDZWxsLFxyXG4gIFRhYmxlSGVhZCxcclxuICBUYWJsZUhlYWRlcixcclxuICBUYWJsZVJvdyxcclxufSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3RhYmxlXCI7XHJcbmltcG9ydCB7XHJcbiAgQ2xvY2ssXHJcbiAgQ2hlY2tDaXJjbGUyLFxyXG4gIFhDaXJjbGUsXHJcbiAgUmVmcmVzaEN3LFxyXG4gIEFsZXJ0VHJpYW5nbGUsXHJcbiAgU2VhcmNoLFxyXG4gIEV4dGVybmFsTGluayxcclxuICBDaGV2cm9uRG93bixcclxuICBDaGV2cm9uVXAsXHJcbn0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQge1xyXG4gIHR5cGUgU3luY1JlY29yZCxcclxuICB0eXBlIFN5bmNBdWRpdEVudHJ5LFxyXG4gIHR5cGUgU3luY1N0YXR1cyxcclxuICBTWU5DX1NUQVRVU19MQUJFTFMsXHJcbiAgU1lOQ19TVEFUVVNfQ09MT1JTLFxyXG4gIFNFRURfU1lOQ19SRUNPUkRTLFxyXG4gIFNFRURfU1lOQ19BVURJVCxcclxuICBjb21wdXRlU3luY0tQSXMsXHJcbiAgc2ltdWxhdGVNb2NrU3luYyxcclxuICBhZHZhbmNlU3luY1JlY29yZCxcclxuICBTWU5DX0VSUk9SX0xBQkVMUyxcclxuICBTWU5DX0VSUk9SX1JFU09MVVRJT05TLFxyXG59IGZyb20gXCJAL2xpYi9hY2NvdW50aW5nU3luY0VuZ2luZVwiO1xyXG5pbXBvcnQge1xyXG4gIFBST1ZJREVSX0xBQkVMUyxcclxuICBFTlRJVFlfVFlQRV9MQUJFTFMsXHJcbiAgZ2V0UHJvdmlkZXJNZXRhLFxyXG59IGZyb20gXCJAL2xpYi9hY2NvdW50aW5nUHJvdmlkZXJzXCI7XHJcblxyXG5mdW5jdGlvbiBmbXREYXRlVGltZShpc286IHN0cmluZyB8IG51bGwpIHtcclxuICBpZiAoIWlzbykgcmV0dXJuIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtbXV0ZWQtZm9yZWdyb3VuZCB0ZXh0LXhzXCI+4oCUPC9zcGFuPjtcclxuICByZXR1cm4gKFxyXG4gICAgPHNwYW4gY2xhc3NOYW1lPVwiZm9udC1tb25vIHRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIHdoaXRlc3BhY2Utbm93cmFwXCI+XHJcbiAgICAgIHtuZXcgRGF0ZShpc28pLnRvTG9jYWxlU3RyaW5nKFwiZW4tR0JcIiwge1xyXG4gICAgICAgIGRheTogXCIyLWRpZ2l0XCIsXHJcbiAgICAgICAgbW9udGg6IFwic2hvcnRcIixcclxuICAgICAgICB5ZWFyOiBcIm51bWVyaWNcIixcclxuICAgICAgICBob3VyOiBcIjItZGlnaXRcIixcclxuICAgICAgICBtaW51dGU6IFwiMi1kaWdpdFwiLFxyXG4gICAgICB9KX1cclxuICAgIDwvc3Bhbj5cclxuICApO1xyXG59XHJcblxyXG5mdW5jdGlvbiBQcm92aWRlckJhZGdlKHsgcHJvdmlkZXIgfTogeyBwcm92aWRlcjogU3luY1JlY29yZFtcInByb3ZpZGVyXCJdIH0pIHtcclxuICBjb25zdCBtZXRhID0gZ2V0UHJvdmlkZXJNZXRhKHByb3ZpZGVyKTtcclxuICByZXR1cm4gKFxyXG4gICAgPHNwYW5cclxuICAgICAgY2xhc3NOYW1lPXtgaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgdGV4dC14cyBmb250LXNlbWlib2xkIHB4LTIgcHktMC41IHJvdW5kZWQgYm9yZGVyICR7XHJcbiAgICAgICAgbWV0YS5iZ0NvbG9yXHJcbiAgICAgIH0gJHttZXRhLmJvcmRlckNvbG9yfSAke21ldGEuY29sb3J9YH1cclxuICAgICAgZGF0YS10ZXN0aWQ9e2Bwcm92aWRlci1iYWRnZS0ke3Byb3ZpZGVyfWB9XHJcbiAgICA+XHJcbiAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImZvbnQtYm9sZFwiPnttZXRhLmxvZ29Jbml0aWFsc308L3NwYW4+XHJcbiAgICAgIHttZXRhLm5hbWV9XHJcbiAgICA8L3NwYW4+XHJcbiAgKTtcclxufVxyXG5cclxuZnVuY3Rpb24gU3RhdHVzQmFkZ2UoeyBzdGF0dXMgfTogeyBzdGF0dXM6IFN5bmNTdGF0dXMgfSkge1xyXG4gIHJldHVybiAoXHJcbiAgICA8QmFkZ2VcclxuICAgICAgdmFyaWFudD1cIm91dGxpbmVcIlxyXG4gICAgICBjbGFzc05hbWU9e1NZTkNfU1RBVFVTX0NPTE9SU1tzdGF0dXNdfVxyXG4gICAgICBkYXRhLXRlc3RpZD17YHN5bmMtc3RhdHVzLWJhZGdlLSR7c3RhdHVzfWB9XHJcbiAgICA+XHJcbiAgICAgIHtTWU5DX1NUQVRVU19MQUJFTFNbc3RhdHVzXX1cclxuICAgIDwvQmFkZ2U+XHJcbiAgKTtcclxufVxyXG5cclxudHlwZSBTb3J0RmllbGQgPSBcInByb3ZpZGVyXCIgfCBcImVudGl0eVR5cGVcIiB8IFwiam9iXCIgfCBcInN0YXR1c1wiIHwgXCJsYXN0QXR0ZW1wdEF0XCI7XHJcblxyXG5leHBvcnQgZnVuY3Rpb24gQWNjb3VudGluZ1N5bmNUYWIoKSB7XHJcbiAgLy8gU3RhdGU6IHN5bmMgcmVjb3JkcyAoc2VlZGVkKVxyXG4gIGNvbnN0IFtyZWNvcmRzLCBzZXRSZWNvcmRzXSA9IHVzZVN0YXRlPFN5bmNSZWNvcmRbXT4oU0VFRF9TWU5DX1JFQ09SRFMpO1xyXG4gIC8vIFN0YXRlOiBhdWRpdCB0cmFpbFxyXG4gIGNvbnN0IFthdWRpdEVudHJpZXMsIHNldEF1ZGl0RW50cmllc10gPVxyXG4gICAgdXNlU3RhdGU8U3luY0F1ZGl0RW50cnlbXT4oU0VFRF9TWU5DX0FVRElUKTtcclxuICAvLyBTdGF0ZTogc2VhcmNoXHJcbiAgY29uc3QgW3NlYXJjaCwgc2V0U2VhcmNoXSA9IHVzZVN0YXRlKFwiXCIpO1xyXG4gIC8vIFN0YXRlOiBzdGF0dXMgZmlsdGVyXHJcbiAgY29uc3QgW3N0YXR1c0ZpbHRlciwgc2V0U3RhdHVzRmlsdGVyXSA9IHVzZVN0YXRlPFN5bmNTdGF0dXMgfCBcImFsbFwiPihcImFsbFwiKTtcclxuICAvLyBTdGF0ZTogc29ydFxyXG4gIGNvbnN0IFtzb3J0RmllbGQsIHNldFNvcnRGaWVsZF0gPSB1c2VTdGF0ZTxTb3J0RmllbGQ+KFwibGFzdEF0dGVtcHRBdFwiKTtcclxuICBjb25zdCBbc29ydERpciwgc2V0U29ydERpcl0gPSB1c2VTdGF0ZTxcImFzY1wiIHwgXCJkZXNjXCI+KFwiZGVzY1wiKTtcclxuICAvLyBTdGF0ZTogZXhwYW5kZWQgZXJyb3Igcm93XHJcbiAgY29uc3QgW2V4cGFuZGVkRXJyb3IsIHNldEV4cGFuZGVkRXJyb3JdID0gdXNlU3RhdGU8c3RyaW5nIHwgbnVsbD4obnVsbCk7XHJcbiAgLy8gU3RhdGU6IGF1ZGl0IHBhbmVsIG9wZW5cclxuICBjb25zdCBbYXVkaXRPcGVuLCBzZXRBdWRpdE9wZW5dID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIC8vIFN0YXRlOiBzeW5jaW5nIGluIHByb2dyZXNzIChyZWNvcmQgaWRzKVxyXG4gIGNvbnN0IFtzeW5jaW5nSWRzLCBzZXRTeW5jaW5nSWRzXSA9IHVzZVN0YXRlPFNldDxzdHJpbmc+PihuZXcgU2V0KCkpO1xyXG5cclxuICAvLyBLUElzXHJcbiAgY29uc3Qga3BpcyA9IHVzZU1lbW8oKCkgPT4gY29tcHV0ZVN5bmNLUElzKHJlY29yZHMpLCBbcmVjb3Jkc10pO1xyXG5cclxuICAvLyBGaWx0ZXJlZCArIHNvcnRlZCByZWNvcmRzXHJcbiAgY29uc3QgZmlsdGVyZWQgPSB1c2VNZW1vKCgpID0+IHtcclxuICAgIGxldCByZXN1bHQgPSByZWNvcmRzO1xyXG5cclxuICAgIGlmIChzdGF0dXNGaWx0ZXIgIT09IFwiYWxsXCIpIHtcclxuICAgICAgcmVzdWx0ID0gcmVzdWx0LmZpbHRlcigocikgPT4gci5zdGF0dXMgPT09IHN0YXR1c0ZpbHRlcik7XHJcbiAgICB9XHJcblxyXG4gICAgaWYgKHNlYXJjaC50cmltKCkpIHtcclxuICAgICAgY29uc3QgcSA9IHNlYXJjaC50cmltKCkudG9Mb3dlckNhc2UoKTtcclxuICAgICAgcmVzdWx0ID0gcmVzdWx0LmZpbHRlcihcclxuICAgICAgICAocikgPT5cclxuICAgICAgICAgIHIuam9iVGl0bGUudG9Mb3dlckNhc2UoKS5pbmNsdWRlcyhxKSB8fFxyXG4gICAgICAgICAgUFJPVklERVJfTEFCRUxTW3IucHJvdmlkZXJdLnRvTG93ZXJDYXNlKCkuaW5jbHVkZXMocSkgfHxcclxuICAgICAgICAgIEVOVElUWV9UWVBFX0xBQkVMU1tyLmVudGl0eVR5cGVdLnRvTG93ZXJDYXNlKCkuaW5jbHVkZXMocSkgfHxcclxuICAgICAgICAgIChyLmV4dGVybmFsSWQ/LnRvTG93ZXJDYXNlKCkuaW5jbHVkZXMocSkgPz8gZmFsc2UpIHx8XHJcbiAgICAgICAgICBTWU5DX1NUQVRVU19MQUJFTFNbci5zdGF0dXNdLnRvTG93ZXJDYXNlKCkuaW5jbHVkZXMocSlcclxuICAgICAgKTtcclxuICAgIH1cclxuXHJcbiAgICByZXR1cm4gWy4uLnJlc3VsdF0uc29ydCgoYSwgYikgPT4ge1xyXG4gICAgICBsZXQgYXY6IHN0cmluZyA9IFwiXCI7XHJcbiAgICAgIGxldCBidjogc3RyaW5nID0gXCJcIjtcclxuICAgICAgc3dpdGNoIChzb3J0RmllbGQpIHtcclxuICAgICAgICBjYXNlIFwicHJvdmlkZXJcIjpcclxuICAgICAgICAgIGF2ID0gYS5wcm92aWRlcjtcclxuICAgICAgICAgIGJ2ID0gYi5wcm92aWRlcjtcclxuICAgICAgICAgIGJyZWFrO1xyXG4gICAgICAgIGNhc2UgXCJlbnRpdHlUeXBlXCI6XHJcbiAgICAgICAgICBhdiA9IGEuZW50aXR5VHlwZTtcclxuICAgICAgICAgIGJ2ID0gYi5lbnRpdHlUeXBlO1xyXG4gICAgICAgICAgYnJlYWs7XHJcbiAgICAgICAgY2FzZSBcImpvYlwiOlxyXG4gICAgICAgICAgYXYgPSBhLmpvYlRpdGxlO1xyXG4gICAgICAgICAgYnYgPSBiLmpvYlRpdGxlO1xyXG4gICAgICAgICAgYnJlYWs7XHJcbiAgICAgICAgY2FzZSBcInN0YXR1c1wiOlxyXG4gICAgICAgICAgYXYgPSBhLnN0YXR1cztcclxuICAgICAgICAgIGJ2ID0gYi5zdGF0dXM7XHJcbiAgICAgICAgICBicmVhaztcclxuICAgICAgICBjYXNlIFwibGFzdEF0dGVtcHRBdFwiOlxyXG4gICAgICAgICAgYXYgPSBhLmxhc3RBdHRlbXB0QXQgPz8gXCJcIjtcclxuICAgICAgICAgIGJ2ID0gYi5sYXN0QXR0ZW1wdEF0ID8/IFwiXCI7XHJcbiAgICAgICAgICBicmVhaztcclxuICAgICAgfVxyXG4gICAgICBpZiAoYXYgPCBidikgcmV0dXJuIHNvcnREaXIgPT09IFwiYXNjXCIgPyAtMSA6IDE7XHJcbiAgICAgIGlmIChhdiA+IGJ2KSByZXR1cm4gc29ydERpciA9PT0gXCJhc2NcIiA/IDEgOiAtMTtcclxuICAgICAgcmV0dXJuIDA7XHJcbiAgICB9KTtcclxuICB9LCBbcmVjb3Jkcywgc2VhcmNoLCBzdGF0dXNGaWx0ZXIsIHNvcnRGaWVsZCwgc29ydERpcl0pO1xyXG5cclxuICBjb25zdCB0b2dnbGVTb3J0ID0gKGZpZWxkOiBTb3J0RmllbGQpID0+IHtcclxuICAgIGlmIChzb3J0RmllbGQgPT09IGZpZWxkKSB7XHJcbiAgICAgIHNldFNvcnREaXIoKGQpID0+IChkID09PSBcImFzY1wiID8gXCJkZXNjXCIgOiBcImFzY1wiKSk7XHJcbiAgICB9IGVsc2Uge1xyXG4gICAgICBzZXRTb3J0RmllbGQoZmllbGQpO1xyXG4gICAgICBzZXRTb3J0RGlyKFwiYXNjXCIpO1xyXG4gICAgfVxyXG4gIH1cclxuXHJcbiAgLy8gTW9jayBzeW5jIGFjdGlvbjogc2ltdWxhdGUgdGhlIFBlbmRpbmcg4oaSIFN5bmNpbmcg4oaSIFN5bmNlZC9GYWlsZWQgd29ya2Zsb3dcclxuICBjb25zdCBoYW5kbGVTeW5jID0gKHJlY29yZDogU3luY1JlY29yZCkgPT4ge1xyXG4gICAgaWYgKHJlY29yZC5zdGF0dXMgPT09IFwic3luY2luZ1wiKSByZXR1cm47XHJcbiAgICBzZXRTeW5jaW5nSWRzKChzKSA9PiBuZXcgU2V0KHMpLmFkZChyZWNvcmQuaWQpKTtcclxuXHJcbiAgICAvLyBEZWNpZGUgb3V0Y29tZTogODAlIHN1Y2Nlc3MsIDIwJSBmYWlsdXJlIChkZXRlcm1pbmlzdGljIGZvciBkZW1vKVxyXG4gICAgY29uc3Qgc3VjY2VlZCA9ICFyZWNvcmQuZXJyb3JUeXBlIHx8IHJlY29yZC5lbnRpdHlUeXBlICE9PSBcInBheXJvbGxcIjtcclxuXHJcbiAgICAvLyBTdGVwIDE6IHNldCB0byBzeW5jaW5nIGltbWVkaWF0ZWx5XHJcbiAgICBzZXRSZWNvcmRzKChwcmV2KSA9PlxyXG4gICAgICBwcmV2Lm1hcCgocikgPT5cclxuICAgICAgICByLmlkID09PSByZWNvcmQuaWQgPyB7IC4uLnIsIHN0YXR1czogXCJzeW5jaW5nXCIsIGxhc3RBdHRlbXB0QXQ6IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKSB9IDogclxyXG4gICAgICApXHJcbiAgICApO1xyXG5cclxuICAgIC8vIFN0ZXAgMjogcmVzb2x2ZSBhZnRlciAxLjVzXHJcbiAgICBzZXRUaW1lb3V0KCgpID0+IHtcclxuICAgICAgY29uc3Qgc3RlcHMgPSBzaW11bGF0ZU1vY2tTeW5jKHJlY29yZCwgc3VjY2VlZCk7XHJcbiAgICAgIGNvbnN0IGZpbmFsU3RlcCA9IHN0ZXBzW3N0ZXBzLmxlbmd0aCAtIDFdO1xyXG4gICAgICBpZiAoZmluYWxTdGVwKSB7XHJcbiAgICAgICAgc2V0UmVjb3JkcygocHJldikgPT5cclxuICAgICAgICAgIHByZXYubWFwKChyKSA9PiAoci5pZCA9PT0gcmVjb3JkLmlkID8gZmluYWxTdGVwLnVwZGF0ZWQgOiByKSlcclxuICAgICAgICApO1xyXG4gICAgICAgIHNldEF1ZGl0RW50cmllcygocHJldikgPT4gWy4uLnByZXYsIC4uLnN0ZXBzLm1hcCgocykgPT4gcy5hdWRpdEVudHJ5KV0pO1xyXG4gICAgICB9XHJcbiAgICAgIHNldFN5bmNpbmdJZHMoKHMpID0+IHtcclxuICAgICAgICBjb25zdCBuZXh0ID0gbmV3IFNldChzKTtcclxuICAgICAgICBuZXh0LmRlbGV0ZShyZWNvcmQuaWQpO1xyXG4gICAgICAgIHJldHVybiBuZXh0O1xyXG4gICAgICB9KTtcclxuICAgIH0sIDE1MDApO1xyXG4gIH07XHJcblxyXG4gIC8vIFJldHJ5OiBtb3ZlIGZhaWxlZCDihpIgcmV0cnlfcmVxdWlyZWQsIHRoZW4gcmUtdHJpZ2dlciBzeW5jXHJcbiAgY29uc3QgaGFuZGxlUmV0cnkgPSAocmVjb3JkOiBTeW5jUmVjb3JkKSA9PiB7XHJcbiAgICBjb25zdCBzdGVwID0gYWR2YW5jZVN5bmNSZWNvcmQocmVjb3JkLCBcInJldHJ5X3JlcXVpcmVkXCIpO1xyXG4gICAgaWYgKCFzdGVwKSByZXR1cm47XHJcbiAgICBzZXRSZWNvcmRzKChwcmV2KSA9PlxyXG4gICAgICBwcmV2Lm1hcCgocikgPT4gKHIuaWQgPT09IHJlY29yZC5pZCA/IHN0ZXAudXBkYXRlZCA6IHIpKVxyXG4gICAgKTtcclxuICAgIHNldEF1ZGl0RW50cmllcygocHJldikgPT4gWy4uLnByZXYsIHN0ZXAuYXVkaXRFbnRyeV0pO1xyXG4gICAgLy8gVGhlbiBpbW1lZGlhdGVseSBhdHRlbXB0IHN5bmNcclxuICAgIHNldFRpbWVvdXQoKCkgPT4gaGFuZGxlU3luYyhzdGVwLnVwZGF0ZWQpLCAyMDApO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IFNvcnRJY29uID0gKHsgZmllbGQgfTogeyBmaWVsZDogU29ydEZpZWxkIH0pID0+IHtcclxuICAgIGlmIChzb3J0RmllbGQgIT09IGZpZWxkKVxyXG4gICAgICByZXR1cm4gPENoZXZyb25Eb3duIGNsYXNzTmFtZT1cImgtMyB3LTMgb3BhY2l0eS0zMFwiIC8+O1xyXG4gICAgcmV0dXJuIHNvcnREaXIgPT09IFwiYXNjXCIgPyAoXHJcbiAgICAgIDxDaGV2cm9uVXAgY2xhc3NOYW1lPVwiaC0zIHctM1wiIC8+XHJcbiAgICApIDogKFxyXG4gICAgICA8Q2hldnJvbkRvd24gY2xhc3NOYW1lPVwiaC0zIHctM1wiIC8+XHJcbiAgICApO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IGtwaUNhcmRzID0gW1xyXG4gICAge1xyXG4gICAgICBsYWJlbDogXCJQZW5kaW5nIFN5bmNcIixcclxuICAgICAgdmFsdWU6IGtwaXMucGVuZGluZyxcclxuICAgICAgaWNvbjogQ2xvY2ssXHJcbiAgICAgIGNvbG9yOiBcInRleHQtc2xhdGUtNjAwXCIsXHJcbiAgICAgIHRlc3RJZDogXCJrcGktc3luYy1wZW5kaW5nXCIsXHJcbiAgICAgIGZpbHRlcjogXCJwZW5kaW5nXCIgYXMgU3luY1N0YXR1cyxcclxuICAgIH0sXHJcbiAgICB7XHJcbiAgICAgIGxhYmVsOiBcIlN5bmNlZFwiLFxyXG4gICAgICB2YWx1ZToga3Bpcy5zeW5jZWQsXHJcbiAgICAgIGljb246IENoZWNrQ2lyY2xlMixcclxuICAgICAgY29sb3I6IFwidGV4dC1lbWVyYWxkLTYwMFwiLFxyXG4gICAgICB0ZXN0SWQ6IFwia3BpLXN5bmMtc3luY2VkXCIsXHJcbiAgICAgIGZpbHRlcjogXCJzeW5jZWRcIiBhcyBTeW5jU3RhdHVzLFxyXG4gICAgfSxcclxuICAgIHtcclxuICAgICAgbGFiZWw6IFwiRmFpbGVkXCIsXHJcbiAgICAgIHZhbHVlOiBrcGlzLmZhaWxlZCxcclxuICAgICAgaWNvbjogWENpcmNsZSxcclxuICAgICAgY29sb3I6IFwidGV4dC1yZWQtNjAwXCIsXHJcbiAgICAgIHRlc3RJZDogXCJrcGktc3luYy1mYWlsZWRcIixcclxuICAgICAgZmlsdGVyOiBcImZhaWxlZFwiIGFzIFN5bmNTdGF0dXMsXHJcbiAgICB9LFxyXG4gICAge1xyXG4gICAgICBsYWJlbDogXCJSZXRyeSBSZXF1aXJlZFwiLFxyXG4gICAgICB2YWx1ZToga3Bpcy5yZXRyeVJlcXVpcmVkLFxyXG4gICAgICBpY29uOiBSZWZyZXNoQ3csXHJcbiAgICAgIGNvbG9yOiBcInRleHQtYW1iZXItNjAwXCIsXHJcbiAgICAgIHRlc3RJZDogXCJrcGktc3luYy1yZXRyeVwiLFxyXG4gICAgICBmaWx0ZXI6IFwicmV0cnlfcmVxdWlyZWRcIiBhcyBTeW5jU3RhdHVzLFxyXG4gICAgfSxcclxuICBdO1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJtdC00IHNwYWNlLXktNlwiIGRhdGEtdGVzdGlkPVwiYWNjb3VudGluZy1zeW5jLXRhYi1wYW5lbFwiPlxyXG4gICAgICB7LyogRG9jdHJpbmUgbm90aWNlICovfVxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cInJvdW5kZWQtbWQgYmctYmx1ZS01MCBib3JkZXIgYm9yZGVyLWJsdWUtMjAwIHB4LTQgcHktMyB0ZXh0LXNtIHRleHQtYmx1ZS03MDBcIj5cclxuICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkXCI+U3luYyBEb2N0cmluZTogPC9zcGFuPlxyXG4gICAgICAgIFN5bmNocm9uaXphdGlvbiBleHBvcnRzIGFwcHJvdmVkIGZpbmFuY2lhbCB0cnV0aCB0byBkb3duc3RyZWFtIGFjY291bnRpbmdcclxuICAgICAgICBzeXN0ZW1zLiBUaGUgTGVkZ2VyIHJlbWFpbnMgdGhlIHNvdXJjZSBvZiBvcGVyYXRpb25hbCB0cnV0aC4gU3luYyBuZXZlclxyXG4gICAgICAgIGNyZWF0ZXMgb3IgbW9kaWZpZXMgZmluYW5jaWFsIHJlY29yZHMuXHJcbiAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgey8qIEtQSSBTdHJpcCAqL31cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0yIHNtOmdyaWQtY29scy00IGdhcC0zXCI+XHJcbiAgICAgICAge2twaUNhcmRzLm1hcCgoeyBsYWJlbCwgdmFsdWUsIGljb246IEljb24sIGNvbG9yLCB0ZXN0SWQsIGZpbHRlciB9KSA9PiAoXHJcbiAgICAgICAgICA8Q2FyZFxyXG4gICAgICAgICAgICBrZXk9e2xhYmVsfVxyXG4gICAgICAgICAgICBjbGFzc05hbWU9e2BjdXJzb3ItcG9pbnRlciB0cmFuc2l0aW9uLWFsbCAke1xyXG4gICAgICAgICAgICAgIHN0YXR1c0ZpbHRlciA9PT0gZmlsdGVyID8gXCJyaW5nLTIgcmluZy1wcmltYXJ5XCIgOiBcIlwiXHJcbiAgICAgICAgICAgIH1gfVxyXG4gICAgICAgICAgICBvbkNsaWNrPXsoKSA9PlxyXG4gICAgICAgICAgICAgIHNldFN0YXR1c0ZpbHRlcigocHJldikgPT4gKHByZXYgPT09IGZpbHRlciA/IFwiYWxsXCIgOiBmaWx0ZXIpKVxyXG4gICAgICAgICAgICB9XHJcbiAgICAgICAgICA+XHJcbiAgICAgICAgICAgIDxDYXJkSGVhZGVyIGNsYXNzTmFtZT1cInBiLTEgcHQtNCBweC00XCI+XHJcbiAgICAgICAgICAgICAgPENhcmRUaXRsZSBjbGFzc05hbWU9XCJ0ZXh0LXhzIGZvbnQtbWVkaXVtIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZVwiPlxyXG4gICAgICAgICAgICAgICAge2xhYmVsfVxyXG4gICAgICAgICAgICAgIDwvQ2FyZFRpdGxlPlxyXG4gICAgICAgICAgICA8L0NhcmRIZWFkZXI+XHJcbiAgICAgICAgICAgIDxDYXJkQ29udGVudCBjbGFzc05hbWU9XCJweC00IHBiLTQgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICA8SWNvbiBjbGFzc05hbWU9e2BoLTUgdy01IGZsZXgtc2hyaW5rLTAgJHtjb2xvcn1gfSAvPlxyXG4gICAgICAgICAgICAgIDxzcGFuXHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ0ZXh0LTJ4bCBmb250LWJvbGRcIlxyXG4gICAgICAgICAgICAgICAgZGF0YS10ZXN0aWQ9e3Rlc3RJZH1cclxuICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICB7dmFsdWV9XHJcbiAgICAgICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICAgICA8L0NhcmRDb250ZW50PlxyXG4gICAgICAgICAgPC9DYXJkPlxyXG4gICAgICAgICkpfVxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIHsvKiBDb250cm9scyAqL31cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIHNtOmZsZXgtcm93IGdhcC0zIGl0ZW1zLXN0YXJ0IHNtOml0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW5cIj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInJlbGF0aXZlIHctZnVsbCBzbTp3LTcyXCI+XHJcbiAgICAgICAgICA8U2VhcmNoIGNsYXNzTmFtZT1cImFic29sdXRlIGxlZnQtMyB0b3AtMS8yIC10cmFuc2xhdGUteS0xLzIgaC00IHctNCB0ZXh0LW11dGVkLWZvcmVncm91bmRcIiAvPlxyXG4gICAgICAgICAgPElucHV0XHJcbiAgICAgICAgICAgIHBsYWNlaG9sZGVyPVwiU2VhcmNoIHByb3ZpZGVyLCBqb2IsIHN0YXR1c+KAplwiXHJcbiAgICAgICAgICAgIHZhbHVlPXtzZWFyY2h9XHJcbiAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0U2VhcmNoKGUudGFyZ2V0LnZhbHVlKX1cclxuICAgICAgICAgICAgY2xhc3NOYW1lPVwicGwtOVwiXHJcbiAgICAgICAgICAgIGRhdGEtdGVzdGlkPVwic3luYy1xdWV1ZS1zZWFyY2hcIlxyXG4gICAgICAgICAgLz5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+XHJcbiAgICAgICAgICB7c3RhdHVzRmlsdGVyICE9PSBcImFsbFwiICYmIChcclxuICAgICAgICAgICAgPEJhZGdlXHJcbiAgICAgICAgICAgICAgdmFyaWFudD1cIm91dGxpbmVcIlxyXG4gICAgICAgICAgICAgIGNsYXNzTmFtZT1cImN1cnNvci1wb2ludGVyXCJcclxuICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBzZXRTdGF0dXNGaWx0ZXIoXCJhbGxcIil9XHJcbiAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICB7U1lOQ19TVEFUVVNfTEFCRUxTW3N0YXR1c0ZpbHRlcl19IMOXXHJcbiAgICAgICAgICAgIDwvQmFkZ2U+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgICAgPEJ1dHRvblxyXG4gICAgICAgICAgICB2YXJpYW50PVwib3V0bGluZVwiXHJcbiAgICAgICAgICAgIHNpemU9XCJzbVwiXHJcbiAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldEF1ZGl0T3BlbigobykgPT4gIW8pfVxyXG4gICAgICAgICAgICBkYXRhLXRlc3RpZD1cImJ0bi10b2dnbGUtc3luYy1hdWRpdFwiXHJcbiAgICAgICAgICA+XHJcbiAgICAgICAgICAgIFN5bmMgQXVkaXQgVHJhaWwgKHthdWRpdEVudHJpZXMubGVuZ3RofSlcclxuICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIHsvKiBTeW5jIFF1ZXVlIFRhYmxlICovfVxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImJvcmRlciByb3VuZGVkLW1kXCIgZGF0YS10ZXN0aWQ9XCJzeW5jLXF1ZXVlLXRhYmxlXCI+XHJcbiAgICAgICAge2ZpbHRlcmVkLmxlbmd0aCA9PT0gMCA/IChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgcHktMTYgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+XHJcbiAgICAgICAgICAgIDxSZWZyZXNoQ3cgY2xhc3NOYW1lPVwiaC0xMCB3LTEwIG1iLTMgb3BhY2l0eS0yMFwiIC8+XHJcbiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc21cIj5ObyBzeW5jIHJlY29yZHMgbWF0Y2ggdGhlIGN1cnJlbnQgZmlsdGVyLjwvcD5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICkgOiAoXHJcbiAgICAgICAgICA8VGFibGU+XHJcbiAgICAgICAgICAgIDxUYWJsZUhlYWRlcj5cclxuICAgICAgICAgICAgICA8VGFibGVSb3c+XHJcbiAgICAgICAgICAgICAgICA8VGFibGVIZWFkPlxyXG4gICAgICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEgaG92ZXI6dGV4dC1mb3JlZ3JvdW5kXCJcclxuICAgICAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB0b2dnbGVTb3J0KFwicHJvdmlkZXJcIil9XHJcbiAgICAgICAgICAgICAgICAgICAgZGF0YS10ZXN0aWQ9XCJzb3J0LXByb3ZpZGVyXCJcclxuICAgICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICAgIFByb3ZpZGVyIDxTb3J0SWNvbiBmaWVsZD1cInByb3ZpZGVyXCIgLz5cclxuICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICA8L1RhYmxlSGVhZD5cclxuICAgICAgICAgICAgICAgIDxUYWJsZUhlYWQ+XHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMSBob3Zlcjp0ZXh0LWZvcmVncm91bmRcIlxyXG4gICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHRvZ2dsZVNvcnQoXCJlbnRpdHlUeXBlXCIpfVxyXG4gICAgICAgICAgICAgICAgICAgIGRhdGEtdGVzdGlkPVwic29ydC1lbnRpdHktdHlwZVwiXHJcbiAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICBFbnRpdHkgVHlwZSA8U29ydEljb24gZmllbGQ9XCJlbnRpdHlUeXBlXCIgLz5cclxuICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICA8L1RhYmxlSGVhZD5cclxuICAgICAgICAgICAgICAgIDxUYWJsZUhlYWQ+XHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMSBob3Zlcjp0ZXh0LWZvcmVncm91bmRcIlxyXG4gICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHRvZ2dsZVNvcnQoXCJqb2JcIil9XHJcbiAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICBKb2IgPFNvcnRJY29uIGZpZWxkPVwiam9iXCIgLz5cclxuICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICA8L1RhYmxlSGVhZD5cclxuICAgICAgICAgICAgICAgIDxUYWJsZUhlYWQ+XHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMSBob3Zlcjp0ZXh0LWZvcmVncm91bmRcIlxyXG4gICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHRvZ2dsZVNvcnQoXCJzdGF0dXNcIil9XHJcbiAgICAgICAgICAgICAgICAgICAgZGF0YS10ZXN0aWQ9XCJzb3J0LXN0YXR1c1wiXHJcbiAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICBTdGF0dXMgPFNvcnRJY29uIGZpZWxkPVwic3RhdHVzXCIgLz5cclxuICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICA8L1RhYmxlSGVhZD5cclxuICAgICAgICAgICAgICAgIDxUYWJsZUhlYWQ+XHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMSBob3Zlcjp0ZXh0LWZvcmVncm91bmRcIlxyXG4gICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHRvZ2dsZVNvcnQoXCJsYXN0QXR0ZW1wdEF0XCIpfVxyXG4gICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAgTGFzdCBBdHRlbXB0IDxTb3J0SWNvbiBmaWVsZD1cImxhc3RBdHRlbXB0QXRcIiAvPlxyXG4gICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgICAgIDwvVGFibGVIZWFkPlxyXG4gICAgICAgICAgICAgICAgPFRhYmxlSGVhZD5FeHRlcm5hbCBJRDwvVGFibGVIZWFkPlxyXG4gICAgICAgICAgICAgICAgPFRhYmxlSGVhZD5BY3Rpb248L1RhYmxlSGVhZD5cclxuICAgICAgICAgICAgICA8L1RhYmxlUm93PlxyXG4gICAgICAgICAgICA8L1RhYmxlSGVhZGVyPlxyXG4gICAgICAgICAgICA8VGFibGVCb2R5PlxyXG4gICAgICAgICAgICAgIHtmaWx0ZXJlZC5tYXAoKHJlY29yZCkgPT4gKFxyXG4gICAgICAgICAgICAgICAgPD5cclxuICAgICAgICAgICAgICAgICAgPFRhYmxlUm93XHJcbiAgICAgICAgICAgICAgICAgICAga2V5PXtyZWNvcmQuaWR9XHJcbiAgICAgICAgICAgICAgICAgICAgZGF0YS10ZXN0aWQ9e2BzeW5jLXJvdy0ke3JlY29yZC5pZH1gfVxyXG4gICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAgPFRhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICAgIDxQcm92aWRlckJhZGdlIHByb3ZpZGVyPXtyZWNvcmQucHJvdmlkZXJ9IC8+XHJcbiAgICAgICAgICAgICAgICAgICAgPC9UYWJsZUNlbGw+XHJcbiAgICAgICAgICAgICAgICAgICAgPFRhYmxlQ2VsbCBjbGFzc05hbWU9XCJ0ZXh0LXNtXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICB7RU5USVRZX1RZUEVfTEFCRUxTW3JlY29yZC5lbnRpdHlUeXBlXX1cclxuICAgICAgICAgICAgICAgICAgICA8L1RhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICA8VGFibGVDZWxsIGNsYXNzTmFtZT1cInRleHQtc20gbWF4LXctWzE2MHB4XSB0cnVuY2F0ZVwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAge3JlY29yZC5qb2JUaXRsZX1cclxuICAgICAgICAgICAgICAgICAgICA8L1RhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICA8VGFibGVDZWxsPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPFN0YXR1c0JhZGdlIHN0YXR1cz17cmVjb3JkLnN0YXR1c30gLz5cclxuICAgICAgICAgICAgICAgICAgICA8L1RhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICA8VGFibGVDZWxsPntmbXREYXRlVGltZShyZWNvcmQubGFzdEF0dGVtcHRBdCl9PC9UYWJsZUNlbGw+XHJcbiAgICAgICAgICAgICAgICAgICAgPFRhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICAgIHtyZWNvcmQuZXh0ZXJuYWxJZCA/IChcclxuICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmb250LW1vbm8gdGV4dC14cyBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMVwiXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS10ZXN0aWQ9e2BleHRlcm5hbC1pZC0ke3JlY29yZC5pZH1gfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPEV4dGVybmFsTGluayBjbGFzc05hbWU9XCJoLTMgdy0zIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAge3JlY29yZC5leHRlcm5hbElkfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LW11dGVkLWZvcmVncm91bmQgdGV4dC14c1wiPuKAlDwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgICAgPC9UYWJsZUNlbGw+XHJcbiAgICAgICAgICAgICAgICAgICAgPFRhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTFcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgeyhyZWNvcmQuc3RhdHVzID09PSBcInBlbmRpbmdcIiB8fCByZWNvcmQuc3RhdHVzID09PSBcInJldHJ5X3JlcXVpcmVkXCIpICYmIChcclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8QnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBzaXplPVwic21cIlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgdmFyaWFudD1cIm91dGxpbmVcIlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidGV4dC14cyBoLTdcIlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gaGFuZGxlU3luYyhyZWNvcmQpfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgZGlzYWJsZWQ9e3N5bmNpbmdJZHMuaGFzKHJlY29yZC5pZCl9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLXRlc3RpZD17YGJ0bi1zeW5jLSR7cmVjb3JkLmlkfWB9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPFJlZnJlc2hDdyBjbGFzc05hbWU9XCJoLTMgdy0zIG1yLTFcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgU3luY1xyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICB7cmVjb3JkLnN0YXR1cyA9PT0gXCJmYWlsZWRcIiAmJiAoXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPD5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxCdXR0b25cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc2l6ZT1cInNtXCJcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdmFyaWFudD1cIm91dGxpbmVcIlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ0ZXh0LXhzIGgtNyB0ZXh0LWFtYmVyLTcwMCBib3JkZXItYW1iZXItMzAwXCJcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gaGFuZGxlUmV0cnkocmVjb3JkKX1cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS10ZXN0aWQ9e2BidG4tcmV0cnktJHtyZWNvcmQuaWR9YH1cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPFJlZnJlc2hDdyBjbGFzc05hbWU9XCJoLTMgdy0zIG1yLTFcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICBSZXRyeVxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8QnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHNpemU9XCJzbVwiXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHZhcmlhbnQ9XCJnaG9zdFwiXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInRleHQteHMgaC03XCJcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzZXRFeHBhbmRlZEVycm9yKChlKSA9PlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZSA9PT0gcmVjb3JkLmlkID8gbnVsbCA6IHJlY29yZC5pZFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIClcclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLXRlc3RpZD17YGJ0bi1lcnJvci1kZXRhaWxzLSR7cmVjb3JkLmlkfWB9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxBbGVydFRyaWFuZ2xlIGNsYXNzTmFtZT1cImgtMyB3LTMgbXItMSB0ZXh0LXJlZC01MDBcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICBEZXRhaWxzXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8Lz5cclxuICAgICAgICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgICAgICAge3JlY29yZC5zdGF0dXMgPT09IFwic3luY2luZ1wiICYmIChcclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtYmx1ZS02MDAgYW5pbWF0ZS1wdWxzZVwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgU3luY2luZ+KAplxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgICAgICAge3JlY29yZC5zdGF0dXMgPT09IFwic3luY2VkXCIgJiYgKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1lbWVyYWxkLTYwMFwiPuKckyBTeW5jZWQ8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICA8L1RhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgPC9UYWJsZVJvdz5cclxuXHJcbiAgICAgICAgICAgICAgICAgIHsvKiBFcnJvciBSZXNvbHV0aW9uIFBhbmVsIChpbmxpbmUpICovfVxyXG4gICAgICAgICAgICAgICAgICB7ZXhwYW5kZWRFcnJvciA9PT0gcmVjb3JkLmlkICYmIHJlY29yZC5lcnJvclR5cGUgJiYgKFxyXG4gICAgICAgICAgICAgICAgICAgIDxUYWJsZVJvdyBrZXk9e2Ake3JlY29yZC5pZH0tZXJyb3JgfT5cclxuICAgICAgICAgICAgICAgICAgICAgIDxUYWJsZUNlbGwgY29sU3Bhbj17N30gY2xhc3NOYW1lPVwiYmctcmVkLTUwIGJvcmRlci10LTBcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPGRpdlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInAtMyBzcGFjZS15LTJcIlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtdGVzdGlkPXtgZXJyb3ItcGFuZWwtJHtyZWNvcmQuaWR9YH1cclxuICAgICAgICAgICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxYQ2lyY2xlIGNsYXNzTmFtZT1cImgtNCB3LTQgdGV4dC1yZWQtNjAwXCIgLz5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgdGV4dC1zbSB0ZXh0LXJlZC03MDBcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAge1NZTkNfRVJST1JfTEFCRUxTW3JlY29yZC5lcnJvclR5cGVdfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1yZWQtNzAwXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICB7cmVjb3JkLmVycm9yTWVzc2FnZX1cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtdC0yIGZsZXggaXRlbXMtc3RhcnQgZ2FwLTIgdGV4dC1zbSB0ZXh0LWFtYmVyLTcwMCBiZy1hbWJlci01MCBib3JkZXIgYm9yZGVyLWFtYmVyLTIwMCByb3VuZGVkIHAtMlwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPEFsZXJ0VHJpYW5nbGUgY2xhc3NOYW1lPVwiaC00IHctNCBtdC0wLjUgZmxleC1zaHJpbmstMFwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkXCI+U3VnZ2VzdGVkIFJlc29sdXRpb246IDwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gZGF0YS10ZXN0aWQ9e2BlcnJvci1yZXNvbHV0aW9uLSR7cmVjb3JkLmlkfWB9PlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHtTWU5DX0VSUk9SX1JFU09MVVRJT05TW3JlY29yZC5lcnJvclR5cGVdfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8L1RhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICA8L1RhYmxlUm93PlxyXG4gICAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgICAgPC8+XHJcbiAgICAgICAgICAgICAgKSl9XHJcbiAgICAgICAgICAgIDwvVGFibGVCb2R5PlxyXG4gICAgICAgICAgPC9UYWJsZT5cclxuICAgICAgICApfVxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIHsvKiBTeW5jIEF1ZGl0IFRyYWlsICovfVxyXG4gICAgICB7YXVkaXRPcGVuICYmIChcclxuICAgICAgICA8ZGl2XHJcbiAgICAgICAgICBjbGFzc05hbWU9XCJib3JkZXIgcm91bmRlZC1tZFwiXHJcbiAgICAgICAgICBkYXRhLXRlc3RpZD1cInN5bmMtYXVkaXQtdHJhaWxcIlxyXG4gICAgICAgID5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicHgtNCBweS0zIGJvcmRlci1iIGJnLW11dGVkLzMwXCI+XHJcbiAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtc2VtaWJvbGRcIj5TeW5jIEF1ZGl0IFRyYWlsPC9oMz5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICBBbGwgc3luYyBhY3Rpb25zIGFyZSBpbW11dGFibHkgbG9nZ2VkIGJlbG93LlxyXG4gICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIHthdWRpdEVudHJpZXMubGVuZ3RoID09PSAwID8gKFxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInB5LTggdGV4dC1jZW50ZXIgdGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICBObyBhdWRpdCBlbnRyaWVzIHlldC5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICA8VGFibGU+XHJcbiAgICAgICAgICAgICAgPFRhYmxlSGVhZGVyPlxyXG4gICAgICAgICAgICAgICAgPFRhYmxlUm93PlxyXG4gICAgICAgICAgICAgICAgICA8VGFibGVIZWFkPlRpbWVzdGFtcDwvVGFibGVIZWFkPlxyXG4gICAgICAgICAgICAgICAgICA8VGFibGVIZWFkPlByb3ZpZGVyPC9UYWJsZUhlYWQ+XHJcbiAgICAgICAgICAgICAgICAgIDxUYWJsZUhlYWQ+RW50aXR5PC9UYWJsZUhlYWQ+XHJcbiAgICAgICAgICAgICAgICAgIDxUYWJsZUhlYWQ+VHJhbnNpdGlvbjwvVGFibGVIZWFkPlxyXG4gICAgICAgICAgICAgICAgICA8VGFibGVIZWFkPk1lc3NhZ2U8L1RhYmxlSGVhZD5cclxuICAgICAgICAgICAgICAgICAgPFRhYmxlSGVhZD5FeHRlcm5hbCBJRDwvVGFibGVIZWFkPlxyXG4gICAgICAgICAgICAgICAgPC9UYWJsZVJvdz5cclxuICAgICAgICAgICAgICA8L1RhYmxlSGVhZGVyPlxyXG4gICAgICAgICAgICAgIDxUYWJsZUJvZHk+XHJcbiAgICAgICAgICAgICAgICB7Wy4uLmF1ZGl0RW50cmllc10ucmV2ZXJzZSgpLm1hcCgoZW50cnkpID0+IChcclxuICAgICAgICAgICAgICAgICAgPFRhYmxlUm93XHJcbiAgICAgICAgICAgICAgICAgICAga2V5PXtlbnRyeS5pZH1cclxuICAgICAgICAgICAgICAgICAgICBkYXRhLXRlc3RpZD17YHN5bmMtYXVkaXQtZW50cnktJHtlbnRyeS5pZH1gfVxyXG4gICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAgPFRhYmxlQ2VsbD57Zm10RGF0ZVRpbWUoZW50cnkudGltZXN0YW1wKX08L1RhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICA8VGFibGVDZWxsPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPFByb3ZpZGVyQmFkZ2UgcHJvdmlkZXI9e2VudHJ5LnByb3ZpZGVyfSAvPlxyXG4gICAgICAgICAgICAgICAgICAgIDwvVGFibGVDZWxsPlxyXG4gICAgICAgICAgICAgICAgICAgIDxUYWJsZUNlbGwgY2xhc3NOYW1lPVwidGV4dC14c1wiPlxyXG4gICAgICAgICAgICAgICAgICAgICAge0VOVElUWV9UWVBFX0xBQkVMU1tlbnRyeS5lbnRpdHlUeXBlXX1cclxuICAgICAgICAgICAgICAgICAgICA8L1RhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICA8VGFibGVDZWxsIGNsYXNzTmFtZT1cInRleHQteHNcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIHtlbnRyeS5mcm9tU3RhdHVzID8gKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8c3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8U3RhdHVzQmFkZ2Ugc3RhdHVzPXtlbnRyeS5mcm9tU3RhdHVzfSAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHtcIiDihpIgXCJ9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPFN0YXR1c0JhZGdlIHN0YXR1cz17ZW50cnkudG9TdGF0dXN9IC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxTdGF0dXNCYWRnZSBzdGF0dXM9e2VudHJ5LnRvU3RhdHVzfSAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgICA8L1RhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICA8VGFibGVDZWxsIGNsYXNzTmFtZT1cInRleHQteHMgbWF4LXctWzI0MHB4XSB0cnVuY2F0ZVwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAge2VudHJ5Lm1lc3NhZ2V9XHJcbiAgICAgICAgICAgICAgICAgICAgPC9UYWJsZUNlbGw+XHJcbiAgICAgICAgICAgICAgICAgICAgPFRhYmxlQ2VsbD5cclxuICAgICAgICAgICAgICAgICAgICAgIHtlbnRyeS5leHRlcm5hbElkID8gKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmb250LW1vbm8gdGV4dC14c1wiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHtlbnRyeS5leHRlcm5hbElkfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LW11dGVkLWZvcmVncm91bmQgdGV4dC14c1wiPuKAlDwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgICAgPC9UYWJsZUNlbGw+XHJcbiAgICAgICAgICAgICAgICAgIDwvVGFibGVSb3c+XHJcbiAgICAgICAgICAgICAgICApKX1cclxuICAgICAgICAgICAgICA8L1RhYmxlQm9keT5cclxuICAgICAgICAgICAgPC9UYWJsZT5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICl9XHJcbiAgICA8L2Rpdj5cclxuICApO1xyXG59XHJcbiJdLCJmaWxlIjoiQzovVXNlcnMvcHNrYW4vRG9jdW1lbnRzL1RoZS1MZWRnZXIvVGhlLUxlZGdlci9UaGUtTGVkZ2VyL2NsaWVudC9zcmMvY29tcG9uZW50cy9maW5hbmNlL0FjY291bnRpbmdTeW5jVGFiLnRzeCJ9

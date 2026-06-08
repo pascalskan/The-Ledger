@@ -243,7 +243,7 @@ function PipelineStrip({ drafts }: { drafts: InvoiceDraft[] }) {
   );
 }
 
-export default function InvoiceBuilderPage() {
+export function InvoiceBuilderContent({ onComplete }: { onComplete?: () => void }) {
   const {
     invoiceDrafts,
     jobs,
@@ -308,7 +308,6 @@ export default function InvoiceBuilderPage() {
   };
 
   return (
-    <Layout>
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -395,6 +394,9 @@ export default function InvoiceBuilderPage() {
           )}
         </div>
       </div>
-    </Layout>
   );
+}
+
+export default function InvoiceBuilderPage() {
+  return <Layout><InvoiceBuilderContent /></Layout>;
 }

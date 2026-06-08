@@ -108,7 +108,7 @@ function ReconStatusBadge({ status }: { status: ReconciliationStatus }) {
   );
 }
 
-export default function ReconciliationCenterPage() {
+export function ReconciliationContent() {
   // Reconciliation state
   const [records] = useState<ReconciliationRecord[]>(SEED_RECONCILIATION_RECORDS);
   const [search, setSearch] = useState("");
@@ -212,7 +212,6 @@ export default function ReconciliationCenterPage() {
   ];
 
   return (
-    <Layout>
       <div className="space-y-6" data-testid="reconciliation-center-page">
         {/* Header */}
         <div>
@@ -540,6 +539,9 @@ export default function ReconciliationCenterPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
   );
+}
+
+export default function ReconciliationCenterPage() {
+  return <Layout><ReconciliationContent /></Layout>;
 }

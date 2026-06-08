@@ -1,11 +1,9 @@
 /**
- * DOCTRINE TEST: Financial Explorer
+ * DOCTRINE TEST: Financial Records (Finance Hub — Records Tab)
  *
- * Phase 5.2 adds the Financial Explorer page at /financial-explorer.
- * This spec validates that the page loads, all tabs render, and the
- * Profitability tab (Phase 5.2 addition) is present and visible.
- *
- * The Financial Explorer is CEO-only.
+ * UX-4: Financial Explorer moved to Finance Hub at /finance?tab=records.
+ * This spec validates that the Records tab loads and core tabs render.
+ * The Financial Records tab is CEO-only (accessed via the Finance Hub).
  */
 import { test, expect } from '@playwright/test';
 import { loginAsCEO } from '../helpers/login';
@@ -15,20 +13,20 @@ test.beforeEach(async ({ page }) => {
   await clearBrowserState(page);
 });
 
-test('Financial Explorer loads and all tabs render', async ({ page }) => {
+test('Financial Records tab loads and all tabs render', async ({ page }) => {
   await loginAsCEO(page);
 
-  // Navigate to Financial Explorer via the sidebar link
-  await page.getByTestId('nav-financial-explorer').click();
+  // Navigate to Finance Hub Records tab directly
+  await page.goto('http://localhost:5000/finance?tab=records');
 
-  await expect(page).toHaveURL(/financial-explorer/i);
+  await expect(page).toHaveURL(/finance/i);
 
-  // Verify the page heading
+  // Verify the heading in Records tab
   await expect(
-    page.getByRole('heading', { name: /Financial Explorer/i })
+    page.getByTestId('finance-records-heading')
   ).toBeVisible();
 
-  // Verify the Profitability tab exists (Phase 5.2 addition — first tab)
+  // Verify the Profitability tab exists
   await expect(page.getByRole('tab', { name: /Profitability/i })).toBeVisible();
 
   // Verify all other core tabs render
@@ -39,28 +37,27 @@ test('Financial Explorer loads and all tabs render', async ({ page }) => {
   await expect(page.getByRole('tab', { name: /Invoice Lines/i })).toBeVisible();
 });
 
-test('Financial Explorer Profitability tab is the default and renders content', async ({ page }) => {
+test('Financial Records Profitability tab renders content', async ({ page }) => {
   await loginAsCEO(page);
 
-  await page.getByTestId('nav-financial-explorer').click();
+  await page.goto('http://localhost:5000/finance?tab=records');
 
-  await expect(page).toHaveURL(/financial-explorer/i);
+  await expect(page).toHaveURL(/finance/i);
 
-  // The Profitability tab should be selected by default
+  // The Profitability tab should be visible
   const profitTab = page.getByRole('tab', { name: /Profitability/i });
   await expect(profitTab).toBeVisible();
   await profitTab.click();
 
   // The tab panel should contain portfolio data or an empty state
-  // (seed data provides records for dj-kitchen-extract-1)
   await expect(page.locator('body')).toContainText(/Revenue|revenue|Portfolio|profitability|No data/i);
 });
 
-test('Financial Explorer Timesheets tab renders without error', async ({ page }) => {
+test('Financial Records Timesheets tab renders without error', async ({ page }) => {
   await loginAsCEO(page);
 
-  await page.getByTestId('nav-financial-explorer').click();
-  await expect(page).toHaveURL(/financial-explorer/i);
+  await page.goto('http://localhost:5000/finance?tab=records');
+  await expect(page).toHaveURL(/finance/i);
 
   await page.getByRole('tab', { name: /Timesheets/i }).click();
 

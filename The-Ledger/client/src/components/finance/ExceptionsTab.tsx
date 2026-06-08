@@ -140,7 +140,7 @@ export function ExceptionsTab() {
             size="sm"
             variant="outline"
             className="text-xs"
-            onClick={() => setLocation("/exception-resolution-center")}
+            onClick={() => setLocation("/finance?tab=accounting&sub=exceptions")}
             data-testid="exc-tab-link-centre"
           >
             <ExternalLink className="h-3 w-3 mr-1" /> Open Resolution Centre

@@ -1,0 +1,201 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/portal/ProjectContacts.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=eb91a722"; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import { Card, CardHeader, CardTitle, CardContent } from "/src/components/ui/card.tsx";
+import { Mail, Phone, UserCircle } from "/@fs/C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/node_modules/.vite/deps/lucide-react.js?v=eb91a722";
+export function ProjectContacts() {
+  return /* @__PURE__ */ jsxDEV(Card, { className: "shadow-sm border-slate-200 bg-slate-50/50", children: [
+    /* @__PURE__ */ jsxDEV(CardHeader, { className: "pb-3 border-b border-slate-100", children: /* @__PURE__ */ jsxDEV(CardTitle, { className: "text-lg flex items-center gap-2", children: [
+      /* @__PURE__ */ jsxDEV(UserCircle, { className: "h-5 w-5 text-slate-500" }, void 0, false, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+        lineNumber: 9,
+        columnNumber: 11
+      }, this),
+      " Project Contacts"
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+      lineNumber: 8,
+      columnNumber: 9
+    }, this) }, void 0, false, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+      lineNumber: 7,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(CardContent, { className: "pt-4 space-y-6", children: [
+      /* @__PURE__ */ jsxDEV("div", { className: "space-y-2.5", children: [
+        /* @__PURE__ */ jsxDEV("h4", { className: "text-xs font-semibold text-slate-500 uppercase tracking-wider", children: "Project Manager" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+          lineNumber: 15,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "text-sm font-medium text-slate-800 mb-1", children: "Sarah Jenkins" }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+            lineNumber: 17,
+            columnNumber: 13
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "space-y-1.5", children: [
+            /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-sm text-slate-600", children: [
+              /* @__PURE__ */ jsxDEV(Mail, { className: "h-3.5 w-3.5 text-slate-400 shrink-0" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+                lineNumber: 20,
+                columnNumber: 17
+              }, this),
+              /* @__PURE__ */ jsxDEV("a", { href: "mailto:sarah@example.com", className: "hover:text-slate-900 hover:underline truncate", children: "sarah@theledger.app" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+                lineNumber: 21,
+                columnNumber: 17
+              }, this)
+            ] }, void 0, true, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+              lineNumber: 19,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-sm text-slate-600", children: [
+              /* @__PURE__ */ jsxDEV(Phone, { className: "h-3.5 w-3.5 text-slate-400 shrink-0" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+                lineNumber: 24,
+                columnNumber: 17
+              }, this),
+              /* @__PURE__ */ jsxDEV("a", { href: "tel:07700900123", className: "hover:text-slate-900 hover:underline", children: "07700 900 123" }, void 0, false, {
+                fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+                lineNumber: 25,
+                columnNumber: 17
+              }, this)
+            ] }, void 0, true, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+              lineNumber: 23,
+              columnNumber: 15
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+            lineNumber: 18,
+            columnNumber: 13
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+          lineNumber: 16,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+        lineNumber: 14,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "space-y-2.5 pt-4 border-t border-slate-200/60", children: [
+        /* @__PURE__ */ jsxDEV("h4", { className: "text-xs font-semibold text-slate-500 uppercase tracking-wider", children: "Operations Contact" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+          lineNumber: 32,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "space-y-1.5", children: [
+          /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-sm text-slate-600", children: [
+            /* @__PURE__ */ jsxDEV(Phone, { className: "h-3.5 w-3.5 text-slate-400 shrink-0" }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+              lineNumber: 35,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV("a", { href: "tel:01632960456", className: "hover:text-slate-900 hover:underline", children: "01632 960 456" }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+              lineNumber: 36,
+              columnNumber: 15
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+            lineNumber: 34,
+            columnNumber: 13
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-sm text-slate-600", children: [
+            /* @__PURE__ */ jsxDEV(Mail, { className: "h-3.5 w-3.5 text-slate-400 shrink-0" }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+              lineNumber: 39,
+              columnNumber: 15
+            }, this),
+            /* @__PURE__ */ jsxDEV("a", { href: "mailto:ops@example.com", className: "hover:text-slate-900 hover:underline truncate", children: "ops@theledger.app" }, void 0, false, {
+              fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+              lineNumber: 40,
+              columnNumber: 15
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+            lineNumber: 38,
+            columnNumber: 13
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+          lineNumber: 33,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+        lineNumber: 31,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("div", { className: "space-y-2.5 pt-4 border-t border-slate-200/60", children: [
+        /* @__PURE__ */ jsxDEV("h4", { className: "text-xs font-semibold text-slate-500 uppercase tracking-wider", children: "Accounts Contact" }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+          lineNumber: 46,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "space-y-1.5", children: /* @__PURE__ */ jsxDEV("div", { className: "flex items-center gap-2 text-sm text-slate-600", children: [
+          /* @__PURE__ */ jsxDEV(Mail, { className: "h-3.5 w-3.5 text-slate-400 shrink-0" }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+            lineNumber: 49,
+            columnNumber: 15
+          }, this),
+          /* @__PURE__ */ jsxDEV("a", { href: "mailto:accounts@example.com", className: "hover:text-slate-900 hover:underline truncate", children: "accounts@theledger.app" }, void 0, false, {
+            fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+            lineNumber: 50,
+            columnNumber: 15
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+          lineNumber: 48,
+          columnNumber: 13
+        }, this) }, void 0, false, {
+          fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+          lineNumber: 47,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+        lineNumber: 45,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+      lineNumber: 12,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx",
+    lineNumber: 6,
+    columnNumber: 5
+  }, this);
+}
+_c = ProjectContacts;
+var _c;
+$RefreshReg$(_c, "ProjectContacts");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/pskan/Documents/The-Ledger/The-Ledger/The-Ledger/client/src/components/portal/ProjectContacts.tsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,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LGlDQUFDLFNBQUksV0FBVSxrREFDYjtBQUFBLGlDQUFDLFFBQUssV0FBVSx5Q0FBaEI7QUFBQTtBQUFBO0FBQUE7QUFBQSxpQkFBcUQ7QUFBQSxVQUNyRCx1QkFBQyxPQUFFLE1BQUssK0JBQThCLFdBQVUsaURBQWdELHNDQUFoRztBQUFBO0FBQUE7QUFBQTtBQUFBLGlCQUFzSDtBQUFBLGFBRnhIO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFHQSxLQUpGO0FBQUE7QUFBQTtBQUFBO0FBQUEsZUFLQTtBQUFBLFdBUEY7QUFBQTtBQUFBO0FBQUE7QUFBQSxhQVFBO0FBQUEsU0F6Q0Y7QUFBQTtBQUFBO0FBQUE7QUFBQSxXQTJDQTtBQUFBLE9BakRGO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0FrREE7QUFFSjtBQUFDQyxLQXREZUQ7QUFBZSxJQUFBQztBQUFBQyxhQUFBRCxJQUFBIiwibmFtZXMiOlsiQ2FyZCIsIkNhcmRIZWFkZXIiLCJDYXJkVGl0bGUiLCJDYXJkQ29udGVudCIsIk1haWwiLCJQaG9uZSIsIlVzZXJDaXJjbGUiLCJQcm9qZWN0Q29udGFjdHMiLCJfYyIsIiRSZWZyZXNoUmVnJCJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJQcm9qZWN0Q29udGFjdHMudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IENhcmQsIENhcmRIZWFkZXIsIENhcmRUaXRsZSwgQ2FyZENvbnRlbnQgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2NhcmRcIjtcbmltcG9ydCB7IE1haWwsIFBob25lLCBVc2VyQ2lyY2xlIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xuXG5leHBvcnQgZnVuY3Rpb24gUHJvamVjdENvbnRhY3RzKCkge1xuICByZXR1cm4gKFxuICAgIDxDYXJkIGNsYXNzTmFtZT1cInNoYWRvdy1zbSBib3JkZXItc2xhdGUtMjAwIGJnLXNsYXRlLTUwLzUwXCI+XG4gICAgICA8Q2FyZEhlYWRlciBjbGFzc05hbWU9XCJwYi0zIGJvcmRlci1iIGJvcmRlci1zbGF0ZS0xMDBcIj5cbiAgICAgICAgPENhcmRUaXRsZSBjbGFzc05hbWU9XCJ0ZXh0LWxnIGZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+XG4gICAgICAgICAgPFVzZXJDaXJjbGUgY2xhc3NOYW1lPVwiaC01IHctNSB0ZXh0LXNsYXRlLTUwMFwiIC8+IFByb2plY3QgQ29udGFjdHNcbiAgICAgICAgPC9DYXJkVGl0bGU+XG4gICAgICA8L0NhcmRIZWFkZXI+XG4gICAgICA8Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicHQtNCBzcGFjZS15LTZcIj5cbiAgICAgICAgXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yLjVcIj5cbiAgICAgICAgICA8aDQgY2xhc3NOYW1lPVwidGV4dC14cyBmb250LXNlbWlib2xkIHRleHQtc2xhdGUtNTAwIHVwcGVyY2FzZSB0cmFja2luZy13aWRlclwiPlByb2plY3QgTWFuYWdlcjwvaDQ+XG4gICAgICAgICAgPGRpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LXNsYXRlLTgwMCBtYi0xXCI+U2FyYWggSmVua2luczwvZGl2PlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTEuNVwiPlxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIHRleHQtc20gdGV4dC1zbGF0ZS02MDBcIj5cbiAgICAgICAgICAgICAgICA8TWFpbCBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSB0ZXh0LXNsYXRlLTQwMCBzaHJpbmstMFwiIC8+IFxuICAgICAgICAgICAgICAgIDxhIGhyZWY9XCJtYWlsdG86c2FyYWhAZXhhbXBsZS5jb21cIiBjbGFzc05hbWU9XCJob3Zlcjp0ZXh0LXNsYXRlLTkwMCBob3Zlcjp1bmRlcmxpbmUgdHJ1bmNhdGVcIj5zYXJhaEB0aGVsZWRnZXIuYXBwPC9hPlxuICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiB0ZXh0LXNtIHRleHQtc2xhdGUtNjAwXCI+XG4gICAgICAgICAgICAgICAgPFBob25lIGNsYXNzTmFtZT1cImgtMy41IHctMy41IHRleHQtc2xhdGUtNDAwIHNocmluay0wXCIgLz4gXG4gICAgICAgICAgICAgICAgPGEgaHJlZj1cInRlbDowNzcwMDkwMDEyM1wiIGNsYXNzTmFtZT1cImhvdmVyOnRleHQtc2xhdGUtOTAwIGhvdmVyOnVuZGVybGluZVwiPjA3NzAwIDkwMCAxMjM8L2E+XG4gICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvZGl2PlxuXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yLjUgcHQtNCBib3JkZXItdCBib3JkZXItc2xhdGUtMjAwLzYwXCI+XG4gICAgICAgICAgPGg0IGNsYXNzTmFtZT1cInRleHQteHMgZm9udC1zZW1pYm9sZCB0ZXh0LXNsYXRlLTUwMCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXJcIj5PcGVyYXRpb25zIENvbnRhY3Q8L2g0PlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0xLjVcIj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgdGV4dC1zbSB0ZXh0LXNsYXRlLTYwMFwiPlxuICAgICAgICAgICAgICA8UGhvbmUgY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjUgdGV4dC1zbGF0ZS00MDAgc2hyaW5rLTBcIiAvPiBcbiAgICAgICAgICAgICAgPGEgaHJlZj1cInRlbDowMTYzMjk2MDQ1NlwiIGNsYXNzTmFtZT1cImhvdmVyOnRleHQtc2xhdGUtOTAwIGhvdmVyOnVuZGVybGluZVwiPjAxNjMyIDk2MCA0NTY8L2E+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgdGV4dC1zbSB0ZXh0LXNsYXRlLTYwMFwiPlxuICAgICAgICAgICAgICA8TWFpbCBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSB0ZXh0LXNsYXRlLTQwMCBzaHJpbmstMFwiIC8+IFxuICAgICAgICAgICAgICA8YSBocmVmPVwibWFpbHRvOm9wc0BleGFtcGxlLmNvbVwiIGNsYXNzTmFtZT1cImhvdmVyOnRleHQtc2xhdGUtOTAwIGhvdmVyOnVuZGVybGluZSB0cnVuY2F0ZVwiPm9wc0B0aGVsZWRnZXIuYXBwPC9hPlxuICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvZGl2PlxuXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yLjUgcHQtNCBib3JkZXItdCBib3JkZXItc2xhdGUtMjAwLzYwXCI+XG4gICAgICAgICAgPGg0IGNsYXNzTmFtZT1cInRleHQteHMgZm9udC1zZW1pYm9sZCB0ZXh0LXNsYXRlLTUwMCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXJcIj5BY2NvdW50cyBDb250YWN0PC9oND5cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMS41XCI+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIHRleHQtc20gdGV4dC1zbGF0ZS02MDBcIj5cbiAgICAgICAgICAgICAgPE1haWwgY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjUgdGV4dC1zbGF0ZS00MDAgc2hyaW5rLTBcIiAvPiBcbiAgICAgICAgICAgICAgPGEgaHJlZj1cIm1haWx0bzphY2NvdW50c0BleGFtcGxlLmNvbVwiIGNsYXNzTmFtZT1cImhvdmVyOnRleHQtc2xhdGUtOTAwIGhvdmVyOnVuZGVybGluZSB0cnVuY2F0ZVwiPmFjY291bnRzQHRoZWxlZGdlci5hcHA8L2E+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgPC9kaXY+XG5cbiAgICAgIDwvQ2FyZENvbnRlbnQ+XG4gICAgPC9DYXJkPlxuICApO1xufVxuIl0sImZpbGUiOiJDOi9Vc2Vycy9wc2thbi9Eb2N1bWVudHMvVGhlLUxlZGdlci9UaGUtTGVkZ2VyL1RoZS1MZWRnZXIvY2xpZW50L3NyYy9jb21wb25lbnRzL3BvcnRhbC9Qcm9qZWN0Q29udGFjdHMudHN4In0=
