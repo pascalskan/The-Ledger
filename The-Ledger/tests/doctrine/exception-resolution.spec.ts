@@ -168,6 +168,8 @@ test('Finance Hub Accounting: Exceptions sub-tab panel renders KPI strip and tab
   await loginAsCEO(page);
   await page.goto('http://localhost:5000/finance?tab=accounting&sub=exceptions');
   await expect(page.getByTestId('accounting-exceptions-panel')).toBeVisible();
+  // Wait for ExceptionResolutionContent to hydrate inside the panel
+  await expect(page.getByTestId('exception-resolution-center-page')).toBeVisible({ timeout: 10000 });
   await expect(page.getByTestId('exc-kpi-strip')).toBeVisible();
 });
 
