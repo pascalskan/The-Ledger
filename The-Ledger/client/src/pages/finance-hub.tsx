@@ -1,7 +1,9 @@
 import { Layout } from "@/components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Layers, FileText, Wallet, Link2, Users, FileDown, RefreshCw, GitMerge, TriangleAlert } from "lucide-react";
+import { LayoutDashboard, Layers, FileText, Wallet, Link2, Users, FileDown, RefreshCw, GitMerge, TriangleAlert, Calendar } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
+import { useStore } from "@/lib/mockData";
+import { groupTimesheetsForPayroll } from "@/lib/profitabilityEngine";
 import { FinancialRecordsContent } from "./financial-explorer";
 import { PayrollProcessingContent } from "./payroll";
 import { PayrollExportContent } from "./payroll-export";
@@ -29,10 +31,48 @@ function defaultSub(tab: string): string {
   return defaults[tab] ?? "";
 }
 
+// Mock payroll schedule — next payroll run date (mock data per spec §2.8)
+const MOCK_NEXT_PAYROLL_RUN = "20 Jun 2026";
+
 function PayrollHub({ activeSub, onSubChange }: { activeSub: string; onSubChange: (sub: string) => void }) {
   const sub = activeSub || "processing";
+  const { timesheets, reviewItems } = useStore();
+
+  const stagingRecords = groupTimesheetsForPayroll(timesheets);
+  const approvedCount = stagingRecords.length;
+  const pendingCount = reviewItems.filter(
+    (r) => r.type === "timesheet" && r.status === "pending"
+  ).length;
+
+  const pendingClass =
+    pendingCount === 0
+      ? "text-emerald-600 font-medium"
+      : pendingCount <= 5
+      ? "text-amber-600 font-medium"
+      : "text-red-600 font-medium";
+
   return (
     <div className="space-y-4">
+      <div
+        className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm flex-wrap"
+        data-testid="payroll-status-banner"
+      >
+        <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <span>
+          Next run: <span className="font-medium">{MOCK_NEXT_PAYROLL_RUN}</span>
+        </span>
+        <span className="text-muted-foreground">·</span>
+        <span>{approvedCount} workers in scope</span>
+        <span className="text-muted-foreground">·</span>
+        <span className="text-emerald-600 font-medium">{approvedCount} ready</span>
+        {pendingCount > 0 && (
+          <>
+            <span className="text-muted-foreground">/</span>
+            <span className={pendingClass}>{pendingCount} pending timesheet{pendingCount !== 1 ? "s" : ""}</span>
+          </>
+        )}
+      </div>
+
       <Tabs value={sub} onValueChange={onSubChange}>
         <TabsList>
           <TabsTrigger value="processing" data-testid="payroll-subtab-processing-queue">
