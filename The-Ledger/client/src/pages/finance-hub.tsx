@@ -3,14 +3,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Layers, FileText, Wallet, Link2, Users, FileDown, RefreshCw, GitMerge, TriangleAlert } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
 import { FinancialRecordsContent } from "./financial-explorer";
-import { InvoicesContent } from "./invoices";
-import { InvoiceBuilderContent } from "./invoice-builder";
 import { PayrollProcessingContent } from "./payroll";
 import { PayrollExportContent } from "./payroll-export";
 import { AccountingSettingsContent } from "./accounting-settings";
 import { ReconciliationContent } from "./reconciliation-center";
 import { ExceptionResolutionContent } from "./exception-resolution-center";
 import { AccountingSyncTab } from "@/components/finance/AccountingSyncTab";
+import { InvoicingHub } from "@/components/finance/InvoicingHub";
 
 const tabLabels: Record<string, string> = {
   overview: "",
@@ -152,17 +151,7 @@ export default function FinanceHubPage() {
           </TabsContent>
 
           <TabsContent value="invoicing" data-testid="finance-invoicing-panel">
-            <div className="space-y-4">
-              <div className="space-y-4">
-                <InvoicesContent />
-              </div>
-              <div className="border-t pt-4">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                  Invoice Builder
-                </h3>
-                <InvoiceBuilderContent />
-              </div>
-            </div>
+            <InvoicingHub />
           </TabsContent>
 
           <TabsContent value="payroll" data-testid="finance-payroll-panel">

@@ -30,6 +30,9 @@ test("Invoice Builder page loads and shows seed draft INV-2026-0001", async ({ p
   await loginAsCEO(page);
   await page.goto("http://localhost:5000/finance?tab=invoicing");
 
+  // Invoice Builder is now in a Sheet — open it via the Create Invoice button
+  await page.getByTestId("btn-create-invoice").click();
+
   await expect(page.getByTestId("page-title-invoice-builder")).toBeVisible();
   await expect(page.getByTestId("invoice-pipeline-strip")).toBeVisible();
 
@@ -53,6 +56,9 @@ test("Pipeline strip shows correct counts from seed data", async ({ page }) => {
   await loginAsCEO(page);
   await page.goto("http://localhost:5000/finance?tab=invoicing");
 
+  // Invoice Builder is now in a Sheet — open it to access pipeline strip
+  await page.getByTestId("btn-create-invoice").click();
+
   await expect(page.getByTestId("pipeline-count-draft")).toHaveText("1");
   await expect(page.getByTestId("pipeline-count-ready")).toHaveText("0");
   await expect(page.getByTestId("pipeline-count-sent")).toHaveText("0");
@@ -65,6 +71,9 @@ test("Pipeline strip shows correct counts from seed data", async ({ page }) => {
 test("Invoice draft can be advanced from draft to ready", async ({ page }) => {
   await loginAsCEO(page);
   await page.goto("http://localhost:5000/finance?tab=invoicing");
+
+  // Invoice Builder is now in a Sheet — open it
+  await page.getByTestId("btn-create-invoice").click();
 
   const advanceBtn = page.getByTestId("btn-advance-seed-draft-kex-1");
   await expect(advanceBtn).toBeVisible();
@@ -86,6 +95,9 @@ test("Invoice draft can be advanced from draft to ready", async ({ page }) => {
 test("Invoice draft completes full workflow draft → ready → sent → paid", async ({ page }) => {
   await loginAsCEO(page);
   await page.goto("http://localhost:5000/finance?tab=invoicing");
+
+  // Invoice Builder is now in a Sheet — open it
+  await page.getByTestId("btn-create-invoice").click();
 
   // draft → ready
   await page.getByTestId("btn-advance-seed-draft-kex-1").click();

@@ -34,7 +34,8 @@ test('Financial Records tab loads and all tabs render', async ({ page }) => {
   await expect(page.getByRole('tab', { name: /Expenses/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /Inventory/i })).toBeVisible();
   await expect(page.getByRole('tab', { name: /Equipment/i })).toBeVisible();
-  await expect(page.getByRole('tab', { name: /Invoice Lines/i })).toBeVisible();
+  // Invoice Lines and Audit Log tabs removed in UX-4 — Records tab retains 7 operational sub-tabs
+  await expect(page.getByRole('tab', { name: /Invoice Pipeline/i })).toBeVisible();
 });
 
 test('Financial Records Profitability tab renders content', async ({ page }) => {

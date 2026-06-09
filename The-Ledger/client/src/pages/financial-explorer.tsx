@@ -16,9 +16,7 @@ import {
   Receipt,
   Package,
   Wrench,
-  FileText,
   Activity,
-  DollarSign,
   BarChart3,
   FilePlus,
   TrendingUp,
@@ -46,20 +44,6 @@ function fmtDate(iso: string) {
   });
 }
 
-const MUTATION_COLORS: Record<string, string> = {
-  timesheet: "text-blue-600 border-blue-200 bg-blue-50",
-  expense: "text-amber-600 border-amber-200 bg-amber-50",
-  inventory: "text-emerald-600 border-emerald-200 bg-emerald-50",
-  equipment: "text-violet-600 border-violet-200 bg-violet-50",
-  invoice: "text-rose-600 border-rose-200 bg-rose-50",
-};
-
-const LINE_TYPE_COLORS: Record<string, string> = {
-  labor: "text-blue-600 border-blue-200 bg-blue-50",
-  material: "text-emerald-600 border-emerald-200 bg-emerald-50",
-  equipment: "text-violet-600 border-violet-200 bg-violet-50",
-  expense: "text-amber-600 border-amber-200 bg-amber-50",
-};
 
 function EmptyState({ label }: { label: string }) {
   return (
@@ -76,8 +60,6 @@ export function FinancialRecordsContent() {
     expenses,
     inventoryMutations,
     equipmentUsageRecords,
-    invoiceLineItems,
-    financialMutations,
     jobs,
     invoiceDrafts,
   } = useStore();
@@ -100,8 +82,6 @@ export function FinancialRecordsContent() {
     { label: "Expenses", count: expenses.length, icon: Receipt, color: "text-amber-600" },
     { label: "Inventory Mutations", count: inventoryMutations.length, icon: Package, color: "text-emerald-600" },
     { label: "Equipment Usage", count: equipmentUsageRecords.length, icon: Wrench, color: "text-violet-600" },
-    { label: "Invoice Line Items", count: invoiceLineItems.length, icon: FileText, color: "text-rose-600" },
-    { label: "Financial Mutations", count: financialMutations.length, icon: DollarSign, color: "text-slate-600" },
     { label: "Invoice Drafts", count: invoiceDrafts.length, icon: FilePlus, color: "text-indigo-600" },
   ];
 
@@ -144,12 +124,10 @@ export function FinancialRecordsContent() {
             <TabsTrigger value="invoice-pipeline" className="flex items-center gap-1.5" data-testid="tab-invoice-pipeline">
               <FilePlus className="h-3.5 w-3.5" /> Invoice Pipeline
             </TabsTrigger>
-            <TabsTrigger value="mutations">Audit Log</TabsTrigger>
             <TabsTrigger value="timesheets">Timesheets</TabsTrigger>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
             <TabsTrigger value="inventory">Inventory</TabsTrigger>
             <TabsTrigger value="equipment">Equipment</TabsTrigger>
-            <TabsTrigger value="lineitems">Invoice Lines</TabsTrigger>
           </TabsList>
 
           {/* ── Phase 5.2: Profitability Dashboard ── */}
@@ -235,53 +213,6 @@ export function FinancialRecordsContent() {
                     </TableBody>
                   </Table>
                 </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* ── Financial Mutation Audit Log ── */}
-          <TabsContent value="mutations">
-            <div className="border rounded-md mt-4">
-              {financialMutations.length === 0 ? (
-                <EmptyState label="No financial records generated yet." />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Created At</TableHead>
-                      <TableHead>Mutation Type</TableHead>
-                      <TableHead>Entity ID</TableHead>
-                      <TableHead>Job</TableHead>
-                      <TableHead>Source Review</TableHead>
-                      <TableHead>Approved By</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {[...financialMutations].reverse().map((m) => (
-                      <TableRow key={m.id}>
-                        <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                          {fmtDate(m.createdAt)}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={MUTATION_COLORS[m.mutationType] ?? ""}
-                          >
-                            {m.mutationType}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground">
-                          {m.entityId}
-                        </TableCell>
-                        <TableCell><JobLink jobId={m.jobId} /></TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground">
-                          {m.sourceReviewId}
-                        </TableCell>
-                        <TableCell className="text-sm">{m.approvedBy}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
               )}
             </div>
           </TabsContent>
@@ -468,52 +399,6 @@ export function FinancialRecordsContent() {
             </div>
           </TabsContent>
 
-          {/* ── Invoice Line Items ── */}
-          <TabsContent value="lineitems">
-            <div className="border rounded-md mt-4">
-              {invoiceLineItems.length === 0 ? (
-                <EmptyState label="No invoice line items generated yet." />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Unit Price</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Job</TableHead>
-                      <TableHead>Approved At</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {[...invoiceLineItems].reverse().map((li) => (
-                      <TableRow key={li.id}>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={LINE_TYPE_COLORS[li.type] ?? ""}
-                          >
-                            {li.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm max-w-[200px] truncate">
-                          {li.description}
-                        </TableCell>
-                        <TableCell className="text-right">{li.quantity}</TableCell>
-                        <TableCell className="text-right">{fmt(li.unitPrice)}</TableCell>
-                        <TableCell className="text-right font-medium">{fmt(li.amount)}</TableCell>
-                        <TableCell><JobLink jobId={li.jobId} /></TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
-                          {fmtDate(li.approvedAt)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </div>
-          </TabsContent>
         </Tabs>
       </div>
   );
