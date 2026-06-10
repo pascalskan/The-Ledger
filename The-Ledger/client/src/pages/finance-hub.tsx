@@ -2,7 +2,8 @@ import { Layout } from "@/components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Layers, FileText, Wallet, Link2, Users, FileDown, RefreshCw, GitMerge, TriangleAlert, Calendar } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
-import { useStore } from "@/lib/mockData";
+import { useStore, useAuth } from "@/lib/mockData";
+import UnauthorizedPage from "@/pages/unauthorized";
 import { groupTimesheetsForPayroll } from "@/lib/profitabilityEngine";
 import { FinancialRecordsContent } from "./financial-explorer";
 import { PayrollProcessingContent } from "./payroll";
@@ -36,7 +37,13 @@ const MOCK_NEXT_PAYROLL_RUN = "20 Jun 2026";
 
 function PayrollHub({ activeSub, onSubChange }: { activeSub: string; onSubChange: (sub: string) => void }) {
   const sub = activeSub || "processing";
-  const { timesheets, reviewItems } = useStore();
+  const { timesheets, reviewItems, roles } = useStore();
+  const { user } = useAuth();
+  // Inner CEO check — defence-in-depth if outer RBAC is ever relaxed (NG-05)
+  const isCEO = (user?.roleIds || [])
+    .map((rid: string) => roles.find((r: any) => r.id === rid)?.name)
+    .includes("CEO");
+  if (!isCEO) return <UnauthorizedPage />;
 
   const stagingRecords = groupTimesheetsForPayroll(timesheets);
   const approvedCount = stagingRecords.length;
@@ -95,6 +102,13 @@ function PayrollHub({ activeSub, onSubChange }: { activeSub: string; onSubChange
 
 function AccountingHub({ activeSub, onSubChange }: { activeSub: string; onSubChange: (sub: string) => void }) {
   const sub = activeSub || "sync";
+  const { roles } = useStore();
+  const { user } = useAuth();
+  // Inner CEO check — defence-in-depth if outer RBAC is ever relaxed (NG-05)
+  const isCEO = (user?.roleIds || [])
+    .map((rid: string) => roles.find((r: any) => r.id === rid)?.name)
+    .includes("CEO");
+  if (!isCEO) return <UnauthorizedPage />;
   return (
     <div className="space-y-4">
       <Tabs value={sub} onValueChange={onSubChange}>
