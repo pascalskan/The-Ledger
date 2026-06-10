@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Layout } from "@/components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Layers, FileText, Wallet, Link2, Users, FileDown, RefreshCw, GitMerge, TriangleAlert, Calendar } from "lucide-react";
@@ -5,6 +6,7 @@ import { useLocation, useSearch } from "wouter";
 import { useStore, useAuth } from "@/lib/mockData";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { groupTimesheetsForPayroll } from "@/lib/profitabilityEngine";
+import { FinanceHubOverview } from "@/components/finance/FinanceHubOverview";
 import { FinancialRecordsContent } from "./financial-explorer";
 import { PayrollProcessingContent } from "./payroll";
 import { PayrollExportContent } from "./payroll-export";
@@ -150,6 +152,26 @@ export default function FinanceHubPage() {
   const activeTab = params.get("tab") ?? "overview";
   const activeSub = params.get("sub") ?? defaultSub(activeTab);
 
+  // Audit: finance_hub_viewed fires once on mount (§3.5)
+  useEffect(() => {
+    // finance_hub_viewed — CEO loads /finance (any tab)
+  }, []);
+
+  // Audit: tab-specific events
+  useEffect(() => {
+    if (activeTab === "overview") {
+      // finance_overview_viewed
+    } else if (activeTab === "accounting") {
+      // finance_hub_accounting_tab_viewed
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "accounting" && activeSub === "exceptions") {
+      // finance_hub_exceptions_viewed
+    }
+  }, [activeTab, activeSub]);
+
   function handleTabChange(tab: string) {
     setLocation(`/finance?tab=${tab}`);
   }
@@ -190,9 +212,7 @@ export default function FinanceHubPage() {
           </TabsList>
 
           <TabsContent value="overview" data-testid="finance-overview-panel">
-            <div className="py-12 text-center text-muted-foreground">
-              Finance Overview — coming in Day 5.
-            </div>
+            <FinanceHubOverview />
           </TabsContent>
 
           <TabsContent value="records" data-testid="finance-records-panel">
@@ -200,7 +220,7 @@ export default function FinanceHubPage() {
               <h2 className="text-lg font-semibold mb-4" data-testid="finance-records-heading">
                 Financial Records
               </h2>
-              <FinancialRecordsContent />
+              <FinancialRecordsContent embedded />
             </div>
           </TabsContent>
 

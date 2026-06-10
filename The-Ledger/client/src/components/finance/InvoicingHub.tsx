@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearch } from "wouter";
+import { useSearch, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -11,6 +11,7 @@ import { InvoicesContent } from "@/pages/invoices";
 import { InvoiceBuilderContent } from "@/pages/invoice-builder";
 
 export function InvoicingHub() {
+  const [, setLocation] = useLocation();
   const search = useSearch();
   const params = new URLSearchParams(search);
   const activeFilter = params.get("filter") ?? "all";
@@ -25,8 +26,16 @@ export function InvoicingHub() {
     { value: "paid", label: "Paid", testId: "invoice-filter-paid" },
   ];
 
+  function handleFilterChange(value: string) {
+    const qs =
+      value === "all"
+        ? "/finance?tab=invoicing"
+        : `/finance?tab=invoicing&filter=${value}`;
+    setLocation(qs);
+  }
+
   return (
-    <div data-testid="finance-invoicing-panel">
+    <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Invoicing</h2>
         <Button data-testid="btn-create-invoice" onClick={() => setSheetOpen(true)}>
@@ -41,6 +50,7 @@ export function InvoicingHub() {
             variant={activeFilter === value ? "default" : "outline"}
             data-testid={testId}
             size="sm"
+            onClick={() => handleFilterChange(value)}
           >
             {label}
           </Button>
@@ -48,7 +58,7 @@ export function InvoicingHub() {
       </div>
 
       <div data-testid="invoice-list-container">
-        <InvoicesContent statusFilter={activeFilter} />
+        <InvoicesContent statusFilter={activeFilter} embedded />
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

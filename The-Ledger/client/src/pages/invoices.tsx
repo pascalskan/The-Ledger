@@ -7,7 +7,7 @@ import { useLocation } from "wouter";
 import { ExternalLink, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function InvoicesContent({ statusFilter }: { statusFilter?: string }) {
+export function InvoicesContent({ statusFilter, embedded }: { statusFilter?: string; embedded?: boolean }) {
   const { invoices, clients, companySettings } = useStore();
   const [, setLocation] = useLocation();
 
@@ -46,14 +46,16 @@ export function InvoicesContent({ statusFilter }: { statusFilter?: string }) {
 
   return (
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">Billing Overview</h2>
-            <p className="text-slate-500 mt-1">
-              {isConnected ? `Read-only view of invoices synced from ${providerName}.` : "Manage and track all client invoices."}
-            </p>
+        {!embedded && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight text-slate-900">Billing Overview</h2>
+              <p className="text-slate-500 mt-1">
+                {isConnected ? `Read-only view of invoices synced from ${providerName}.` : "Manage and track all client invoices."}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {isConnected ? (
           <Card className="bg-blue-50/50 border-blue-100 shadow-sm">
@@ -111,14 +113,28 @@ export function InvoicesContent({ statusFilter }: { statusFilter?: string }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-slate-500">
-                      {isConnected ? `No invoices found. Syncing from ${providerName}...` : "No invoices found. Create one to get started."}
-                    </TableCell>
-                  </TableRow>
-                )}
-                {invoices.map((inv) => {
+                {(() => {
+                  const filtered =
+                    statusFilter && statusFilter !== "all"
+                      ? invoices.filter(
+                          (inv) =>
+                            inv.status.toLowerCase() === statusFilter.toLowerCase()
+                        )
+                      : invoices;
+                  if (filtered.length === 0) {
+                    return (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                          {statusFilter && statusFilter !== "all"
+                            ? `No ${statusFilter} invoices found.`
+                            : isConnected
+                            ? `No invoices found. Syncing from ${providerName}...`
+                            : "No invoices found. Create one to get started."}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+                  return filtered.map((inv) => {
                   const client = clients.find((c) => c.id === inv.clientId);
                   const total = inv.lineItems.reduce((sum, li) => sum + li.qty * li.unitPrice, 0);
 
@@ -139,7 +155,8 @@ export function InvoicesContent({ statusFilter }: { statusFilter?: string }) {
                       </TableCell>
                     </TableRow>
                   );
-                })}
+                  });
+                })()}
               </TableBody>
             </Table>
           </CardContent>
