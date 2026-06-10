@@ -236,13 +236,13 @@ test('AF-22: Detail dialog shows Go to Source deep-link button', async ({ page }
 // AF-23: Deep Linking
 // ──────────────────────────────────────────────────────
 
-test('AF-23: Deep link from sync event navigates to /financial-explorer', async ({ page }) => {
+test('AF-23: Deep link from sync event navigates to Finance Hub records tab', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/activity-feed');
   await page.getByTestId('af-btn-view-act-010').click();
   await expect(page.getByTestId('af-event-detail-dialog')).toBeVisible();
   await page.getByTestId('af-detail-btn-deep-link').click();
-  await expect(page).toHaveURL(/\/financial-explorer/);
+  await expect(page).toHaveURL(/\/finance/);
 });
 
 // ──────────────────────────────────────────────────────

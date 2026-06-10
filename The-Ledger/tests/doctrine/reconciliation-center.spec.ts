@@ -36,20 +36,20 @@ test.beforeEach(async ({ page }) => {
 
 test("RC-01: Reconciliation Centre page loads for CEO", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await expect(page.getByTestId("reconciliation-center-page")).toBeVisible();
 });
 
 test("RC-02: Page header displays 'Reconciliation Centre'", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await expect(page.getByRole("heading", { name: /reconciliation centre/i })).toBeVisible();
 });
 
-test("RC-03: CEO navigation contains Reconciliation Centre link", async ({ page }) => {
+test("RC-03: CEO navigation contains Finance Hub link (consolidates Reconciliation)", async ({ page }) => {
   await loginAsCEO(page);
   await page.goto(`${BASE}/`);
-  await expect(page.getByTestId("nav-reconciliation-centre")).toBeVisible();
+  await expect(page.getByTestId("nav-finance-hub")).toBeVisible();
 });
 
 // ─────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ test("RC-03: CEO navigation contains Reconciliation Centre link", async ({ page 
 
 test("RC-04: KPI strip renders all four cards", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await expect(page.getByTestId("rc-kpi-strip")).toBeVisible();
   await expect(page.getByTestId("rc-kpi-matched")).toBeVisible();
   await expect(page.getByTestId("rc-kpi-unmatched")).toBeVisible();
@@ -68,7 +68,7 @@ test("RC-04: KPI strip renders all four cards", async ({ page }) => {
 
 test("RC-05: KPI values are numeric", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await expect(page.getByTestId("rc-kpi-matched")).toBeVisible();
   const matched = await page.getByTestId("rc-kpi-matched").textContent();
   expect(Number(matched?.trim())).toBeGreaterThanOrEqual(0);
@@ -80,19 +80,19 @@ test("RC-05: KPI values are numeric", async ({ page }) => {
 
 test("RC-06: Reconciliation table renders", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await expect(page.getByTestId("rc-recon-table")).toBeVisible();
 });
 
 test("RC-07: Table contains status badges for Matched records", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await expect(page.getByTestId("recon-status-matched").first()).toBeVisible();
 });
 
 test("RC-08: Table contains Unmatched status badge", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await expect(page.getByTestId("recon-status-unmatched").first()).toBeVisible();
 });
 
@@ -102,19 +102,19 @@ test("RC-08: Table contains Unmatched status badge", async ({ page }) => {
 
 test("RC-09: Status filter select is visible", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await expect(page.getByTestId("rc-filter-status")).toBeVisible();
 });
 
 test("RC-10: Provider filter select is visible", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await expect(page.getByTestId("rc-filter-provider")).toBeVisible();
 });
 
 test("RC-11: Search field is visible and accepts input", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   const search = page.getByTestId("rc-search");
   await expect(search).toBeVisible();
   await search.fill("invoice");
@@ -127,7 +127,7 @@ test("RC-11: Search field is visible and accepts input", async ({ page }) => {
 
 test("RC-12: Sync Operations tab navigates and renders KPIs", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await page.getByTestId("rc-tab-sync-ops").click();
   await expect(page.getByTestId("rc-sync-ops-panel")).toBeVisible();
   await expect(page.getByTestId("rc-ops-kpi-strip")).toBeVisible();
@@ -137,14 +137,14 @@ test("RC-12: Sync Operations tab navigates and renders KPIs", async ({ page }) =
 
 test("RC-13: Failure queue renders in Sync Operations tab", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await page.getByTestId("rc-tab-sync-ops").click();
   await expect(page.getByTestId("rc-failure-queue")).toBeVisible();
 });
 
 test("RC-14: Retry action button is visible in failure queue", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/reconciliation-center`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
   await page.getByTestId("rc-tab-sync-ops").click();
   await expect(page.locator("[data-testid^='rc-btn-retry-']").first()).toBeVisible();
 });
@@ -153,10 +153,10 @@ test("RC-14: Retry action button is visible in failure queue", async ({ page }) 
 // GROUP 6: Integration — Financial Explorer & Job Detail
 // ─────────────────────────────────────────────────────────
 
-test("RC-15: Financial Explorer Reconciliation tab is visible", async ({ page }) => {
+test("RC-15: Finance Hub Accounting Reconciliation sub-tab is visible", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/financial-explorer`);
-  await expect(page.getByTestId("tab-reconciliation")).toBeVisible();
+  await page.goto(`${BASE}/finance?tab=accounting&sub=reconciliation`);
+  await expect(page.getByTestId("accounting-subtab-reconciliation")).toBeVisible();
 });
 
 test("RC-16: Job Detail page renders JobReconciliationPanel", async ({ page }) => {

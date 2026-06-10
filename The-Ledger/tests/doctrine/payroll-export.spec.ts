@@ -32,10 +32,10 @@ test.beforeEach(async ({ page }) => {
 test("Payroll Export page is accessible to CEO and renders without error", async ({ page }) => {
   await loginAsCEO(page);
 
-  // Navigate via sidebar link
-  await page.getByTestId("nav-payroll-export").click();
+  // Navigate to Finance Hub Payroll → Export History tab
+  await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
-  await expect(page).toHaveURL(/payroll-export/i);
+  await expect(page).toHaveURL(/finance/i);
 
   // Verify the page heading
   await expect(
@@ -56,7 +56,7 @@ test("Payroll Export page is accessible to CEO and renders without error", async
 // ─────────────────────────────────────────────────────────────────
 test("Payroll Export page shows seeded worker records in preview", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/payroll-export");
+  await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
   // Phase 4.5 seed data creates TimesheetEntry records for Sophie Taylor and Ben Hughes
   await expect(page.locator("body")).toContainText(/Sophie Taylor|Ben Hughes/i);
@@ -70,7 +70,7 @@ test("Payroll Export page shows seeded worker records in preview", async ({ page
 // ─────────────────────────────────────────────────────────────────
 test("Payroll Export period selector shows all period options", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/payroll-export");
+  await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
   await expect(page.getByTestId("period-btn-all")).toBeVisible();
   await expect(page.getByTestId("period-btn-current-month")).toBeVisible();
@@ -82,7 +82,7 @@ test("Payroll Export period selector shows all period options", async ({ page })
 // ─────────────────────────────────────────────────────────────────
 test("Payroll Export KPI strip shows seeded worker and hour totals", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/payroll-export");
+  await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
   await expect(page.getByTestId("payroll-export-kpi-strip")).toBeVisible();
 
@@ -98,7 +98,7 @@ test("Payroll Export KPI strip shows seeded worker and hour totals", async ({ pa
 // ─────────────────────────────────────────────────────────────────
 test("Generate Export button creates a PayrollExport and shows it in the list", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/payroll-export");
+  await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
   // Click generate
   await page.getByTestId("btn-generate-export").click();
@@ -117,7 +117,7 @@ test("Generate Export button creates a PayrollExport and shows it in the list", 
 // ─────────────────────────────────────────────────────────────────
 test("Generated export shows PAY- export number and Generated status", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/payroll-export");
+  await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
   await page.getByTestId("btn-generate-export").click();
 
@@ -140,7 +140,7 @@ test("Generated export shows PAY- export number and Generated status", async ({ 
 // ─────────────────────────────────────────────────────────────────
 test("Generated export has a Download CSV button", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/payroll-export");
+  await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
   await page.getByTestId("btn-generate-export").click();
 
@@ -154,7 +154,7 @@ test("Generated export has a Download CSV button", async ({ page }) => {
 // ─────────────────────────────────────────────────────────────────
 test("Mark Exported button advances export status to Exported", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/payroll-export");
+  await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
   await page.getByTestId("btn-generate-export").click();
 
@@ -181,7 +181,7 @@ test("Mark Exported button advances export status to Exported", async ({ page })
 // ─────────────────────────────────────────────────────────────────
 test("Generated export shows worker breakdown with Sophie Taylor and Ben Hughes", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto("http://localhost:5000/payroll-export");
+  await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
   await page.getByTestId("btn-generate-export").click();
 
@@ -192,21 +192,21 @@ test("Generated export shows worker breakdown with Sophie Taylor and Ben Hughes"
 // ─────────────────────────────────────────────────────────────────
 // TEST 10: Doctrine — Payroll Export page linked from Payroll Staging
 // ─────────────────────────────────────────────────────────────────
-test("Payroll Export is accessible as a separate nav item from Payroll Staging", async ({ page }) => {
+test("Payroll Export and Payroll Staging are accessible via Finance Hub", async ({ page }) => {
   await loginAsCEO(page);
 
-  // Both nav items should be present in sidebar
-  const stagingLink = page.getByTestId("nav-payroll-staging");
-  const exportLink  = page.getByTestId("nav-payroll-export");
+  // Finance Hub nav item should be present in sidebar
+  const financeLink = page.getByTestId("nav-finance-hub");
+  await expect(financeLink).toBeVisible();
 
-  await expect(stagingLink).toBeVisible();
-  await expect(exportLink).toBeVisible();
+  // Export History sub-tab is accessible
+  await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
+  await expect(page).toHaveURL(/finance/i);
+  await expect(page.getByTestId("payroll-export-history-panel")).toBeVisible();
 
-  // They should navigate to different URLs
-  await exportLink.click();
-  await expect(page).toHaveURL(/payroll-export/i);
-
-  await stagingLink.click();
-  await expect(page).toHaveURL(/\/payroll$/i);
+  // Processing Queue sub-tab is accessible
+  await page.goto("http://localhost:5000/finance?tab=payroll");
+  await expect(page).toHaveURL(/finance/i);
+  await expect(page.getByTestId("payroll-processing-queue-panel")).toBeVisible();
 });
 

@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import FinanceHubPage from "@/pages/finance-hub";
 import Dashboard from "@/pages/dashboard";
 import JobsPage from "@/pages/jobs";
 import JobDetailPage from "@/pages/job-detail";
@@ -91,6 +92,16 @@ function ProtectedRoute({ component: Component, roles }: { component: React.Comp
   return <Component />;
 }
 
+// Synchronous redirect to Finance Hub — matches ProtectedRoute pattern (lines 86–88).
+// Do NOT use useEffect — it creates a blank frame and races with auth checks.
+// Wouter 3.x setLocation accepts a single string argument only.
+function RedirectToFinance({ tab, sub }: { tab: string; sub?: string }) {
+  const [, setLocation] = useLocation();
+  const qs = sub ? `?tab=${tab}&sub=${sub}` : `?tab=${tab}`;
+  setLocation(`/finance${qs}`);
+  return null;
+}
+
 function Router() {
   return (
     <Switch>
@@ -164,6 +175,41 @@ function Router() {
       <Route path="/reporting-centre">
         <ProtectedRoute component={ReportingCentrePage} roles={["CEO"]} />
       </Route>
+      {/* UX-4: Finance Hub — CEO only */}
+      <Route path="/finance">
+        <ProtectedRoute component={FinanceHubPage} roles={["CEO"]} />
+      </Route>
+
+      {/* UX-4: Finance Hub redirect routes — must precede legacy route declarations.
+          /invoices/:id before /invoices; /payroll-export before /payroll (Wouter first-match-wins) */}
+      <Route path="/financial-explorer">
+        <ProtectedRoute component={() => <RedirectToFinance tab="records" />} roles={["CEO"]} />
+      </Route>
+      <Route path="/invoices/:id">
+        <ProtectedRoute component={() => <RedirectToFinance tab="invoicing" />} roles={["CEO"]} />
+      </Route>
+      <Route path="/invoices">
+        <ProtectedRoute component={() => <RedirectToFinance tab="invoicing" />} roles={["CEO"]} />
+      </Route>
+      <Route path="/invoice-builder">
+        <ProtectedRoute component={() => <RedirectToFinance tab="invoicing" />} roles={["CEO"]} />
+      </Route>
+      <Route path="/payroll-export">
+        <ProtectedRoute component={() => <RedirectToFinance tab="payroll" sub="export" />} roles={["CEO"]} />
+      </Route>
+      <Route path="/payroll">
+        <ProtectedRoute component={() => <RedirectToFinance tab="payroll" />} roles={["CEO"]} />
+      </Route>
+      <Route path="/accounting-settings">
+        <ProtectedRoute component={() => <RedirectToFinance tab="accounting" />} roles={["CEO"]} />
+      </Route>
+      <Route path="/reconciliation-center">
+        <ProtectedRoute component={() => <RedirectToFinance tab="accounting" sub="reconciliation" />} roles={["CEO"]} />
+      </Route>
+      <Route path="/exception-resolution-center">
+        <ProtectedRoute component={() => <RedirectToFinance tab="accounting" sub="exceptions" />} roles={["CEO"]} />
+      </Route>
+
       <Route path="/jobs">
         <ProtectedRoute component={JobsPage} />
       </Route>
@@ -177,10 +223,10 @@ function Router() {
         <ProtectedRoute component={ClientDetailPage} roles={["CEO", "Project Manager"]} />
       </Route>
       <Route path="/invoices">
-        <ProtectedRoute component={InvoicesPage} roles={["CEO", "Project Manager"]} />
+        <ProtectedRoute component={InvoicesPage} roles={["CEO"]} />
       </Route>
       <Route path="/invoices/:id">
-        <ProtectedRoute component={InvoiceDetailPage} roles={["CEO", "Project Manager"]} />
+        <ProtectedRoute component={InvoiceDetailPage} roles={["CEO"]} />
       </Route>
       <Route path="/expenses">
         <ProtectedRoute component={FinancialsPage} />
@@ -231,7 +277,7 @@ function Router() {
         <ProtectedRoute component={PayrollExportPage} roles={["CEO"]} />
       </Route>
       <Route path="/invoice-builder">
-        <ProtectedRoute component={InvoiceBuilderPage} roles={["CEO", "Project Manager"]} />
+        <ProtectedRoute component={InvoiceBuilderPage} roles={["CEO"]} />
       </Route>
       {/* Phase 5.8: Reconciliation Centre — CEO only */}
       <Route path="/reconciliation-center">

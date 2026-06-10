@@ -393,7 +393,7 @@ export function getCriticalRisks(): RiskItem[] {
       description: `${reconSummary.unmatched} record(s) are unmatched between The Ledger and accounting systems.`,
       category: 'financial',
       severity: 'critical',
-      sourceRoute: '/reconciliation-center',
+      sourceRoute: '/finance?tab=accounting&sub=reconciliation',
       recommendation: 'Investigate unmatched records in Reconciliation Centre immediately.',
     });
   }
@@ -405,7 +405,7 @@ export function getCriticalRisks(): RiskItem[] {
       description: `${controlSummary.pending} financial control override(s) awaiting CEO approval.`,
       category: 'financial',
       severity: 'high',
-      sourceRoute: '/exception-resolution-center',
+      sourceRoute: '/finance?tab=accounting&sub=exceptions',
       recommendation: 'Review and action pending financial controls.',
     });
   }
@@ -419,7 +419,7 @@ export function getCriticalRisks(): RiskItem[] {
       description: `${failedSyncs} sync failure(s) require attention before next accounting period.`,
       category: 'financial',
       severity: 'high',
-      sourceRoute: '/financial-explorer',
+      sourceRoute: '/finance?tab=records',
       recommendation: 'Retry failed syncs from the Financial Explorer accounting sync panel.',
     });
   }
@@ -433,7 +433,7 @@ export function getCriticalRisks(): RiskItem[] {
       description: `${exceptionSummary.open} exception(s) are open and unassigned.`,
       category: 'operational',
       severity: exceptionSummary.open >= 3 ? 'high' : 'medium',
-      sourceRoute: '/exception-resolution-center',
+      sourceRoute: '/finance?tab=accounting&sub=exceptions',
       recommendation: 'Assign and begin investigation on open exceptions.',
     });
   }
@@ -678,7 +678,7 @@ export function getBottleneckAnalysis(): BottleneckItem[] {
       category: 'exception',
       severity: exceptionSummary.open >= 3 ? 'high' : 'medium',
       impact: `${exceptionSummary.open} exception(s) unassigned — financial resolution delayed.`,
-      sourceRoute: '/exception-resolution-center',
+      sourceRoute: '/finance?tab=accounting&sub=exceptions',
     });
   }
 
@@ -724,4 +724,87 @@ export function getAnalyticsAuditLog(): AnalyticsAuditEntry[] {
 export function _resetAnalyticsState(): void {
   _analyticsAuditLog = [];
   _auditCounter = 1;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// FINANCE HUB AUDIT
+// Follows the same pattern as ExecutiveCommandEngine audit functions.
+// Required by spec §3.5 — Finance Hub access events.
+// ─────────────────────────────────────────────────────────────────────
+
+export interface FinanceHubAuditEntry {
+  id: string;
+  action:
+    | 'finance_hub_viewed'
+    | 'finance_overview_viewed'
+    | 'finance_hub_accounting_tab_viewed'
+    | 'finance_hub_exceptions_viewed'
+    | 'finance_hub_deep_link_opened';
+  performedBy: string;
+  performedAt: string;
+  details: string;
+  destination?: string; // for finance_hub_deep_link_opened
+}
+
+let _financeHubAuditLog: FinanceHubAuditEntry[] = [];
+let _financeHubAuditCounter = 1;
+
+function _writeFinanceAudit(
+  action: FinanceHubAuditEntry['action'],
+  performedBy: string,
+  details: string,
+  destination?: string,
+): void {
+  _financeHubAuditLog.push({
+    id: `finance-audit-${String(_financeHubAuditCounter).padStart(4, '0')}`,
+    action,
+    performedBy,
+    performedAt: new Date().toISOString(),
+    details,
+    ...(destination !== undefined ? { destination } : {}),
+  });
+  _financeHubAuditCounter++;
+}
+
+export function recordFinanceHubViewed(performedBy: string): void {
+  _writeFinanceAudit('finance_hub_viewed', performedBy, 'Finance Hub viewed.');
+}
+
+export function recordFinanceHubOverviewViewed(performedBy: string): void {
+  _writeFinanceAudit('finance_overview_viewed', performedBy, 'Finance Hub Overview tab viewed.');
+}
+
+export function recordFinanceHubAccountingTabViewed(performedBy: string): void {
+  _writeFinanceAudit(
+    'finance_hub_accounting_tab_viewed',
+    performedBy,
+    'Finance Hub Accounting tab viewed.',
+  );
+}
+
+export function recordFinanceHubExceptionsViewed(performedBy: string): void {
+  _writeFinanceAudit(
+    'finance_hub_exceptions_viewed',
+    performedBy,
+    'Finance Hub Exceptions sub-tab viewed.',
+  );
+}
+
+export function recordFinanceHubDeepLinkOpened(destination: string, performedBy: string): void {
+  _writeFinanceAudit(
+    'finance_hub_deep_link_opened',
+    performedBy,
+    `Finance Hub deep link opened to: ${destination}`,
+    destination,
+  );
+}
+
+export function getFinanceHubAuditLog(): FinanceHubAuditEntry[] {
+  return [..._financeHubAuditLog];
+}
+
+// Reset for testing
+export function _resetFinanceHubAuditState(): void {
+  _financeHubAuditLog = [];
+  _financeHubAuditCounter = 1;
 }

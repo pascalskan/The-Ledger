@@ -1286,3 +1286,51 @@ Backend Architecture Refinement: Complete (8 documents updated to v2.0)
 ## Next Development Target
 
 Phase 6.1 — Notification Centre (backend implementation)
+
+---
+
+# UX REDESIGN PROGRAMME
+
+Programme document: docs/ux/UX_REDESIGN_PROGRAMME.md (authoritative tracker)
+
+## Phase Status
+
+| Phase | Name | Status | Completed |
+|---|---|---|---|
+| UX-1 | Critical Credibility Fixes | COMPLETE | June 5, 2026 |
+| UX-2 | Navigation Restructuring | COMPLETE | June 5, 2026 |
+| UX-3 | Dashboard Redesign | COMPLETE | June 5, 2026 |
+| UX-QW | Quick Wins (post-audit) | COMPLETE | June 5, 2026 |
+| UX-4 | Finance Hub | COMPLETE | June 10, 2026 |
+| UX-5 | Intelligence Hub | Not started | — |
+| UX-6 | Automation Hub | Not started | — |
+| UX-7 | Review Centre Enhancement | Not started | — |
+| UX-8 | Operations Hub & Final Polish | Not started | — |
+
+## UX-4 — Finance Hub (COMPLETE)
+
+Status: COMPLETE — merged to main, June 10, 2026
+Branch: feature/ux4-finance-hub
+Specification: docs/specifications/UX-4-FINANCE-HUB-SPECIFICATION-v1.1.md
+
+Delivered:
+
+- Finance Hub Overview implemented (period KPIs, job profitability, invoice status, payroll status, accounting status)
+- Records tab complete (Financial Explorer consolidated)
+- Invoicing integrated (Invoices + Invoice Builder)
+- Payroll integrated (Payroll Staging + Payroll Export)
+- Accounting integrated (Accounting Settings + Reconciliation Centre + Exception Resolution)
+- Legacy finance routes consolidated into the Finance Hub (`/finance`)
+- Audit instrumentation complete
+- RBAC complete (CEO-scoped financial access preserved; Workers retain no financial visibility)
+
+UX-4 implementation finished successfully. All doctrines preserved — no approval, audit, job attribution, or financial integrity regressions.
+
+## Test Baseline (as of June 10, 2026)
+
+Playwright: 501 total / 499 passed / 2 known baseline failures
+
+Known baseline failures (pre-existing, unrelated to UX-4):
+
+- AF-08 (tests/doctrine/activity-feed.spec.ts — "KPI last7days count equals total"): seed date drift issue.
+- NC-25 (tests/doctrine/notification-centre.spec.ts — mobile bell badge): duplicate notif-bell-badge locator causing a Playwright strict-mode failure.

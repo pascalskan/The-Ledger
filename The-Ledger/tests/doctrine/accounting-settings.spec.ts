@@ -35,28 +35,28 @@ test.beforeEach(async ({ page }) => {
 // ── 1: Page loads at /accounting-settings ───────────────────────────────
 test("1. Accounting Settings page loads at /accounting-settings", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   await expect(page.getByTestId("accounting-settings-page")).toBeVisible();
 });
 
 // ── 2: CEO visibility ──────────────────────────────────────────────
 test("2. CEO can see Accounting Settings page heading", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   await expect(page.getByRole("heading", { name: "Accounting Settings" })).toBeVisible();
 });
 
 // ── 3: Provider cards section renders ─────────────────────────────────
 test("3. Provider cards section renders", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   await expect(page.getByTestId("provider-cards-section")).toBeVisible();
 });
 
 // ── 4: All four provider cards render ─────────────────────────────────
 test("4. All four provider cards render (QuickBooks, Xero, FreshBooks, Zoho)", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   await expect(page.getByTestId("provider-card-quickbooks")).toBeVisible();
   await expect(page.getByTestId("provider-card-xero")).toBeVisible();
   await expect(page.getByTestId("provider-card-freshbooks")).toBeVisible();
@@ -66,7 +66,7 @@ test("4. All four provider cards render (QuickBooks, Xero, FreshBooks, Zoho)", a
 // ── 5: QuickBooks shows Connected ────────────────────────────────────
 test("5. QuickBooks card shows Connected status", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   const card = page.getByTestId("provider-card-quickbooks");
   await expect(card.getByTestId("provider-status-badge-connected")).toBeVisible();
 });
@@ -74,7 +74,7 @@ test("5. QuickBooks card shows Connected status", async ({ page }) => {
 // ── 6: Xero shows Connected ──────────────────────────────────────────
 test("6. Xero card shows Connected status", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   const card = page.getByTestId("provider-card-xero");
   await expect(card.getByTestId("provider-status-badge-connected")).toBeVisible();
 });
@@ -82,7 +82,7 @@ test("6. Xero card shows Connected status", async ({ page }) => {
 // ── 7: FreshBooks shows Disconnected ─────────────────────────────────
 test("7. FreshBooks card shows Disconnected status", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   const card = page.getByTestId("provider-card-freshbooks");
   await expect(card.getByTestId("provider-status-badge-disconnected")).toBeVisible();
 });
@@ -90,14 +90,14 @@ test("7. FreshBooks card shows Disconnected status", async ({ page }) => {
 // ── 8: Default indicator on QuickBooks ───────────────────────────────
 test("8. Default provider indicator is visible on QuickBooks card", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   await expect(page.getByTestId("provider-default-indicator-quickbooks")).toBeVisible();
 });
 
 // ── 9: Set Default changes default provider ───────────────────────────
 test("9. Setting Xero as default removes QuickBooks default indicator", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   // QuickBooks is currently default; click Set Default on Xero
   await page.getByTestId("btn-set-default-xero").click();
   // QuickBooks should no longer have default indicator
@@ -109,7 +109,7 @@ test("9. Setting Xero as default removes QuickBooks default indicator", async ({
 // ── 10: Disable action updates status ─────────────────────────────────
 test("10. Disabling Xero shows Enable button instead of Disable", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   // Disable Xero
   await page.getByTestId("btn-disable-xero").click();
   // Disable button should be gone; Enable button should appear
@@ -120,7 +120,7 @@ test("10. Disabling Xero shows Enable button instead of Disable", async ({ page 
 // ── 11: Sync policies section renders all controls ──────────────────────
 test("11. Sync policies section renders all controls", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   await expect(page.getByTestId("sync-policy-section")).toBeVisible();
   await expect(page.getByTestId("toggle-sync-mode")).toBeVisible();
   await expect(page.getByTestId("toggle-retry-failed")).toBeVisible();
@@ -131,7 +131,7 @@ test("11. Sync policies section renders all controls", async ({ page }) => {
 // ── 12: Sync mode toggle is interactive ──────────────────────────────
 test("12. Sync mode toggle is visible and interactive", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   const toggle = page.getByTestId("toggle-sync-mode");
   await expect(toggle).toBeVisible();
   // Default is automatic (checked). Summary shows Automatic.
@@ -144,7 +144,7 @@ test("12. Sync mode toggle is visible and interactive", async ({ page }) => {
 // ── 13: Entity mapping section renders all four entities ─────────────────
 test("13. Entity mapping section renders all four entity rows", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   await expect(page.getByTestId("entity-mapping-section")).toBeVisible();
   await expect(page.getByTestId("entity-mapping-row-customer")).toBeVisible();
   await expect(page.getByTestId("entity-mapping-row-invoice")).toBeVisible();
@@ -155,13 +155,13 @@ test("13. Entity mapping section renders all four entity rows", async ({ page })
 // ── 14: Customer mapping shows Mapped ────────────────────────────────
 test("14. Customer entity mapping status shows Mapped", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   await expect(page.getByTestId("entity-mapping-status-customer")).toContainText("Mapped");
 });
 
 // ── 15: Job mapping shows Not Mapped ────────────────────────────────
 test("15. Job entity mapping status shows Not Mapped", async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto(`${BASE}/accounting-settings`);
+  await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
   await expect(page.getByTestId("entity-mapping-status-job")).toContainText("Not Mapped");
 });

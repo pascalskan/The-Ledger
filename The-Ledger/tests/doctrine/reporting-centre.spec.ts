@@ -351,7 +351,7 @@ test('RC-38: Deep link from Financial report navigates to Financial Explorer', a
   const finLink = page.locator('[data-testid="report-deeplink-fin_controls"]');
   if (await finLink.isVisible()) {
     await finLink.click();
-    await expect(page).toHaveURL(/financial-explorer/, { timeout: 8000 });
+    await expect(page).toHaveURL(/finance/, { timeout: 8000 });
   }
 });
 

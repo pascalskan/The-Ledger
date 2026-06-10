@@ -76,7 +76,7 @@ const PERIOD_OPTIONS: { value: PayrollPeriodType; label: string }[] = [
   { value: "last-month",    label: "Previous month" },
 ];
 
-export default function PayrollExportPage() {
+export function PayrollExportContent() {
   const { timesheets, jobs, payrollExports, addPayrollExport, updatePayrollExportStatus } = useStore();
   const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState<PayrollPeriodType>("all");
@@ -140,7 +140,6 @@ export default function PayrollExportPage() {
   };
 
   return (
-    <Layout>
       <div className="space-y-6" data-testid="payroll-export-page">
         {/* Header */}
         <div>
@@ -509,6 +508,9 @@ export default function PayrollExportPage() {
           </div>
         )}
       </div>
-    </Layout>
   );
+}
+
+export default function PayrollExportPage() {
+  return <Layout><PayrollExportContent /></Layout>;
 }

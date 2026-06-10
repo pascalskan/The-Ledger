@@ -285,7 +285,7 @@ function buildSeedReports(): ReportRecord[] {
       forecastSummary: forecasts.map(f => `${f.metric}: ${f.projectedChangePercent > 0 ? '+' : ''}${f.projectedChangePercent}% (${f.confidence} confidence)`).join('. ') + ' — Advisory projections only.',
       governanceSummary: `Automation governance: ${govSummary.compliant} compliant, ${govSummary.requiresReview} requires review, ${govSummary.restricted} restricted, ${govSummary.suspended} suspended. Financial controls: ${controlsSummary.pending} pending CEO approval.`,
       sections: [
-        { id: 'board_financial', title: 'Financial Overview', content: `Reconciliation: ${reconSummary.totalItems} records, ${reconSummary.matchedItems} matched, ${reconSummary.unmatchedItems} unmatched.`, deepLinkRoute: '/reconciliation-center', deepLinkLabel: 'Reconciliation Centre' },
+        { id: 'board_financial', title: 'Financial Overview', content: `Reconciliation: ${reconSummary.totalItems} records, ${reconSummary.matchedItems} matched, ${reconSummary.unmatchedItems} unmatched.`, deepLinkRoute: '/finance?tab=accounting&sub=reconciliation', deepLinkLabel: 'Finance — Reconciliation' },
         { id: 'board_governance', title: 'Governance Summary', content: `${govSummary.requiresReview} automations require governance review. Workflow health: ${execHealth.workflow.label}.`, deepLinkRoute: '/automation-governance', deepLinkLabel: 'Automation Governance' },
       ],
     },
@@ -343,8 +343,8 @@ function buildSeedReports(): ReportRecord[] {
         : 'No financial forecasts available.',
       governanceSummary: `Financial controls: ${controlsSummary.pending} pending CEO approval. All overrides require explicit CEO approval per doctrine.`,
       sections: [
-        { id: 'fin_controls', title: 'Financial Controls', content: `${controlsSummary.pending} controls pending. ${controlsSummary.approved} approved. ${controlsSummary.rejected} rejected.`, deepLinkRoute: '/financial-explorer', deepLinkLabel: 'Financial Explorer' },
-        { id: 'fin_reconciliation', title: 'Reconciliation', content: `${reconSummary.totalItems} records. ${reconSummary.matchedItems} matched, ${reconSummary.unmatchedItems} unmatched, ${reconSummary.requiresReviewItems} requires review.`, deepLinkRoute: '/reconciliation-center', deepLinkLabel: 'Reconciliation Centre' },
+        { id: 'fin_controls', title: 'Financial Controls', content: `${controlsSummary.pending} controls pending. ${controlsSummary.approved} approved. ${controlsSummary.rejected} rejected.`, deepLinkRoute: '/finance?tab=records', deepLinkLabel: 'Finance — Records' },
+        { id: 'fin_reconciliation', title: 'Reconciliation', content: `${reconSummary.totalItems} records. ${reconSummary.matchedItems} matched, ${reconSummary.unmatchedItems} unmatched, ${reconSummary.requiresReviewItems} requires review.`, deepLinkRoute: '/finance?tab=accounting&sub=reconciliation', deepLinkLabel: 'Finance — Reconciliation' },
       ],
     },
     // ── rpt-005: Operations Report
@@ -568,7 +568,7 @@ function buildReport(
     sections.push({ id: 'gov', title: 'Governance Summary', content: govText, deepLinkRoute: '/automation-governance', deepLinkLabel: 'Automation Governance' });
   }
   if (includedSections.includes('financial_overview')) {
-    sections.push({ id: 'fin', title: 'Financial Overview', content: `Failed syncs: ${finOverview.failedSyncs}. Recon issues: ${finOverview.openReconciliationIssues}. Pending controls: ${finOverview.pendingFinancialControls}. Open exceptions: ${finOverview.openExceptions}.`, deepLinkRoute: '/financial-explorer', deepLinkLabel: 'Financial Explorer' });
+    sections.push({ id: 'fin', title: 'Financial Overview', content: `Failed syncs: ${finOverview.failedSyncs}. Recon issues: ${finOverview.openReconciliationIssues}. Pending controls: ${finOverview.pendingFinancialControls}. Open exceptions: ${finOverview.openExceptions}.`, deepLinkRoute: '/finance?tab=records', deepLinkLabel: 'Finance — Records' });
   }
   if (includedSections.includes('workflow_summary')) {
     sections.push({ id: 'wf', title: 'Workflow Summary', content: `${workflowSummary.total} workflows: ${workflowSummary.active} active, ${workflowSummary.paused} paused, ${workflowSummary.requiresAction} require action, ${workflowSummary.financiallySensitive} financially sensitive.`, deepLinkRoute: '/workflows', deepLinkLabel: 'Workflow Centre' });

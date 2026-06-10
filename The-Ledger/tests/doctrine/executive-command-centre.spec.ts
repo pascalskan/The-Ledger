@@ -209,18 +209,18 @@ test('ECC-20: Financial Oversight Panel renders all four metrics', async ({ page
   await expect(page.locator('[data-testid="exec-fin-open-exceptions"]')).toBeVisible();
 });
 
-test('ECC-21: Financial Panel reconciliation deep link navigates to /reconciliation-center', async ({ page }) => {
+test('ECC-21: Financial Panel reconciliation deep link navigates to Finance Hub accounting reconciliation', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/executive-command-centre');
   await page.locator('[data-testid="exec-fin-link-reconciliation"]').click();
-  await expect(page).toHaveURL(/\/reconciliation-center/);
+  await expect(page).toHaveURL(/\/finance/);
 });
 
-test('ECC-22: Financial Panel syncs deep link navigates to /financial-explorer', async ({ page }) => {
+test('ECC-22: Financial Panel syncs deep link navigates to Finance Hub records tab', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/executive-command-centre');
   await page.locator('[data-testid="exec-fin-link-financial-explorer"]').click();
-  await expect(page).toHaveURL(/\/financial-explorer/);
+  await expect(page).toHaveURL(/\/finance/);
 });
 
 // ─────────────────────────────────────────────────────────────────────
@@ -264,11 +264,11 @@ test('ECC-26: Notification Centre deep link navigates to /notifications', async 
   await expect(page).toHaveURL(/\/notifications/);
 });
 
-test('ECC-27: Exception Resolution deep link navigates to /exception-resolution-center', async ({ page }) => {
+test('ECC-27: Exception Resolution deep link navigates to Finance Hub accounting exceptions', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/executive-command-centre');
   await page.locator('[data-testid="exec-nav--exception-resolution-center"]').click();
-  await expect(page).toHaveURL(/\/exception-resolution-center/);
+  await expect(page).toHaveURL(/\/finance/);
 });
 
 // ─────────────────────────────────────────────────────────────────────

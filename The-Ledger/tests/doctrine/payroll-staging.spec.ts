@@ -23,9 +23,9 @@ test('Payroll Staging page is accessible to CEO and renders without error', asyn
   await loginAsCEO(page);
 
   // Navigate via sidebar link
-  await page.getByTestId('nav-payroll-staging').click();
+  await page.goto('http://localhost:5000/finance?tab=payroll');
 
-  await expect(page).toHaveURL(/payroll/i);
+  await expect(page).toHaveURL(/finance/i);
 
   // Verify the page heading
   await expect(
@@ -42,8 +42,8 @@ test('Payroll Staging page is accessible to CEO and renders without error', asyn
 test('Payroll Staging page shows seeded worker payroll records', async ({ page }) => {
   await loginAsCEO(page);
 
-  await page.getByTestId('nav-payroll-staging').click();
-  await expect(page).toHaveURL(/payroll/i);
+  await page.goto('http://localhost:5000/finance?tab=payroll');
+  await expect(page).toHaveURL(/finance/i);
 
   // The Phase 4.5 seed data creates TimesheetEntry records for Sophie Taylor and Ben Hughes
   // groupTimesheetsForPayroll() should surface them on this page
@@ -53,8 +53,8 @@ test('Payroll Staging page shows seeded worker payroll records', async ({ page }
 test('Payroll Staging period filter renders All / Current / Previous options', async ({ page }) => {
   await loginAsCEO(page);
 
-  await page.getByTestId('nav-payroll-staging').click();
-  await expect(page).toHaveURL(/payroll/i);
+  await page.goto('http://localhost:5000/finance?tab=payroll');
+  await expect(page).toHaveURL(/finance/i);
 
   // Verify the period selector is present
   await expect(page.locator('body')).toContainText(/All time|Current month|Previous month/i);
