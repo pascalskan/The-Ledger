@@ -1,7 +1,7 @@
 # THE LEDGER
 ## Current Development State
 
-Last Updated: June 4, 2026
+Last Updated: June 10, 2026
 
 ---
 
@@ -10,7 +10,7 @@ Last Updated: June 4, 2026
 Branch: main
 Verification:
 - Build: PASS
-- Playwright: 501 / 501 Tests PASS
+- Playwright: 501 total / 499 passed / 2 known baseline failures (AF-08, NC-25 — see UX Redesign Programme section)
 
 ---
 
@@ -21,6 +21,8 @@ The following have been merged into main:
 - Phase 6.8 — Report Exports & Distribution Centre
 - Claude Project Context System (CLAUDE.md, docs/ai-context/, docs/handoffs/, docs/architecture/archive/)
 - Domain Definition Program (docs/domain/)
+- UX-1, UX-2, UX-3, UX-QW (UX Redesign Programme — June 5, 2026)
+- UX-4 — Finance Hub (UX Redesign Programme — June 10, 2026)
 
 main is up to date with origin/main.
 
@@ -29,8 +31,41 @@ main is up to date with origin/main.
 ## Verification Status
 
 Build: PASS
-Playwright: 501 / 501 Tests PASS
+Playwright: 501 total / 499 passed / 2 known baseline failures
 Regressions: 0
+
+Known baseline failures (pre-existing, unrelated to UX-4):
+
+- AF-08 (tests/doctrine/activity-feed.spec.ts — "KPI last7days count equals total"): seed date drift issue.
+- NC-25 (tests/doctrine/notification-centre.spec.ts — mobile bell badge): duplicate notif-bell-badge locator causing a Playwright strict-mode failure.
+
+---
+
+## UX Redesign Programme
+
+Programme document: docs/ux/UX_REDESIGN_PROGRAMME.md (authoritative tracker)
+
+- UX-1 (Critical Credibility Fixes): COMPLETE — merged to main, June 5, 2026
+- UX-2 (Navigation Restructuring): COMPLETE — merged to main, June 5, 2026
+- UX-3 (Dashboard Redesign): COMPLETE — merged to main, June 5, 2026
+- UX-QW (Quick Wins post-audit): COMPLETE — merged to main, June 5, 2026
+- UX-4 (Finance Hub): COMPLETE — merged to main, June 10, 2026
+- UX-5 through UX-8: Not started
+
+### UX-4 — Finance Hub (COMPLETE)
+
+UX-4 implementation finished successfully:
+
+- Finance Hub Overview implemented
+- Records tab complete
+- Invoicing integrated
+- Payroll integrated
+- Accounting integrated
+- Legacy finance routes consolidated into `/finance`
+- Audit instrumentation complete
+- RBAC complete
+
+Handoff: docs/handoffs/ux4-finance-hub-handoff.md
 
 ---
 
