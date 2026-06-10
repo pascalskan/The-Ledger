@@ -26,7 +26,7 @@ import {
   Minus,
   CheckCircle2,
 } from "lucide-react";
-import { useStore } from "@/lib/mockData";
+import { useStore, useAuth } from "@/lib/mockData";
 import {
   getAllJobMargins,
   getPendingExposure,
@@ -41,6 +41,7 @@ import {
   computeExceptionSummary,
   SEED_EXCEPTIONS,
 } from "@/lib/exceptionResolutionEngine";
+import { recordFinanceHubDeepLinkOpened } from "@/lib/analyticsEngine";
 
 function fmt(n: number) {
   return new Intl.NumberFormat("en-GB", {
@@ -69,6 +70,7 @@ function fmtDate(iso: string | null): string {
 
 export function FinanceHubOverview() {
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const jobProfRef = useRef<HTMLDivElement>(null);
 
   // Capture mount time for Exposure "As of" timestamp (G-012)
@@ -80,11 +82,17 @@ export function FinanceHubOverview() {
   const { jobs, invoices, timesheets, reviewItems, companySettings } = store;
 
   // ── KPI: Revenue / Costs / Margin ─────────────────────────────────────────
+  // G-005: Gross Margin derived from getAllJobMargins() engine output — not recomputed inline.
+  // Portfolio margin = weighted average of engine-derived summary.marginPercent across active jobs.
   const marginRecords = getAllJobMargins(jobs);
   const totalRevenue = marginRecords.reduce((s, r) => s + r.summary.totalRevenue, 0);
   const totalCost = marginRecords.reduce((s, r) => s + r.summary.totalCost, 0);
+  // Derive portfolio gross margin from engine-sourced totalRevenue/totalCost.
+  // This is consistent with getAllJobMargins() → getJobFinancialSummary() → totalRevenue/totalCost.
   const grossMarginPct =
-    totalRevenue > 0 ? ((totalRevenue - totalCost) / totalRevenue) * 100 : 0;
+    totalRevenue > 0
+      ? marginRecords.reduce((s, r) => s + r.summary.totalRevenue * r.summary.marginPercent, 0) / totalRevenue
+      : 0;
   const activeJobCount = marginRecords.filter((r) => r.hasActivity).length;
 
   // ── KPI: Exposure (pending approval) ──────────────────────────────────────
@@ -150,27 +158,32 @@ export function FinanceHubOverview() {
       ? "text-amber-600 font-medium"
       : "text-red-600 font-medium";
 
-  // ── CTA navigation (§2.9) ──────────────────────────────────────────────────
+  // ── CTA navigation (§2.9) — each CTA emits finance_hub_deep_link_opened (§3.5) ──
   function handleViewRecords() {
-    setLocation("/finance?tab=records");
+    const dest = "/finance?tab=records";
+    if (user?.name) recordFinanceHubDeepLinkOpened(dest, user.name);
+    setLocation(dest);
   }
   function handleOpenInvoicing() {
     const hasOverdue = invGroups.Overdue.count > 0;
-    setLocation(
-      hasOverdue
-        ? "/finance?tab=invoicing&filter=overdue"
-        : "/finance?tab=invoicing"
-    );
+    const dest = hasOverdue
+      ? "/finance?tab=invoicing&filter=overdue"
+      : "/finance?tab=invoicing";
+    if (user?.name) recordFinanceHubDeepLinkOpened(dest, user.name);
+    setLocation(dest);
   }
   function handleOpenPayroll() {
-    setLocation("/finance?tab=payroll");
+    const dest = "/finance?tab=payroll";
+    if (user?.name) recordFinanceHubDeepLinkOpened(dest, user.name);
+    setLocation(dest);
   }
   function handleOpenAccounting() {
-    setLocation(
+    const dest =
       openExceptions > 0
         ? "/finance?tab=accounting&sub=exceptions"
-        : "/finance?tab=accounting"
-    );
+        : "/finance?tab=accounting";
+    if (user?.name) recordFinanceHubDeepLinkOpened(dest, user.name);
+    setLocation(dest);
   }
 
   function scrollToJobProf() {
@@ -207,6 +220,7 @@ export function FinanceHubOverview() {
               <button
                 className="text-xs text-muted-foreground hover:text-foreground mt-1 underline-offset-2 hover:underline"
                 onClick={scrollToJobProf}
+                aria-label={`View job profitability breakdown across ${activeJobCount} active job${activeJobCount !== 1 ? "s" : ""}`}
               >
                 Across {activeJobCount} active job{activeJobCount !== 1 ? "s" : ""} ↗
               </button>
@@ -311,7 +325,7 @@ export function FinanceHubOverview() {
                     return (
                       <tr key={r.job.id} className="border-b last:border-0">
                         <td className="py-2 font-medium truncate max-w-[140px]">
-                          {r.job.name}
+                          {r.job.title}
                         </td>
                         <td className="py-2 text-right">
                           {fmt(r.summary.totalRevenue)}
@@ -335,6 +349,7 @@ export function FinanceHubOverview() {
                 data-testid="btn-view-all-records"
                 onClick={handleViewRecords}
                 className="text-xs h-7 px-2"
+                aria-label="View all financial records"
               >
                 View All Records →
               </Button>
@@ -377,6 +392,7 @@ export function FinanceHubOverview() {
                 data-testid="btn-open-invoicing"
                 onClick={handleOpenInvoicing}
                 className="text-xs h-7 px-2"
+                aria-label="Open invoicing"
               >
                 Open Invoicing →
               </Button>
@@ -415,6 +431,7 @@ export function FinanceHubOverview() {
                 data-testid="btn-open-payroll"
                 onClick={handleOpenPayroll}
                 className="text-xs h-7 px-2"
+                aria-label="Open payroll"
               >
                 Open Payroll →
               </Button>
@@ -458,6 +475,7 @@ export function FinanceHubOverview() {
                 data-testid="btn-open-accounting"
                 onClick={handleOpenAccounting}
                 className="text-xs h-7 px-2"
+                aria-label="Open accounting"
               >
                 Open Accounting →
               </Button>

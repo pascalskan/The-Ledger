@@ -6,6 +6,12 @@ import { useLocation, useSearch } from "wouter";
 import { useStore, useAuth } from "@/lib/mockData";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { groupTimesheetsForPayroll } from "@/lib/profitabilityEngine";
+import {
+  recordFinanceHubViewed,
+  recordFinanceHubOverviewViewed,
+  recordFinanceHubAccountingTabViewed,
+  recordFinanceHubExceptionsViewed,
+} from "@/lib/analyticsEngine";
 import { FinanceHubOverview } from "@/components/finance/FinanceHubOverview";
 import { FinancialRecordsContent } from "./financial-explorer";
 import { PayrollProcessingContent } from "./payroll";
@@ -151,26 +157,30 @@ export default function FinanceHubPage() {
   const params = new URLSearchParams(search);
   const activeTab = params.get("tab") ?? "overview";
   const activeSub = params.get("sub") ?? defaultSub(activeTab);
+  const { user } = useAuth();
 
-  // Audit: finance_hub_viewed fires once on mount (§3.5)
+  // Audit: finance_hub_viewed — fires once on mount regardless of active tab (§3.5)
   useEffect(() => {
-    // finance_hub_viewed — CEO loads /finance (any tab)
-  }, []);
+    if (user?.name) recordFinanceHubViewed(user.name);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Audit: tab-specific events
+  // Audit: tab-specific view events (§3.5)
   useEffect(() => {
+    if (!user?.name) return;
     if (activeTab === "overview") {
-      // finance_overview_viewed
+      recordFinanceHubOverviewViewed(user.name);
     } else if (activeTab === "accounting") {
-      // finance_hub_accounting_tab_viewed
+      recordFinanceHubAccountingTabViewed(user.name);
     }
-  }, [activeTab]);
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Audit: exceptions sub-tab view event (§3.5)
   useEffect(() => {
+    if (!user?.name) return;
     if (activeTab === "accounting" && activeSub === "exceptions") {
-      // finance_hub_exceptions_viewed
+      recordFinanceHubExceptionsViewed(user.name);
     }
-  }, [activeTab, activeSub]);
+  }, [activeTab, activeSub]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleTabChange(tab: string) {
     setLocation(`/finance?tab=${tab}`);
