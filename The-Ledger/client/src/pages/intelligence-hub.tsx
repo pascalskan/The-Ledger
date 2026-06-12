@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Layout } from "@/components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { LayoutDashboard, BarChart3, BookOpen, FileDown, Activity, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, BarChart3, BookOpen, FileDown, Activity, ShieldAlert, Download, Send } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
 import { useStore, useAuth } from "@/lib/mockData";
 import UnauthorizedPage from "@/pages/unauthorized";
@@ -14,7 +14,7 @@ import {
 import { recordExecutiveCentreViewed } from "@/lib/executiveCommandEngine";
 import { IntelligenceOverview } from "@/components/intelligence/IntelligenceOverview";
 import { AnalyticsCentreContent } from "@/pages/analytics-centre";
-import { ReportsContent } from "@/pages/reporting-centre";
+import { ReportsContent, ExportsContent, DistributionContent } from "@/pages/reporting-centre";
 
 const tabLabels: Record<string, string> = {
   overview: "",
@@ -66,6 +66,10 @@ export default function IntelligenceHubPage() {
 
   function handleTabChange(tab: string) {
     setLocation(`/intelligence?tab=${tab}`);
+  }
+
+  function handleSubChange(sub: string) {
+    setLocation(`/intelligence?tab=${activeTab}&sub=${sub}`);
   }
 
   return (
@@ -136,10 +140,23 @@ export default function IntelligenceHubPage() {
           </TabsContent>
 
           <TabsContent value="exports" data-testid="intelligence-exports-panel">
-            {/* Export Centre content (Exports/Distribution sub-tabs via ?sub=) mounts here in UX-5 Stage 5 */}
-            <p className="text-sm text-muted-foreground">
-              Exports content is being assembled.{activeSub === "distribution" ? " (Distribution)" : ""}
-            </p>
+            {/* Exports/Distribution sub-tabs — UX-4 Accounting-tab pattern (§6.5) */}
+            <Tabs value={activeSub || "exports"} onValueChange={handleSubChange}>
+              <TabsList>
+                <TabsTrigger value="exports" data-testid="exports-subtab-exports">
+                  <Download className="h-3.5 w-3.5 mr-1" /> Exports
+                </TabsTrigger>
+                <TabsTrigger value="distribution" data-testid="exports-subtab-distribution">
+                  <Send className="h-3.5 w-3.5 mr-1" /> Distribution
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="exports" data-testid="exports-subtab-exports-panel">
+                <ExportsContent />
+              </TabsContent>
+              <TabsContent value="distribution" data-testid="exports-subtab-distribution-panel">
+                <DistributionContent />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="activity" data-testid="intelligence-activity-panel">
