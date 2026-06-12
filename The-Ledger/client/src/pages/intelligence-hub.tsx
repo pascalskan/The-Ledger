@@ -12,6 +12,7 @@ import {
   recordAnalyticsViewed,
 } from "@/lib/analyticsEngine";
 import { recordExecutiveCentreViewed } from "@/lib/executiveCommandEngine";
+import { IntelligenceOverview } from "@/components/intelligence/IntelligenceOverview";
 
 const tabLabels: Record<string, string> = {
   overview: "",
@@ -120,8 +121,7 @@ export default function IntelligenceHubPage() {
                   </div>
                 </div>
               </div>
-              {/* Overview content lands in UX-5 Stage 2 (IntelligenceOverview) */}
-              <p className="text-sm text-muted-foreground">Overview content is being assembled.</p>
+              <IntelligenceOverview />
             </div>
           </TabsContent>
 
