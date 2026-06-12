@@ -68,10 +68,12 @@ import { getExecutiveSummary } from "@/lib/executiveCommandEngine";
 function NotificationBell({
   userId,
   testId = "notif-bell-btn",
+  badgeTestId = "notif-bell-badge",
   viewAllHref = "/notifications",
 }: {
   userId: string;
   testId?: string;
+  badgeTestId?: string;
   viewAllHref?: string;
 }) {
   const [, setLocation] = useLocation();
@@ -116,7 +118,7 @@ function NotificationBell({
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span
-              data-testid="notif-bell-badge"
+              data-testid={badgeTestId}
               className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -530,6 +532,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <NotificationBell
             userId={user.id}
             testId="notif-bell-btn-desktop"
+            badgeTestId="notif-bell-badge-desktop"
             viewAllHref={hasAnyRole(["CEO"]) ? "/intelligence?tab=activity" : "/notifications"}
           />
         )}
