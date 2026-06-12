@@ -537,7 +537,7 @@ The UX Redesign Programme is successful when the following conditions are met:
 | UX-3 | Dashboard Redesign | ✓ Complete | feature/ux-phases-1-2-3 | 5 Jun 2026 |
 | UX-QW | Quick Wins (post-audit) | ✓ Complete | feature/ux-phases-1-2-3 | 5 Jun 2026 |
 | UX-4 | Finance Hub | ✓ Complete | feature/ux4-finance-hub | 10 Jun 2026 |
-| UX-5 | Intelligence Hub | ☐ Not Started | — | — |
+| UX-5 | Intelligence Hub | ◑ In Progress (implementation complete; PR pending merge) | feature/ux5-intelligence-hub | — |
 | UX-6 | Automation Hub | ☐ Not Started | — | — |
 | UX-7 | Review Centre Enhancement | ☐ Not Started | — | — |
 | UX-8 | Operations Hub & Final Polish | ☐ Not Started | — | — |

@@ -1302,7 +1302,7 @@ Programme document: docs/ux/UX_REDESIGN_PROGRAMME.md (authoritative tracker)
 | UX-3 | Dashboard Redesign | COMPLETE | June 5, 2026 |
 | UX-QW | Quick Wins (post-audit) | COMPLETE | June 5, 2026 |
 | UX-4 | Finance Hub | COMPLETE | June 10, 2026 |
-| UX-5 | Intelligence Hub | Not started | — |
+| UX-5 | Intelligence Hub | IMPLEMENTED (branch feature/ux5-intelligence-hub, PR pending merge) | June 12, 2026 |
 | UX-6 | Automation Hub | Not started | — |
 | UX-7 | Review Centre Enhancement | Not started | — |
 | UX-8 | Operations Hub & Final Polish | Not started | — |
@@ -1326,11 +1326,24 @@ Delivered:
 
 UX-4 implementation finished successfully. All doctrines preserved — no approval, audit, job attribution, or financial integrity regressions.
 
-## Test Baseline (as of June 10, 2026)
+## UX-5 — Intelligence Hub (IMPLEMENTED — June 12, 2026)
 
-Playwright: 501 total / 499 passed / 2 known baseline failures
+Branch: feature/ux5-intelligence-hub (PR pending merge; do not merge without review)
+Specification: docs/specifications/UX-5-INTELLIGENCE-HUB-SPECIFICATION-v1.1.md (frozen)
+Handoff: docs/handoffs/ux5-intelligence-hub-handoff.md
 
-Known baseline failures (pre-existing, unrelated to UX-4):
+Delivered:
 
-- AF-08 (tests/doctrine/activity-feed.spec.ts — "KPI last7days count equals total"): seed date drift issue.
-- NC-25 (tests/doctrine/notification-centre.spec.ts — mobile bell badge): duplicate notif-bell-badge locator causing a Playwright strict-mode failure.
+- `/intelligence` hub (CEO-only): Overview · Analytics · Reports · Exports (Exports/Distribution sub-tabs) · Activity
+- Legacy redirects (ECC, Analytics Centre, Reporting Centre, Activity Feed; role-aware /notifications — PM page unchanged)
+- `/event-monitor` retained as a hidden CEO-only route (no nav item, no redirect)
+- Canonical priority mapping (critical→Critical, high→Warning, medium/low→Info), Show Event Detail toggle with ?detail=1 precedence, bus-af- Platform Event join
+- Link sweep S-1…S-8; NC-25 companion fix (unique bell badge testIds)
+- All doctrines preserved — read-only presentation consolidation; no approval, audit, job attribution, or financial integrity changes
+
+## Test Baseline
+
+After UX-5 (expected): 512 total / 512 passed / **0 known failures** —
+AF-08 retired with the legacy Activity Feed KPI strip (AF-04–AF-08 removed with the superseded page); NC-25 fixed by the UX-5 companion commit (unique mobile/desktop bell badge testIds). The known-failure ledger is empty.
+
+Pre-UX-5 baseline (June 10, 2026): 501 total / 499 passed / 2 known failures (AF-08, NC-25).
