@@ -13,6 +13,7 @@ import {
 } from "@/lib/analyticsEngine";
 import { recordExecutiveCentreViewed } from "@/lib/executiveCommandEngine";
 import { IntelligenceOverview } from "@/components/intelligence/IntelligenceOverview";
+import { ActivityHub } from "@/components/intelligence/ActivityHub";
 import { AnalyticsCentreContent } from "@/pages/analytics-centre";
 import { ReportsContent, ExportsContent, DistributionContent } from "@/pages/reporting-centre";
 
@@ -160,8 +161,7 @@ export default function IntelligenceHubPage() {
           </TabsContent>
 
           <TabsContent value="activity" data-testid="intelligence-activity-panel">
-            {/* Combined Activity view mounts here in UX-5 Stage 6 */}
-            <p className="text-sm text-muted-foreground">Activity content is being assembled.</p>
+            <ActivityHub />
           </TabsContent>
         </Tabs>
       </div>
