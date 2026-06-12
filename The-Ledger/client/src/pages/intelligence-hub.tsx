@@ -13,6 +13,7 @@ import {
 } from "@/lib/analyticsEngine";
 import { recordExecutiveCentreViewed } from "@/lib/executiveCommandEngine";
 import { IntelligenceOverview } from "@/components/intelligence/IntelligenceOverview";
+import { AnalyticsCentreContent } from "@/pages/analytics-centre";
 
 const tabLabels: Record<string, string> = {
   overview: "",
@@ -126,8 +127,7 @@ export default function IntelligenceHubPage() {
           </TabsContent>
 
           <TabsContent value="analytics" data-testid="intelligence-analytics-panel">
-            {/* Analytics Centre content mounts here in UX-5 Stage 3 */}
-            <p className="text-sm text-muted-foreground">Analytics content is being assembled.</p>
+            <AnalyticsCentreContent embedded />
           </TabsContent>
 
           <TabsContent value="reports" data-testid="intelligence-reports-panel">
