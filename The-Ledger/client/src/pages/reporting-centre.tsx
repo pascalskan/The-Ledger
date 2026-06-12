@@ -593,47 +593,32 @@ function ReportBuilderDialog({ open, onClose, onGenerated, generatedBy }: Report
 type ActiveTab = 'reports' | 'exports' | 'distribution';
 
 // ─────────────────────────────────────────────────────────────────────
-// MAIN PAGE
+// REPORTS CONTENT
+// UX-5: extracted so the Intelligence Hub Reports tab can mount the
+// reports surface unchanged. Owns reports state, the Report Detail
+// Dialog, and the Report Builder Dialog. Loads from reportingEngine on
+// mount (engines are module singletons — cross-tab freshness comes from
+// remount on tab activation).
 // ─────────────────────────────────────────────────────────────────────
 
-export default function ReportingCentrePage() {
+export function ReportsContent({ embedded = false }: { embedded?: boolean }) {
   const { user } = useAuth();
-  const [, setLocation] = useLocation();
 
-  // Reports tab state
   const [reports, setReports] = useState<ReportRecord[]>([]);
   const [statusFilter, setStatusFilter] = useState<ReportStatus | 'all'>('all');
   const [selectedReport, setSelectedReport] = useState<ReportRecord | null>(null);
   const [builderOpen, setBuilderOpen] = useState(false);
 
-  // Exports tab state
-  const [exports, setExports] = useState<ReportExport[]>([]);
-  const [selectedExport, setSelectedExport] = useState<ReportExport | null>(null);
-  const [exportStatusFilter, setExportStatusFilter] = useState<string>('all');
-
-  // Tab state
-  const [activeTab, setActiveTab] = useState<ActiveTab>('reports');
-
-  // Load on mount
   useEffect(() => {
     setReports(getAllReports());
-    setExports(getAllExports());
   }, []);
 
   const summary = computeReportingSummary();
-  const exportSummary = computeExportSummary();
-  const distributionSummary = computeDistributionSummary();
-  const distributions = getAllDistributions();
 
   const filteredReports = statusFilter === 'all'
     ? reports
     : reports.filter((r) => r.status === statusFilter);
 
-  const filteredExports = exportStatusFilter === 'all'
-    ? exports
-    : exports.filter((e) => e.status === exportStatusFilter);
-
-  // Report handlers
   function handleView(report: ReportRecord) {
     if (user?.name) recordReportViewed(report.id, report.name, user.name);
     setSelectedReport(report);
@@ -650,67 +635,11 @@ export default function ReportingCentrePage() {
     setSelectedReport(report);
   }
 
-  // Export handlers
-  function handleExportView(exp: ReportExport) {
-    setSelectedExport(exp);
-  }
-
-  function handleExportDownload(id: string) {
-    if (user?.name) downloadExport(id, user.name);
-    setExports(getAllExports());
-  }
-
-  function handleExportArchive(id: string) {
-    if (user?.name) archiveExport(id, user.name);
-    setExports(getAllExports());
-  }
-
-  function handleGenerateBoardPack() {
-    if (user?.name) {
-      generateBoardPack(user.name);
-      setExports(getAllExports());
-    }
-  }
-
-  function handleGenerateExport(reportId: string, exportType: ExportType) {
-    if (user?.name) {
-      generateExport(reportId, exportType, user.name);
-      setExports(getAllExports());
-    }
-  }
-
   return (
-    <Layout>
-      <div data-testid="reporting-centre-page" className="space-y-6">
-
-        {/* ── HEADER ── */}
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-bold">Reporting Centre</h1>
-              <Badge variant="outline" className="text-purple-700 border-purple-200 bg-purple-50">
-                CEO Only
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Executive reports, exports, and distribution management. Read-only.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <FileText className="h-8 w-8 text-muted-foreground" />
-            <Button
-              data-testid="reporting-centre-build-btn"
-              size="sm"
-              className="gap-1 bg-purple-600 hover:bg-purple-700 text-white"
-              onClick={() => setBuilderOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Build Report
-            </Button>
-          </div>
-        </div>
-
-        {/* ── DOCTRINE NOTICE ── */}
+    <div className="space-y-6">
+      {/* Doctrine notice — page-level copy rendered by the legacy wrapper; the hub
+          renders it here so the Reports tab keeps its doctrine testId (§6.1) */}
+      {embedded && (
         <div
           data-testid="reporting-doctrine-notice"
           className="rounded-lg border border-amber-200 bg-amber-50 p-4"
@@ -727,59 +656,21 @@ export default function ReportingCentrePage() {
             </div>
           </div>
         </div>
+      )}
 
-        {/* ── TAB BAR ── */}
-        <div data-testid="reporting-centre-tabs" className="flex items-center gap-1 border-b">
-          <button
-            data-testid="tab-reports"
-            onClick={() => setActiveTab('reports')}
-            className={cn(
-              'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-              activeTab === 'reports'
-                ? 'border-purple-600 text-purple-700'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <span className="flex items-center gap-1.5">
-              <FileText className="h-4 w-4" />
-              Reports
-            </span>
-          </button>
-          <button
-            data-testid="tab-exports"
-            onClick={() => setActiveTab('exports')}
-            className={cn(
-              'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-              activeTab === 'exports'
-                ? 'border-purple-600 text-purple-700'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <span className="flex items-center gap-1.5">
-              <Download className="h-4 w-4" />
-              Exports
-            </span>
-          </button>
-          <button
-            data-testid="tab-distribution"
-            onClick={() => setActiveTab('distribution')}
-            className={cn(
-              'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-              activeTab === 'distribution'
-                ? 'border-purple-600 text-purple-700'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <span className="flex items-center gap-1.5">
-              <Send className="h-4 w-4" />
-              Distribution
-            </span>
-          </button>
-        </div>
+      {/* Build Report */}
+      <div className="flex items-center gap-2 justify-end">
+        <Button
+          data-testid="reporting-centre-build-btn"
+          size="sm"
+          className="gap-1 bg-purple-600 hover:bg-purple-700 text-white"
+          onClick={() => setBuilderOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          Build Report
+        </Button>
+      </div>
 
-        {/* ──────────────────────── REPORTS TAB ──────────────────────── */}
-        {activeTab === 'reports' && (
-          <>
             {/* ── KPI STRIP ── */}
             <div data-testid="reporting-kpi-strip" className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Card data-testid="reporting-kpi-total" className="border">
@@ -903,12 +794,79 @@ export default function ReportingCentrePage() {
                 </div>
               </CardContent>
             </Card>
-          </>
-        )}
 
-        {/* ──────────────────────── EXPORTS TAB ──────────────────────── */}
-        {activeTab === 'exports' && (
-          <>
+      {/* Dialogs owned by ReportsContent */}
+      <ReportDetailDialog
+        report={selectedReport}
+        onClose={() => setSelectedReport(null)}
+        onArchive={handleArchive}
+      />
+      <ReportBuilderDialog
+        open={builderOpen}
+        onClose={() => setBuilderOpen(false)}
+        onGenerated={handleBuilderGenerated}
+        generatedBy={user?.name ?? 'Demo CEO'}
+      />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// EXPORTS CONTENT
+// UX-5: extracted for the Intelligence Hub Exports tab (Exports sub-tab).
+// Owns exports state and the Export Detail Dialog.
+// ─────────────────────────────────────────────────────────────────────
+
+export function ExportsContent() {
+  const { user } = useAuth();
+
+  const [exports, setExports] = useState<ReportExport[]>([]);
+  const [selectedExport, setSelectedExport] = useState<ReportExport | null>(null);
+  const [exportStatusFilter, setExportStatusFilter] = useState<string>('all');
+
+  useEffect(() => {
+    setExports(getAllExports());
+  }, []);
+
+  const exportSummary = computeExportSummary();
+
+  const filteredExports = exportStatusFilter === 'all'
+    ? exports
+    : exports.filter((e) => e.status === exportStatusFilter);
+
+  function handleExportView(exp: ReportExport) {
+    setSelectedExport(exp);
+  }
+
+  function handleExportDownload(id: string) {
+    if (user?.name) downloadExport(id, user.name);
+    setExports(getAllExports());
+  }
+
+  function handleExportArchive(id: string) {
+    if (user?.name) archiveExport(id, user.name);
+    setExports(getAllExports());
+  }
+
+  function handleGenerateBoardPack() {
+    if (user?.name) {
+      generateBoardPack(user.name);
+      setExports(getAllExports());
+    }
+  }
+
+  // Retained from the pre-split page (unused there too) — export generation
+  // from a report flows through the engine API; surfaced flows are unchanged.
+  function handleGenerateExport(reportId: string, exportType: ExportType) {
+    if (user?.name) {
+      generateExport(reportId, exportType, user.name);
+      setExports(getAllExports());
+    }
+  }
+  void handleGenerateExport;
+
+  return (
+    <div className="space-y-6">
             {/* Export KPI Strip */}
             <div data-testid="exports-kpi-strip" className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Card data-testid="exports-kpi-total" className="border">
@@ -1058,12 +1016,30 @@ export default function ReportingCentrePage() {
                 </div>
               </CardContent>
             </Card>
-          </>
-        )}
 
-        {/* ──────────────────────── DISTRIBUTION TAB ──────────────────────── */}
-        {activeTab === 'distribution' && (
-          <>
+      {/* Dialog owned by ExportsContent */}
+      <ExportDetailDialog
+        exportRecord={selectedExport}
+        onClose={() => setSelectedExport(null)}
+        onDownload={handleExportDownload}
+        onArchive={handleExportArchive}
+      />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// DISTRIBUTION CONTENT
+// UX-5: extracted for the Intelligence Hub Exports tab (Distribution
+// sub-tab). Read-only — reads directly from exportEngine on render.
+// ─────────────────────────────────────────────────────────────────────
+
+export function DistributionContent() {
+  const distributionSummary = computeDistributionSummary();
+  const distributions = getAllDistributions();
+
+  return (
+    <div className="space-y-6">
             {/* Distribution KPI Strip */}
             <div data-testid="distribution-kpi-strip" className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Card data-testid="dist-kpi-total" className="border">
@@ -1141,29 +1117,110 @@ export default function ReportingCentrePage() {
                 </div>
               </CardContent>
             </Card>
-          </>
-        )}
+    </div>
+  );
+}
 
-        {/* ── DIALOGS ── */}
-        <ReportDetailDialog
-          report={selectedReport}
-          onClose={() => setSelectedReport(null)}
-          onArchive={handleArchive}
-        />
+// ─────────────────────────────────────────────────────────────────────
+// LEGACY PAGE WRAPPER
+// Unrouted once the UX-5 /reporting-centre redirect lands; retained for
+// the physical-deletion cleanup pass (spec §4 Out of Scope). Mounts the
+// three extracted content components behind the original tab bar.
+// ─────────────────────────────────────────────────────────────────────
 
-        <ExportDetailDialog
-          exportRecord={selectedExport}
-          onClose={() => setSelectedExport(null)}
-          onDownload={handleExportDownload}
-          onArchive={handleExportArchive}
-        />
+export default function ReportingCentrePage() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('reports');
 
-        <ReportBuilderDialog
-          open={builderOpen}
-          onClose={() => setBuilderOpen(false)}
-          onGenerated={handleBuilderGenerated}
-          generatedBy={user?.name ?? 'Demo CEO'}
-        />
+  return (
+    <Layout>
+      <div data-testid="reporting-centre-page" className="space-y-6">
+
+        {/* ── HEADER ── */}
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-2xl font-bold">Reporting Centre</h1>
+              <Badge variant="outline" className="text-purple-700 border-purple-200 bg-purple-50">
+                CEO Only
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Executive reports, exports, and distribution management. Read-only.
+            </p>
+          </div>
+          <FileText className="h-8 w-8 text-muted-foreground" />
+        </div>
+
+        {/* ── DOCTRINE NOTICE ── */}
+        <div
+          data-testid="reporting-doctrine-notice"
+          className="rounded-lg border border-amber-200 bg-amber-50 p-4"
+        >
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-amber-800">Reporting Centre Doctrine</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Reports may aggregate, summarise, present, and export data. They may{' '}
+                <strong>never</strong> approve records, modify records, create financial mutations,
+                or bypass governance. Reporting is informational only. All report actions are audited.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── TAB BAR ── */}
+        <div data-testid="reporting-centre-tabs" className="flex items-center gap-1 border-b">
+          <button
+            data-testid="tab-reports"
+            onClick={() => setActiveTab('reports')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+              activeTab === 'reports'
+                ? 'border-purple-600 text-purple-700'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <span className="flex items-center gap-1.5">
+              <FileText className="h-4 w-4" />
+              Reports
+            </span>
+          </button>
+          <button
+            data-testid="tab-exports"
+            onClick={() => setActiveTab('exports')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+              activeTab === 'exports'
+                ? 'border-purple-600 text-purple-700'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <span className="flex items-center gap-1.5">
+              <Download className="h-4 w-4" />
+              Exports
+            </span>
+          </button>
+          <button
+            data-testid="tab-distribution"
+            onClick={() => setActiveTab('distribution')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+              activeTab === 'distribution'
+                ? 'border-purple-600 text-purple-700'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <span className="flex items-center gap-1.5">
+              <Send className="h-4 w-4" />
+              Distribution
+            </span>
+          </button>
+        </div>
+
+        {activeTab === 'reports' && <ReportsContent />}
+        {activeTab === 'exports' && <ExportsContent />}
+        {activeTab === 'distribution' && <DistributionContent />}
 
       </div>
     </Layout>
