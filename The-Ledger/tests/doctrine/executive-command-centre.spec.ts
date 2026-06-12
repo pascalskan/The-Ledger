@@ -1,14 +1,21 @@
 /**
- * DOCTRINE TESTS — Phase 6.5: Executive Command Centre
+ * DOCTRINE TESTS — Phase 6.5: Executive Command Centre / UX-5 rewrite
  *
- * 35 tests covering:
- *   - Executive Engine: summary calculations, health calculations, critical item aggregation
- *   - Executive Centre: page rendering, KPI strip, alert panel, operational panel,
- *     governance panel, financial panel, activity stream, doctrine notice
- *   - Dashboard Integration: Executive Snapshot widget
- *   - Deep Linking: navigation to source modules
- *   - Audit Integration: Centre viewed, alert opened, deep link opened
- *   - RBAC: CEO allowed, PM denied, Worker denied, Client denied
+ * UX-5: the ECC page is consolidated into the Intelligence Hub Overview tab
+ * (/intelligence?tab=overview); the legacy route redirects. This suite is a
+ * rewrite against the Overview components (spec §13.2):
+ *
+ * - Health Scorecard (4 dimensions — intel-health-*)
+ * - Critical Items panel with §6.2-B severity rendering (P1-E)
+ * - 6-tile Platform Summary strip (§10.1 verified sources)
+ * - Legacy-route redirect coverage
+ * - Dashboard Zone A integration (S-4 re-point)
+ * - RBAC: CEO allowed, PM denied, Worker denied (Unauthorized page — P1-A)
+ *
+ * Dropped ECC sections (operational/governance/financial overview panels,
+ * analytics summary, reporting/export snapshots, activity stream, module
+ * navigation) get removal, not migration — each has a superset home
+ * (hub tabs, Finance Hub, primary nav, hidden /event-monitor) per spec §6.2.
  */
 
 import { test, expect } from '@playwright/test';
@@ -20,256 +27,194 @@ test.beforeEach(async ({ page }) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────
-// GROUP 1: EXECUTIVE COMMAND CENTRE — RENDERING & NAVIGATION
+// GROUP 1: OVERVIEW TAB — RENDERING & NAVIGATION
 // ─────────────────────────────────────────────────────────────────────
 
-test('ECC-01: Executive Command Centre is accessible to CEO via sidebar nav', async ({ page }) => {
+test('ECC-01: Overview is accessible to CEO via sidebar nav (default tab)', async ({ page }) => {
   await loginAsCEO(page);
-  await page.locator('[data-testid="nav-executive-command-centre"]').click();
-  await expect(page).toHaveURL(/\/executive-command-centre/);
-  await expect(page.locator('[data-testid="executive-command-centre-page"]')).toBeVisible();
+  await page.locator('[data-testid="nav-intelligence-hub"]').click();
+  await expect(page).toHaveURL(/\/intelligence/);
+  await expect(page.locator('[data-testid="intelligence-overview-panel"]')).toBeVisible();
 });
 
-test('ECC-02: Executive Command Centre page renders heading and CEO-only badge', async ({ page }) => {
+test('ECC-02: Hub renders Intelligence heading and CEO-only badge on Overview', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.getByRole('heading', { name: /Executive Command Centre/i })).toBeVisible();
+  await page.goto('/intelligence?tab=overview');
+  await expect(page.locator('[data-testid="intelligence-hub-heading"]')).toContainText('Intelligence');
   await expect(page.locator('body')).toContainText('CEO Only');
 });
 
-test('ECC-03: Executive Command Centre renders without runtime errors', async ({ page }) => {
+test('ECC-03: Overview tab renders without runtime errors', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="executive-command-centre-page"]')).toBeVisible();
+  await page.goto('/intelligence?tab=overview');
+  await expect(page.locator('[data-testid="intelligence-overview-panel"]')).toBeVisible();
   await expect(page.locator('body')).not.toContainText(/Uncaught|TypeError|ReferenceError/i);
 });
 
-test('ECC-04: Doctrine notice renders and describes read-only nature', async ({ page }) => {
+test('ECC-04: Hub doctrine notice renders and describes the read-only advisory layer', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="exec-doctrine-notice"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-doctrine-notice"]')).toContainText(/read-only/i);
-  await expect(page.locator('[data-testid="exec-doctrine-notice"]')).toContainText(/financial mutations/i);
+  await page.goto('/intelligence?tab=overview');
+  const notice = page.locator('[data-testid="intelligence-hub-doctrine-notice"]');
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText(/read-only/i);
+  await expect(notice).toContainText(/financial mutations/i);
 });
 
 // ─────────────────────────────────────────────────────────────────────
-// GROUP 2: KPI STRIP
+// GROUP 2: HEALTH SCORECARD (4 dimensions — Blueprint 6.2)
 // ─────────────────────────────────────────────────────────────────────
 
-test('ECC-05: KPI strip renders all five KPI cards', async ({ page }) => {
+test('ECC-05: Health Scorecard renders all four dimension cards', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="exec-kpi-strip"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-kpi-operational-health"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-kpi-financial-health"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-kpi-governance-health"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-kpi-open-exceptions"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-kpi-critical-alerts"]')).toBeVisible();
+  await page.goto('/intelligence?tab=overview');
+  await expect(page.locator('[data-testid="intel-health-scorecard"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-health-operational"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-health-financial"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-health-governance"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-health-workflow"]')).toBeVisible();
 });
 
-test('ECC-06: Operational Health KPI displays a health label and score', async ({ page }) => {
+test('ECC-06: Operational Health card shows a score out of 100', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  const kpi = page.locator('[data-testid="exec-kpi-operational-health"]');
-  await expect(kpi).toBeVisible();
-  // Should contain a label (Operational / Needs Attention / Critical) and a /100 score
-  await expect(kpi).toContainText(/\/100/);
+  await page.goto('/intelligence?tab=overview');
+  await expect(page.locator('[data-testid="intel-health-operational"]')).toContainText(/\/100/);
 });
 
-test('ECC-07: Financial Health KPI displays a health label and score', async ({ page }) => {
+test('ECC-07: Financial Health card shows a score out of 100', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  const kpi = page.locator('[data-testid="exec-kpi-financial-health"]');
-  await expect(kpi).toContainText(/\/100/);
+  await page.goto('/intelligence?tab=overview');
+  await expect(page.locator('[data-testid="intel-health-financial"]')).toContainText(/\/100/);
 });
 
-test('ECC-08: Governance Health KPI displays a health label and score', async ({ page }) => {
+test('ECC-08: Governance Risk and Workflow Efficiency cards show scores out of 100', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  const kpi = page.locator('[data-testid="exec-kpi-governance-health"]');
-  await expect(kpi).toContainText(/\/100/);
+  await page.goto('/intelligence?tab=overview');
+  await expect(page.locator('[data-testid="intel-health-governance"]')).toContainText(/\/100/);
+  await expect(page.locator('[data-testid="intel-health-workflow"]')).toContainText(/\/100/);
 });
 
-test('ECC-09: Open Exceptions KPI displays a numeric count', async ({ page }) => {
+test('ECC-09: Health cards pair status text with the dot (colour never the sole signal)', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  const kpi = page.locator('[data-testid="exec-kpi-open-exceptions"]');
-  await expect(kpi).toBeVisible();
-  const text = await kpi.textContent();
-  expect(text).toMatch(/\d+/);
-});
-
-test('ECC-10: Critical Alerts KPI is visible and numeric', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  const kpi = page.locator('[data-testid="exec-kpi-critical-alerts"]');
-  await expect(kpi).toBeVisible();
-  const text = await kpi.textContent();
-  expect(text).toMatch(/\d+/);
+  await page.goto('/intelligence?tab=overview');
+  const scorecard = page.locator('[data-testid="intel-health-scorecard"]');
+  await expect(scorecard).toContainText(/Healthy|Warning|Critical/);
 });
 
 // ─────────────────────────────────────────────────────────────────────
-// GROUP 3: EXECUTIVE ALERT PANEL
+// GROUP 3: CRITICAL ITEMS PANEL (§6.2-B severity rendering — P1-E)
 // ─────────────────────────────────────────────────────────────────────
 
-test('ECC-11: Executive Alert Panel renders with item count badge', async ({ page }) => {
+test('ECC-10: Critical Items panel renders with item count badge', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="exec-alert-panel"]')).toBeVisible();
-  // Should show "X items" badge
-  await expect(page.locator('[data-testid="exec-alert-panel"]')).toContainText(/items/i);
+  await page.goto('/intelligence?tab=overview');
+  await expect(page.locator('[data-testid="intel-critical-items"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-critical-items"]')).toContainText(/items/i);
 });
 
-test('ECC-12: Executive Alert Panel renders alert items from seed data', async ({ page }) => {
+test('ECC-11: Critical Items panel renders rows from seed data', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  const alerts = page.locator('[data-testid^="exec-alert-item-"]');
-  const count = await alerts.count();
+  await page.goto('/intelligence?tab=overview');
+  const rows = page.locator('[data-testid="intel-critical-item-row"]');
+  expect(await rows.count()).toBeGreaterThan(0);
+});
+
+test('ECC-12: Severity rendering maps critical→Critical and high→Warning', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/intelligence?tab=overview');
+  const rows = page.locator('[data-testid="intel-critical-item-row"]');
+  expect(await rows.count()).toBeGreaterThan(0);
+  const criticalRows = page.locator('[data-testid="intel-critical-item-row"][data-priority="critical"]');
+  const highRows = page.locator('[data-testid="intel-critical-item-row"][data-priority="high"]');
+  if ((await criticalRows.count()) > 0) {
+    await expect(criticalRows.first()).toContainText('Critical');
+  }
+  if ((await highRows.count()) > 0) {
+    await expect(highRows.first()).toContainText('Warning');
+  }
+});
+
+test('ECC-13: Critical Items are ordered critical-first', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/intelligence?tab=overview');
+  const rows = page.locator('[data-testid="intel-critical-item-row"]');
+  const priorities = await rows.evaluateAll((els) =>
+    els.map((e) => e.getAttribute('data-priority')),
+  );
+  const firstHigh = priorities.indexOf('high');
+  const lastCritical = priorities.lastIndexOf('critical');
+  if (firstHigh !== -1 && lastCritical !== -1) {
+    expect(lastCritical).toBeLessThan(firstHigh);
+  }
+});
+
+test('ECC-14: Critical item Action button deep-links to the source module', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/intelligence?tab=overview');
+  const firstAction = page
+    .locator('[data-testid="intel-critical-item-row"]')
+    .first()
+    .getByRole('button', { name: /Open source/i });
+  await firstAction.click();
+  await expect(page).not.toHaveURL(/tab=overview/);
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// GROUP 4: PLATFORM SUMMARY STRIP (6 tiles — §10.1 verified sources)
+// ─────────────────────────────────────────────────────────────────────
+
+test('ECC-15: Platform Summary strip renders all six tiles', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/intelligence?tab=overview');
+  await expect(page.locator('[data-testid="intel-summary-strip"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-summary-tile-active-jobs"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-summary-tile-pending-reviews"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-summary-tile-active-rules"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-summary-tile-open-exceptions"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-summary-tile-active-workflows"]')).toBeVisible();
+  await expect(page.locator('[data-testid="intel-summary-tile-unread-notifications"]')).toBeVisible();
+});
+
+test('ECC-16: Active Jobs and Active Workflows tiles show numeric values', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/intelligence?tab=overview');
+  expect(await page.locator('[data-testid="intel-summary-tile-active-jobs"]').textContent()).toMatch(/\d+/);
+  expect(await page.locator('[data-testid="intel-summary-tile-active-workflows"]').textContent()).toMatch(/\d+/);
+});
+
+test('ECC-17: Unread Notifications tile shows a numeric value from seed data', async ({ page }) => {
+  await loginAsCEO(page);
+  await page.goto('/intelligence?tab=overview');
+  const text = await page.locator('[data-testid="intel-summary-tile-unread-notifications"]').textContent();
+  const count = parseInt(text?.match(/\d+/)?.[0] || '-1');
   expect(count).toBeGreaterThan(0);
 });
 
-test('ECC-13: Each alert item shows priority badge (HIGH or CRITICAL)', async ({ page }) => {
+// ─────────────────────────────────────────────────────────────────────
+// GROUP 5: REDIRECT & ANALYTICS LINK
+// ─────────────────────────────────────────────────────────────────────
+
+test('ECC-18: legacy /executive-command-centre redirects CEO to the Overview tab', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/executive-command-centre');
-  const panel = page.locator('[data-testid="exec-alert-panel"]');
-  await expect(panel).toContainText(/HIGH|CRITICAL/i);
+  await expect(page).toHaveURL(/\/intelligence\?tab=overview/);
+  await expect(page.locator('[data-testid="intelligence-overview-panel"]')).toBeVisible();
 });
 
-test('ECC-14: Clicking View Source on an alert navigates to the source module', async ({ page }) => {
+test('ECC-19: "View analytics" link navigates to the Analytics tab', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  const firstViewSourceBtn = page.locator('[data-testid^="exec-alert-view-source-"]').first();
-  await firstViewSourceBtn.click();
-  // Should navigate away from executive command centre to a source route
-  await expect(page).not.toHaveURL('/executive-command-centre');
+  await page.goto('/intelligence?tab=overview');
+  await page.locator('[data-testid="intel-health-view-analytics"]').click();
+  await expect(page).toHaveURL(/tab=analytics/);
+  await expect(page.locator('[data-testid="analytics-centre-page"]')).toBeVisible();
 });
 
 // ─────────────────────────────────────────────────────────────────────
-// GROUP 4: OPERATIONAL OVERVIEW PANEL
+// GROUPS 6–8 (legacy ECC panels): REMOVED, not migrated (spec §6.2/§13.2)
+// Operational/Governance/Financial overview panels, Analytics summary,
+// Reporting/Export snapshots, Executive Activity Stream, and Module
+// Navigation each have a superset home: hub Analytics/Reports/Exports/
+// Activity tabs, the Finance Hub, primary nav, or hidden /event-monitor.
 // ─────────────────────────────────────────────────────────────────────
-
-test('ECC-15: Operational Overview Panel renders all five metrics', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="exec-operational-panel"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-op-active-workflows"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-op-active-automations"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-op-scheduled"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-op-event-volume"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-op-activity-volume"]')).toBeVisible();
-});
-
-test('ECC-16: Active Workflows metric shows a numeric value', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  const metric = page.locator('[data-testid="exec-op-active-workflows"]');
-  const text = await metric.textContent();
-  expect(text).toMatch(/\d+/);
-});
-
-test('ECC-17: Workflow Centre deep link from Operational panel navigates to /workflows', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await page.locator('[data-testid="exec-op-link-workflows"]').click();
-  await expect(page).toHaveURL(/\/workflows/);
-});
-
-// ─────────────────────────────────────────────────────────────────────
-// GROUP 5: GOVERNANCE OVERVIEW PANEL
-// ─────────────────────────────────────────────────────────────────────
-
-test('ECC-18: Governance Overview Panel renders all four metrics', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="exec-governance-panel"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-gov-requires-review"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-gov-restricted"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-gov-suspended"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-gov-fin-sensitive"]')).toBeVisible();
-});
-
-test('ECC-19: Governance Panel deep link navigates to /automation-governance', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await page.locator('[data-testid="exec-gov-link-governance"]').click();
-  await expect(page).toHaveURL(/\/automation-governance/);
-});
-
-// ─────────────────────────────────────────────────────────────────────
-// GROUP 6: FINANCIAL OVERSIGHT PANEL
-// ─────────────────────────────────────────────────────────────────────
-
-test('ECC-20: Financial Oversight Panel renders all four metrics', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="exec-financial-panel"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-fin-failed-syncs"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-fin-recon-issues"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-fin-pending-controls"]')).toBeVisible();
-  await expect(page.locator('[data-testid="exec-fin-open-exceptions"]')).toBeVisible();
-});
-
-test('ECC-21: Financial Panel reconciliation deep link navigates to Finance Hub accounting reconciliation', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await page.locator('[data-testid="exec-fin-link-reconciliation"]').click();
-  await expect(page).toHaveURL(/\/finance/);
-});
-
-test('ECC-22: Financial Panel syncs deep link navigates to Finance Hub records tab', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await page.locator('[data-testid="exec-fin-link-financial-explorer"]').click();
-  await expect(page).toHaveURL(/\/finance/);
-});
-
-// ─────────────────────────────────────────────────────────────────────
-// GROUP 7: EXECUTIVE ACTIVITY STREAM
-// ─────────────────────────────────────────────────────────────────────
-
-test('ECC-23: Executive Activity Stream renders with events from seed data', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="exec-activity-stream"]')).toBeVisible();
-  const events = page.locator('[data-testid^="exec-activity-event-"]');
-  const count = await events.count();
-  expect(count).toBeGreaterThan(0);
-});
-
-test('ECC-24: Activity Stream View All deep link navigates to /activity-feed', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await page.locator('[data-testid="exec-activity-link"]').click();
-  await expect(page).toHaveURL(/\/activity-feed/);
-});
-
-// ─────────────────────────────────────────────────────────────────────
-// GROUP 8: MODULE NAVIGATION (DEEP LINKS)
-// ─────────────────────────────────────────────────────────────────────
-
-test('ECC-25: Module Navigation panel renders deep link buttons', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="exec-deep-links-panel"]')).toBeVisible();
-  // Notification Centre link
-  await expect(page.locator('[data-testid="exec-nav--notifications"]')).toBeVisible();
-  // Workflow Centre link
-  await expect(page.locator('[data-testid="exec-nav--workflows"]')).toBeVisible();
-});
-
-test('ECC-26: Notification Centre deep link navigates to /notifications', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await page.locator('[data-testid="exec-nav--notifications"]').click();
-  await expect(page).toHaveURL(/\/notifications/);
-});
-
-test('ECC-27: Exception Resolution deep link navigates to Finance Hub accounting exceptions', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await page.locator('[data-testid="exec-nav--exception-resolution-center"]').click();
-  await expect(page).toHaveURL(/\/finance/);
-});
 
 // ─────────────────────────────────────────────────────────────────────
 // GROUP 9: DASHBOARD INTEGRATION — ZONE A ATTENTION STRIP
@@ -295,27 +240,26 @@ test('ECC-30: Zone A shows Pending Reviews card', async ({ page }) => {
   await expect(page.locator('[data-testid="dashboard-zone-a-reviews"]')).toBeVisible();
 });
 
-test('ECC-31: Executive Command Centre page shows governance data', async ({ page }) => {
+test('ECC-31: Overview shows governance health data', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="executive-command-centre-page"]')).toBeVisible();
+  await page.goto('/intelligence?tab=overview');
+  await expect(page.locator('[data-testid="intel-health-governance"]')).toBeVisible();
 });
 
-test('ECC-32: Zone A Critical Alerts "View Alerts" button navigates to /executive-command-centre', async ({ page }) => {
+test('ECC-32: Zone A "View Alerts" button navigates to the hub Overview (S-4)', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/');
-  // Only click the button if the alert card is in active (non-clear) state
   const alertCard = page.locator('[data-testid="dashboard-zone-a-alerts"]');
   await expect(alertCard).toBeVisible();
   const button = alertCard.getByRole('button', { name: /View Alerts/i });
   const hasButton = await button.count();
   if (hasButton > 0) {
     await button.click();
-    await expect(page).toHaveURL(/\/executive-command-centre/);
+    await expect(page).toHaveURL(/\/intelligence\?tab=overview/);
   } else {
-    // Card is in clear state — verify executive-command-centre is still accessible
-    await page.goto('/executive-command-centre');
-    await expect(page.locator('[data-testid="executive-command-centre-page"]')).toBeVisible();
+    // Card is in clear state — verify the Overview is still accessible
+    await page.goto('/intelligence?tab=overview');
+    await expect(page.locator('[data-testid="intelligence-overview-panel"]')).toBeVisible();
   }
 });
 
@@ -323,33 +267,26 @@ test('ECC-32: Zone A Critical Alerts "View Alerts" button navigates to /executiv
 // GROUP 10: RBAC — ACCESS CONTROL
 // ─────────────────────────────────────────────────────────────────────
 
-test('ECC-33: CEO can access Executive Command Centre at /executive-command-centre', async ({ page }) => {
+test('ECC-33: CEO can access the hub Overview at /intelligence', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="executive-command-centre-page"]')).toBeVisible();
+  await page.goto('/intelligence');
+  await expect(page.locator('[data-testid="intelligence-overview-panel"]')).toBeVisible();
 });
 
-test('ECC-34: PM is denied access to /executive-command-centre', async ({ page }) => {
+test('ECC-34: PM is denied access to /intelligence and the legacy ECC route', async ({ page }) => {
   await loginAsPM(page);
+  await page.goto('/intelligence');
+  let bodyText = await page.locator('body').textContent();
+  expect(bodyText && /unauthorized|access denied|not allowed|403/i.test(bodyText)).toBeTruthy();
   await page.goto('/executive-command-centre');
-  const url = page.url();
-  const bodyText = await page.locator('body').textContent();
-  const isDenied =
-    url.includes('/auth') ||
-    url.includes('/unauthorized') ||
-    (bodyText && /unauthorized|access denied|not allowed|403/i.test(bodyText));
-  expect(isDenied).toBeTruthy();
+  bodyText = await page.locator('body').textContent();
+  expect(bodyText && /unauthorized|access denied|not allowed|403/i.test(bodyText)).toBeTruthy();
 });
 
-test('ECC-35: Worker is denied access to /executive-command-centre (redirected)', async ({ page }) => {
+test('ECC-35: Worker is denied access to /intelligence (Unauthorized page — P1-A)', async ({ page }) => {
   await loginAsWorker(page);
-  await page.goto('/executive-command-centre');
-  const url = page.url();
+  await page.goto('/intelligence');
+  // P1-A: the roles check returns the Unauthorized page — never assert a redirect
   const bodyText = await page.locator('body').textContent();
-  const isDenied =
-    url.includes('/worker') ||
-    url.includes('/auth') ||
-    url.includes('/unauthorized') ||
-    (bodyText && /unauthorized|access denied|not allowed|403/i.test(bodyText));
-  expect(isDenied).toBeTruthy();
+  expect(bodyText && /unauthorized|access denied|not allowed|403/i.test(bodyText)).toBeTruthy();
 });

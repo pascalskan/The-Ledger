@@ -1,17 +1,23 @@
 /**
- * DOCTRINE TEST: Activity Feed — Phase 6.2
+ * DOCTRINE TEST: Activity Feed — Phase 6.2 / UX-5 rewrite
  *
- * 25 tests covering:
- * - Engine functions (summary, filter, search, retrieval)
- * - Page rendering (KPI strip, event table, filters, search)
- * - Event detail dialog
- * - Deep linking
- * - Dashboard widget
- * - RBAC
- * - Doctrine compliance (informational only)
+ * UX-5: the standalone Activity Feed page is superseded by the Intelligence
+ * Hub's combined Activity tab (/intelligence?tab=activity — ActivityHub).
+ * This suite is a rewrite against the new component (spec §13.2):
+ *
+ * - AF-04 … AF-08 (legacy KPI-strip group) are RETIRED — the Activity tab
+ *   deliberately has no KPI strip (spec §6.6, P1-C). AF-08 thereby leaves
+ *   the known-failure ledger; its seed-date drift is out of scope (P2-2).
+ * - AF-16 … AF-18 (legacy search box) are RETIRED — Blueprint 6.6 defines
+ *   the tab as filters + combined list only; there is no search input.
+ * - The legacy Event Detail dialog is replaced by the inline "Show Event
+ *   Detail" expansion (spec §10.5 metadata contract).
+ *
+ * Remaining coverage: access/RBAC, combined list rendering, merge order,
+ * type/priority filters, detail expansion, deep linking, doctrine.
  */
 import { test, expect } from '@playwright/test';
-import { loginAsCEO, loginAsPM, loginAsWorker } from '../helpers/login';
+import { loginAsCEO, loginAsWorker } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 
 test.beforeEach(async ({ page }) => {
@@ -22,246 +28,203 @@ test.beforeEach(async ({ page }) => {
 // AF-01 to AF-03: Page Access & RBAC
 // ──────────────────────────────────────────────────────
 
-test('AF-01: Activity Feed page loads for CEO', async ({ page }) => {
+test('AF-01: Activity tab loads for CEO', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await expect(page.getByTestId('activity-feed-page')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Activity Feed/i })).toBeVisible();
+  await page.goto('/intelligence?tab=activity');
+  await expect(page.getByTestId('activity-hub')).toBeVisible();
+  await expect(page.getByTestId('activity-combined-list')).toBeVisible();
 });
 
-test('AF-02: CEO can navigate via sidebar to Activity Feed', async ({ page }) => {
+test('AF-02: CEO can navigate via sidebar to the Activity tab; legacy route redirects', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/');
-  await page.getByTestId('nav-activity-feed').click();
-  await expect(page.getByTestId('activity-feed-page')).toBeVisible();
+  await page.getByTestId('nav-intelligence-hub').click();
+  await page.getByTestId('intelligence-tab-activity').click();
+  await expect(page.getByTestId('activity-hub')).toBeVisible();
+  // Legacy /activity-feed redirects to the hub Activity tab
+  await page.goto('/activity-feed');
+  await expect(page).toHaveURL(/\/intelligence\?tab=activity/);
+  await expect(page.getByTestId('activity-hub')).toBeVisible();
 });
 
-test('AF-03 (RBAC): Worker is denied access to Activity Feed', async ({ page }) => {
+test('AF-03 (RBAC): Worker is denied access to the Activity tab', async ({ page }) => {
   await loginAsWorker(page);
+  await page.goto('/intelligence?tab=activity');
+  await expect(page.getByTestId('activity-hub')).not.toBeVisible();
   await page.goto('/activity-feed');
-  await expect(page.getByTestId('activity-feed-page')).not.toBeVisible();
+  await expect(page.getByTestId('activity-hub')).not.toBeVisible();
 });
 
 // ──────────────────────────────────────────────────────
-// AF-04 to AF-08: KPI Strip
+// AF-04 to AF-08: RETIRED — legacy KPI strip (af-kpi-*)
+// The combined Activity tab has no KPI strip (UX-5 spec §6.6, P1-C).
+// AF-08 leaves the known-failure ledger with this retirement.
 // ──────────────────────────────────────────────────────
 
-test('AF-04: KPI strip renders all 5 cards', async ({ page }) => {
+// ──────────────────────────────────────────────────────
+// AF-09 to AF-11: Combined List
+// ──────────────────────────────────────────────────────
+
+test('AF-09: Combined list renders activity rows from seed data', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await expect(page.getByTestId('af-kpi-strip')).toBeVisible();
-  await expect(page.getByTestId('af-kpi-total')).toBeVisible();
-  await expect(page.getByTestId('af-kpi-critical')).toBeVisible();
-  await expect(page.getByTestId('af-kpi-action-required')).toBeVisible();
-  await expect(page.getByTestId('af-kpi-today')).toBeVisible();
-  await expect(page.getByTestId('af-kpi-last7days')).toBeVisible();
+  await page.goto('/intelligence?tab=activity');
+  const rows = page.getByTestId('activity-row');
+  expect(await rows.count()).toBeGreaterThan(0);
+  // act-001 is the newest seed record — must be present on the first page
+  await expect(rows.filter({ hasText: 'Timesheet Approved' }).first()).toBeVisible();
 });
 
-test('AF-05: KPI total matches seed data (25 events)', async ({ page }) => {
+test('AF-10: Combined list includes notification rows with a Notification chip', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await expect(page.getByTestId('af-kpi-total')).toContainText('25');
+  await page.goto('/intelligence?tab=activity');
+  // Narrow with the Warning filter (small result set, no pagination effects):
+  // seeded high-priority notifications map to Warning (spec §10.5)
+  await page.getByTestId('activity-filter-priority-warning').click();
+  const chips = page.getByTestId('activity-row-notification-chip');
+  expect(await chips.count()).toBeGreaterThan(0);
 });
 
-test('AF-06: KPI critical count is non-zero from seed data', async ({ page }) => {
+test('AF-11: Rows are sorted newest first (act-001 leads; 1h-old before 2h-old)', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  const critText = await page.getByTestId('af-kpi-critical').textContent();
-  const count = parseInt(critText?.match(/\d+/)?.[0] || '0');
-  expect(count).toBeGreaterThanOrEqual(3);
-});
-
-test('AF-07: KPI action required count is non-zero from seed data', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  const arText = await page.getByTestId('af-kpi-action-required').textContent();
-  const count = parseInt(arText?.match(/\d+/)?.[0] || '0');
-  expect(count).toBeGreaterThanOrEqual(5);
-});
-
-test('AF-08: KPI last7days count equals total (all seed data within 7 days)', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  const totalText = await page.getByTestId('af-kpi-total').textContent();
-  const last7Text = await page.getByTestId('af-kpi-last7days').textContent();
-  const total = parseInt(totalText?.match(/\d+/)?.[0] || '0');
-  const last7 = parseInt(last7Text?.match(/\d+/)?.[0] || '0');
-  expect(last7).toBeLessThanOrEqual(total);
-  expect(last7).toBeGreaterThan(0);
+  await page.goto('/intelligence?tab=activity');
+  const rows = page.getByTestId('activity-row');
+  // act-001 (1h before seed NOW) is the newest record across both engines
+  await expect(rows.first()).toContainText('Timesheet Approved');
+  const texts = await rows.allTextContents();
+  const idxApproved = texts.findIndex((t) => t.includes('Timesheet Approved'));
+  const idxRejected = texts.findIndex((t) => t.includes('Expense Rejected'));
+  expect(idxApproved).toBeGreaterThanOrEqual(0);
+  expect(idxRejected).toBeGreaterThan(idxApproved);
 });
 
 // ──────────────────────────────────────────────────────
-// AF-09 to AF-11: Event Table
+// AF-12 to AF-15: Type & Priority Filters (canonical mappings — §10.5)
 // ──────────────────────────────────────────────────────
 
-test('AF-09: Event table renders seed events', async ({ page }) => {
+test('AF-12: Type filter — Sync shows sync events and hides operational rows', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await expect(page.getByTestId('af-event-table')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-001')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-005')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-014')).toBeVisible();
+  await page.goto('/intelligence?tab=activity');
+  await page.getByTestId('activity-filter-type-sync').click();
+  const rows = page.getByTestId('activity-row');
+  await expect(rows.filter({ hasText: 'QuickBooks Sync Failed' }).first()).toBeVisible();
+  await expect(rows.filter({ hasText: 'Timesheet Approved' })).toHaveCount(0);
 });
 
-test('AF-10: Action Required indicator shown for events requiring action', async ({ page }) => {
+test('AF-13: Priority filter — Critical shows critical rows and hides info rows', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await expect(page.getByTestId('af-action-required-act-005')).toBeVisible();
-  await expect(page.getByTestId('af-action-required-act-014')).toBeVisible();
-  await expect(page.getByTestId('af-action-required-act-010')).toBeVisible();
+  await page.goto('/intelligence?tab=activity');
+  await page.getByTestId('activity-filter-priority-critical').click();
+  const rows = page.getByTestId('activity-row');
+  await expect(rows.filter({ hasText: 'Automation Execution Blocked' }).first()).toBeVisible();
+  await expect(rows.filter({ hasText: 'QuickBooks Sync Failed' }).first()).toBeVisible();
+  await expect(rows.filter({ hasText: 'Timesheet Approved' })).toHaveCount(0);
 });
 
-test('AF-11: Events sorted newest first (act-001 appears before act-023)', async ({ page }) => {
+test('AF-14: Type filter — Operational shows review/job rows and hides automation rows', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  const rows = page.getByTestId('af-event-table').locator('[data-testid^="af-event-row-"]');
-  const count = await rows.count();
-  expect(count).toBeGreaterThan(0);
-  // act-001 was created 1 hour ago, act-023 was created 3 days ago
-  // act-001 should appear before act-023 in the sorted list
-  const allTestIds = await rows.evaluateAll((els) => els.map((e) => e.getAttribute('data-testid')));
-  const idx001 = allTestIds.indexOf('af-event-row-act-001');
-  const idx023 = allTestIds.indexOf('af-event-row-act-023');
-  expect(idx001).toBeLessThan(idx023);
+  await page.goto('/intelligence?tab=activity');
+  await page.getByTestId('activity-filter-type-operational').click();
+  const rows = page.getByTestId('activity-row');
+  await expect(rows.filter({ hasText: 'Timesheet Approved' }).first()).toBeVisible();
+  await expect(rows.filter({ hasText: 'Job Status Changed to Active' }).first()).toBeVisible();
+  await expect(rows.filter({ hasText: 'Automation Execution Blocked' })).toHaveCount(0);
 });
 
-// ──────────────────────────────────────────────────────
-// AF-12 to AF-15: Filters
-// ──────────────────────────────────────────────────────
-
-test('AF-12: Type filter — Sync events only', async ({ page }) => {
+test('AF-15: Priority filter — Warning shows warning rows, hides info rows', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-filter-type').click();
-  await page.getByRole('option', { name: 'Sync' }).click();
-  await expect(page.getByTestId('af-event-row-act-010')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-011')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-001')).not.toBeVisible();
-});
-
-test('AF-13: Priority filter — Critical events only', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-filter-priority').click();
-  await page.getByRole('option', { name: 'Critical' }).click();
-  await expect(page.getByTestId('af-event-row-act-005')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-010')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-001')).not.toBeVisible();
-});
-
-test('AF-14: Type filter — Job events only', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-filter-type').click();
-  await page.getByRole('option', { name: 'Job' }).click();
-  await expect(page.getByTestId('af-event-row-act-018')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-019')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-001')).not.toBeVisible();
-});
-
-test('AF-15: Priority filter — Warning events visible, info hidden', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-filter-priority').click();
-  await page.getByRole('option', { name: 'Warning' }).click();
-  await expect(page.getByTestId('af-event-row-act-002')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-001')).not.toBeVisible();
+  await page.goto('/intelligence?tab=activity');
+  await page.getByTestId('activity-filter-priority-warning').click();
+  const rows = page.getByTestId('activity-row');
+  await expect(rows.filter({ hasText: 'Expense Rejected' }).first()).toBeVisible();
+  await expect(rows.filter({ hasText: 'Timesheet Approved' })).toHaveCount(0);
 });
 
 // ──────────────────────────────────────────────────────
-// AF-16 to AF-18: Search
+// AF-16 to AF-18: RETIRED — legacy search box
+// Blueprint 6.6 defines the Activity tab as filters + combined list only.
 // ──────────────────────────────────────────────────────
 
-test('AF-16: Search by event title filters results', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-search').fill('QuickBooks');
-  await expect(page.getByTestId('af-event-row-act-010')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-001')).not.toBeVisible();
-});
-
-test('AF-17: Search by job ID filters results', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-search').fill('JOB-2026-005');
-  await expect(page.getByTestId('af-event-row-act-014')).toBeVisible();
-  await expect(page.getByTestId('af-event-row-act-001')).not.toBeVisible();
-});
-
-test('AF-18: Clearing search restores all events', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-search').fill('QuickBooks');
-  await expect(page.getByTestId('af-event-row-act-001')).not.toBeVisible();
-  await page.getByTestId('af-search').fill('');
-  await expect(page.getByTestId('af-event-row-act-001')).toBeVisible();
-});
-
 // ──────────────────────────────────────────────────────
-// AF-19 to AF-22: Event Detail Dialog
+// AF-19 to AF-22: Event Detail Expansion (replaces the legacy dialog)
 // ──────────────────────────────────────────────────────
 
-test('AF-19: Event detail dialog opens on View', async ({ page }) => {
+test('AF-19: Show Event Detail toggle expands rows with metadata blocks', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-btn-view-act-001').click();
-  await expect(page.getByTestId('af-event-detail-dialog')).toBeVisible();
+  await page.goto('/intelligence?tab=activity');
+  await expect(page.getByTestId('activity-event-detail-block')).toHaveCount(0);
+  await page.getByTestId('activity-event-detail-toggle').click();
+  const blocks = page.getByTestId('activity-event-detail-block');
+  expect(await blocks.count()).toBeGreaterThan(0);
 });
 
-test('AF-20: Detail dialog shows type and priority badges', async ({ page }) => {
+test('AF-20: Detail expansion shows the §10.5 metadata contract fields', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-btn-view-act-014').click();
-  await expect(page.getByTestId('af-event-detail-dialog')).toBeVisible();
-  await expect(page.getByTestId('af-detail-type-badge')).toBeVisible();
-  await expect(page.getByTestId('af-detail-priority-badge')).toBeVisible();
+  await page.goto('/intelligence?tab=activity');
+  await page.getByTestId('activity-event-detail-toggle').click();
+  const firstBlock = page.getByTestId('activity-event-detail-block').first();
+  await expect(firstBlock).toContainText('Type');
+  await expect(firstBlock).toContainText('Native priority');
+  await expect(firstBlock).toContainText('Source route');
+  await expect(firstBlock).toContainText('Action required');
 });
 
-test('AF-21: Detail dialog shows Action Required badge for action-required events', async ({ page }) => {
+test('AF-21: Detail expansion shows seed source metadata (act-010 invoice_sync)', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-btn-view-act-016').click();
-  await expect(page.getByTestId('af-detail-action-required-badge')).toBeVisible();
+  await page.goto('/intelligence?tab=activity');
+  await page.getByTestId('activity-filter-type-sync').click();
+  await page.getByTestId('activity-event-detail-toggle').click();
+  const syncRow = page.getByTestId('activity-row').filter({ hasText: 'QuickBooks Sync Failed' });
+  await expect(syncRow.getByTestId('activity-event-detail-block')).toContainText('invoice_sync');
 });
 
-test('AF-22: Detail dialog shows Go to Source deep-link button', async ({ page }) => {
+test('AF-22: Detail expansion shows native notification priority', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-btn-view-act-010').click();
-  await expect(page.getByTestId('af-event-detail-dialog')).toBeVisible();
-  await expect(page.getByTestId('af-detail-btn-deep-link')).toBeVisible();
+  await page.goto('/intelligence?tab=activity');
+  await page.getByTestId('activity-filter-priority-warning').click();
+  await page.getByTestId('activity-event-detail-toggle').click();
+  // A seeded high-priority notification renders Warning on the row but its
+  // native priority (High) inside the expansion (spec §10.5)
+  const notifRow = page
+    .getByTestId('activity-row')
+    .filter({ has: page.getByTestId('activity-row-notification-chip') })
+    .first();
+  await expect(notifRow.getByTestId('activity-event-detail-block')).toContainText('High');
 });
 
 // ──────────────────────────────────────────────────────
 // AF-23: Deep Linking
 // ──────────────────────────────────────────────────────
 
-test('AF-23: Deep link from sync event navigates to Finance Hub records tab', async ({ page }) => {
+test('AF-23: Open Source on a sync row navigates to the Finance Hub', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await page.getByTestId('af-btn-view-act-010').click();
-  await expect(page.getByTestId('af-event-detail-dialog')).toBeVisible();
-  await page.getByTestId('af-detail-btn-deep-link').click();
+  await page.goto('/intelligence?tab=activity');
+  await page.getByTestId('activity-filter-type-sync').click();
+  const syncRow = page.getByTestId('activity-row').filter({ hasText: 'QuickBooks Sync Failed' });
+  await syncRow.getByRole('button', { name: /Open source/i }).click();
   await expect(page).toHaveURL(/\/finance/);
 });
 
 // ──────────────────────────────────────────────────────
-// AF-24: Doctrine Notice
+// AF-24: Doctrine — informational only
 // ──────────────────────────────────────────────────────
 
-test('AF-24: Doctrine notice visible on Activity Feed page', async ({ page }) => {
+test('AF-24: Activity tab contains no approve/override/mutate controls', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await expect(page.getByTestId('af-doctrine-notice')).toBeVisible();
-  await expect(page.getByTestId('af-doctrine-notice')).toContainText(/informational only/i);
+  await page.goto('/intelligence?tab=activity');
+  await expect(page.getByTestId('activity-hub')).toBeVisible();
+  const panel = page.getByTestId('intelligence-activity-panel');
+  await expect(panel.locator('button:has-text("Approve")')).toHaveCount(0);
+  await expect(panel.locator('button:has-text("Override")')).toHaveCount(0);
+  await expect(panel.locator('button:has-text("Mutate")')).toHaveCount(0);
 });
 
 // ──────────────────────────────────────────────────────
-// AF-25: Dashboard Widget
+// AF-25: Bookmarkable URL
 // ──────────────────────────────────────────────────────
 
-test('AF-25: Activity Feed page is accessible for CEO', async ({ page }) => {
+test('AF-25: Activity tab is accessible at its bookmarkable URL', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/activity-feed');
-  await expect(page.getByRole('heading', { name: /Activity Feed/i })).toBeVisible();
+  await page.goto('/intelligence?tab=activity');
+  await expect(page.getByTestId('activity-hub')).toBeVisible();
+  await expect(page.getByTestId('intelligence-hub-heading')).toContainText(/Activity/i);
 });
