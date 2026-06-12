@@ -142,7 +142,7 @@ export const BUS_EVENT_ROUTES: Record<BusEventCategory, string> = {
   automation_event: '/automations',
   governance_event: '/automation-governance',
   scheduler_event: '/automations',
-  notification_event: '/notifications',
+  notification_event: '/intelligence?tab=activity', // UX-5 S-8: CEO notification consumption lives in the hub
   sync_event: '/finance?tab=records',
   reconciliation_event: '/finance?tab=accounting&sub=reconciliation',
   exception_event: '/finance?tab=accounting&sub=exceptions',
