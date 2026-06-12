@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import FinanceHubPage from "@/pages/finance-hub";
+import IntelligenceHubPage from "@/pages/intelligence-hub";
 import Dashboard from "@/pages/dashboard";
 import JobsPage from "@/pages/jobs";
 import JobDetailPage from "@/pages/job-detail";
@@ -178,6 +179,10 @@ function Router() {
       {/* UX-4: Finance Hub — CEO only */}
       <Route path="/finance">
         <ProtectedRoute component={FinanceHubPage} roles={["CEO"]} />
+      </Route>
+      {/* UX-5: Intelligence Hub — CEO only */}
+      <Route path="/intelligence">
+        <ProtectedRoute component={IntelligenceHubPage} roles={["CEO"]} />
       </Route>
 
       {/* UX-4: Finance Hub redirect routes — must precede legacy route declarations.

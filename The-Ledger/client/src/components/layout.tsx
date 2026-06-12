@@ -51,6 +51,7 @@ import {
   BarChart3,
   BookOpen,
   DollarSign,
+  Brain,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -305,7 +306,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   ].filter((item) => hasAnyRole(item.roles));
 
   // ── INTELLIGENCE section ──────────────────────────────
+  // UX-5 Stage 1: "Intelligence" hub item added alongside the legacy items;
+  // the legacy entries are removed in the UX-5 navigation-cleanup stage.
   const INTELLIGENCE_ITEMS: NavItem[] = [
+    { label: "Intelligence", href: "/intelligence", icon: Brain, roles: ["CEO"], testId: "nav-intelligence-hub" },
     { label: "Command Centre", href: "/executive-command-centre", icon: Terminal, roles: ["CEO"], testId: "nav-executive-command-centre" },
     { label: "Analytics Centre", href: "/analytics-centre", icon: BarChart3, roles: ["CEO"], testId: "nav-analytics-centre" },
     { label: "Reporting Centre", href: "/reporting-centre", icon: BookOpen, roles: ["CEO"], testId: "nav-reporting-centre" },
