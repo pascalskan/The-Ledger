@@ -23,12 +23,14 @@ import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout";
 import { AutomationExecutiveDashboard } from "@/components/automation/AutomationExecutiveDashboard";
 import { AutomationCatalogue, buildCatalogueRows } from "@/components/automation/AutomationCatalogue";
+import { AutomationExecutionMonitor } from "@/components/automation/AutomationExecutionMonitor";
 import {
   GOVERNANCE_STATUS_LABELS,
   GOVERNANCE_STATUS_COLORS,
   RISK_LEVEL_LABELS,
   RISK_LEVEL_COLORS,
   getAllGovernanceRecords,
+  getGovernanceRecordByRuleId,
 } from "@/lib/automationGovernanceEngine";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -1020,10 +1022,22 @@ function RuleDetailDialog({
 
 // ── Execution Detail Dialog ────────────────────────────────────────────────────
 
+const EXEC_COMPLETION_SECONDS: Record<string, number> = {
+  success: 1.2,
+  blocked_approval_required: 0.4,
+  blocked_forbidden_action: 0.3,
+  blocked_condition_not_met: 0.3,
+  failed: 3.1,
+};
+
 function ExecutionDetailDialog({ entry, onClose }: { entry: AutomationAuditEntry; onClose: () => void }) {
+  const governance = useMemo(() => getGovernanceRecordByRuleId(entry.ruleId), [entry.ruleId]);
+  const duration = EXEC_COMPLETION_SECONDS[entry.result] ?? 1.0;
+  const isBlocked = entry.result.startsWith("blocked");
+  const isFailure = entry.result === "failed";
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[540px]" data-testid="aut-execution-detail-dialog">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto" data-testid="aut-execution-detail-dialog">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Activity className="h-4 w-4" /> Execution Detail</DialogTitle>
           <DialogDescription className="font-mono text-xs">{entry.executionId}</DialogDescription>
@@ -1031,13 +1045,54 @@ function ExecutionDetailDialog({ entry, onClose }: { entry: AutomationAuditEntry
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div><span className="text-xs text-muted-foreground">Rule</span><div className="mt-1 font-semibold">{entry.ruleNumber}</div><div className="text-xs text-muted-foreground truncate">{entry.ruleName}</div></div>
-            <div><span className="text-xs text-muted-foreground">Result</span><div className="mt-1"><ResultBadge result={entry.result} /></div></div>
+            <div><span className="text-xs text-muted-foreground">Outcome</span><div className="mt-1"><ResultBadge result={entry.result} /></div></div>
             <div><span className="text-xs text-muted-foreground">Trigger</span><div className="mt-1 text-sm font-mono">{entry.triggerType}</div></div>
             <div><span className="text-xs text-muted-foreground">Triggered By</span><div className="mt-1 font-medium">{entry.initiatedBy}</div></div>
             {entry.jobName && (<div><span className="text-xs text-muted-foreground">Job</span><div className="mt-1 font-medium truncate">{entry.jobName}</div></div>)}
             <div><span className="text-xs text-muted-foreground">Timestamp</span><div className="mt-1">{fmtDateTime(entry.timestamp)}</div></div>
           </div>
-          <div><span className="text-xs text-muted-foreground">Audit Reference</span><div className="mt-1 font-mono text-xs bg-muted px-2 py-1 rounded">{entry.id}</div></div>
+
+          {/* Actions evaluated + duration — UX-6.3 */}
+          <section data-testid="aut-exec-detail-actions">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Action Evaluated</h4>
+            <div className="rounded-md border p-3 text-sm flex items-center justify-between gap-3">
+              <div><div className="font-medium">{entry.actionLabel}</div><div className="text-xs text-muted-foreground font-mono">{entry.actionType}</div></div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0" data-testid="aut-exec-detail-duration"><Clock className="h-3.5 w-3.5" />{duration}s</div>
+            </div>
+          </section>
+
+          {/* Governance checks + approval status — UX-6.3 */}
+          <section data-testid="aut-exec-detail-governance">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Governance & Approval</h4>
+            <div className="rounded-md bg-muted/30 p-3 grid grid-cols-2 gap-3 text-sm">
+              <div><span className="text-xs text-muted-foreground">Governance</span><div className="mt-1">{governance ? (<Badge variant="outline" className={`text-xs ${GOVERNANCE_STATUS_COLORS[governance.governanceStatus]}`}>{GOVERNANCE_STATUS_LABELS[governance.governanceStatus]}</Badge>) : <span className="text-xs text-muted-foreground">—</span>}</div></div>
+              <div><span className="text-xs text-muted-foreground">Risk Level</span><div className="mt-1">{governance ? (<Badge variant="outline" className={`text-xs ${RISK_LEVEL_COLORS[governance.riskLevel]}`}>{RISK_LEVEL_LABELS[governance.riskLevel]}</Badge>) : <span className="text-xs text-muted-foreground">—</span>}</div></div>
+              <div><span className="text-xs text-muted-foreground">Approval State</span><div className="mt-1 font-medium capitalize" data-testid="aut-exec-detail-approval">{entry.approvalStateAtExecution.replace(/_/g, " ")}</div></div>
+              <div><span className="text-xs text-muted-foreground">Approval Required</span><div className="mt-1 font-medium">{governance?.isApprovalProtected ? "Yes — human-controlled" : "No"}</div></div>
+            </div>
+          </section>
+
+          {/* Failure / block details — UX-6.3 */}
+          {(isBlocked || isFailure) && (
+            <section data-testid="aut-exec-detail-failure">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{isFailure ? "Failure Details" : "Block Details"}</h4>
+              <div className={`flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm ${isFailure ? "bg-red-50 border-red-200 text-red-700" : "bg-violet-50 border-violet-200 text-violet-700"}`}>
+                {isFailure ? <XCircle className="h-4 w-4 shrink-0 mt-0.5" /> : <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />}
+                <p>{entry.resultMessage}</p>
+              </div>
+            </section>
+          )}
+
+          {/* Audit references — UX-6.3 */}
+          <section data-testid="aut-exec-detail-audit">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Audit References</h4>
+            <div className="grid grid-cols-1 gap-1.5 text-xs">
+              <div className="flex items-center justify-between gap-2"><span className="text-muted-foreground">Audit ID</span><span className="font-mono bg-muted px-2 py-0.5 rounded">{entry.id}</span></div>
+              <div className="flex items-center justify-between gap-2"><span className="text-muted-foreground">Execution ID</span><span className="font-mono bg-muted px-2 py-0.5 rounded">{entry.executionId}</span></div>
+              <div className="flex items-center justify-between gap-2"><span className="text-muted-foreground">Rule ID</span><span className="font-mono bg-muted px-2 py-0.5 rounded">{entry.ruleId}</span></div>
+            </div>
+          </section>
+
           <div><span className="text-xs text-muted-foreground">Result Message</span><p className="mt-1 text-sm rounded border p-2 bg-muted/20">{entry.resultMessage}</p></div>
           <Button size="sm" variant="outline" onClick={onClose}>Close</Button>
         </div>
@@ -1210,6 +1265,9 @@ export default function AutomationsPage() {
             <TabsTrigger value="scheduler" className="flex items-center gap-1.5" data-testid="aut-tab-scheduler">
               <CalendarClock className="h-3.5 w-3.5" /> Scheduler
             </TabsTrigger>
+            <TabsTrigger value="monitoring" className="flex items-center gap-1.5" data-testid="aut-tab-monitoring">
+              <Activity className="h-3.5 w-3.5" /> Execution Monitoring
+            </TabsTrigger>
             <TabsTrigger value="execution-history" className="flex items-center gap-1.5" data-testid="aut-tab-execution-history">
               <History className="h-3.5 w-3.5" /> Execution History
             </TabsTrigger>
@@ -1314,6 +1372,13 @@ export default function AutomationsPage() {
                   </Table>
                 )}
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Execution Monitoring — UX-6.3 */}
+          <TabsContent value="monitoring">
+            <div className="mt-4" data-testid="aut-monitoring-panel">
+              <AutomationExecutionMonitor onSelectExecution={setSelectedExecution} />
             </div>
           </TabsContent>
 
