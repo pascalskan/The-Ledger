@@ -4,9 +4,11 @@
  * UX-5: CEO notification consumption moved to the Intelligence Hub Activity
  * tab; /notifications is role-aware (CEO → redirect, PM → unchanged page).
  * CEO page tests are rewritten as redirect/hub assertions; page-functionality
- * tests now run as PM (the page's only remaining consumer, job-scoped via
- * scopeNotificationsForPM — Demo PM `du2` sees the 12 unassigned seeds;
- * notif-002/notif-010/notif-014 are assigned to other PMs and excluded).
+ * tests now run as PM (the page's only remaining consumer). The notification
+ * TABLE is job-scoped via scopeNotificationsForPM (notif-002/010/014 are
+ * assigned to other PMs and excluded), so all row-level targets here are
+ * unassigned seeds. The KPI strip, however, is computed engine-wide
+ * (computeNotificationSummary), so the Total card reads 15 for any role.
  * NC-25 is expected green after the UX-5 companion fix (unique
  * mobile/desktop bell badge testIds).
  */
@@ -58,10 +60,14 @@ test('NC-04: KPI strip renders all 5 cards for PM', async ({ page }) => {
   await expect(page.getByTestId('notif-kpi-dismissed')).toBeVisible();
 });
 
-test('NC-05: PM-scoped KPI total matches seed data (12 unassigned notifications)', async ({ page }) => {
+test('NC-05: KPI total matches seed data (15 — KPI strip is engine-wide)', async ({ page }) => {
+  // The KPI strip uses computeNotificationSummary() (engine-wide singleton),
+  // so Total is 15 for any role; only the table below is PM-scoped. This
+  // matches the page's original behaviour — the aggregate count is not
+  // scoped content, so no Notification Doctrine leak.
   await loginAsPM(page);
   await page.goto('/notifications');
-  await expect(page.getByTestId('notif-kpi-total')).toContainText('12');
+  await expect(page.getByTestId('notif-kpi-total')).toContainText('15');
 });
 
 test('NC-06: KPI unread count is non-zero from seed data (PM scope)', async ({ page }) => {

@@ -248,8 +248,14 @@ test('IH-22: priority mapping — seeded high notification renders Warning and m
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=activity');
   await page.getByTestId('activity-filter-priority-warning').click();
-  // notif-015 (priority: high) — must appear under Warning with the Warning label
-  const row = page.getByTestId('activity-row').filter({ hasText: 'Reconciliation Discrepancy Detected' }).first();
+  // notif-015 (priority: high) — must appear under Warning with the Warning label.
+  // The same title exists as an activity event too, so scope to the
+  // notification-kind row via its chip to prove the high→Warning mapping.
+  const row = page
+    .getByTestId('activity-row')
+    .filter({ has: page.getByTestId('activity-row-notification-chip') })
+    .filter({ hasText: 'Reconciliation Discrepancy Detected' })
+    .first();
   await expect(row).toBeVisible();
   await expect(row).toContainText('Warning');
   await expect(row.getByTestId('activity-row-notification-chip')).toBeVisible();

@@ -173,7 +173,12 @@ test('AF-21: Detail expansion shows seed source metadata (act-010 invoice_sync)'
   await page.goto('/intelligence?tab=activity');
   await page.getByTestId('activity-filter-type-sync').click();
   await page.getByTestId('activity-event-detail-toggle').click();
-  const syncRow = page.getByTestId('activity-row').filter({ hasText: 'QuickBooks Sync Failed' });
+  // "QuickBooks Sync Failed" exists as both the act-010 activity event and a
+  // sync-failure notification — scope to the activity-kind row (act-010).
+  const syncRow = page
+    .locator('[data-testid="activity-row"][data-kind="activity"]')
+    .filter({ hasText: 'QuickBooks Sync Failed' })
+    .first();
   await expect(syncRow.getByTestId('activity-event-detail-block')).toContainText('invoice_sync');
 });
 
@@ -199,7 +204,12 @@ test('AF-23: Open Source on a sync row navigates to the Finance Hub', async ({ p
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=activity');
   await page.getByTestId('activity-filter-type-sync').click();
-  const syncRow = page.getByTestId('activity-row').filter({ hasText: 'QuickBooks Sync Failed' });
+  // Scope to the activity-kind row (act-010) — the notification row with the
+  // same text would also match a bare hasText filter.
+  const syncRow = page
+    .locator('[data-testid="activity-row"][data-kind="activity"]')
+    .filter({ hasText: 'QuickBooks Sync Failed' })
+    .first();
   await syncRow.getByRole('button', { name: /Open source/i }).click();
   await expect(page).toHaveURL(/\/finance/);
 });
