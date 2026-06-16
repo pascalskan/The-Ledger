@@ -21,6 +21,7 @@
 
 import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout";
+import { AutomationExecutiveDashboard } from "@/components/automation/AutomationExecutiveDashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1140,6 +1141,9 @@ export default function AutomationsPage() {
           <span className="font-semibold">Automation Doctrine: </span>
           Automations never override approval workflows. Financially sensitive actions require prior approval. Every execution generates an immutable audit entry.
         </div>
+
+        {/* Executive Dashboard (UX-6.1) — read-only health overview */}
+        <AutomationExecutiveDashboard />
 
         {/* KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" data-testid="aut-kpi-strip">
