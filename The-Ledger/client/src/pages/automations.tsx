@@ -22,6 +22,14 @@
 import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout";
 import { AutomationExecutiveDashboard } from "@/components/automation/AutomationExecutiveDashboard";
+import { AutomationCatalogue, buildCatalogueRows } from "@/components/automation/AutomationCatalogue";
+import {
+  GOVERNANCE_STATUS_LABELS,
+  GOVERNANCE_STATUS_COLORS,
+  RISK_LEVEL_LABELS,
+  RISK_LEVEL_COLORS,
+  getAllGovernanceRecords,
+} from "@/lib/automationGovernanceEngine";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,9 +94,6 @@ import {
   computeAutomationRuleSummary,
   getActionsForRule,
   getTriggerById,
-  filterRulesByStatus,
-  filterRulesByCategory,
-  searchRules,
   TRIGGER_CATALOGUE_V1,
   ACTION_CATALOGUE_V1,
 } from "@/lib/automationEngine";
@@ -920,9 +925,13 @@ function RuleDetailDialog({
 }) {
   const trigger = getTriggerById(rule.triggerId);
   const actions = getActionsForRule(rule);
+  const meta = useMemo(
+    () => buildCatalogueRows([rule], getAllGovernanceRecords(), getAllSchedules())[0],
+    [rule]
+  );
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[640px]" data-testid="aut-rule-detail-dialog">
+      <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto" data-testid="aut-rule-detail-dialog">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Zap className="h-4 w-4" />{rule.ruleNumber}</DialogTitle>
           <DialogDescription>{rule.name}</DialogDescription>
@@ -951,6 +960,46 @@ function RuleDetailDialog({
             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Actions</h4>
             <div className="space-y-2">{actions.map((action) => (<div key={action.id} className="flex items-start justify-between rounded-md border p-3 text-sm"><div><div className="font-semibold">{action.label}</div><div className="text-muted-foreground text-xs mt-0.5">{action.description}</div></div><Badge variant="outline" className={`text-xs ml-3 shrink-0 ${AUTOMATION_CATEGORY_COLORS[action.safetyClass]}`}>{action.safetyClass}</Badge></div>))}</div>
           </section>
+          {/* Execution Statistics — UX-6.2 */}
+          <section data-testid="aut-rule-detail-stats">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Execution Statistics</h4>
+            <div className="rounded-md bg-muted/30 p-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div><span className="text-xs text-muted-foreground">Total Runs</span><div className="mt-1 font-semibold">{meta?.totalExecutions ?? rule.executionCount}</div></div>
+              <div><span className="text-xs text-muted-foreground">Success Rate</span><div className="mt-1 font-semibold" data-testid="aut-rule-detail-success-rate">{meta?.successRate !== null && meta?.successRate !== undefined ? `${meta.successRate}%` : "—"}</div></div>
+              <div><span className="text-xs text-muted-foreground">Last Execution</span><div className="mt-1">{fmtDateTime(rule.lastExecutedAt)}</div></div>
+              <div><span className="text-xs text-muted-foreground">Next Execution</span><div className="mt-1" data-testid="aut-rule-detail-next-run">{fmtDateTime(meta?.nextRunAt ?? null)}</div></div>
+            </div>
+          </section>
+
+          {/* Schedule Summary — UX-6.2 */}
+          {meta?.schedule && (
+            <section data-testid="aut-rule-detail-schedule">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Schedule</h4>
+              <div className="rounded-md border p-3 text-sm flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-mono text-xs text-muted-foreground">{meta.schedule.scheduleNumber}</div>
+                  <div className="font-medium mt-0.5">{meta.schedule.scheduleSummary}</div>
+                </div>
+                <Badge variant="outline" className={`text-xs shrink-0 ${SCHEDULE_STATUS_COLORS[meta.schedule.status]}`}>{SCHEDULE_STATUS_LABELS[meta.schedule.status]}</Badge>
+              </div>
+            </section>
+          )}
+
+          {/* Governance Status — UX-6.2 */}
+          {meta?.governanceStatus && (
+            <section data-testid="aut-rule-detail-governance">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Governance Status</h4>
+              <div className="rounded-md border p-3 text-sm space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className={`text-xs ${GOVERNANCE_STATUS_COLORS[meta.governanceStatus]}`}>{GOVERNANCE_STATUS_LABELS[meta.governanceStatus]}</Badge>
+                  {meta.riskLevel && (<Badge variant="outline" className={`text-xs ${RISK_LEVEL_COLORS[meta.riskLevel]}`}>{RISK_LEVEL_LABELS[meta.riskLevel]} Risk</Badge>)}
+                  {meta.isApprovalProtected && (<Badge variant="outline" className="text-xs text-violet-700 border-violet-200 bg-violet-50"><ShieldAlert className="h-3 w-3 mr-1" />Approval Protected</Badge>)}
+                </div>
+                {meta.governance?.riskRationale && (<p className="text-xs text-muted-foreground">{meta.governance.riskRationale}</p>)}
+              </div>
+            </section>
+          )}
+
           {rule.category === "FinanciallySensitive" && (
             <section data-testid="aut-rule-detail-financial-safeguard">
               <div className="flex items-center gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700"><ShieldAlert className="h-4 w-4 shrink-0" /><div><span className="font-semibold">Financially Sensitive — </span>Approval Required before execution.</div></div>
@@ -1004,9 +1053,6 @@ export default function AutomationsPage() {
 
   // Rule state
   const [rules, setRules] = useState<AutomationRule[]>(getAllRules);
-  const [ruleSearch, setRuleSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<AutomationStatus | "all">("all");
-  const [categoryFilter, setCategoryFilter] = useState<AutomationCategory | "all">("all");
   const [selectedRule, setSelectedRule] = useState<AutomationRule | null>(null);
 
   // Builder
@@ -1029,11 +1075,6 @@ export default function AutomationsPage() {
 
   // Derived
   const summary = useMemo(() => computeAutomationRuleSummary(rules), [rules]);
-  const filteredRules = useMemo(() => {
-    let r = filterRulesByStatus(rules, statusFilter);
-    r = filterRulesByCategory(r, categoryFilter);
-    return searchRules(r, ruleSearch);
-  }, [rules, statusFilter, categoryFilter, ruleSearch]);
 
   const allExecutions = useMemo(() => {
     const runtime = getAutomationAuditHistory();
@@ -1177,55 +1218,10 @@ export default function AutomationsPage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab: Automation Rules */}
+          {/* Tab: Automation Rules — UX-6.2 Catalogue */}
           <TabsContent value="rules">
             <div className="mt-4 space-y-4" data-testid="aut-rules-panel">
-              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                <div className="relative w-full sm:w-72">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search rule name, number…" value={ruleSearch} onChange={(e) => setRuleSearch(e.target.value)} className="pl-9" data-testid="aut-rules-search" />
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <select className="h-9 rounded-md border bg-background px-3 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as AutomationStatus | "all")} data-testid="aut-filter-status">
-                    <option value="all">All Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="disabled">Disabled</option>
-                    <option value="draft">Draft</option>
-                    <option value="archived">Archived</option>
-                  </select>
-                  <select className="h-9 rounded-md border bg-background px-3 text-sm" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value as AutomationCategory | "all")} data-testid="aut-filter-category">
-                    <option value="all">All Categories</option>
-                    <option value="Operational">Operational</option>
-                    <option value="Workflow">Workflow</option>
-                    <option value="FinanciallySensitive">Financially Sensitive</option>
-                  </select>
-                </div>
-              </div>
-              <div className="border rounded-md" data-testid="aut-rules-table">
-                {filteredRules.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-muted-foreground"><Zap className="h-10 w-10 mb-3 opacity-20" /><p className="text-sm">No rules match the current filter.</p></div>
-                ) : (
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Rule</TableHead><TableHead>Category</TableHead><TableHead>Trigger</TableHead><TableHead className="text-center">Actions</TableHead><TableHead>Status</TableHead><TableHead>Last Executed</TableHead><TableHead>View</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {filteredRules.map((rule) => {
-                        const trigger = getTriggerById(rule.triggerId);
-                        return (
-                          <TableRow key={rule.id} data-testid={`aut-rule-row-${rule.id}`}>
-                            <TableCell><div className="font-mono text-xs font-semibold text-muted-foreground">{rule.ruleNumber}</div><div className="font-medium text-sm max-w-[200px] truncate">{rule.name}</div></TableCell>
-                            <TableCell><CategoryBadge category={rule.category} /></TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[140px] truncate">{trigger?.label ?? rule.triggerType}</TableCell>
-                            <TableCell className="text-center"><span className="text-sm font-semibold">{rule.actionIds.length}</span></TableCell>
-                            <TableCell><StatusBadge status={rule.status} /></TableCell>
-                            <TableCell>{fmtDateTime(rule.lastExecutedAt)}</TableCell>
-                            <TableCell><Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setSelectedRule(rule)} data-testid={`aut-btn-view-${rule.id}`}><Eye className="h-3 w-3 mr-1" /> View</Button></TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                )}
-              </div>
+              <AutomationCatalogue rules={rules} onView={setSelectedRule} />
             </div>
           </TabsContent>
 
