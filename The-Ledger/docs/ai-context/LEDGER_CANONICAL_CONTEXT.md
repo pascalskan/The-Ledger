@@ -1302,8 +1302,8 @@ Programme document: docs/ux/UX_REDESIGN_PROGRAMME.md (authoritative tracker)
 | UX-3 | Dashboard Redesign | COMPLETE | June 5, 2026 |
 | UX-QW | Quick Wins (post-audit) | COMPLETE | June 5, 2026 |
 | UX-4 | Finance Hub | COMPLETE | June 10, 2026 |
-| UX-5 | Intelligence Hub | IMPLEMENTED (branch feature/ux5-intelligence-hub, PR pending merge) | June 12, 2026 |
-| UX-6 | Automation Hub | Not started | — |
+| UX-5 | Intelligence Hub | COMPLETE (branch feature/ux5-intelligence-hub; build + full Playwright suite green; awaiting owner merge to main) | June 16, 2026 |
+| UX-6 | Automation Hub | Next (active upcoming work item) | — |
 | UX-7 | Review Centre Enhancement | Not started | — |
 | UX-8 | Operations Hub & Final Polish | Not started | — |
 
@@ -1326,9 +1326,11 @@ Delivered:
 
 UX-4 implementation finished successfully. All doctrines preserved — no approval, audit, job attribution, or financial integrity regressions.
 
-## UX-5 — Intelligence Hub (IMPLEMENTED — June 12, 2026)
+## UX-5 — Intelligence Hub (COMPLETE — June 16, 2026)
 
-Branch: feature/ux5-intelligence-hub (PR pending merge; do not merge without review)
+Status: COMPLETE — build + full Playwright suite green; awaiting owner merge to main (do not merge without review)
+Branch: feature/ux5-intelligence-hub
+The Intelligence Hub (`/intelligence`) is now the consolidated executive intelligence experience — health, analytics, reports, exports, and activity behind a single CEO destination.
 Specification: docs/specifications/UX-5-INTELLIGENCE-HUB-SPECIFICATION-v1.1.md (frozen)
 Handoff: docs/handoffs/ux5-intelligence-hub-handoff.md
 
@@ -1343,7 +1345,7 @@ Delivered:
 
 ## Test Baseline
 
-After UX-5 (expected): 512 total / 512 passed / **0 known failures** —
+After UX-5 (verified green by the repository owner, June 16, 2026): 512 total / 512 passed / **0 known failures** —
 AF-08 retired with the legacy Activity Feed KPI strip (AF-04–AF-08 removed with the superseded page); NC-25 fixed by the UX-5 companion commit (unique mobile/desktop bell badge testIds). The known-failure ledger is empty.
 
 Pre-UX-5 baseline (June 10, 2026): 501 total / 499 passed / 2 known failures (AF-08, NC-25).

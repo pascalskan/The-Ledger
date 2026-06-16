@@ -3,7 +3,7 @@
 Date: June 12, 2026
 Branch: `feature/ux5-intelligence-hub`
 Specification: `docs/specifications/UX-5-INTELLIGENCE-HUB-SPECIFICATION-v1.1.md` (frozen, v1.1)
-Status: Implementation complete — **full Playwright verification deferred to a local run by the repository owner** (per session instruction); build verified after every stage.
+Status: **COMPLETE** — build verified after every stage; full Playwright suite verified green by the repository owner (512 / 512, zero failures) on June 16, 2026. Awaiting owner merge to `main`.
 
 ---
 
@@ -64,7 +64,7 @@ UX-5 consolidates the CEO's read-only intelligence destinations — Executive Co
 
 - Build (`npm run build`): **PASS** after every stage.
 - `tsc --noEmit`: zero errors in any UX-5-touched file (pre-existing repo-wide errors in untouched files remain; the project gate is the Vite build).
-- Playwright: **NOT RUN in this session** — the repository owner runs the full suite locally. Expected result: **512 / 512, zero failures** (known-failure ledger empty: AF-08 retired, NC-25 fixed). Until that run completes, treat the baseline as unverified.
+- Playwright: **PASS — 512 / 512, zero failures** (known-failure ledger empty: AF-08 retired, NC-25 fixed). Full suite verified green by the repository owner on June 16, 2026.
 
 ## Doctrine Compliance
 
@@ -75,13 +75,30 @@ UX-5 consolidates the CEO's read-only intelligence destinations — Executive Co
 - **Analytics / Reporting / Export:** content mounted unchanged; "Projections — Advisory Only" labels intact; report-section deep-link updates are presentation routing data only.
 - **RBAC:** CEO full hub; PM unchanged (`/notifications` page, job-scoped; everything else Unauthorized); Worker/Client unchanged (Unauthorized page — P1-A).
 
+## Known Limitations (non-blocking)
+
+Deferred spec P2 items — none block merge:
+
+- Activity seed-date re-anchoring (P2-2) — optional data hygiene; AF-08 already retired with the legacy KPI strip.
+- Relative-time formatting polish across merged Activity rows (P2-3).
+- Physical deletion of the now-unrouted legacy page files (`executive-command-centre.tsx`, `activity-feed.tsx`) after two phases of green history confirm nothing references them (P2-4).
+- Critical-items "Show all N" expansion animation / count badge (P2-5).
+
+Minor stylistic observations (not regressions, no action required for merge):
+
+- `NotificationsRouteSwitch` (App.tsx) detects CEO via a `roleIds` string-prefix check rather than the role-name lookup used elsewhere — works against current seed data.
+- A few seed-record `sourceRoute: '/notifications'` values rely on the CEO role-aware redirect (the intended compatibility layer); the normative route maps (S-7/S-8) are updated.
+
+## Merge Readiness
+
+**UX-5 Intelligence Hub is stabilized and ready for merge into `main`.** Build passes; the full Playwright suite is green (512 / 512, zero failures); the known-failure ledger is empty; all doctrines (Approval, Audit, Job Attribution, Financial Integrity, Review Centre, Notification, Activity Feed, Event Bus) are preserved; RBAC is intact. The merge is to be performed by the repository owner via GitHub after review.
+
 ## Outstanding Work
 
-1. **Run the full Playwright suite locally** (owner). Gate: zero failures at 512 tests. Any failure should be triaged against the relevant stage commit.
-2. Open PR from `feature/ux5-intelligence-hub` → `main` (do not merge in-session per workflow).
-3. After merge: flip tracker/docs status from IMPLEMENTED/In Progress to COMPLETE with the merge date.
-4. Deferred (spec P2, non-blocking): activity seed-date re-anchoring (P2-2), relative-time formatting polish (P2-3), physical deletion of unrouted legacy page files after two phases of green history (P2-4), critical-items expansion animation (P2-5).
+1. ✅ Full Playwright suite run — **done** (512 / 512, zero failures, June 16, 2026).
+2. Owner merge of `feature/ux5-intelligence-hub` → `main` via GitHub.
+3. After merge: update branch references in the tracker/dev-state to reflect the merge landing on `main`.
 
 ## Recommended Next Steps
 
-- Verify locally → open PR → merge → UX-6 (Automation Hub), which will re-point automation deep links to `/automation?tab=…`.
+- Owner merges to `main` → begin UX-6 (Automation Hub), which will re-point automation deep links to `/automation?tab=…`.
