@@ -294,7 +294,7 @@ export default function Dashboard() {
             activeClass="bg-red-50 border-red-200"
             clearText="No Active Alerts"
             actionLabel="View Alerts"
-            onAction={() => setLocation('/executive-command-centre')}
+            onAction={() => setLocation('/intelligence?tab=overview')}
           />
         </div>
 

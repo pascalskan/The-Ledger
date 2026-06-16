@@ -808,3 +808,77 @@ export function _resetFinanceHubAuditState(): void {
   _financeHubAuditLog = [];
   _financeHubAuditCounter = 1;
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// INTELLIGENCE HUB AUDIT
+// analyticsEngine.ts is the platform's designated "hub audit host":
+// hub-level view/deep-link audit recorders for consolidated hubs
+// (Finance Hub — UX-4, Intelligence Hub — UX-5) live here, following
+// the recordFinanceHub* precedent above. (UX-5 spec §2.4 / §7.2)
+// ─────────────────────────────────────────────────────────────────────
+
+export interface IntelligenceHubAuditEntry {
+  id: string;
+  action:
+    | 'intelligence_hub_viewed'
+    | 'intelligence_hub_tab_viewed'
+    | 'intelligence_hub_deep_link_opened';
+  performedBy: string;
+  performedAt: string;
+  details: string;
+  tab?: string; // for intelligence_hub_tab_viewed
+  destination?: string; // for intelligence_hub_deep_link_opened
+}
+
+let _intelligenceHubAuditLog: IntelligenceHubAuditEntry[] = [];
+let _intelligenceHubAuditCounter = 1;
+
+function _writeIntelligenceAudit(
+  action: IntelligenceHubAuditEntry['action'],
+  performedBy: string,
+  details: string,
+  extra?: { tab?: string; destination?: string },
+): void {
+  _intelligenceHubAuditLog.push({
+    id: `intelligence-audit-${String(_intelligenceHubAuditCounter).padStart(4, '0')}`,
+    action,
+    performedBy,
+    performedAt: new Date().toISOString(),
+    details,
+    ...(extra?.tab !== undefined ? { tab: extra.tab } : {}),
+    ...(extra?.destination !== undefined ? { destination: extra.destination } : {}),
+  });
+  _intelligenceHubAuditCounter++;
+}
+
+export function recordIntelligenceHubViewed(performedBy: string): void {
+  _writeIntelligenceAudit('intelligence_hub_viewed', performedBy, 'Intelligence Hub viewed.');
+}
+
+export function recordIntelligenceHubTabViewed(tab: string, performedBy: string): void {
+  _writeIntelligenceAudit(
+    'intelligence_hub_tab_viewed',
+    performedBy,
+    `Intelligence Hub tab viewed: ${tab}`,
+    { tab },
+  );
+}
+
+export function recordIntelligenceHubDeepLinkOpened(destination: string, performedBy: string): void {
+  _writeIntelligenceAudit(
+    'intelligence_hub_deep_link_opened',
+    performedBy,
+    `Intelligence Hub deep link opened to: ${destination}`,
+    { destination },
+  );
+}
+
+export function getIntelligenceHubAuditLog(): IntelligenceHubAuditEntry[] {
+  return [..._intelligenceHubAuditLog];
+}
+
+// Reset for testing
+export function _resetIntelligenceHubAuditState(): void {
+  _intelligenceHubAuditLog = [];
+  _intelligenceHubAuditCounter = 1;
+}

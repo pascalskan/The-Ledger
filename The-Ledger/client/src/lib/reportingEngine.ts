@@ -255,8 +255,8 @@ function buildSeedReports(): ReportRecord[] {
         : 'No forecasts available.',
       governanceSummary: `${govSummary.requiresReview} automations require review. ${govSummary.restricted} restricted. ${govSummary.suspended} suspended. Overall compliance: ${govSummary.compliant} compliant of ${govSummary.total} total automations.`,
       sections: [
-        { id: 'exec_overview', title: 'Executive Overview', content: `Operational health: ${execHealth.operational.label}. Financial health: ${execHealth.financial.label}. ${execSummary.criticalAlerts} critical alerts, ${execSummary.pendingReviews} pending reviews.`, deepLinkRoute: '/executive-command-centre', deepLinkLabel: 'Open Command Centre' },
-        { id: 'risk_section', title: 'Risk Summary', content: `${risks.length} risks identified across governance, financial, and operational categories.`, deepLinkRoute: '/analytics-centre', deepLinkLabel: 'View Analytics' },
+        { id: 'exec_overview', title: 'Executive Overview', content: `Operational health: ${execHealth.operational.label}. Financial health: ${execHealth.financial.label}. ${execSummary.criticalAlerts} critical alerts, ${execSummary.pendingReviews} pending reviews.`, deepLinkRoute: '/intelligence?tab=overview', deepLinkLabel: 'Open Command Centre' },
+        { id: 'risk_section', title: 'Risk Summary', content: `${risks.length} risks identified across governance, financial, and operational categories.`, deepLinkRoute: '/intelligence?tab=analytics', deepLinkLabel: 'View Analytics' },
       ],
     },
     // ── rpt-002: Board Report Q2
@@ -403,7 +403,7 @@ function buildSeedReports(): ReportRecord[] {
       forecastSummary: `KPI forecast: ${forecasts.map(f => `${f.metric} ${f.projectedChangePercent > 0 ? '+' : ''}${f.projectedChangePercent}%`).join(', ')}. Advisory projections only.`,
       governanceSummary: `Governance KPIs: ${govSummary.compliant}/${govSummary.total} compliant. ${govSummary.requiresReview} under review.`,
       sections: [
-        { id: 'kpi_health', title: 'Platform Health KPIs', content: 'All four health dimensions tracked: operational, financial, governance, workflow.', deepLinkRoute: '/analytics-centre', deepLinkLabel: 'Analytics Centre' },
+        { id: 'kpi_health', title: 'Platform Health KPIs', content: 'All four health dimensions tracked: operational, financial, governance, workflow.', deepLinkRoute: '/intelligence?tab=analytics', deepLinkLabel: 'Analytics Centre' },
       ],
     },
     // ── rpt-007: Archived
@@ -562,7 +562,7 @@ function buildReport(
 
   const sections: ReportSection[] = [];
   if (includedSections.includes('executive_summary')) {
-    sections.push({ id: 'exec', title: 'Executive Summary', content: execText, deepLinkRoute: '/executive-command-centre', deepLinkLabel: 'Command Centre' });
+    sections.push({ id: 'exec', title: 'Executive Summary', content: execText, deepLinkRoute: '/intelligence?tab=overview', deepLinkLabel: 'Command Centre' });
   }
   if (includedSections.includes('governance_summary')) {
     sections.push({ id: 'gov', title: 'Governance Summary', content: govText, deepLinkRoute: '/automation-governance', deepLinkLabel: 'Automation Governance' });
@@ -574,7 +574,7 @@ function buildReport(
     sections.push({ id: 'wf', title: 'Workflow Summary', content: `${workflowSummary.total} workflows: ${workflowSummary.active} active, ${workflowSummary.paused} paused, ${workflowSummary.requiresAction} require action, ${workflowSummary.financiallySensitive} financially sensitive.`, deepLinkRoute: '/workflows', deepLinkLabel: 'Workflow Centre' });
   }
   if (includedSections.includes('risk_summary')) {
-    sections.push({ id: 'risk', title: 'Risk Summary', content: riskText, deepLinkRoute: '/analytics-centre', deepLinkLabel: 'Analytics Centre' });
+    sections.push({ id: 'risk', title: 'Risk Summary', content: riskText, deepLinkRoute: '/intelligence?tab=analytics', deepLinkLabel: 'Analytics Centre' });
   }
 
   return {

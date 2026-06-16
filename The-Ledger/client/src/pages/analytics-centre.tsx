@@ -93,10 +93,13 @@ function CategoryIcon({ category }: { category: RiskItem['category'] | Bottlenec
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// PAGE COMPONENT
+// CONTENT COMPONENT
+// UX-5: extracted so the Intelligence Hub Analytics tab can mount the
+// centre unchanged (embedded suppresses the page-level header — the hub
+// supplies the single h1). Legacy default export wraps it in Layout.
 // ─────────────────────────────────────────────────────────────────────
 
-export default function AnalyticsCentrePage() {
+export function AnalyticsCentreContent({ embedded = false }: { embedded?: boolean }) {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -126,10 +129,10 @@ export default function AnalyticsCentrePage() {
   }
 
   return (
-    <Layout>
       <div data-testid="analytics-centre-page" className="space-y-6">
 
-        {/* ── HEADER ── */}
+        {/* ── HEADER (suppressed when embedded in the Intelligence Hub) ── */}
+        {!embedded && (
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -144,6 +147,7 @@ export default function AnalyticsCentrePage() {
           </div>
           <BarChart3 className="h-8 w-8 text-muted-foreground" />
         </div>
+        )}
 
         {/* ── DOCTRINE NOTICE ── */}
         <div
@@ -415,6 +419,19 @@ export default function AnalyticsCentrePage() {
         </Card>
 
       </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// LEGACY PAGE WRAPPER
+// Unrouted once the UX-5 /analytics-centre redirect lands; retained for
+// the physical-deletion cleanup pass (spec §4 Out of Scope).
+// ─────────────────────────────────────────────────────────────────────
+
+export default function AnalyticsCentrePage() {
+  return (
+    <Layout>
+      <AnalyticsCentreContent />
     </Layout>
   );
 }

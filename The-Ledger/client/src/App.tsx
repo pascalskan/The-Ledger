@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import FinanceHubPage from "@/pages/finance-hub";
+import IntelligenceHubPage from "@/pages/intelligence-hub";
 import Dashboard from "@/pages/dashboard";
 import JobsPage from "@/pages/jobs";
 import JobDetailPage from "@/pages/job-detail";
@@ -49,12 +50,8 @@ import PayrollExportPage from "@/pages/payroll-export";
 import ReconciliationCenterPage from "@/pages/reconciliation-center";
 import ExceptionResolutionCenterPage from "@/pages/exception-resolution-center";
 import NotificationCentrePage from "@/pages/notification-center";
-import ActivityFeedPage from "@/pages/activity-feed";
 import EventMonitorPage from "@/pages/event-monitor";
 import WorkflowCentrePage from "@/pages/workflows";
-import ExecutiveCommandCentrePage from "@/pages/executive-command-centre";
-import AnalyticsCentrePage from "@/pages/analytics-centre";
-import ReportingCentrePage from "@/pages/reporting-centre";
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
 import { useEffect } from "react";
@@ -102,6 +99,25 @@ function RedirectToFinance({ tab, sub }: { tab: string; sub?: string }) {
   return null;
 }
 
+// UX-5: synchronous redirect to Intelligence Hub — RedirectToFinance pattern.
+function RedirectToIntelligence({ tab, sub }: { tab: string; sub?: string }) {
+  const [, setLocation] = useLocation();
+  const qs = sub ? `?tab=${tab}&sub=${sub}` : `?tab=${tab}`;
+  setLocation(`/intelligence${qs}`);
+  return null;
+}
+
+// UX-5: role-aware /notifications. CEO notification consumption moved to the
+// hub Activity tab; PM keeps the job-scoped Notification Centre page
+// (Notification Doctrine RBAC). The role check precedes the redirect so a PM
+// is never bounced into an Unauthorized hub (spec §9 / risk P0-2).
+function NotificationsRouteSwitch() {
+  const { user } = useAuth();
+  const isCEO = user?.roleIds?.[0]?.includes("ceo");
+  if (isCEO) return <RedirectToIntelligence tab="activity" />;
+  return <NotificationCentrePage />;
+}
+
 function Router() {
   return (
     <Switch>
@@ -147,15 +163,18 @@ function Router() {
       <Route path="/automation-governance">
         <ProtectedRoute component={AutomationGovernanceCentrePage} roles={["CEO"]} />
       </Route>
-      {/* Phase 6.1: Notification Centre — CEO + PM */}
+      {/* Phase 6.1 / UX-5: Notification Centre — role-aware at its original
+          declaration position (wouter first-match-wins — spec §5.2).
+          CEO → hub Activity tab redirect; PM → Notification Centre page */}
       <Route path="/notifications">
-        <ProtectedRoute component={NotificationCentrePage} roles={["CEO", "Project Manager"]} />
+        <ProtectedRoute component={NotificationsRouteSwitch} roles={["CEO", "Project Manager"]} />
       </Route>
-      {/* Phase 6.2: Activity Feed — CEO only */}
+      {/* UX-5: Activity Feed consolidated into the Intelligence Hub */}
       <Route path="/activity-feed">
-        <ProtectedRoute component={ActivityFeedPage} roles={["CEO"]} />
+        <ProtectedRoute component={() => <RedirectToIntelligence tab="activity" />} roles={["CEO"]} />
       </Route>
-      {/* Phase 6.3: Event Monitor — CEO only */}
+      {/* Phase 6.3 / UX-5: Event Monitor — retained as a hidden CEO-only route
+          (no nav item, NO redirect — spec P0-B; full seeded bus history) */}
       <Route path="/event-monitor">
         <ProtectedRoute component={EventMonitorPage} roles={["CEO"]} />
       </Route>
@@ -163,21 +182,25 @@ function Router() {
       <Route path="/workflows">
         <ProtectedRoute component={WorkflowCentrePage} roles={["CEO"]} />
       </Route>
-      {/* Phase 6.5: Executive Command Centre — CEO only */}
+      {/* UX-5: Executive Command Centre consolidated into the Intelligence Hub */}
       <Route path="/executive-command-centre">
-        <ProtectedRoute component={ExecutiveCommandCentrePage} roles={["CEO"]} />
+        <ProtectedRoute component={() => <RedirectToIntelligence tab="overview" />} roles={["CEO"]} />
       </Route>
-      {/* Phase 6.6: Analytics Centre — CEO only */}
+      {/* UX-5: Analytics Centre consolidated into the Intelligence Hub */}
       <Route path="/analytics-centre">
-        <ProtectedRoute component={AnalyticsCentrePage} roles={["CEO"]} />
+        <ProtectedRoute component={() => <RedirectToIntelligence tab="analytics" />} roles={["CEO"]} />
       </Route>
-      {/* Phase 6.7: Reporting Centre — CEO only */}
+      {/* UX-5: Reporting Centre consolidated into the Intelligence Hub */}
       <Route path="/reporting-centre">
-        <ProtectedRoute component={ReportingCentrePage} roles={["CEO"]} />
+        <ProtectedRoute component={() => <RedirectToIntelligence tab="reports" />} roles={["CEO"]} />
       </Route>
       {/* UX-4: Finance Hub — CEO only */}
       <Route path="/finance">
         <ProtectedRoute component={FinanceHubPage} roles={["CEO"]} />
+      </Route>
+      {/* UX-5: Intelligence Hub — CEO only */}
+      <Route path="/intelligence">
+        <ProtectedRoute component={IntelligenceHubPage} roles={["CEO"]} />
       </Route>
 
       {/* UX-4: Finance Hub redirect routes — must precede legacy route declarations.

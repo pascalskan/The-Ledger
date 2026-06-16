@@ -33,11 +33,15 @@ test('EB-01: Event Monitor page loads for CEO', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /Event Monitor/i })).toBeVisible();
 });
 
-test('EB-02: CEO can navigate via sidebar to Event Monitor', async ({ page }) => {
+test('EB-02: Event Monitor has no nav item but remains a hidden CEO route (no redirect)', async ({ page }) => {
+  // UX-5 (P0-B): "Platform Events" removed from ADMINISTRATION; /event-monitor
+  // retained as an unlisted CEO-only deep URL serving the full seeded bus history.
   await loginAsCEO(page);
   await page.goto('/');
   await page.getByTestId('nav-admin-toggle').click();
-  await page.getByTestId('nav-event-monitor').click();
+  await expect(page.getByTestId('nav-event-monitor')).toHaveCount(0);
+  await page.goto('/event-monitor');
+  await expect(page).toHaveURL(/\/event-monitor/);
   await expect(page.getByTestId('event-monitor-page')).toBeVisible();
 });
 
@@ -291,13 +295,17 @@ test('EB-27: Doctrine notice is visible and contains key doctrine text', async (
 // EB-28: Activity Feed Integration
 // ──────────────────────────────────────────────────────
 
-test('EB-28: Activity Feed still renders correctly after Event Bus seed data loaded', async ({ page }) => {
+test('EB-28: hub Activity tab still renders correctly after Event Bus seed data loaded', async ({ page }) => {
+  // UX-5: the legacy Activity Feed page is superseded by the hub Activity tab;
+  // /activity-feed redirects there. Seeded activity events remain present and
+  // the suppressed bus seed events are NOT injected into the combined list.
   await loginAsCEO(page);
   await page.goto('/activity-feed');
-  await expect(page.getByTestId('activity-feed-page')).toBeVisible();
-  await expect(page.getByTestId('af-kpi-strip')).toBeVisible();
-  // Seed events still present
-  await expect(page.getByTestId('af-event-row-act-001')).toBeVisible();
+  await expect(page).toHaveURL(/\/intelligence\?tab=activity/);
+  await expect(page.getByTestId('activity-hub')).toBeVisible();
+  await expect(
+    page.getByTestId('activity-row').filter({ hasText: 'Timesheet Approved' }).first()
+  ).toBeVisible();
 });
 
 // ──────────────────────────────────────────────────────

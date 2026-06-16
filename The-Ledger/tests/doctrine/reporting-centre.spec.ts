@@ -1,17 +1,17 @@
 /**
  * DOCTRINE TESTS — Phase 6.7 Executive Reporting & Export Centre
- *
- * RC-01 to RC-40
+ * UX-5 migration: Reports content now mounts unchanged inside the
+ * Intelligence Hub (/intelligence?tab=reports); the legacy route redirects.
+ * Content testIds unchanged. ECC-integration tests (RC-34…RC-36) removed —
+ * the ECC page is unrouted and its reporting snapshot was deliberately
+ * dropped (UX-5 spec §6.2 / §13.2).
  *
  * Covers:
- * - Reporting Engine (unit)
- * - Reporting Centre page (CEO access, KPI strip, table, dialogs)
+ * - Reports tab (CEO access, KPI strip, table, dialogs)
  * - Report Builder
- * - Dashboard integration (Executive Reports Widget)
- * - Executive Command Centre integration (Reporting Snapshot)
- * - Deep linking
+ * - Legacy-route redirect coverage
+ * - Deep linking (hub URLs per spec §5.5 S-5/S-6)
  * - RBAC enforcement
- * - Audit integration
  * - Reporting doctrine (read-only)
  */
 
@@ -27,36 +27,38 @@ test.beforeEach(async ({ page }) => {
 // RC-01 to RC-05: RBAC — access control
 // ─────────────────────────────────────────────────────────────────────
 
-test('RC-01: CEO can navigate to Reporting Centre via sidebar', async ({ page }) => {
+test('RC-01: CEO can navigate to the Reports tab via sidebar + hub tab', async ({ page }) => {
   await loginAsCEO(page);
-  await page.locator('[data-testid="nav-reporting-centre"]').click();
-  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await page.locator('[data-testid="nav-intelligence-hub"]').click();
+  await page.locator('[data-testid="intelligence-tab-reports"]').click();
+  await expect(page.locator('[data-testid="intelligence-reports-panel"]')).toBeVisible({ timeout: 8000 });
 });
 
-test('RC-02: Reporting Centre route is accessible to CEO', async ({ page }) => {
+test('RC-02: legacy /reporting-centre redirects CEO to the hub Reports tab', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/reporting-centre');
-  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await expect(page).toHaveURL(/\/intelligence\?tab=reports/, { timeout: 8000 });
+  await expect(page.locator('[data-testid="intelligence-reports-panel"]')).toBeVisible({ timeout: 8000 });
 });
 
-test('RC-03: PM denied access to Reporting Centre', async ({ page }) => {
+test('RC-03: PM denied access to legacy and hub reports routes', async ({ page }) => {
   await loginAsPM(page);
   await page.goto('/reporting-centre');
-  // PM should see unauthorized or be redirected — reporting centre page must not render
-  await expect(page.locator('[data-testid="reporting-centre-page"]')).not.toBeVisible({ timeout: 5000 });
+  await expect(page.locator('[data-testid="intelligence-reports-panel"]')).not.toBeVisible({ timeout: 5000 });
+  await page.goto('/intelligence?tab=reports');
+  await expect(page.locator('[data-testid="intelligence-reports-panel"]')).not.toBeVisible({ timeout: 5000 });
 });
 
-test('RC-04: Reporting Centre page header renders with CEO Only badge', async ({ page }) => {
+test('RC-04: Reports tab renders hub heading with CEO Only badge', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
-  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
-  await expect(page.locator('[data-testid="reporting-centre-page"] h1')).toContainText('Reporting Centre');
+  await page.goto('/intelligence?tab=reports');
+  await expect(page.locator('[data-testid="intelligence-hub-heading"]')).toContainText(/Reports/i);
   await expect(page.locator('text=CEO Only')).toBeVisible();
 });
 
 test('RC-05: Reporting Centre doctrine notice is displayed', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await expect(page.locator('[data-testid="reporting-doctrine-notice"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('[data-testid="reporting-doctrine-notice"]')).toContainText('never');
 });
@@ -67,31 +69,31 @@ test('RC-05: Reporting Centre doctrine notice is displayed', async ({ page }) =>
 
 test('RC-06: KPI strip renders on Reporting Centre page', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await expect(page.locator('[data-testid="reporting-kpi-strip"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-07: KPI strip shows Total Reports card', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await expect(page.locator('[data-testid="reporting-kpi-total"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-08: KPI strip shows Generated Reports card', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await expect(page.locator('[data-testid="reporting-kpi-generated"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-09: KPI strip shows Draft Reports card', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await expect(page.locator('[data-testid="reporting-kpi-draft"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-10: KPI strip shows Archived and This Month cards', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await expect(page.locator('[data-testid="reporting-kpi-archived"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('[data-testid="reporting-kpi-this-month"]')).toBeVisible({ timeout: 8000 });
 });
@@ -102,26 +104,26 @@ test('RC-10: KPI strip shows Archived and This Month cards', async ({ page }) =>
 
 test('RC-11: Reports table renders with seeded reports', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await expect(page.locator('[data-testid="reports-table"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('[data-testid^="report-row-"]').first()).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-12: Reports table shows View button for each report', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await expect(page.locator('[data-testid^="report-view-btn-"]').first()).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-13: Reports table shows Archive button for non-archived reports', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await expect(page.locator('[data-testid^="report-archive-btn-"]').first()).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-14: Status filter buttons are rendered', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await expect(page.locator('[data-testid="reporting-status-filter"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('[data-testid="filter-status-all"]')).toBeVisible();
   await expect(page.locator('[data-testid="filter-status-generated"]')).toBeVisible();
@@ -130,7 +132,7 @@ test('RC-14: Status filter buttons are rendered', async ({ page }) => {
 
 test('RC-15: Filtering by Generated shows only generated reports', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid="filter-status-generated"]').click();
   const rows = page.locator('[data-testid^="report-row-"]');
   const count = await rows.count();
@@ -143,49 +145,49 @@ test('RC-15: Filtering by Generated shows only generated reports', async ({ page
 
 test('RC-16: Clicking View on a report opens detail dialog', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid^="report-view-btn-"]').first().click();
   await expect(page.locator('[data-testid="report-detail-dialog"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-17: Report detail dialog shows Executive Summary section', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid^="report-view-btn-"]').first().click();
   await expect(page.locator('[data-testid="report-detail-exec-summary"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-18: Report detail dialog shows KPI Snapshot', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid="report-view-btn-rpt-001"]').click();
   await expect(page.locator('[data-testid="report-detail-kpi-snapshot"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-19: Report detail dialog shows Risk Summary section', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid^="report-view-btn-"]').first().click();
   await expect(page.locator('[data-testid="report-detail-risk-summary"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-20: Report detail dialog shows Forecast Summary section', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid^="report-view-btn-"]').first().click();
   await expect(page.locator('[data-testid="report-detail-forecast-summary"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-21: Report detail dialog shows Governance Summary section', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid^="report-view-btn-"]').first().click();
   await expect(page.locator('[data-testid="report-detail-governance-summary"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-22: Report detail dialog shows doctrine notice', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid^="report-view-btn-"]').first().click();
   await expect(page.locator('[data-testid="report-detail-doctrine-notice"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('[data-testid="report-detail-doctrine-notice"]')).toContainText('informational only');
@@ -197,7 +199,7 @@ test('RC-22: Report detail dialog shows doctrine notice', async ({ page }) => {
 
 test('RC-23: Archive button in detail dialog archives the report', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid="report-view-btn-rpt-001"]').click();
   await expect(page.locator('[data-testid="report-detail-dialog"]')).toBeVisible({ timeout: 8000 });
   await page.locator('[data-testid="report-detail-archive-btn"]').click();
@@ -206,7 +208,7 @@ test('RC-23: Archive button in detail dialog archives the report', async ({ page
 
 test('RC-24: Archive button in table row archives the report', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   const archiveBtn = page.locator('[data-testid^="report-archive-btn-"]').first();
   await expect(archiveBtn).toBeVisible({ timeout: 8000 });
   await archiveBtn.click();
@@ -215,7 +217,7 @@ test('RC-24: Archive button in table row archives the report', async ({ page }) 
 
 test('RC-25: Archived reports do not show Archive button in table', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid="filter-status-archived"]').click();
   const archivedRows = page.locator('[data-testid^="report-row-"]');
   const archivedCount = await archivedRows.count();
@@ -231,7 +233,7 @@ test('RC-25: Archived reports do not show Archive button in table', async ({ pag
 
 test('RC-26: Close button in detail dialog dismisses the dialog', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid^="report-view-btn-"]').first().click();
   await expect(page.locator('[data-testid="report-detail-dialog"]')).toBeVisible({ timeout: 8000 });
   await page.locator('[data-testid="report-detail-close-btn"]').click();
@@ -244,14 +246,14 @@ test('RC-26: Close button in detail dialog dismisses the dialog', async ({ page 
 
 test('RC-27: Build Report button opens Report Builder dialog', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid="reporting-centre-build-btn"]').click();
   await expect(page.locator('[data-testid="report-builder-dialog"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-28: Report Builder shows report type selection', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid="reporting-centre-build-btn"]').click();
   await expect(page.locator('[data-testid="builder-type-executive_summary"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('[data-testid="builder-type-board_report"]')).toBeVisible();
@@ -260,7 +262,7 @@ test('RC-28: Report Builder shows report type selection', async ({ page }) => {
 
 test('RC-29: Report Builder shows period selection', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid="reporting-centre-build-btn"]').click();
   await expect(page.locator('[data-testid="builder-period-this_month"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('[data-testid="builder-period-last_month"]')).toBeVisible();
@@ -268,7 +270,7 @@ test('RC-29: Report Builder shows period selection', async ({ page }) => {
 
 test('RC-30: Generating a report from builder adds it to the table', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   const initialCount = await page.locator('[data-testid^="report-row-"]').count();
   await page.locator('[data-testid="reporting-centre-build-btn"]').click();
   await page.locator('[data-testid="builder-type-governance_report"]').click();
@@ -284,48 +286,30 @@ test('RC-30: Generating a report from builder adds it to the table', async ({ pa
 
 test('RC-31: Reporting Centre is accessible for CEO', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
-  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await page.goto('/intelligence?tab=reports');
+  await expect(page.locator('[data-testid="intelligence-reports-panel"]')).toBeVisible({ timeout: 8000 });
 });
 
 test('RC-32: Reporting Centre shows report KPI counts', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
-  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await page.goto('/intelligence?tab=reports');
+  await expect(page.locator('[data-testid="intelligence-reports-panel"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('body')).toContainText(/report|generated|total/i);
 });
 
 test('RC-33: Reporting Centre page loads without errors', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
-  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await page.goto('/intelligence?tab=reports');
+  await expect(page.locator('[data-testid="intelligence-reports-panel"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('body')).not.toContainText(/Error|TypeError|Uncaught/i);
 });
 
 // ─────────────────────────────────────────────────────────────────────
 // RC-34 to RC-36: Executive Command Centre Integration
+// UX-5: removed. The ECC page is unrouted; its Reporting Snapshot and
+// Module Navigation sections were deliberately dropped (the hub Reports
+// tab is their superset home — spec §6.2 / §13.2).
 // ─────────────────────────────────────────────────────────────────────
-
-test('RC-34: Executive Command Centre shows Reporting Snapshot section', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="exec-reporting-snapshot"]')).toBeVisible({ timeout: 8000 });
-});
-
-test('RC-35: Reporting Snapshot link navigates to Reporting Centre', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await page.locator('[data-testid="exec-reporting-link"]').click();
-  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
-});
-
-test('RC-36: Reporting Centre link in ECC Module Navigation works', async ({ page }) => {
-  await loginAsCEO(page);
-  await page.goto('/executive-command-centre');
-  await expect(page.locator('[data-testid="exec-nav--reporting-centre"]')).toBeVisible({ timeout: 8000 });
-  await page.locator('[data-testid="exec-nav--reporting-centre"]').click();
-  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
-});
 
 // ─────────────────────────────────────────────────────────────────────
 // RC-37 to RC-38: Deep Linking
@@ -333,7 +317,7 @@ test('RC-36: Reporting Centre link in ECC Module Navigation works', async ({ pag
 
 test('RC-37: Deep link from report Governance section navigates to Automation Governance', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid="report-view-btn-rpt-003"]').click();
   await expect(page.locator('[data-testid="report-detail-dialog"]')).toBeVisible({ timeout: 8000 });
   const govLink = page.locator('[data-testid="report-deeplink-gov_automation"]');
@@ -345,7 +329,7 @@ test('RC-37: Deep link from report Governance section navigates to Automation Go
 
 test('RC-38: Deep link from Financial report navigates to Financial Explorer', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid="report-view-btn-rpt-004"]').click();
   await expect(page.locator('[data-testid="report-detail-dialog"]')).toBeVisible({ timeout: 8000 });
   const finLink = page.locator('[data-testid="report-deeplink-fin_controls"]');
@@ -361,8 +345,8 @@ test('RC-38: Deep link from Financial report navigates to Financial Explorer', a
 
 test('RC-39: Reporting Centre does not contain approve/mutate controls', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
-  await expect(page.locator('[data-testid="reporting-centre-page"]')).toBeVisible({ timeout: 8000 });
+  await page.goto('/intelligence?tab=reports');
+  await expect(page.locator('[data-testid="intelligence-reports-panel"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('button:has-text("Approve")')).not.toBeVisible();
   await expect(page.locator('button:has-text("Override")')).not.toBeVisible();
   await expect(page.locator('button:has-text("Mutate")')).not.toBeVisible();
@@ -370,7 +354,7 @@ test('RC-39: Reporting Centre does not contain approve/mutate controls', async (
 
 test('RC-40: Report detail dialog contains no mutation controls', async ({ page }) => {
   await loginAsCEO(page);
-  await page.goto('/reporting-centre');
+  await page.goto('/intelligence?tab=reports');
   await page.locator('[data-testid^="report-view-btn-"]').first().click();
   await expect(page.locator('[data-testid="report-detail-dialog"]')).toBeVisible({ timeout: 8000 });
   await expect(page.locator('[data-testid="report-detail-dialog"] button:has-text("Approve")')).not.toBeVisible();

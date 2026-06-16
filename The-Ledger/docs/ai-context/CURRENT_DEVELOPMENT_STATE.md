@@ -1,7 +1,7 @@
 # THE LEDGER
 ## Current Development State
 
-Last Updated: June 10, 2026
+Last Updated: June 16, 2026
 
 ---
 
@@ -50,7 +50,30 @@ Programme document: docs/ux/UX_REDESIGN_PROGRAMME.md (authoritative tracker)
 - UX-3 (Dashboard Redesign): COMPLETE — merged to main, June 5, 2026
 - UX-QW (Quick Wins post-audit): COMPLETE — merged to main, June 5, 2026
 - UX-4 (Finance Hub): COMPLETE — merged to main, June 10, 2026
-- UX-5 through UX-8: Not started
+- UX-5 (Intelligence Hub): COMPLETE — branch feature/ux5-intelligence-hub, June 16, 2026 (build + full Playwright suite green; awaiting owner merge to main)
+- UX-6 (Automation Hub): NEXT — active upcoming work item (depends on UX-5)
+- UX-7 (Review Centre Enhancement): Pending
+- UX-8 (Operations Hub & Final Polish): Not started
+
+### UX-5 — Intelligence Hub (COMPLETE, awaiting owner merge)
+
+Specification: docs/specifications/UX-5-INTELLIGENCE-HUB-SPECIFICATION-v1.1.md (frozen)
+
+Delivered on feature/ux5-intelligence-hub:
+
+- `/intelligence` hub (CEO-only) with five tabs: Overview, Analytics, Reports, Exports (Exports/Distribution sub-tabs), Activity
+- Overview: 4-dimension Health Scorecard, Critical Items panel (P1-E severity rendering), 6-tile Platform Summary strip (§10.1 verified sources)
+- Analytics/Reports/Exports content extracted and mounted unchanged (AnalyticsCentreContent, ReportsContent, ExportsContent, DistributionContent)
+- Activity tab (ActivityHub): combined activity + notification chronology, canonical priority mapping (P0-A), total type mapping, mark-read/dismiss, Show Event Detail toggle (?detail=1 precedence, P1-D), bus-af- Platform Event join, pagination
+- Legacy redirects: /executive-command-centre, /analytics-centre, /reporting-centre, /activity-feed → hub tabs; role-aware /notifications (CEO → hub Activity, PM → unchanged Notification Centre)
+- /event-monitor retained as hidden CEO-only route — no nav item, NO redirect (P0-B)
+- Link sweep S-1…S-8 applied (header alert, nav, bell, dashboard Zone A, reportingEngine deep links, engine route constants)
+- NC-25 companion fix: unique mobile/desktop bell badge testIds (isolated commit)
+- Hub audit recorders in analyticsEngine.ts (designated hub audit host)
+
+Test migration: ECC + activity-feed + notification CEO-half rewritten; analytics/reporting/exports navigation-migrated; event-bus touched up; AF-04–AF-08 retired (AF-08 leaves the known-failure ledger); new tests/doctrine/intelligence-hub.spec.ts (38 tests).
+
+Playwright baseline after UX-5: **512 total / 512 passed / 0 known failures** (AF-08 retired, NC-25 fixed) — full suite verified green by the repository owner, June 16, 2026.
 
 ### UX-4 — Finance Hub (COMPLETE)
 

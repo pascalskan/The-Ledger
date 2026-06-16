@@ -1,5 +1,16 @@
 /**
- * DOCTRINE TEST: Notification Centre — Phase 6.1
+ * DOCTRINE TEST: Notification Centre — Phase 6.1 / UX-5 rewrite
+ *
+ * UX-5: CEO notification consumption moved to the Intelligence Hub Activity
+ * tab; /notifications is role-aware (CEO → redirect, PM → unchanged page).
+ * CEO page tests are rewritten as redirect/hub assertions; page-functionality
+ * tests now run as PM (the page's only remaining consumer). The notification
+ * TABLE is job-scoped via scopeNotificationsForPM (notif-002/010/014 are
+ * assigned to other PMs and excluded), so all row-level targets here are
+ * unassigned seeds. The KPI strip, however, is computed engine-wide
+ * (computeNotificationSummary), so the Total card reads 15 for any role.
+ * NC-25 is expected green after the UX-5 companion fix (unique
+ * mobile/desktop bell badge testIds).
  */
 import { test, expect } from '@playwright/test';
 import { loginAsCEO, loginAsPM, loginAsWorker } from '../helpers/login';
@@ -9,28 +20,37 @@ test.beforeEach(async ({ page }) => {
   await clearBrowserState(page);
 });
 
-test('NC-01: Notification Centre page loads for CEO', async ({ page }) => {
+// ──────────────────────────────────────────────────────
+// NC-01 to NC-03: Access & role-aware routing
+// ──────────────────────────────────────────────────────
+
+test('NC-01: CEO /notifications redirects to the hub Activity tab', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/notifications');
-  await expect(page.getByTestId('notification-centre-page')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Notification Centre/i })).toBeVisible();
+  await expect(page).toHaveURL(/\/intelligence\?tab=activity/);
+  await expect(page.getByTestId('activity-hub')).toBeVisible();
 });
 
-test('NC-02: CEO can navigate via sidebar to Notification Centre', async ({ page }) => {
+test('NC-02: CEO sidebar shows Intelligence and no Notifications item', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/');
-  await page.getByTestId('nav-notifications').click();
-  await expect(page.getByTestId('notification-centre-page')).toBeVisible();
+  await expect(page.getByTestId('nav-intelligence-hub')).toBeVisible();
+  await expect(page.getByTestId('nav-notifications')).not.toBeVisible();
 });
 
-test('NC-03: PM can access Notification Centre', async ({ page }) => {
+test('NC-03: PM can access Notification Centre (page unchanged, nav item retained)', async ({ page }) => {
   await loginAsPM(page);
   await page.goto('/notifications');
   await expect(page.getByTestId('notification-centre-page')).toBeVisible();
+  await expect(page.getByTestId('nav-notifications')).toBeVisible();
 });
 
-test('NC-04: KPI strip renders all 5 cards', async ({ page }) => {
-  await loginAsCEO(page);
+// ──────────────────────────────────────────────────────
+// NC-04 to NC-07: KPI strip (PM, job-scoped)
+// ──────────────────────────────────────────────────────
+
+test('NC-04: KPI strip renders all 5 cards for PM', async ({ page }) => {
+  await loginAsPM(page);
   await page.goto('/notifications');
   await expect(page.getByTestId('notif-kpi-strip')).toBeVisible();
   await expect(page.getByTestId('notif-kpi-total')).toBeVisible();
@@ -40,14 +60,18 @@ test('NC-04: KPI strip renders all 5 cards', async ({ page }) => {
   await expect(page.getByTestId('notif-kpi-dismissed')).toBeVisible();
 });
 
-test('NC-05: KPI total matches seed data (15 notifications)', async ({ page }) => {
-  await loginAsCEO(page);
+test('NC-05: KPI total matches seed data (15 — KPI strip is engine-wide)', async ({ page }) => {
+  // The KPI strip uses computeNotificationSummary() (engine-wide singleton),
+  // so Total is 15 for any role; only the table below is PM-scoped. This
+  // matches the page's original behaviour — the aggregate count is not
+  // scoped content, so no Notification Doctrine leak.
+  await loginAsPM(page);
   await page.goto('/notifications');
   await expect(page.getByTestId('notif-kpi-total')).toContainText('15');
 });
 
-test('NC-06: KPI unread count is non-zero from seed data', async ({ page }) => {
-  await loginAsCEO(page);
+test('NC-06: KPI unread count is non-zero from seed data (PM scope)', async ({ page }) => {
+  await loginAsPM(page);
   await page.goto('/notifications');
   const unreadCard = page.getByTestId('notif-kpi-unread');
   const text = await unreadCard.textContent();
@@ -55,8 +79,8 @@ test('NC-06: KPI unread count is non-zero from seed data', async ({ page }) => {
   expect(count).toBeGreaterThan(0);
 });
 
-test('NC-07: KPI critical count reflects seed data', async ({ page }) => {
-  await loginAsCEO(page);
+test('NC-07: KPI critical count reflects seed data (PM scope)', async ({ page }) => {
+  await loginAsPM(page);
   await page.goto('/notifications');
   const criticalCard = page.getByTestId('notif-kpi-critical');
   const text = await criticalCard.textContent();
@@ -64,8 +88,12 @@ test('NC-07: KPI critical count reflects seed data', async ({ page }) => {
   expect(count).toBeGreaterThanOrEqual(3);
 });
 
+// ──────────────────────────────────────────────────────
+// NC-08 to NC-16: Table, filters, search (PM, page unchanged)
+// ──────────────────────────────────────────────────────
+
 test('NC-08: Notification table renders with seed data rows', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await expect(page.getByTestId('notif-table')).toBeVisible();
   await expect(page.getByTestId('notif-row-notif-001')).toBeVisible();
@@ -74,13 +102,13 @@ test('NC-08: Notification table renders with seed data rows', async ({ page }) =
 });
 
 test('NC-09: Action Required indicator visible for notifications requiring action', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await expect(page.getByTestId('notif-action-required-notif-001')).toBeVisible();
 });
 
 test('NC-10: Status filter shows only Dismissed notifications', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-filter-status').click();
   await page.getByRole('option', { name: 'Dismissed' }).click();
@@ -89,7 +117,7 @@ test('NC-10: Status filter shows only Dismissed notifications', async ({ page })
 });
 
 test('NC-11: Type filter shows only Sync Failure notifications', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-filter-type').click();
   await page.getByRole('option', { name: 'Sync Failure' }).click();
@@ -99,7 +127,7 @@ test('NC-11: Type filter shows only Sync Failure notifications', async ({ page }
 });
 
 test('NC-12: Priority filter shows only Critical notifications', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-filter-priority').click();
   await page.getByRole('option', { name: 'Critical' }).click();
@@ -109,7 +137,7 @@ test('NC-12: Priority filter shows only Critical notifications', async ({ page }
 });
 
 test('NC-13: Search by title filters notifications', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-search').fill('QuickBooks');
   await expect(page.getByTestId('notif-row-notif-005')).toBeVisible();
@@ -117,7 +145,7 @@ test('NC-13: Search by title filters notifications', async ({ page }) => {
 });
 
 test('NC-14: Search by source ID filters notifications', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-search').fill('FC-2026-001');
   await expect(page.getByTestId('notif-row-notif-011')).toBeVisible();
@@ -125,7 +153,7 @@ test('NC-14: Search by source ID filters notifications', async ({ page }) => {
 });
 
 test('NC-15: Search by job ID filters notifications', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-search').fill('JOB-2026-005');
   await expect(page.getByTestId('notif-row-notif-009')).toBeVisible();
@@ -133,7 +161,7 @@ test('NC-15: Search by job ID filters notifications', async ({ page }) => {
 });
 
 test('NC-16: Clearing search restores all notifications', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-search').fill('QuickBooks');
   await expect(page.getByTestId('notif-row-notif-001')).not.toBeVisible();
@@ -141,15 +169,19 @@ test('NC-16: Clearing search restores all notifications', async ({ page }) => {
   await expect(page.getByTestId('notif-row-notif-001')).toBeVisible();
 });
 
+// ──────────────────────────────────────────────────────
+// NC-17 to NC-21: Detail dialog (PM, page unchanged)
+// ──────────────────────────────────────────────────────
+
 test('NC-17: Notification detail dialog opens on View', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-btn-view-notif-001').click();
   await expect(page.getByTestId('notif-detail-dialog')).toBeVisible();
 });
 
 test('NC-18: Detail dialog shows type, priority, and status badges', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-btn-view-notif-009').click();
   await expect(page.getByTestId('notif-detail-dialog')).toBeVisible();
@@ -159,14 +191,14 @@ test('NC-18: Detail dialog shows type, priority, and status badges', async ({ pa
 });
 
 test('NC-19: Detail dialog shows Action Required badge for action-required notifications', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-btn-view-notif-011').click();
   await expect(page.getByTestId('notif-detail-action-required-badge')).toBeVisible();
 });
 
 test('NC-20: Detail dialog shows Go to Source deep-link button', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-btn-view-notif-005').click();
   await expect(page.getByTestId('notif-detail-dialog')).toBeVisible();
@@ -174,7 +206,7 @@ test('NC-20: Detail dialog shows Go to Source deep-link button', async ({ page }
 });
 
 test('NC-21: Informational doctrine notice visible in detail dialog', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-btn-view-notif-007').click();
   await expect(page.getByTestId('notif-detail-dialog')).toBeVisible();
@@ -184,9 +216,11 @@ test('NC-21: Informational doctrine notice visible in detail dialog', async ({ p
 
 // NC-22/23/24: scope toast assertions to [role="status"] to avoid strict-mode
 // collision with KPI cards and status badges that also contain these words.
+// UX-5: run as PM (page unchanged); targets restricted to PM-visible
+// unassigned seeds (notif-002/notif-014 are assigned to other PMs).
 
 test('NC-22: Mark Read action removes unread highlight and shows toast', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
   await page.getByTestId('notif-btn-mark-read-notif-001').click();
   await expect(
@@ -195,18 +229,18 @@ test('NC-22: Mark Read action removes unread highlight and shows toast', async (
 });
 
 test('NC-23: Dismiss action shows toast and audit confirmation', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
-  await page.getByTestId('notif-btn-dismiss-notif-002').click();
+  await page.getByTestId('notif-btn-dismiss-notif-004').click();
   await expect(
     page.locator('[role="status"]').filter({ hasText: /notification dismissed/i })
   ).toBeVisible({ timeout: 5000 });
 });
 
 test('NC-24: Dismiss from detail dialog closes dialog and shows toast', async ({ page }) => {
-  await loginAsCEO(page);
+  await loginAsPM(page);
   await page.goto('/notifications');
-  await page.getByTestId('notif-btn-view-notif-014').click();
+  await page.getByTestId('notif-btn-view-notif-015').click();
   await expect(page.getByTestId('notif-detail-dialog')).toBeVisible();
   await page.getByTestId('notif-detail-btn-dismiss').click();
   await expect(page.getByTestId('notif-detail-dialog')).not.toBeVisible();
@@ -214,6 +248,10 @@ test('NC-24: Dismiss from detail dialog closes dialog and shows toast', async ({
     page.locator('[role="status"]').filter({ hasText: /notification dismissed/i })
   ).toBeVisible({ timeout: 5000 });
 });
+
+// ──────────────────────────────────────────────────────
+// NC-25 to NC-27: Notification bell (header)
+// ──────────────────────────────────────────────────────
 
 test('NC-25: Bell renders with unread badge on mobile bar for CEO', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -238,15 +276,20 @@ test('NC-26: Bell dropdown opens and shows preview notifications', async ({ page
   ).toBeVisible();
 });
 
-test('NC-27: Bell View All navigates to /notifications', async ({ page }) => {
+test('NC-27: Bell View All navigates CEO to the hub Activity tab', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await loginAsCEO(page);
   await page.goto('/');
   await page.getByTestId('notif-bell-btn').click();
   await expect(page.getByTestId('notif-bell-dropdown')).toBeVisible();
   await page.getByTestId('notif-bell-view-all').click();
-  await expect(page.getByTestId('notification-centre-page')).toBeVisible();
+  await expect(page).toHaveURL(/\/intelligence\?tab=activity/);
+  await expect(page.getByTestId('activity-hub')).toBeVisible();
 });
+
+// ──────────────────────────────────────────────────────
+// NC-28: RBAC
+// ──────────────────────────────────────────────────────
 
 test('NC-28 (RBAC): Worker is denied access to Notification Centre', async ({ page }) => {
   await loginAsWorker(page);

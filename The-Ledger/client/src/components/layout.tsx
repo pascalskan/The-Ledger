@@ -44,13 +44,9 @@ import {
   Bell,
   ExternalLink,
   CheckCircle,
-  Activity,
-  Radio,
   GitBranch,
-  Terminal,
-  BarChart3,
-  BookOpen,
   DollarSign,
+  Brain,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { useState, useEffect } from "react";
@@ -67,7 +63,19 @@ import { getExecutiveSummary } from "@/lib/executiveCommandEngine";
 // NOTIFICATION BELL COMPONENT
 // ──────────────────────────────────────────────────────
 
-function NotificationBell({ userId, testId = "notif-bell-btn" }: { userId: string; testId?: string }) {
+// UX-5: "View All" is role-aware — CEO consumes notifications in the hub
+// Activity tab; PM keeps the standalone Notification Centre (spec §5.3 S-3).
+function NotificationBell({
+  userId,
+  testId = "notif-bell-btn",
+  badgeTestId = "notif-bell-badge",
+  viewAllHref = "/notifications",
+}: {
+  userId: string;
+  testId?: string;
+  badgeTestId?: string;
+  viewAllHref?: string;
+}) {
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState(() => getAllNotifications());
@@ -94,7 +102,7 @@ function NotificationBell({ userId, testId = "notif-bell-btn" }: { userId: strin
 
   function handleViewAll() {
     setOpen(false);
-    setLocation('/notifications');
+    setLocation(viewAllHref);
   }
 
   return (
@@ -110,7 +118,7 @@ function NotificationBell({ userId, testId = "notif-bell-btn" }: { userId: strin
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span
-              data-testid="notif-bell-badge"
+              data-testid={badgeTestId}
               className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -201,7 +209,7 @@ function SystemAlertIndicator() {
       variant="ghost"
       size="icon"
       className="relative text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-      onClick={() => setLocation('/executive-command-centre')}
+      onClick={() => setLocation('/intelligence?tab=overview')}
       title={`${count} critical alert${count === 1 ? '' : 's'}`}
       aria-label="System alerts"
     >
@@ -305,12 +313,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
   ].filter((item) => hasAnyRole(item.roles));
 
   // ── INTELLIGENCE section ──────────────────────────────
+  // UX-5: single "Intelligence" hub item for CEO; PM keeps the job-scoped
+  // "Notifications" entry (Notification Doctrine RBAC). Legacy centre
+  // entries consolidated into the hub (spec §5.1).
   const INTELLIGENCE_ITEMS: NavItem[] = [
-    { label: "Command Centre", href: "/executive-command-centre", icon: Terminal, roles: ["CEO"], testId: "nav-executive-command-centre" },
-    { label: "Analytics Centre", href: "/analytics-centre", icon: BarChart3, roles: ["CEO"], testId: "nav-analytics-centre" },
-    { label: "Reporting Centre", href: "/reporting-centre", icon: BookOpen, roles: ["CEO"], testId: "nav-reporting-centre" },
-    { label: "Activity", href: "/activity-feed", icon: Activity, roles: ["CEO"], testId: "nav-activity-feed" },
-    { label: "Notifications", href: "/notifications", icon: Bell, roles: ["CEO", "Project Manager"], testId: "nav-notifications" },
+    { label: "Intelligence", href: "/intelligence", icon: Brain, roles: ["CEO"], testId: "nav-intelligence-hub" },
+    { label: "Notifications", href: "/notifications", icon: Bell, roles: ["Project Manager"], testId: "nav-notifications" },
   ].filter((item) => hasAnyRole(item.roles));
 
   // ── AUTOMATION section ────────────────────────────────
@@ -324,7 +332,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const ADMIN_ITEMS: NavItem[] = [
     { label: "Manage Roles", href: "/roles", icon: UserCog, roles: ["CEO", "Admin"], testId: "nav-manage-roles" },
     { label: "Audit Log", href: "/audit", icon: ShieldAlert, roles: ["CEO"], testId: "nav-audit-log" },
-    { label: "Platform Events", href: "/event-monitor", icon: Radio, roles: ["CEO"], testId: "nav-event-monitor" },
+    // UX-5: "Platform Events" removed — /event-monitor remains a hidden CEO-only route (spec §5.1)
     { label: "Accounting Settings", href: "/finance?tab=accounting", icon: Link2Icon, roles: ["CEO"], testId: "nav-admin-accounting-settings" },
     { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"], testId: "nav-settings" },
   ].filter((item) => hasAnyRole(item.roles));
@@ -500,7 +508,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-1">
           {isCEOorPM && <SystemAlertIndicator />}
           {isCEOorPM && user?.id && (
-            <NotificationBell userId={user.id} />
+            <NotificationBell
+              userId={user.id}
+              viewAllHref={hasAnyRole(["CEO"]) ? "/intelligence?tab=activity" : "/notifications"}
+            />
           )}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild><Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button></SheetTrigger>
@@ -518,7 +529,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       )}>
         {isCEOorPM && <SystemAlertIndicator />}
         {isCEOorPM && user?.id && (
-          <NotificationBell userId={user.id} testId="notif-bell-btn-desktop" />
+          <NotificationBell
+            userId={user.id}
+            testId="notif-bell-btn-desktop"
+            badgeTestId="notif-bell-badge-desktop"
+            viewAllHref={hasAnyRole(["CEO"]) ? "/intelligence?tab=activity" : "/notifications"}
+          />
         )}
       </div>
 
