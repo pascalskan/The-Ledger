@@ -24,6 +24,7 @@ import { Layout } from "@/components/layout";
 import { AutomationExecutiveDashboard } from "@/components/automation/AutomationExecutiveDashboard";
 import { AutomationCatalogue, buildCatalogueRows } from "@/components/automation/AutomationCatalogue";
 import { AutomationExecutionMonitor } from "@/components/automation/AutomationExecutionMonitor";
+import { AutomationApprovalQueue } from "@/components/automation/AutomationApprovalQueue";
 import {
   GOVERNANCE_STATUS_LABELS,
   GOVERNANCE_STATUS_COLORS,
@@ -84,6 +85,7 @@ import {
   PlayCircle,
   Ban,
   CalendarCheck,
+  Inbox,
 } from "lucide-react";
 import {
   type AutomationRule,
@@ -1268,6 +1270,9 @@ export default function AutomationsPage() {
             <TabsTrigger value="monitoring" className="flex items-center gap-1.5" data-testid="aut-tab-monitoring">
               <Activity className="h-3.5 w-3.5" /> Execution Monitoring
             </TabsTrigger>
+            <TabsTrigger value="approval-queue" className="flex items-center gap-1.5" data-testid="aut-tab-approval-queue">
+              <Inbox className="h-3.5 w-3.5" /> Approval Queue
+            </TabsTrigger>
             <TabsTrigger value="execution-history" className="flex items-center gap-1.5" data-testid="aut-tab-execution-history">
               <History className="h-3.5 w-3.5" /> Execution History
             </TabsTrigger>
@@ -1372,6 +1377,13 @@ export default function AutomationsPage() {
                   </Table>
                 )}
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Approval Queue — UX-6.4 */}
+          <TabsContent value="approval-queue">
+            <div className="mt-4" data-testid="aut-approval-queue-panel">
+              <AutomationApprovalQueue />
             </div>
           </TabsContent>
 
