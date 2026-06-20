@@ -53,6 +53,11 @@ test('REV-BAT-04 Batch approval requires confirmation and shows a summary', asyn
   // A confirmation dialog with a financial/review summary appears.
   await expect(page.getByTestId('batch-confirm-dialog')).toBeVisible();
   await expect(page.getByTestId('batch-summary')).toBeVisible();
+  // Doctrine: any applicable safeguards must be acknowledged before confirming
+  // (e.g. mixed review types in the selection). Acknowledge them all first.
+  for (const ack of await page.locator('[data-testid^="batch-safeguard-ack-"]').all()) {
+    await ack.click();
+  }
   // Confirm executes the batch.
   await page.getByTestId('batch-confirm-btn').click();
   await expect(page.getByTestId('batch-confirm-dialog')).toHaveCount(0);
