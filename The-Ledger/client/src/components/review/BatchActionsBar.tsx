@@ -244,10 +244,21 @@ export function BatchActionsBar({
                 value={String(summary.riskCount)}
                 danger={summary.riskCount > 0}
               />
-              <SummaryRow label="Revenue" value={formatGbp(summary.revenue)} />
-              <SummaryRow label="Cost" value={formatGbp(summary.cost)} />
-              <SummaryRow label="Payroll" value={formatGbp(summary.payroll)} />
+              <SummaryRow label="Total revenue affected" value={formatGbp(summary.revenue)} />
+              <SummaryRow label="Total costs affected" value={formatGbp(summary.cost)} />
+              <SummaryRow label="Total payroll affected" value={formatGbp(summary.payroll)} />
               <SummaryRow label="Total impact" value={formatGbp(summary.total)} bold />
+            </div>
+            {/* UX-7.4 — aggregated profitability impact (informational) */}
+            <div
+              className="mt-2 border-t border-slate-200 pt-2"
+              data-testid="batch-profitability-impact"
+            >
+              <SummaryRow
+                label="Total profitability impact"
+                value={formatGbp(summary.revenue - summary.cost - summary.payroll)}
+                bold
+              />
             </div>
           </div>
 
