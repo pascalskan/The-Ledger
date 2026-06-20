@@ -13,6 +13,7 @@ import { ReviewPriorityPanel, PriorityBadge } from "@/components/review/ReviewPr
 import { getJobPriority, getJobPriorityRank } from "@/lib/reviewPriorityEngine";
 import { RecommendationDistributionPanel } from "@/components/review/ReviewRecommendations";
 import { ReviewAnalyticsDashboard } from "@/components/review/ReviewAnalyticsDashboard";
+import { ReviewExecutiveBriefing } from "@/components/review/ReviewExecutiveBriefing";
 
 export default function ReviewPage() {
   const { jobs, workers, reviewItems } = useStore();
@@ -78,6 +79,9 @@ export default function ReviewPage() {
             <p className="text-slate-500 mt-1">Review and approve worker submissions, photos, and reports.</p>
           </div>
         </div>
+
+        {/* UX-7.7 — Executive Review Briefing: roll-up of all UX-7 intelligence (CEO-only) */}
+        {isCEO && <ReviewExecutiveBriefing />}
 
         {/* UX-7.1 — Executive Review Dashboard (CEO-only, read-only visibility) */}
         {isCEO && <ReviewExecutiveDashboard />}

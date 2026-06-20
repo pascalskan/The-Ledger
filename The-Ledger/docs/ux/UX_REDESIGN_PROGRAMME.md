@@ -343,7 +343,8 @@ Navigation structure, dashboard design, and screen hierarchy all reflect these t
 - **UX-7.4 — Decision Intelligence:** COMPLETE (June 20, 2026). New `reviewDecisionIntelligenceEngine.ts` (financial impact breakdown, job/client impact, approval preview, batch decision impact, executive impact insights) + `ReviewDecisionPanel` (financial/job/client impact, Approve/Reject/Correct comparison view, insights) on review-detail. Batch confirm dialog extended with aggregated profitability impact. Surfaces consequences before a decision; no approval behaviour changed. See `docs/handoffs/ux7-4-decision-intelligence-handoff.md`.
 - **UX-7.5 — Review Recommendations:** COMPLETE (June 20, 2026). New `reviewRecommendationEngine.ts` (deterministic recommendation type — Likely Approve/Reject/Correction/Requires Human Review — + confidence Very High/High/Medium/Low, similar historical decisions, insights, executive guidance). `RecommendationDistributionPanel` (distribution + insights + guidance, CEO review page) and `JobRecommendationPanel` (per-review recommendation/confidence/rationale/similar decisions, review detail); recommendation badges added to priority queue + executive attention queue. Guidance only — no approval behaviour changed. See `docs/handoffs/ux7-5-review-recommendations-handoff.md`.
 - **UX-7.6 — Review Operations Analytics:** COMPLETE (June 20, 2026). New `reviewAnalyticsEngine.ts` (volume/throughput, approval performance + SLA, bottleneck analysis, reviewer performance, review-type analytics, financial throughput, trends, operational health score, insights) + `ReviewAnalyticsDashboard` (CEO review page). Measurement only — no review behaviour changed. See `docs/handoffs/ux7-6-review-operations-analytics-handoff.md`.
-- **UX-7.7 — Next target.**
+- **UX-7.7 — Executive Review Briefing:** COMPLETE (June 20, 2026). New `reviewBriefingEngine.ts` (consolidates UX-7.1–7.6: approval/financial/operational health, daily briefing, attention feed, exposure interpretation, bottleneck summary, recommendation + decision roll-ups, weekly summary, strategic insights, four readiness indicators) + `ReviewExecutiveBriefing` mounted first on the CEO review page. Consolidation only — no decisions made. See `docs/handoffs/ux7-7-executive-review-briefing-handoff.md`.
+- **UX-7.8 — Next target (final phase).**
 
 **Objective:** Elevate the Review Centre workflow to match its operational importance. This phase has the highest per-session time saving for daily CEO use.
 
@@ -548,7 +549,7 @@ The UX Redesign Programme is successful when the following conditions are met:
 | UX-4 | Finance Hub | ✓ Complete | feature/ux4-finance-hub | 10 Jun 2026 |
 | UX-5 | Intelligence Hub | ✓ Complete (build + full Playwright suite green; awaiting owner merge to main) | feature/ux5-intelligence-hub | 16 Jun 2026 |
 | UX-6 | Automation Hub | ✓ Complete — merged to main (PR #25) | feature/ux6-automation-hub | 20 Jun 2026 |
-| UX-7 | Review Centre Enhancement | ◐ In Progress — UX-7.1, UX-7.2, UX-7.3, UX-7.4, UX-7.5, UX-7.6 complete | feature/ux7-review-centre-enhancement | 20 Jun 2026 |
+| UX-7 | Review Centre Enhancement | ◐ In Progress — UX-7.1–7.7 complete (7.8 next) | feature/ux7-review-centre-enhancement | 20 Jun 2026 |
 | UX-8 | Operations Hub & Final Polish | ☐ Not Started | — | — |
 
 ## Status Key
