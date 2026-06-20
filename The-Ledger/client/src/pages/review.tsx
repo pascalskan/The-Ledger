@@ -12,6 +12,7 @@ import { ReviewExecutiveDashboard } from "@/components/review/ReviewExecutiveDas
 import { ReviewPriorityPanel, PriorityBadge } from "@/components/review/ReviewPriorityPanel";
 import { getJobPriority, getJobPriorityRank } from "@/lib/reviewPriorityEngine";
 import { RecommendationDistributionPanel } from "@/components/review/ReviewRecommendations";
+import { ReviewAnalyticsDashboard } from "@/components/review/ReviewAnalyticsDashboard";
 
 export default function ReviewPage() {
   const { jobs, workers, reviewItems } = useStore();
@@ -86,6 +87,9 @@ export default function ReviewPage() {
 
         {/* UX-7.5 — Review Recommendations: distribution + guidance (CEO-only) */}
         {isCEO && <RecommendationDistributionPanel />}
+
+        {/* UX-7.6 — Review Operations Analytics (CEO-only, read-only) */}
+        {isCEO && <ReviewAnalyticsDashboard />}
 
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="bg-blue-50/50 border-blue-100">
