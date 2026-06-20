@@ -41,6 +41,8 @@ import {
   type PrioritisedReview,
   type PriorityCategory,
 } from "@/lib/reviewPriorityEngine";
+import { computeReviewRecommendation } from "@/lib/reviewRecommendationEngine";
+import { RecommendationBadge } from "@/components/review/ReviewRecommendations";
 
 export function PriorityBadge({
   category,
@@ -154,6 +156,7 @@ export function ReviewPriorityPanel() {
                     <TableHead className="w-12">#</TableHead>
                     <TableHead>Review</TableHead>
                     <TableHead>Priority</TableHead>
+                    <TableHead className="hidden md:table-cell">Recommendation</TableHead>
                     <TableHead className="hidden sm:table-cell">Score</TableHead>
                     <TableHead className="hidden md:table-cell">Type</TableHead>
                     <TableHead className="hidden lg:table-cell">Job</TableHead>
@@ -175,6 +178,11 @@ export function ReviewPriorityPanel() {
                       </TableCell>
                       <TableCell>
                         <PriorityBadge category={r.priority.category} />
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <RecommendationBadge
+                          type={computeReviewRecommendation(r).type}
+                        />
                       </TableCell>
                       <TableCell className="hidden sm:table-cell font-medium">
                         {r.priority.score}

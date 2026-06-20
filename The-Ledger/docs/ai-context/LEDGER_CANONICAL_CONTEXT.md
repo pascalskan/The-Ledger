@@ -1304,7 +1304,7 @@ Programme document: docs/ux/UX_REDESIGN_PROGRAMME.md (authoritative tracker)
 | UX-4 | Finance Hub | COMPLETE | June 10, 2026 |
 | UX-5 | Intelligence Hub | COMPLETE — merged to main | June 16, 2026 |
 | UX-6 | Automation Hub | COMPLETE — merged to main (PR #25; UX-6.1–6.10) | June 20, 2026 |
-| UX-7 | Review Centre Enhancement | IN PROGRESS (branch feature/ux7-review-centre-enhancement; UX-7.1 Executive Review Dashboard + UX-7.2 Intelligent Prioritisation + UX-7.3 Batch Decision Tools + UX-7.4 Decision Intelligence complete) | June 20, 2026 |
+| UX-7 | Review Centre Enhancement | IN PROGRESS (branch feature/ux7-review-centre-enhancement; UX-7.1 Executive Review Dashboard + UX-7.2 Intelligent Prioritisation + UX-7.3 Batch Decision Tools + UX-7.4 Decision Intelligence + UX-7.5 Review Recommendations complete) | June 20, 2026 |
 | UX-8 | Operations Hub & Final Polish | Not started | — |
 
 ## UX-4 — Finance Hub (COMPLETE)

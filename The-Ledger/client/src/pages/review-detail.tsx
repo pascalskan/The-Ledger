@@ -14,6 +14,7 @@ import { PriorityBadge } from "@/components/review/ReviewPriorityPanel";
 import { BatchActionsBar } from "@/components/review/BatchActionsBar";
 import type { BatchReviewInput } from "@/lib/reviewBatchEngine";
 import { ReviewDecisionPanel } from "@/components/review/ReviewDecisionPanel";
+import { JobRecommendationPanel } from "@/components/review/ReviewRecommendations";
 
 export default function ReviewDetailPage() {
   const { id } = useParams();
@@ -305,6 +306,9 @@ export default function ReviewDetailPage() {
 
         {/* UX-7.4 — Decision Intelligence (read-only consequence preview) */}
         <ReviewDecisionPanel jobId={job.id} />
+
+        {/* UX-7.5 — Review Recommendations (read-only guidance) */}
+        <JobRecommendationPanel jobId={job.id} />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

@@ -44,6 +44,8 @@ import {
   type DerivedReview,
   type RiskLevel,
 } from "@/lib/reviewIntelligenceEngine";
+import { computeReviewRecommendation } from "@/lib/reviewRecommendationEngine";
+import { RecommendationBadge } from "@/components/review/ReviewRecommendations";
 
 function priorityBadge(priority: DerivedReview["priority"]) {
   const map: Record<DerivedReview["priority"], string> = {
@@ -304,6 +306,7 @@ export function ReviewExecutiveDashboard() {
                     <TableHead>Age</TableHead>
                     <TableHead className="hidden sm:table-cell">Risk</TableHead>
                     <TableHead>Priority</TableHead>
+                    <TableHead className="hidden lg:table-cell">Recommendation</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -355,6 +358,11 @@ export function ReviewExecutiveDashboard() {
                         >
                           {r.priority}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <RecommendationBadge
+                          type={computeReviewRecommendation(r).type}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}

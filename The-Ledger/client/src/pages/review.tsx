@@ -11,6 +11,7 @@ import { useLocation } from "wouter";
 import { ReviewExecutiveDashboard } from "@/components/review/ReviewExecutiveDashboard";
 import { ReviewPriorityPanel, PriorityBadge } from "@/components/review/ReviewPriorityPanel";
 import { getJobPriority, getJobPriorityRank } from "@/lib/reviewPriorityEngine";
+import { RecommendationDistributionPanel } from "@/components/review/ReviewRecommendations";
 
 export default function ReviewPage() {
   const { jobs, workers, reviewItems } = useStore();
@@ -82,6 +83,9 @@ export default function ReviewPage() {
 
         {/* UX-7.2 — Intelligent Prioritisation: recommended work queue (CEO-only) */}
         {isCEO && <ReviewPriorityPanel />}
+
+        {/* UX-7.5 — Review Recommendations: distribution + guidance (CEO-only) */}
+        {isCEO && <RecommendationDistributionPanel />}
 
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="bg-blue-50/50 border-blue-100">
