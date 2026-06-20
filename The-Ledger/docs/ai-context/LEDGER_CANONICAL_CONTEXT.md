@@ -1303,7 +1303,7 @@ Programme document: docs/ux/UX_REDESIGN_PROGRAMME.md (authoritative tracker)
 | UX-QW | Quick Wins (post-audit) | COMPLETE | June 5, 2026 |
 | UX-4 | Finance Hub | COMPLETE | June 10, 2026 |
 | UX-5 | Intelligence Hub | COMPLETE (branch feature/ux5-intelligence-hub; build + full Playwright suite green; awaiting owner merge to main) | June 16, 2026 |
-| UX-6 | Automation Hub | Next (active upcoming work item) | — |
+| UX-6 | Automation Hub | COMPLETE (branch feature/ux6-automation-hub; UX-6.1–6.10; build green; awaiting owner merge to main) | June 16, 2026 |
 | UX-7 | Review Centre Enhancement | Not started | — |
 | UX-8 | Operations Hub & Final Polish | Not started | — |
 

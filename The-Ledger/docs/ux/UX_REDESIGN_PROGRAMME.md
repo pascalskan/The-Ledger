@@ -538,7 +538,7 @@ The UX Redesign Programme is successful when the following conditions are met:
 | UX-QW | Quick Wins (post-audit) | ✓ Complete | feature/ux-phases-1-2-3 | 5 Jun 2026 |
 | UX-4 | Finance Hub | ✓ Complete | feature/ux4-finance-hub | 10 Jun 2026 |
 | UX-5 | Intelligence Hub | ✓ Complete (build + full Playwright suite green; awaiting owner merge to main) | feature/ux5-intelligence-hub | 16 Jun 2026 |
-| UX-6 | Automation Hub | ☐ Not Started (next active phase) | — | — |
+| UX-6 | Automation Hub | ✓ Complete — UX-6.1–6.10 (build green; awaiting owner merge to main) | feature/ux6-automation-hub | 16 Jun 2026 |
 | UX-7 | Review Centre Enhancement | ☐ Not Started | — | — |
 | UX-8 | Operations Hub & Final Polish | ☐ Not Started | — | — |
 

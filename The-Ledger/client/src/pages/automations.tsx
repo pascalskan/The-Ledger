@@ -94,6 +94,7 @@ import {
   CalendarRange,
   Lightbulb,
   Newspaper,
+  ScrollText,
 } from "lucide-react";
 import {
   type AutomationRule,
@@ -1264,7 +1265,7 @@ export default function AutomationsPage() {
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Automation Centre</h2>
-            <p className="text-muted-foreground mt-1">Manage operational, workflow and financially sensitive automations.</p>
+            <p className="text-muted-foreground mt-1">Your executive Automation Operations Centre — health, catalogue, approvals, scheduling, governance, audit and intelligence in one place.</p>
           </div>
           <Button onClick={openCreateBuilder} data-testid="aut-btn-create-automation">
             <Plus className="h-4 w-4 mr-2" /> Create Automation
@@ -1297,10 +1298,12 @@ export default function AutomationsPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="rules">
-          <TabsList className="flex flex-wrap h-auto gap-1">
+          <TabsList className="flex flex-wrap h-auto gap-1" aria-label="Automation Operations Centre sections">
+            {/* Overview */}
             <TabsTrigger value="ceo-briefing" className="flex items-center gap-1.5" data-testid="aut-tab-ceo-briefing">
               <Newspaper className="h-3.5 w-3.5" /> CEO Briefing
             </TabsTrigger>
+            {/* Configure */}
             <TabsTrigger value="rules" className="flex items-center gap-1.5" data-testid="aut-tab-rules">
               <ListChecks className="h-3.5 w-3.5" /> Automation Rules
             </TabsTrigger>
@@ -1310,26 +1313,29 @@ export default function AutomationsPage() {
             <TabsTrigger value="timeline" className="flex items-center gap-1.5" data-testid="aut-tab-timeline">
               <CalendarRange className="h-3.5 w-3.5" /> Scheduler Timeline
             </TabsTrigger>
+            {/* Operate */}
             <TabsTrigger value="monitoring" className="flex items-center gap-1.5" data-testid="aut-tab-monitoring">
               <Activity className="h-3.5 w-3.5" /> Execution Monitoring
+            </TabsTrigger>
+            <TabsTrigger value="execution-history" className="flex items-center gap-1.5" data-testid="aut-tab-execution-history">
+              <History className="h-3.5 w-3.5" /> Execution History
             </TabsTrigger>
             <TabsTrigger value="approval-queue" className="flex items-center gap-1.5" data-testid="aut-tab-approval-queue">
               <Inbox className="h-3.5 w-3.5" /> Approval Queue
             </TabsTrigger>
+            {/* Oversee */}
             <TabsTrigger value="governance" className="flex items-center gap-1.5" data-testid="aut-tab-governance">
               <ShieldAlert className="h-3.5 w-3.5" /> Governance
-            </TabsTrigger>
-            <TabsTrigger value="recommendations" className="flex items-center gap-1.5" data-testid="aut-tab-recommendations">
-              <Lightbulb className="h-3.5 w-3.5" /> Recommendations
-            </TabsTrigger>
-            <TabsTrigger value="execution-history" className="flex items-center gap-1.5" data-testid="aut-tab-execution-history">
-              <History className="h-3.5 w-3.5" /> Execution History
             </TabsTrigger>
             <TabsTrigger value="audit-centre" className="flex items-center gap-1.5" data-testid="aut-tab-audit-centre">
               <FileSearch className="h-3.5 w-3.5" /> Audit Centre
             </TabsTrigger>
             <TabsTrigger value="audit" className="flex items-center gap-1.5" data-testid="aut-tab-audit">
-              <FileSearch className="h-3.5 w-3.5" /> Automation Audit
+              <ScrollText className="h-3.5 w-3.5" /> Audit Log
+            </TabsTrigger>
+            {/* Plan */}
+            <TabsTrigger value="recommendations" className="flex items-center gap-1.5" data-testid="aut-tab-recommendations">
+              <Lightbulb className="h-3.5 w-3.5" /> Recommendations
             </TabsTrigger>
           </TabsList>
 
