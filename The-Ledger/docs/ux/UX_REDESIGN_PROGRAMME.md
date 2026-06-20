@@ -344,7 +344,9 @@ Navigation structure, dashboard design, and screen hierarchy all reflect these t
 - **UX-7.5 — Review Recommendations:** COMPLETE (June 20, 2026). New `reviewRecommendationEngine.ts` (deterministic recommendation type — Likely Approve/Reject/Correction/Requires Human Review — + confidence Very High/High/Medium/Low, similar historical decisions, insights, executive guidance). `RecommendationDistributionPanel` (distribution + insights + guidance, CEO review page) and `JobRecommendationPanel` (per-review recommendation/confidence/rationale/similar decisions, review detail); recommendation badges added to priority queue + executive attention queue. Guidance only — no approval behaviour changed. See `docs/handoffs/ux7-5-review-recommendations-handoff.md`.
 - **UX-7.6 — Review Operations Analytics:** COMPLETE (June 20, 2026). New `reviewAnalyticsEngine.ts` (volume/throughput, approval performance + SLA, bottleneck analysis, reviewer performance, review-type analytics, financial throughput, trends, operational health score, insights) + `ReviewAnalyticsDashboard` (CEO review page). Measurement only — no review behaviour changed. See `docs/handoffs/ux7-6-review-operations-analytics-handoff.md`.
 - **UX-7.7 — Executive Review Briefing:** COMPLETE (June 20, 2026). New `reviewBriefingEngine.ts` (consolidates UX-7.1–7.6: approval/financial/operational health, daily briefing, attention feed, exposure interpretation, bottleneck summary, recommendation + decision roll-ups, weekly summary, strategic insights, four readiness indicators) + `ReviewExecutiveBriefing` mounted first on the CEO review page. Consolidation only — no decisions made. See `docs/handoffs/ux7-7-executive-review-briefing-handoff.md`.
-- **UX-7.8 — Next target (final phase).**
+- **UX-7.8 — Review Centre Polish & Merge Readiness:** COMPLETE (June 20, 2026). Unified the seven UX-7 modules into one tabbed **Review Operations Centre** (Briefing default / Dashboard / Prioritisation / Recommendations / Analytics) with the live queue always visible below; executive heading/subtitle; search-aware queue empty state; aria-labels; on-demand panel computation; documented doctrine-validation pass (all PASS). New `tests/doctrine/review-operations-centre.spec.ts` (ROC-01…07); prior specs migrated to the tabbed hub. See `docs/handoffs/ux7-8-polish-merge-readiness-handoff.md`.
+
+**UX-7 (7.1–7.8) is feature-complete and merge-ready on `feature/ux7-review-centre-enhancement`** — awaiting the owner's full Playwright run and merge to `main`.
 
 **Objective:** Elevate the Review Centre workflow to match its operational importance. This phase has the highest per-session time saving for daily CEO use.
 
@@ -549,7 +551,7 @@ The UX Redesign Programme is successful when the following conditions are met:
 | UX-4 | Finance Hub | ✓ Complete | feature/ux4-finance-hub | 10 Jun 2026 |
 | UX-5 | Intelligence Hub | ✓ Complete (build + full Playwright suite green; awaiting owner merge to main) | feature/ux5-intelligence-hub | 16 Jun 2026 |
 | UX-6 | Automation Hub | ✓ Complete — merged to main (PR #25) | feature/ux6-automation-hub | 20 Jun 2026 |
-| UX-7 | Review Centre Enhancement | ◐ In Progress — UX-7.1–7.7 complete (7.8 next) | feature/ux7-review-centre-enhancement | 20 Jun 2026 |
+| UX-7 | Review Centre Enhancement | ✓ Complete — UX-7.1–7.8 (build green; awaiting owner merge to main) | feature/ux7-review-centre-enhancement | 20 Jun 2026 |
 | UX-8 | Operations Hub & Final Polish | ☐ Not Started | — | — |
 
 ## Status Key
