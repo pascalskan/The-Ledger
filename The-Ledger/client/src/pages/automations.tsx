@@ -28,6 +28,7 @@ import { AutomationApprovalQueue } from "@/components/automation/AutomationAppro
 import { AutomationSchedulerTimeline, estimatedRecurrence } from "@/components/automation/AutomationSchedulerTimeline";
 import { AutomationGovernanceDashboard } from "@/components/automation/AutomationGovernanceDashboard";
 import { AutomationAuditCentre } from "@/components/automation/AutomationAuditCentre";
+import { AutomationRecommendations } from "@/components/automation/AutomationRecommendations";
 import {
   GOVERNANCE_STATUS_LABELS,
   GOVERNANCE_STATUS_COLORS,
@@ -90,6 +91,7 @@ import {
   CalendarCheck,
   Inbox,
   CalendarRange,
+  Lightbulb,
 } from "lucide-react";
 import {
   type AutomationRule,
@@ -1312,6 +1314,9 @@ export default function AutomationsPage() {
             <TabsTrigger value="governance" className="flex items-center gap-1.5" data-testid="aut-tab-governance">
               <ShieldAlert className="h-3.5 w-3.5" /> Governance
             </TabsTrigger>
+            <TabsTrigger value="recommendations" className="flex items-center gap-1.5" data-testid="aut-tab-recommendations">
+              <Lightbulb className="h-3.5 w-3.5" /> Recommendations
+            </TabsTrigger>
             <TabsTrigger value="execution-history" className="flex items-center gap-1.5" data-testid="aut-tab-execution-history">
               <History className="h-3.5 w-3.5" /> Execution History
             </TabsTrigger>
@@ -1419,6 +1424,13 @@ export default function AutomationsPage() {
                   </Table>
                 )}
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Recommendations — UX-6.8 (advisory only) */}
+          <TabsContent value="recommendations">
+            <div className="mt-4" data-testid="aut-recommendations-panel">
+              <AutomationRecommendations onBuild={openCreateBuilder} />
             </div>
           </TabsContent>
 
