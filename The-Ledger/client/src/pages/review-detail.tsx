@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, XCircle, Clock, FileText, Image as ImageIcon, Search, AlertCircle, ChevronLeft, ArrowRight, User, PoundSterling, ShieldAlert, History } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, FileText, Image as ImageIcon, Search, AlertCircle, ChevronLeft, ArrowRight, User, PoundSterling, ShieldAlert, History, ListChecks, Gauge } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { getJobReviewContext, formatGbp, formatAge, ageHoursOf } from "@/lib/reviewIntelligenceEngine";
+import { computePriorityQueue } from "@/lib/reviewPriorityEngine";
+import { PriorityBadge } from "@/components/review/ReviewPriorityPanel";
 
 export default function ReviewDetailPage() {
   const { id } = useParams();
@@ -63,6 +65,13 @@ export default function ReviewDetailPage() {
       : detailPriority === "High"
       ? "bg-amber-50 text-amber-700 border-amber-200"
       : "bg-slate-50 text-slate-600 border-slate-200";
+
+  // UX-7.2 — intelligent prioritisation context for this job (informational
+  // only; does not affect approval). Uses the most urgent pending review on
+  // the job to surface category, score, contributing factors and queue position.
+  const priorityQueue = computePriorityQueue();
+  const jobPriorityReviews = priorityQueue.filter((r) => r.jobId === job.id);
+  const topPriorityReview = jobPriorityReviews[0] ?? null;
 
   const filteredItems = activeTab === "all"
     ? pendingItems 
@@ -159,6 +168,84 @@ export default function ReviewDetailPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* UX-7.2 — Intelligent prioritisation detail (informational only) */}
+        {topPriorityReview && (
+          <Card data-testid="review-detail-priority-panel">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ListChecks className="h-4 w-4 text-blue-500" /> Review Priority
+              </CardTitle>
+              <CardDescription>
+                Guidance for what to review first — this does not change approval
+                behaviour.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6 lg:grid-cols-3">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Priority</span>
+                    <PriorityBadge category={topPriorityReview.priority.category} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Priority score</span>
+                    <span
+                      className="flex items-center gap-1 text-sm font-semibold text-slate-900"
+                      data-testid="review-detail-priority-score"
+                    >
+                      <Gauge className="h-3.5 w-3.5 text-slate-400" />
+                      {topPriorityReview.priority.score} / 100
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Queue position</span>
+                    <span className="text-sm font-semibold text-slate-900">
+                      #{topPriorityReview.queuePosition}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Financial exposure</span>
+                    <span className="text-sm font-semibold text-slate-900">
+                      {topPriorityReview.financialImpact > 0
+                        ? formatGbp(topPriorityReview.financialImpact)
+                        : "—"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-2">
+                  <p className="mb-2 text-sm font-medium text-slate-900">
+                    Contributing factors
+                  </p>
+                  <div className="space-y-2" data-testid="review-detail-priority-factors">
+                    {topPriorityReview.priority.factors.map((f, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 text-sm"
+                      >
+                        <span className="w-36 shrink-0 text-slate-600">
+                          {f.label}
+                        </span>
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full bg-blue-500"
+                            style={{
+                              width: `${Math.min(100, (f.points / 30) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="w-28 shrink-0 text-right text-xs text-slate-500">
+                          +{f.points} · {f.detail}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

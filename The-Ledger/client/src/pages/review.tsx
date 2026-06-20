@@ -9,12 +9,17 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { ReviewExecutiveDashboard } from "@/components/review/ReviewExecutiveDashboard";
+import { ReviewPriorityPanel, PriorityBadge } from "@/components/review/ReviewPriorityPanel";
+import { getJobPriority, getJobPriorityRank } from "@/lib/reviewPriorityEngine";
 
 export default function ReviewPage() {
   const { jobs, workers, reviewItems } = useStore();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [search, setSearch] = useState("");
+  // UX-7.2 — queue ordering: "standard" preserves existing behaviour;
+  // "priority" reorders by intelligent prioritisation (visibility only).
+  const [order, setOrder] = useState<"standard" | "priority">("standard");
 
   // In a real app, this would be data fetched from a backend containing pending items per job
   // For the mockup, we'll generate some demo review items based on active/completed jobs
@@ -48,10 +53,19 @@ export default function ReviewPage() {
     };
   }).filter(j => j.totalPending > 0);
 
-  const filteredJobs = jobsWithReviews.filter(j => 
-    j.title.toLowerCase().includes(search.toLowerCase()) || 
+  const searchedJobs = jobsWithReviews.filter(j =>
+    j.title.toLowerCase().includes(search.toLowerCase()) ||
     j.jobId.toLowerCase().includes(search.toLowerCase())
   );
+
+  // UX-7.2 — apply the selected ordering. Standard keeps the original order;
+  // priority sorts by aggregated job priority (most urgent first).
+  const filteredJobs =
+    order === "priority"
+      ? [...searchedJobs].sort(
+          (a, b) => getJobPriorityRank(a.id) - getJobPriorityRank(b.id)
+        )
+      : searchedJobs;
 
   return (
     <Layout>
@@ -65,6 +79,9 @@ export default function ReviewPage() {
 
         {/* UX-7.1 — Executive Review Dashboard (CEO-only, read-only visibility) */}
         {isCEO && <ReviewExecutiveDashboard />}
+
+        {/* UX-7.2 — Intelligent Prioritisation: recommended work queue (CEO-only) */}
+        {isCEO && <ReviewPriorityPanel />}
 
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="bg-blue-50/50 border-blue-100">
@@ -117,14 +134,46 @@ export default function ReviewPage() {
                 <CardTitle>Jobs Requiring Review</CardTitle>
                 <CardDescription>Select a job to review its pending submissions</CardDescription>
               </div>
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                <Input 
-                  placeholder="Search jobs..." 
-                  className="pl-9 bg-slate-50"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                {/* UX-7.2 — Standard / Priority order toggle (visibility only) */}
+                {isCEO && (
+                  <div
+                    className="inline-flex rounded-md border border-slate-200 p-0.5"
+                    data-testid="review-order-toggle"
+                  >
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={order === "standard" ? "default" : "ghost"}
+                      className="h-8"
+                      aria-pressed={order === "standard"}
+                      data-testid="review-order-standard"
+                      onClick={() => setOrder("standard")}
+                    >
+                      Standard Order
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={order === "priority" ? "default" : "ghost"}
+                      className="h-8"
+                      aria-pressed={order === "priority"}
+                      data-testid="review-order-priority"
+                      onClick={() => setOrder("priority")}
+                    >
+                      Priority Order
+                    </Button>
+                  </div>
+                )}
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search jobs..."
+                    className="pl-9 bg-slate-50"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -135,13 +184,14 @@ export default function ReviewPage() {
                   <TableHead>Job ID</TableHead>
                   <TableHead>Title</TableHead>
                   <TableHead>Pending Items</TableHead>
+                  <TableHead>Priority</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredJobs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                    <TableCell colSpan={5} className="text-center py-8 text-slate-500">
                       No jobs currently require review.
                     </TableCell>
                   </TableRow>
@@ -172,8 +222,11 @@ export default function ReviewPage() {
                           )}
                         </div>
                       </TableCell>
+                      <TableCell data-testid={`review-job-priority-${job.id}`}>
+                        <PriorityBadge category={getJobPriority(job.id).category} />
+                      </TableCell>
                       <TableCell className="text-right">
-                        <Button 
+                        <Button
                           onClick={() => setLocation(`/review/${job.id}`)}
                           className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
