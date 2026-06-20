@@ -8,6 +8,7 @@ import { CheckCircle2, XCircle, Clock, FileText, Image as ImageIcon, Search } fr
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { ReviewExecutiveDashboard } from "@/components/review/ReviewExecutiveDashboard";
 
 export default function ReviewPage() {
   const { jobs, workers, reviewItems } = useStore();
@@ -17,8 +18,10 @@ export default function ReviewPage() {
 
   // In a real app, this would be data fetched from a backend containing pending items per job
   // For the mockup, we'll generate some demo review items based on active/completed jobs
-  
+
   const isPM = user?.roleIds?.includes("role-pm") || user?.roleIds?.includes("drole-pm");
+  // UX-7.1 — executive visibility layer is CEO-only; PMs keep the scoped queue.
+  const isCEO = user?.roleIds?.includes("role-ceo") || user?.roleIds?.includes("drole-ceo");
 
   const jobsWithReviews = jobs.filter(j => {
     if (j.status !== 'Active' && j.status !== 'Completed') return false;
@@ -59,6 +62,9 @@ export default function ReviewPage() {
             <p className="text-slate-500 mt-1">Review and approve worker submissions, photos, and reports.</p>
           </div>
         </div>
+
+        {/* UX-7.1 — Executive Review Dashboard (CEO-only, read-only visibility) */}
+        {isCEO && <ReviewExecutiveDashboard />}
 
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="bg-blue-50/50 border-blue-100">

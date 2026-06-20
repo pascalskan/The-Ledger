@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, XCircle, Clock, FileText, Image as ImageIcon, Search, AlertCircle, ChevronLeft, ArrowRight, User } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, FileText, Image as ImageIcon, Search, AlertCircle, ChevronLeft, ArrowRight, User, PoundSterling, ShieldAlert, History } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
+import { getJobReviewContext, formatGbp, formatAge, ageHoursOf } from "@/lib/reviewIntelligenceEngine";
 
 export default function ReviewDetailPage() {
   const { id } = useParams();
@@ -41,7 +42,29 @@ export default function ReviewDetailPage() {
     updateReviewItem(itemId, { status: "rejected" });
   };
 
-  const filteredItems = activeTab === "all" 
+  // UX-7.1 — read-only executive context for this job. Does not alter the
+  // approval flow below; it only surfaces financial impact, age, priority,
+  // related job summary, and approval history.
+  const reviewContext = getJobReviewContext(job.id);
+  const oldestAgeHours = pendingItems.reduce((max, item) => {
+    if (!item.submittedAt) return max;
+    const h = ageHoursOf({ submittedAt: item.submittedAt } as any);
+    return Math.max(max, h);
+  }, 0);
+  const detailPriority =
+    reviewContext.exposure >= 4000 || oldestAgeHours > 48
+      ? "Critical"
+      : reviewContext.exposure >= 1000 || oldestAgeHours > 24
+      ? "High"
+      : "Standard";
+  const priorityClass =
+    detailPriority === "Critical"
+      ? "bg-rose-50 text-rose-700 border-rose-200"
+      : detailPriority === "High"
+      ? "bg-amber-50 text-amber-700 border-amber-200"
+      : "bg-slate-50 text-slate-600 border-slate-200";
+
+  const filteredItems = activeTab === "all"
     ? pendingItems 
     : activeTab === "report"
       ? pendingItems.filter(item => item.type === "report" || item.type === "worker-report")
@@ -61,6 +84,80 @@ export default function ReviewDetailPage() {
             </div>
             <p className="text-slate-500 mt-1">Review pending submissions for this job.</p>
           </div>
+        </div>
+
+        {/* UX-7.1 — read-only review context (financial impact, age, priority, job, history) */}
+        <div
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          data-testid="review-detail-context"
+        >
+          <Card data-testid="review-detail-financial">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <PoundSterling className="h-4 w-4" />
+                <span className="text-[11px] font-medium uppercase tracking-wide">
+                  Financial Impact
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {reviewContext.exposure > 0 ? formatGbp(reviewContext.exposure) : "—"}
+              </p>
+              <p className="text-xs text-slate-500">Blocked pending approval</p>
+            </CardContent>
+          </Card>
+
+          <Card data-testid="review-detail-age">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <Clock className="h-4 w-4" />
+                <span className="text-[11px] font-medium uppercase tracking-wide">
+                  Oldest Pending
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {pendingItems.length > 0 ? formatAge(oldestAgeHours) : "—"}
+              </p>
+              <p className="text-xs text-slate-500">{pendingItems.length} item(s) pending</p>
+            </CardContent>
+          </Card>
+
+          <Card data-testid="review-detail-priority">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <ShieldAlert className="h-4 w-4" />
+                <span className="text-[11px] font-medium uppercase tracking-wide">
+                  Priority
+                </span>
+              </div>
+              <div className="mt-2">
+                <Badge variant="outline" className={priorityClass}>
+                  {detailPriority}
+                </Badge>
+              </div>
+              <p className="mt-1 text-xs text-slate-500 capitalize">
+                {job.priority} priority job · {job.status}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card data-testid="review-detail-history">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <History className="h-4 w-4" />
+                <span className="text-[11px] font-medium uppercase tracking-wide">
+                  Approval History
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {reviewContext.history.length}
+              </p>
+              <p className="text-xs text-slate-500">
+                {reviewContext.history.filter((h) => h.status === "approved").length} approved ·{" "}
+                {reviewContext.history.filter((h) => h.status === "rejected").length} rejected ·{" "}
+                {reviewContext.history.filter((h) => h.status === "corrected").length} corrected
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>

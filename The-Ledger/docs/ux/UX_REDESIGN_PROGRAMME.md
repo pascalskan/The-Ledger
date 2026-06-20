@@ -336,6 +336,10 @@ Navigation structure, dashboard design, and screen hierarchy all reflect these t
 
 ## Phase UX-7 — Review Centre Enhancement
 
+**Status:** IN PROGRESS — branch `feature/ux7-review-centre-enhancement`.
+- **UX-7.1 — Executive Review Dashboard:** COMPLETE (June 20, 2026). CEO-only read-only executive layer (KPI strip, financial exposure, requires-attention queue, reviews-by-type, workload summary, executive insights) plus read-only review-detail context. New `reviewIntelligenceEngine.ts`; existing approval workflow untouched. See `docs/handoffs/ux7-1-executive-review-dashboard-handoff.md`.
+- **UX-7.2 — Next target.**
+
 **Objective:** Elevate the Review Centre workflow to match its operational importance. This phase has the highest per-session time saving for daily CEO use.
 
 **Changes:**
@@ -538,8 +542,8 @@ The UX Redesign Programme is successful when the following conditions are met:
 | UX-QW | Quick Wins (post-audit) | ✓ Complete | feature/ux-phases-1-2-3 | 5 Jun 2026 |
 | UX-4 | Finance Hub | ✓ Complete | feature/ux4-finance-hub | 10 Jun 2026 |
 | UX-5 | Intelligence Hub | ✓ Complete (build + full Playwright suite green; awaiting owner merge to main) | feature/ux5-intelligence-hub | 16 Jun 2026 |
-| UX-6 | Automation Hub | ✓ Complete — UX-6.1–6.10 (build green; awaiting owner merge to main) | feature/ux6-automation-hub | 16 Jun 2026 |
-| UX-7 | Review Centre Enhancement | ☐ Not Started | — | — |
+| UX-6 | Automation Hub | ✓ Complete — merged to main (PR #25) | feature/ux6-automation-hub | 20 Jun 2026 |
+| UX-7 | Review Centre Enhancement | ◐ In Progress — UX-7.1 complete | feature/ux7-review-centre-enhancement | 20 Jun 2026 |
 | UX-8 | Operations Hub & Final Polish | ☐ Not Started | — | — |
 
 ## Status Key
