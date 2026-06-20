@@ -26,6 +26,7 @@ import { AutomationCatalogue, buildCatalogueRows } from "@/components/automation
 import { AutomationExecutionMonitor } from "@/components/automation/AutomationExecutionMonitor";
 import { AutomationApprovalQueue } from "@/components/automation/AutomationApprovalQueue";
 import { AutomationSchedulerTimeline, estimatedRecurrence } from "@/components/automation/AutomationSchedulerTimeline";
+import { AutomationGovernanceDashboard } from "@/components/automation/AutomationGovernanceDashboard";
 import {
   GOVERNANCE_STATUS_LABELS,
   GOVERNANCE_STATUS_COLORS,
@@ -1307,6 +1308,9 @@ export default function AutomationsPage() {
             <TabsTrigger value="approval-queue" className="flex items-center gap-1.5" data-testid="aut-tab-approval-queue">
               <Inbox className="h-3.5 w-3.5" /> Approval Queue
             </TabsTrigger>
+            <TabsTrigger value="governance" className="flex items-center gap-1.5" data-testid="aut-tab-governance">
+              <ShieldAlert className="h-3.5 w-3.5" /> Governance
+            </TabsTrigger>
             <TabsTrigger value="execution-history" className="flex items-center gap-1.5" data-testid="aut-tab-execution-history">
               <History className="h-3.5 w-3.5" /> Execution History
             </TabsTrigger>
@@ -1411,6 +1415,13 @@ export default function AutomationsPage() {
                   </Table>
                 )}
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Governance — UX-6.6 */}
+          <TabsContent value="governance">
+            <div className="mt-4" data-testid="aut-governance-panel">
+              <AutomationGovernanceDashboard />
             </div>
           </TabsContent>
 
