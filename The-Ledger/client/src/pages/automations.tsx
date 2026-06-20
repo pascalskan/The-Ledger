@@ -21,6 +21,23 @@
 
 import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout";
+import { AutomationExecutiveDashboard } from "@/components/automation/AutomationExecutiveDashboard";
+import { AutomationCatalogue, buildCatalogueRows } from "@/components/automation/AutomationCatalogue";
+import { AutomationExecutionMonitor } from "@/components/automation/AutomationExecutionMonitor";
+import { AutomationApprovalQueue } from "@/components/automation/AutomationApprovalQueue";
+import { AutomationSchedulerTimeline, estimatedRecurrence } from "@/components/automation/AutomationSchedulerTimeline";
+import { AutomationGovernanceDashboard } from "@/components/automation/AutomationGovernanceDashboard";
+import { AutomationAuditCentre } from "@/components/automation/AutomationAuditCentre";
+import { AutomationRecommendations } from "@/components/automation/AutomationRecommendations";
+import { AutomationCeoBriefing } from "@/components/automation/AutomationCeoBriefing";
+import {
+  GOVERNANCE_STATUS_LABELS,
+  GOVERNANCE_STATUS_COLORS,
+  RISK_LEVEL_LABELS,
+  RISK_LEVEL_COLORS,
+  getAllGovernanceRecords,
+  getGovernanceRecordByRuleId,
+} from "@/lib/automationGovernanceEngine";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,6 +90,11 @@ import {
   PlayCircle,
   Ban,
   CalendarCheck,
+  Inbox,
+  CalendarRange,
+  Lightbulb,
+  Newspaper,
+  ScrollText,
 } from "lucide-react";
 import {
   type AutomationRule,
@@ -85,9 +107,6 @@ import {
   computeAutomationRuleSummary,
   getActionsForRule,
   getTriggerById,
-  filterRulesByStatus,
-  filterRulesByCategory,
-  searchRules,
   TRIGGER_CATALOGUE_V1,
   ACTION_CATALOGUE_V1,
 } from "@/lib/automationEngine";
@@ -504,8 +523,37 @@ function ScheduleDetailDialog({
                 <span className="text-xs text-muted-foreground">Total Runs</span>
                 <div className="mt-1 font-semibold">{schedule.runCount}</div>
               </div>
+              <div className="col-span-2">
+                <span className="text-xs text-muted-foreground">Estimated Recurrence</span>
+                <div className="mt-1 font-medium" data-testid="sched-detail-recurrence">{estimatedRecurrence(schedule.scheduleType)}</div>
+              </div>
             </div>
           </section>
+
+          {/* Recent Execution History — UX-6.5 */}
+          {(() => {
+            const history = getScheduleExecutions()
+              .filter((e) => e.scheduleId === schedule.id)
+              .sort((a, b) => new Date(b.executedAt).getTime() - new Date(a.executedAt).getTime())
+              .slice(0, 5);
+            return (
+              <section data-testid="sched-detail-history">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Recent Execution History</h4>
+                {history.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No execution history recorded for this schedule.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {history.map((e) => (
+                      <div key={e.id} className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-xs">
+                        <span className="font-mono text-muted-foreground">{fmtDateTimeShort(e.executedAt)}</span>
+                        <Badge variant="outline" className={`text-[10px] ${SCHEDULE_EXECUTION_RESULT_COLORS[e.result]}`}>{SCHEDULE_EXECUTION_RESULT_LABELS[e.result]}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })()}
 
           {/* Upcoming Runs */}
           {upcomingRuns.length > 0 && (
@@ -919,9 +967,13 @@ function RuleDetailDialog({
 }) {
   const trigger = getTriggerById(rule.triggerId);
   const actions = getActionsForRule(rule);
+  const meta = useMemo(
+    () => buildCatalogueRows([rule], getAllGovernanceRecords(), getAllSchedules())[0],
+    [rule]
+  );
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[640px]" data-testid="aut-rule-detail-dialog">
+      <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto" data-testid="aut-rule-detail-dialog">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Zap className="h-4 w-4" />{rule.ruleNumber}</DialogTitle>
           <DialogDescription>{rule.name}</DialogDescription>
@@ -950,6 +1002,46 @@ function RuleDetailDialog({
             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Actions</h4>
             <div className="space-y-2">{actions.map((action) => (<div key={action.id} className="flex items-start justify-between rounded-md border p-3 text-sm"><div><div className="font-semibold">{action.label}</div><div className="text-muted-foreground text-xs mt-0.5">{action.description}</div></div><Badge variant="outline" className={`text-xs ml-3 shrink-0 ${AUTOMATION_CATEGORY_COLORS[action.safetyClass]}`}>{action.safetyClass}</Badge></div>))}</div>
           </section>
+          {/* Execution Statistics — UX-6.2 */}
+          <section data-testid="aut-rule-detail-stats">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Execution Statistics</h4>
+            <div className="rounded-md bg-muted/30 p-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div><span className="text-xs text-muted-foreground">Total Runs</span><div className="mt-1 font-semibold">{meta?.totalExecutions ?? rule.executionCount}</div></div>
+              <div><span className="text-xs text-muted-foreground">Success Rate</span><div className="mt-1 font-semibold" data-testid="aut-rule-detail-success-rate">{meta?.successRate !== null && meta?.successRate !== undefined ? `${meta.successRate}%` : "—"}</div></div>
+              <div><span className="text-xs text-muted-foreground">Last Execution</span><div className="mt-1">{fmtDateTime(rule.lastExecutedAt)}</div></div>
+              <div><span className="text-xs text-muted-foreground">Next Execution</span><div className="mt-1" data-testid="aut-rule-detail-next-run">{fmtDateTime(meta?.nextRunAt ?? null)}</div></div>
+            </div>
+          </section>
+
+          {/* Schedule Summary — UX-6.2 */}
+          {meta?.schedule && (
+            <section data-testid="aut-rule-detail-schedule">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Schedule</h4>
+              <div className="rounded-md border p-3 text-sm flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-mono text-xs text-muted-foreground">{meta.schedule.scheduleNumber}</div>
+                  <div className="font-medium mt-0.5">{meta.schedule.scheduleSummary}</div>
+                </div>
+                <Badge variant="outline" className={`text-xs shrink-0 ${SCHEDULE_STATUS_COLORS[meta.schedule.status]}`}>{SCHEDULE_STATUS_LABELS[meta.schedule.status]}</Badge>
+              </div>
+            </section>
+          )}
+
+          {/* Governance Status — UX-6.2 */}
+          {meta?.governanceStatus && (
+            <section data-testid="aut-rule-detail-governance">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Governance Status</h4>
+              <div className="rounded-md border p-3 text-sm space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className={`text-xs ${GOVERNANCE_STATUS_COLORS[meta.governanceStatus]}`}>{GOVERNANCE_STATUS_LABELS[meta.governanceStatus]}</Badge>
+                  {meta.riskLevel && (<Badge variant="outline" className={`text-xs ${RISK_LEVEL_COLORS[meta.riskLevel]}`}>{RISK_LEVEL_LABELS[meta.riskLevel]} Risk</Badge>)}
+                  {meta.isApprovalProtected && (<Badge variant="outline" className="text-xs text-violet-700 border-violet-200 bg-violet-50"><ShieldAlert className="h-3 w-3 mr-1" />Approval Protected</Badge>)}
+                </div>
+                {meta.governance?.riskRationale && (<p className="text-xs text-muted-foreground">{meta.governance.riskRationale}</p>)}
+              </div>
+            </section>
+          )}
+
           {rule.category === "FinanciallySensitive" && (
             <section data-testid="aut-rule-detail-financial-safeguard">
               <div className="flex items-center gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700"><ShieldAlert className="h-4 w-4 shrink-0" /><div><span className="font-semibold">Financially Sensitive — </span>Approval Required before execution.</div></div>
@@ -970,10 +1062,22 @@ function RuleDetailDialog({
 
 // ── Execution Detail Dialog ────────────────────────────────────────────────────
 
+const EXEC_COMPLETION_SECONDS: Record<string, number> = {
+  success: 1.2,
+  blocked_approval_required: 0.4,
+  blocked_forbidden_action: 0.3,
+  blocked_condition_not_met: 0.3,
+  failed: 3.1,
+};
+
 function ExecutionDetailDialog({ entry, onClose }: { entry: AutomationAuditEntry; onClose: () => void }) {
+  const governance = useMemo(() => getGovernanceRecordByRuleId(entry.ruleId), [entry.ruleId]);
+  const duration = EXEC_COMPLETION_SECONDS[entry.result] ?? 1.0;
+  const isBlocked = entry.result.startsWith("blocked");
+  const isFailure = entry.result === "failed";
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[540px]" data-testid="aut-execution-detail-dialog">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto" data-testid="aut-execution-detail-dialog">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Activity className="h-4 w-4" /> Execution Detail</DialogTitle>
           <DialogDescription className="font-mono text-xs">{entry.executionId}</DialogDescription>
@@ -981,13 +1085,54 @@ function ExecutionDetailDialog({ entry, onClose }: { entry: AutomationAuditEntry
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div><span className="text-xs text-muted-foreground">Rule</span><div className="mt-1 font-semibold">{entry.ruleNumber}</div><div className="text-xs text-muted-foreground truncate">{entry.ruleName}</div></div>
-            <div><span className="text-xs text-muted-foreground">Result</span><div className="mt-1"><ResultBadge result={entry.result} /></div></div>
+            <div><span className="text-xs text-muted-foreground">Outcome</span><div className="mt-1"><ResultBadge result={entry.result} /></div></div>
             <div><span className="text-xs text-muted-foreground">Trigger</span><div className="mt-1 text-sm font-mono">{entry.triggerType}</div></div>
             <div><span className="text-xs text-muted-foreground">Triggered By</span><div className="mt-1 font-medium">{entry.initiatedBy}</div></div>
             {entry.jobName && (<div><span className="text-xs text-muted-foreground">Job</span><div className="mt-1 font-medium truncate">{entry.jobName}</div></div>)}
             <div><span className="text-xs text-muted-foreground">Timestamp</span><div className="mt-1">{fmtDateTime(entry.timestamp)}</div></div>
           </div>
-          <div><span className="text-xs text-muted-foreground">Audit Reference</span><div className="mt-1 font-mono text-xs bg-muted px-2 py-1 rounded">{entry.id}</div></div>
+
+          {/* Actions evaluated + duration — UX-6.3 */}
+          <section data-testid="aut-exec-detail-actions">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Action Evaluated</h4>
+            <div className="rounded-md border p-3 text-sm flex items-center justify-between gap-3">
+              <div><div className="font-medium">{entry.actionLabel}</div><div className="text-xs text-muted-foreground font-mono">{entry.actionType}</div></div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0" data-testid="aut-exec-detail-duration"><Clock className="h-3.5 w-3.5" />{duration}s</div>
+            </div>
+          </section>
+
+          {/* Governance checks + approval status — UX-6.3 */}
+          <section data-testid="aut-exec-detail-governance">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Governance & Approval</h4>
+            <div className="rounded-md bg-muted/30 p-3 grid grid-cols-2 gap-3 text-sm">
+              <div><span className="text-xs text-muted-foreground">Governance</span><div className="mt-1">{governance ? (<Badge variant="outline" className={`text-xs ${GOVERNANCE_STATUS_COLORS[governance.governanceStatus]}`}>{GOVERNANCE_STATUS_LABELS[governance.governanceStatus]}</Badge>) : <span className="text-xs text-muted-foreground">—</span>}</div></div>
+              <div><span className="text-xs text-muted-foreground">Risk Level</span><div className="mt-1">{governance ? (<Badge variant="outline" className={`text-xs ${RISK_LEVEL_COLORS[governance.riskLevel]}`}>{RISK_LEVEL_LABELS[governance.riskLevel]}</Badge>) : <span className="text-xs text-muted-foreground">—</span>}</div></div>
+              <div><span className="text-xs text-muted-foreground">Approval State</span><div className="mt-1 font-medium capitalize" data-testid="aut-exec-detail-approval">{entry.approvalStateAtExecution.replace(/_/g, " ")}</div></div>
+              <div><span className="text-xs text-muted-foreground">Approval Required</span><div className="mt-1 font-medium">{governance?.isApprovalProtected ? "Yes — human-controlled" : "No"}</div></div>
+            </div>
+          </section>
+
+          {/* Failure / block details — UX-6.3 */}
+          {(isBlocked || isFailure) && (
+            <section data-testid="aut-exec-detail-failure">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{isFailure ? "Failure Details" : "Block Details"}</h4>
+              <div className={`flex items-start gap-2 rounded-md border px-3 py-2.5 text-sm ${isFailure ? "bg-red-50 border-red-200 text-red-700" : "bg-violet-50 border-violet-200 text-violet-700"}`}>
+                {isFailure ? <XCircle className="h-4 w-4 shrink-0 mt-0.5" /> : <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />}
+                <p>{entry.resultMessage}</p>
+              </div>
+            </section>
+          )}
+
+          {/* Audit references — UX-6.3 */}
+          <section data-testid="aut-exec-detail-audit">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Audit References</h4>
+            <div className="grid grid-cols-1 gap-1.5 text-xs">
+              <div className="flex items-center justify-between gap-2"><span className="text-muted-foreground">Audit ID</span><span className="font-mono bg-muted px-2 py-0.5 rounded">{entry.id}</span></div>
+              <div className="flex items-center justify-between gap-2"><span className="text-muted-foreground">Execution ID</span><span className="font-mono bg-muted px-2 py-0.5 rounded">{entry.executionId}</span></div>
+              <div className="flex items-center justify-between gap-2"><span className="text-muted-foreground">Rule ID</span><span className="font-mono bg-muted px-2 py-0.5 rounded">{entry.ruleId}</span></div>
+            </div>
+          </section>
+
           <div><span className="text-xs text-muted-foreground">Result Message</span><p className="mt-1 text-sm rounded border p-2 bg-muted/20">{entry.resultMessage}</p></div>
           <Button size="sm" variant="outline" onClick={onClose}>Close</Button>
         </div>
@@ -1003,9 +1148,6 @@ export default function AutomationsPage() {
 
   // Rule state
   const [rules, setRules] = useState<AutomationRule[]>(getAllRules);
-  const [ruleSearch, setRuleSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<AutomationStatus | "all">("all");
-  const [categoryFilter, setCategoryFilter] = useState<AutomationCategory | "all">("all");
   const [selectedRule, setSelectedRule] = useState<AutomationRule | null>(null);
 
   // Builder
@@ -1028,11 +1170,6 @@ export default function AutomationsPage() {
 
   // Derived
   const summary = useMemo(() => computeAutomationRuleSummary(rules), [rules]);
-  const filteredRules = useMemo(() => {
-    let r = filterRulesByStatus(rules, statusFilter);
-    r = filterRulesByCategory(r, categoryFilter);
-    return searchRules(r, ruleSearch);
-  }, [rules, statusFilter, categoryFilter, ruleSearch]);
 
   const allExecutions = useMemo(() => {
     const runtime = getAutomationAuditHistory();
@@ -1128,7 +1265,7 @@ export default function AutomationsPage() {
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Automation Centre</h2>
-            <p className="text-muted-foreground mt-1">Manage operational, workflow and financially sensitive automations.</p>
+            <p className="text-muted-foreground mt-1">Your executive Automation Operations Centre — health, catalogue, approvals, scheduling, governance, audit and intelligence in one place.</p>
           </div>
           <Button onClick={openCreateBuilder} data-testid="aut-btn-create-automation">
             <Plus className="h-4 w-4 mr-2" /> Create Automation
@@ -1140,6 +1277,9 @@ export default function AutomationsPage() {
           <span className="font-semibold">Automation Doctrine: </span>
           Automations never override approval workflows. Financially sensitive actions require prior approval. Every execution generates an immutable audit entry.
         </div>
+
+        {/* Executive Dashboard (UX-6.1) — read-only health overview */}
+        <AutomationExecutiveDashboard />
 
         {/* KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" data-testid="aut-kpi-strip">
@@ -1158,70 +1298,58 @@ export default function AutomationsPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="rules">
-          <TabsList className="flex flex-wrap h-auto gap-1">
+          <TabsList className="flex flex-wrap h-auto gap-1" aria-label="Automation Operations Centre sections">
+            {/* Overview */}
+            <TabsTrigger value="ceo-briefing" className="flex items-center gap-1.5" data-testid="aut-tab-ceo-briefing">
+              <Newspaper className="h-3.5 w-3.5" /> CEO Briefing
+            </TabsTrigger>
+            {/* Configure */}
             <TabsTrigger value="rules" className="flex items-center gap-1.5" data-testid="aut-tab-rules">
               <ListChecks className="h-3.5 w-3.5" /> Automation Rules
             </TabsTrigger>
             <TabsTrigger value="scheduler" className="flex items-center gap-1.5" data-testid="aut-tab-scheduler">
               <CalendarClock className="h-3.5 w-3.5" /> Scheduler
             </TabsTrigger>
+            <TabsTrigger value="timeline" className="flex items-center gap-1.5" data-testid="aut-tab-timeline">
+              <CalendarRange className="h-3.5 w-3.5" /> Scheduler Timeline
+            </TabsTrigger>
+            {/* Operate */}
+            <TabsTrigger value="monitoring" className="flex items-center gap-1.5" data-testid="aut-tab-monitoring">
+              <Activity className="h-3.5 w-3.5" /> Execution Monitoring
+            </TabsTrigger>
             <TabsTrigger value="execution-history" className="flex items-center gap-1.5" data-testid="aut-tab-execution-history">
               <History className="h-3.5 w-3.5" /> Execution History
             </TabsTrigger>
+            <TabsTrigger value="approval-queue" className="flex items-center gap-1.5" data-testid="aut-tab-approval-queue">
+              <Inbox className="h-3.5 w-3.5" /> Approval Queue
+            </TabsTrigger>
+            {/* Oversee */}
+            <TabsTrigger value="governance" className="flex items-center gap-1.5" data-testid="aut-tab-governance">
+              <ShieldAlert className="h-3.5 w-3.5" /> Governance
+            </TabsTrigger>
+            <TabsTrigger value="audit-centre" className="flex items-center gap-1.5" data-testid="aut-tab-audit-centre">
+              <FileSearch className="h-3.5 w-3.5" /> Audit Centre
+            </TabsTrigger>
             <TabsTrigger value="audit" className="flex items-center gap-1.5" data-testid="aut-tab-audit">
-              <FileSearch className="h-3.5 w-3.5" /> Automation Audit
+              <ScrollText className="h-3.5 w-3.5" /> Audit Log
+            </TabsTrigger>
+            {/* Plan */}
+            <TabsTrigger value="recommendations" className="flex items-center gap-1.5" data-testid="aut-tab-recommendations">
+              <Lightbulb className="h-3.5 w-3.5" /> Recommendations
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab: Automation Rules */}
+          {/* Tab: CEO Briefing — UX-6.9 (executive roll-up) */}
+          <TabsContent value="ceo-briefing">
+            <div className="mt-4" data-testid="aut-ceo-briefing-panel">
+              <AutomationCeoBriefing />
+            </div>
+          </TabsContent>
+
+          {/* Tab: Automation Rules — UX-6.2 Catalogue */}
           <TabsContent value="rules">
             <div className="mt-4 space-y-4" data-testid="aut-rules-panel">
-              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                <div className="relative w-full sm:w-72">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search rule name, number…" value={ruleSearch} onChange={(e) => setRuleSearch(e.target.value)} className="pl-9" data-testid="aut-rules-search" />
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <select className="h-9 rounded-md border bg-background px-3 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as AutomationStatus | "all")} data-testid="aut-filter-status">
-                    <option value="all">All Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="disabled">Disabled</option>
-                    <option value="draft">Draft</option>
-                    <option value="archived">Archived</option>
-                  </select>
-                  <select className="h-9 rounded-md border bg-background px-3 text-sm" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value as AutomationCategory | "all")} data-testid="aut-filter-category">
-                    <option value="all">All Categories</option>
-                    <option value="Operational">Operational</option>
-                    <option value="Workflow">Workflow</option>
-                    <option value="FinanciallySensitive">Financially Sensitive</option>
-                  </select>
-                </div>
-              </div>
-              <div className="border rounded-md" data-testid="aut-rules-table">
-                {filteredRules.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-muted-foreground"><Zap className="h-10 w-10 mb-3 opacity-20" /><p className="text-sm">No rules match the current filter.</p></div>
-                ) : (
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Rule</TableHead><TableHead>Category</TableHead><TableHead>Trigger</TableHead><TableHead className="text-center">Actions</TableHead><TableHead>Status</TableHead><TableHead>Last Executed</TableHead><TableHead>View</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {filteredRules.map((rule) => {
-                        const trigger = getTriggerById(rule.triggerId);
-                        return (
-                          <TableRow key={rule.id} data-testid={`aut-rule-row-${rule.id}`}>
-                            <TableCell><div className="font-mono text-xs font-semibold text-muted-foreground">{rule.ruleNumber}</div><div className="font-medium text-sm max-w-[200px] truncate">{rule.name}</div></TableCell>
-                            <TableCell><CategoryBadge category={rule.category} /></TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[140px] truncate">{trigger?.label ?? rule.triggerType}</TableCell>
-                            <TableCell className="text-center"><span className="text-sm font-semibold">{rule.actionIds.length}</span></TableCell>
-                            <TableCell><StatusBadge status={rule.status} /></TableCell>
-                            <TableCell>{fmtDateTime(rule.lastExecutedAt)}</TableCell>
-                            <TableCell><Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setSelectedRule(rule)} data-testid={`aut-btn-view-${rule.id}`}><Eye className="h-3 w-3 mr-1" /> View</Button></TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                )}
-              </div>
+              <AutomationCatalogue rules={rules} onView={setSelectedRule} />
             </div>
           </TabsContent>
 
@@ -1317,6 +1445,41 @@ export default function AutomationsPage() {
             </div>
           </TabsContent>
 
+          {/* Tab: Recommendations — UX-6.8 (advisory only) */}
+          <TabsContent value="recommendations">
+            <div className="mt-4" data-testid="aut-recommendations-panel">
+              <AutomationRecommendations onBuild={openCreateBuilder} />
+            </div>
+          </TabsContent>
+
+          {/* Tab: Governance — UX-6.6 */}
+          <TabsContent value="governance">
+            <div className="mt-4" data-testid="aut-governance-panel">
+              <AutomationGovernanceDashboard />
+            </div>
+          </TabsContent>
+
+          {/* Tab: Scheduler Timeline — UX-6.5 */}
+          <TabsContent value="timeline">
+            <div className="mt-4" data-testid="aut-timeline-panel">
+              <AutomationSchedulerTimeline onSelectSchedule={setSelectedSchedule} />
+            </div>
+          </TabsContent>
+
+          {/* Tab: Approval Queue — UX-6.4 */}
+          <TabsContent value="approval-queue">
+            <div className="mt-4" data-testid="aut-approval-queue-panel">
+              <AutomationApprovalQueue />
+            </div>
+          </TabsContent>
+
+          {/* Tab: Execution Monitoring — UX-6.3 */}
+          <TabsContent value="monitoring">
+            <div className="mt-4" data-testid="aut-monitoring-panel">
+              <AutomationExecutionMonitor onSelectExecution={setSelectedExecution} />
+            </div>
+          </TabsContent>
+
           {/* Tab: Execution History */}
           <TabsContent value="execution-history">
             <div className="mt-4 space-y-4" data-testid="aut-execution-history-panel">
@@ -1342,6 +1505,13 @@ export default function AutomationsPage() {
                   </Table>
                 )}
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Audit Centre — UX-6.7 (unified executive audit) */}
+          <TabsContent value="audit-centre">
+            <div className="mt-4" data-testid="aut-audit-centre-panel">
+              <AutomationAuditCentre />
             </div>
           </TabsContent>
 
