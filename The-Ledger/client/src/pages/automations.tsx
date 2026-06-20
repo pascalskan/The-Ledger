@@ -25,6 +25,7 @@ import { AutomationExecutiveDashboard } from "@/components/automation/Automation
 import { AutomationCatalogue, buildCatalogueRows } from "@/components/automation/AutomationCatalogue";
 import { AutomationExecutionMonitor } from "@/components/automation/AutomationExecutionMonitor";
 import { AutomationApprovalQueue } from "@/components/automation/AutomationApprovalQueue";
+import { AutomationSchedulerTimeline, estimatedRecurrence } from "@/components/automation/AutomationSchedulerTimeline";
 import {
   GOVERNANCE_STATUS_LABELS,
   GOVERNANCE_STATUS_COLORS,
@@ -86,6 +87,7 @@ import {
   Ban,
   CalendarCheck,
   Inbox,
+  CalendarRange,
 } from "lucide-react";
 import {
   type AutomationRule,
@@ -514,8 +516,37 @@ function ScheduleDetailDialog({
                 <span className="text-xs text-muted-foreground">Total Runs</span>
                 <div className="mt-1 font-semibold">{schedule.runCount}</div>
               </div>
+              <div className="col-span-2">
+                <span className="text-xs text-muted-foreground">Estimated Recurrence</span>
+                <div className="mt-1 font-medium" data-testid="sched-detail-recurrence">{estimatedRecurrence(schedule.scheduleType)}</div>
+              </div>
             </div>
           </section>
+
+          {/* Recent Execution History — UX-6.5 */}
+          {(() => {
+            const history = getScheduleExecutions()
+              .filter((e) => e.scheduleId === schedule.id)
+              .sort((a, b) => new Date(b.executedAt).getTime() - new Date(a.executedAt).getTime())
+              .slice(0, 5);
+            return (
+              <section data-testid="sched-detail-history">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Recent Execution History</h4>
+                {history.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No execution history recorded for this schedule.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {history.map((e) => (
+                      <div key={e.id} className="flex items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-xs">
+                        <span className="font-mono text-muted-foreground">{fmtDateTimeShort(e.executedAt)}</span>
+                        <Badge variant="outline" className={`text-[10px] ${SCHEDULE_EXECUTION_RESULT_COLORS[e.result]}`}>{SCHEDULE_EXECUTION_RESULT_LABELS[e.result]}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })()}
 
           {/* Upcoming Runs */}
           {upcomingRuns.length > 0 && (
@@ -1267,6 +1298,9 @@ export default function AutomationsPage() {
             <TabsTrigger value="scheduler" className="flex items-center gap-1.5" data-testid="aut-tab-scheduler">
               <CalendarClock className="h-3.5 w-3.5" /> Scheduler
             </TabsTrigger>
+            <TabsTrigger value="timeline" className="flex items-center gap-1.5" data-testid="aut-tab-timeline">
+              <CalendarRange className="h-3.5 w-3.5" /> Scheduler Timeline
+            </TabsTrigger>
             <TabsTrigger value="monitoring" className="flex items-center gap-1.5" data-testid="aut-tab-monitoring">
               <Activity className="h-3.5 w-3.5" /> Execution Monitoring
             </TabsTrigger>
@@ -1377,6 +1411,13 @@ export default function AutomationsPage() {
                   </Table>
                 )}
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Scheduler Timeline — UX-6.5 */}
+          <TabsContent value="timeline">
+            <div className="mt-4" data-testid="aut-timeline-panel">
+              <AutomationSchedulerTimeline onSelectSchedule={setSelectedSchedule} />
             </div>
           </TabsContent>
 
