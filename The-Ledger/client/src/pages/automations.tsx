@@ -27,6 +27,7 @@ import { AutomationExecutionMonitor } from "@/components/automation/AutomationEx
 import { AutomationApprovalQueue } from "@/components/automation/AutomationApprovalQueue";
 import { AutomationSchedulerTimeline, estimatedRecurrence } from "@/components/automation/AutomationSchedulerTimeline";
 import { AutomationGovernanceDashboard } from "@/components/automation/AutomationGovernanceDashboard";
+import { AutomationAuditCentre } from "@/components/automation/AutomationAuditCentre";
 import {
   GOVERNANCE_STATUS_LABELS,
   GOVERNANCE_STATUS_COLORS,
@@ -1314,6 +1315,9 @@ export default function AutomationsPage() {
             <TabsTrigger value="execution-history" className="flex items-center gap-1.5" data-testid="aut-tab-execution-history">
               <History className="h-3.5 w-3.5" /> Execution History
             </TabsTrigger>
+            <TabsTrigger value="audit-centre" className="flex items-center gap-1.5" data-testid="aut-tab-audit-centre">
+              <FileSearch className="h-3.5 w-3.5" /> Audit Centre
+            </TabsTrigger>
             <TabsTrigger value="audit" className="flex items-center gap-1.5" data-testid="aut-tab-audit">
               <FileSearch className="h-3.5 w-3.5" /> Automation Audit
             </TabsTrigger>
@@ -1471,6 +1475,13 @@ export default function AutomationsPage() {
                   </Table>
                 )}
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Audit Centre — UX-6.7 (unified executive audit) */}
+          <TabsContent value="audit-centre">
+            <div className="mt-4" data-testid="aut-audit-centre-panel">
+              <AutomationAuditCentre />
             </div>
           </TabsContent>
 
