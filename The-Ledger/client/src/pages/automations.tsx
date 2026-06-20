@@ -29,6 +29,7 @@ import { AutomationSchedulerTimeline, estimatedRecurrence } from "@/components/a
 import { AutomationGovernanceDashboard } from "@/components/automation/AutomationGovernanceDashboard";
 import { AutomationAuditCentre } from "@/components/automation/AutomationAuditCentre";
 import { AutomationRecommendations } from "@/components/automation/AutomationRecommendations";
+import { AutomationCeoBriefing } from "@/components/automation/AutomationCeoBriefing";
 import {
   GOVERNANCE_STATUS_LABELS,
   GOVERNANCE_STATUS_COLORS,
@@ -92,6 +93,7 @@ import {
   Inbox,
   CalendarRange,
   Lightbulb,
+  Newspaper,
 } from "lucide-react";
 import {
   type AutomationRule,
@@ -1296,6 +1298,9 @@ export default function AutomationsPage() {
         {/* Tabs */}
         <Tabs defaultValue="rules">
           <TabsList className="flex flex-wrap h-auto gap-1">
+            <TabsTrigger value="ceo-briefing" className="flex items-center gap-1.5" data-testid="aut-tab-ceo-briefing">
+              <Newspaper className="h-3.5 w-3.5" /> CEO Briefing
+            </TabsTrigger>
             <TabsTrigger value="rules" className="flex items-center gap-1.5" data-testid="aut-tab-rules">
               <ListChecks className="h-3.5 w-3.5" /> Automation Rules
             </TabsTrigger>
@@ -1327,6 +1332,13 @@ export default function AutomationsPage() {
               <FileSearch className="h-3.5 w-3.5" /> Automation Audit
             </TabsTrigger>
           </TabsList>
+
+          {/* Tab: CEO Briefing — UX-6.9 (executive roll-up) */}
+          <TabsContent value="ceo-briefing">
+            <div className="mt-4" data-testid="aut-ceo-briefing-panel">
+              <AutomationCeoBriefing />
+            </div>
+          </TabsContent>
 
           {/* Tab: Automation Rules — UX-6.2 Catalogue */}
           <TabsContent value="rules">
