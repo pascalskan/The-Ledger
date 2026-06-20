@@ -339,7 +339,8 @@ Navigation structure, dashboard design, and screen hierarchy all reflect these t
 **Status:** IN PROGRESS — branch `feature/ux7-review-centre-enhancement`.
 - **UX-7.1 — Executive Review Dashboard:** COMPLETE (June 20, 2026). CEO-only read-only executive layer (KPI strip, financial exposure, requires-attention queue, reviews-by-type, workload summary, executive insights) plus read-only review-detail context. New `reviewIntelligenceEngine.ts`; existing approval workflow untouched. See `docs/handoffs/ux7-1-executive-review-dashboard-handoff.md`.
 - **UX-7.2 — Intelligent Prioritisation:** COMPLETE (June 20, 2026). New `reviewPriorityEngine.ts` (deterministic 0–100 score → Critical/High/Medium/Low + contributing factors). CEO Recommended Work Queue (`ReviewPriorityPanel`): priority distribution, insights, priority queue, executive attention. Standard/Priority order toggle + job priority badges on the review list; review-detail priority card (score/queue position/factors). Visibility only — no approval behaviour changed. See `docs/handoffs/ux7-2-intelligent-prioritisation-handoff.md`.
-- **UX-7.3 — Next target.**
+- **UX-7.3 — Batch Decision Tools:** COMPLETE (June 20, 2026). New `reviewBatchEngine.ts` (financial estimate, batch summary, safeguards, in-memory batch audit log) + `BatchActionsBar` (multi-select toolbar with confirmation dialogs for Approve/Reject/Request Correction/Assign Reviewer, financial summary, high-risk/sensitive/mixed-type/large-batch safeguards). Review-detail multi-select (select-all-visible, clear, persists across tab filtering). Each action fans out to the existing single-item `updateReviewItem` flow after confirmation — no new approval path. See `docs/handoffs/ux7-3-batch-decision-tools-handoff.md`.
+- **UX-7.4 — Next target.**
 
 **Objective:** Elevate the Review Centre workflow to match its operational importance. This phase has the highest per-session time saving for daily CEO use.
 
@@ -544,7 +545,7 @@ The UX Redesign Programme is successful when the following conditions are met:
 | UX-4 | Finance Hub | ✓ Complete | feature/ux4-finance-hub | 10 Jun 2026 |
 | UX-5 | Intelligence Hub | ✓ Complete (build + full Playwright suite green; awaiting owner merge to main) | feature/ux5-intelligence-hub | 16 Jun 2026 |
 | UX-6 | Automation Hub | ✓ Complete — merged to main (PR #25) | feature/ux6-automation-hub | 20 Jun 2026 |
-| UX-7 | Review Centre Enhancement | ◐ In Progress — UX-7.1, UX-7.2 complete | feature/ux7-review-centre-enhancement | 20 Jun 2026 |
+| UX-7 | Review Centre Enhancement | ◐ In Progress — UX-7.1, UX-7.2, UX-7.3 complete | feature/ux7-review-centre-enhancement | 20 Jun 2026 |
 | UX-8 | Operations Hub & Final Polish | ☐ Not Started | — | — |
 
 ## Status Key

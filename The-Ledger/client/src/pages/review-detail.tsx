@@ -1,8 +1,9 @@
 import { Layout } from "@/components/layout";
-import { useStore } from "@/lib/mockData";
+import { useStore, useAuth } from "@/lib/mockData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, XCircle, Clock, FileText, Image as ImageIcon, Search, AlertCircle, ChevronLeft, ArrowRight, User, PoundSterling, ShieldAlert, History, ListChecks, Gauge } from "lucide-react";
 import { useState } from "react";
@@ -10,12 +11,17 @@ import { useLocation, useParams } from "wouter";
 import { getJobReviewContext, formatGbp, formatAge, ageHoursOf } from "@/lib/reviewIntelligenceEngine";
 import { computePriorityQueue } from "@/lib/reviewPriorityEngine";
 import { PriorityBadge } from "@/components/review/ReviewPriorityPanel";
+import { BatchActionsBar } from "@/components/review/BatchActionsBar";
+import type { BatchReviewInput } from "@/lib/reviewBatchEngine";
 
 export default function ReviewDetailPage() {
   const { id } = useParams();
   const { jobs, workers, reviewItems, updateReviewItem } = useStore();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("all");
+  // UX-7.3 — batch selection. Keyed by id so it persists across tab filtering.
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const job = jobs.find(j => j.id === id);
 
@@ -43,6 +49,34 @@ export default function ReviewDetailPage() {
   const handleReject = (itemId: string) => {
     updateReviewItem(itemId, { status: "rejected" });
   };
+
+  // UX-7.3 — Batch handlers. Each fans out to the SAME single-item store flow
+  // (updateReviewItem) used by the per-item buttons above — no new approval
+  // path, no bypass. Audit is recorded by BatchActionsBar before these run.
+  const handleBatchApprove = (ids: string[]) => {
+    ids.forEach((i) => updateReviewItem(i, { status: "approved" }));
+    setSelectedIds([]);
+  };
+  const handleBatchReject = (ids: string[], _reason: string) => {
+    ids.forEach((i) => updateReviewItem(i, { status: "rejected" }));
+    setSelectedIds([]);
+  };
+  const handleBatchCorrection = (ids: string[], _reason: string, note: string) => {
+    ids.forEach((i) =>
+      updateReviewItem(i, { status: "needs-correction", correctionNotes: note } as any)
+    );
+    setSelectedIds([]);
+  };
+  const handleBatchAssign = (_ids: string[], _assignee: string) => {
+    // Mock: assignment is audit-only in the prototype (no assignee field on
+    // ReviewItem). The audit record is written by BatchActionsBar.
+    setSelectedIds([]);
+  };
+
+  const toggleSelect = (itemId: string) =>
+    setSelectedIds((prev) =>
+      prev.includes(itemId) ? prev.filter((x) => x !== itemId) : [...prev, itemId]
+    );
 
   // UX-7.1 — read-only executive context for this job. Does not alter the
   // approval flow below; it only surfaces financial impact, age, priority,
@@ -74,10 +108,31 @@ export default function ReviewDetailPage() {
   const topPriorityReview = jobPriorityReviews[0] ?? null;
 
   const filteredItems = activeTab === "all"
-    ? pendingItems 
+    ? pendingItems
     : activeTab === "report"
       ? pendingItems.filter(item => item.type === "report" || item.type === "worker-report")
       : pendingItems.filter(item => item.type === activeTab);
+
+  // UX-7.3 — selection helpers scoped to the currently visible (filtered) items.
+  const visibleIds = filteredItems.map((i) => i.id);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((vid) => selectedIds.includes(vid));
+  const selectAllVisible = () =>
+    setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
+  const clearSelection = () => setSelectedIds([]);
+
+  // Selected reviews (across all tabs) mapped to the batch engine's input shape.
+  const selectedReviews: BatchReviewInput[] = pendingItems
+    .filter((i) => selectedIds.includes(i.id))
+    .map((i) => ({
+      id: i.id,
+      type: i.type,
+      title: (i as any).title,
+      notes: (i as any).notes,
+      content: (i as any).content,
+    }));
+
+  const currentUserName = user?.name || "Reviewer";
 
   return (
     <Layout>
@@ -262,6 +317,40 @@ export default function ReviewDetailPage() {
             )}
           </div>
 
+          {/* UX-7.3 — selection toolbar */}
+          {filteredItems.length > 0 && (
+            <div
+              className="mb-4 flex items-center gap-3 text-sm"
+              data-testid="review-selection-toolbar"
+            >
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={allVisibleSelected}
+                  onCheckedChange={(v) => (v ? selectAllVisible() : clearSelection())}
+                  data-testid="select-all-visible"
+                />
+                <span className="text-slate-600">Select all visible</span>
+              </label>
+              {selectedIds.length > 0 && (
+                <>
+                  <span className="text-slate-400">·</span>
+                  <span className="font-medium text-slate-700" data-testid="selection-count">
+                    {selectedIds.length} selected
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7"
+                    data-testid="clear-selection"
+                    onClick={clearSelection}
+                  >
+                    Clear
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+
           <TabsContent value={activeTab} className="mt-0">
             {filteredItems.length === 0 ? (
               <Card>
@@ -276,6 +365,15 @@ export default function ReviewDetailPage() {
                 {filteredItems.map(item => (
                   <Card key={item.id} className="overflow-hidden">
                     <div className="flex flex-col md:flex-row">
+                      {/* UX-7.3 — selection checkbox */}
+                      <div className="flex items-start p-6 pr-0 pt-7">
+                        <Checkbox
+                          checked={selectedIds.includes(item.id)}
+                          onCheckedChange={() => toggleSelect(item.id)}
+                          data-testid={`select-review-${item.id}`}
+                          aria-label={`Select review ${item.title || item.id}`}
+                        />
+                      </div>
                       {/* Left side - Content */}
                       <div className="flex-1 p-6">
                         <div className="flex items-start justify-between mb-4">
@@ -386,6 +484,17 @@ export default function ReviewDetailPage() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* UX-7.3 — batch decision toolbar (appears when reviews are selected) */}
+        <BatchActionsBar
+          selected={selectedReviews}
+          currentUserName={currentUserName}
+          onApprove={handleBatchApprove}
+          onReject={handleBatchReject}
+          onCorrection={handleBatchCorrection}
+          onAssign={handleBatchAssign}
+          onClear={clearSelection}
+        />
       </div>
     </Layout>
   );
