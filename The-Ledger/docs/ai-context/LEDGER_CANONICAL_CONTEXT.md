@@ -1302,9 +1302,9 @@ Programme document: docs/ux/UX_REDESIGN_PROGRAMME.md (authoritative tracker)
 | UX-3 | Dashboard Redesign | COMPLETE | June 5, 2026 |
 | UX-QW | Quick Wins (post-audit) | COMPLETE | June 5, 2026 |
 | UX-4 | Finance Hub | COMPLETE | June 10, 2026 |
-| UX-5 | Intelligence Hub | COMPLETE (branch feature/ux5-intelligence-hub; build + full Playwright suite green; awaiting owner merge to main) | June 16, 2026 |
-| UX-6 | Automation Hub | COMPLETE (branch feature/ux6-automation-hub; UX-6.1–6.10; build green; awaiting owner merge to main) | June 16, 2026 |
-| UX-7 | Review Centre Enhancement | Not started | — |
+| UX-5 | Intelligence Hub | COMPLETE — merged to main | June 16, 2026 |
+| UX-6 | Automation Hub | COMPLETE — merged to main (PR #25; UX-6.1–6.10) | June 20, 2026 |
+| UX-7 | Review Centre Enhancement | COMPLETE — UX-7.1–7.8 (branch feature/ux7-review-centre-enhancement; unified Review Operations Centre; build green; awaiting owner merge to main) | June 20, 2026 |
 | UX-8 | Operations Hub & Final Polish | Not started | — |
 
 ## UX-4 — Finance Hub (COMPLETE)

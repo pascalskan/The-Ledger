@@ -1,18 +1,29 @@
 import { Layout } from "@/components/layout";
-import { useStore } from "@/lib/mockData";
+import { useStore, useAuth } from "@/lib/mockData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, XCircle, Clock, FileText, Image as ImageIcon, Search, AlertCircle, ChevronLeft, ArrowRight, User } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, FileText, Image as ImageIcon, Search, AlertCircle, ChevronLeft, ArrowRight, User, PoundSterling, ShieldAlert, History, ListChecks, Gauge } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
+import { getJobReviewContext, formatGbp, formatAge, ageHoursOf } from "@/lib/reviewIntelligenceEngine";
+import { computePriorityQueue } from "@/lib/reviewPriorityEngine";
+import { PriorityBadge } from "@/components/review/ReviewPriorityPanel";
+import { BatchActionsBar } from "@/components/review/BatchActionsBar";
+import type { BatchReviewInput } from "@/lib/reviewBatchEngine";
+import { ReviewDecisionPanel } from "@/components/review/ReviewDecisionPanel";
+import { JobRecommendationPanel } from "@/components/review/ReviewRecommendations";
 
 export default function ReviewDetailPage() {
   const { id } = useParams();
   const { jobs, workers, reviewItems, updateReviewItem } = useStore();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("all");
+  // UX-7.3 — batch selection. Keyed by id so it persists across tab filtering.
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const job = jobs.find(j => j.id === id);
 
@@ -41,11 +52,89 @@ export default function ReviewDetailPage() {
     updateReviewItem(itemId, { status: "rejected" });
   };
 
-  const filteredItems = activeTab === "all" 
-    ? pendingItems 
+  // UX-7.3 — Batch handlers. Each fans out to the SAME single-item store flow
+  // (updateReviewItem) used by the per-item buttons above — no new approval
+  // path, no bypass. Audit is recorded by BatchActionsBar before these run.
+  const handleBatchApprove = (ids: string[]) => {
+    ids.forEach((i) => updateReviewItem(i, { status: "approved" }));
+    setSelectedIds([]);
+  };
+  const handleBatchReject = (ids: string[], _reason: string) => {
+    ids.forEach((i) => updateReviewItem(i, { status: "rejected" }));
+    setSelectedIds([]);
+  };
+  const handleBatchCorrection = (ids: string[], _reason: string, note: string) => {
+    ids.forEach((i) =>
+      updateReviewItem(i, { status: "needs-correction", correctionNotes: note } as any)
+    );
+    setSelectedIds([]);
+  };
+  const handleBatchAssign = (_ids: string[], _assignee: string) => {
+    // Mock: assignment is audit-only in the prototype (no assignee field on
+    // ReviewItem). The audit record is written by BatchActionsBar.
+    setSelectedIds([]);
+  };
+
+  const toggleSelect = (itemId: string) =>
+    setSelectedIds((prev) =>
+      prev.includes(itemId) ? prev.filter((x) => x !== itemId) : [...prev, itemId]
+    );
+
+  // UX-7.1 — read-only executive context for this job. Does not alter the
+  // approval flow below; it only surfaces financial impact, age, priority,
+  // related job summary, and approval history.
+  const reviewContext = getJobReviewContext(job.id);
+  const oldestAgeHours = pendingItems.reduce((max, item) => {
+    if (!item.submittedAt) return max;
+    const h = ageHoursOf({ submittedAt: item.submittedAt } as any);
+    return Math.max(max, h);
+  }, 0);
+  const detailPriority =
+    reviewContext.exposure >= 4000 || oldestAgeHours > 48
+      ? "Critical"
+      : reviewContext.exposure >= 1000 || oldestAgeHours > 24
+      ? "High"
+      : "Standard";
+  const priorityClass =
+    detailPriority === "Critical"
+      ? "bg-rose-50 text-rose-700 border-rose-200"
+      : detailPriority === "High"
+      ? "bg-amber-50 text-amber-700 border-amber-200"
+      : "bg-slate-50 text-slate-600 border-slate-200";
+
+  // UX-7.2 — intelligent prioritisation context for this job (informational
+  // only; does not affect approval). Uses the most urgent pending review on
+  // the job to surface category, score, contributing factors and queue position.
+  const priorityQueue = computePriorityQueue();
+  const jobPriorityReviews = priorityQueue.filter((r) => r.jobId === job.id);
+  const topPriorityReview = jobPriorityReviews[0] ?? null;
+
+  const filteredItems = activeTab === "all"
+    ? pendingItems
     : activeTab === "report"
       ? pendingItems.filter(item => item.type === "report" || item.type === "worker-report")
       : pendingItems.filter(item => item.type === activeTab);
+
+  // UX-7.3 — selection helpers scoped to the currently visible (filtered) items.
+  const visibleIds = filteredItems.map((i) => i.id);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((vid) => selectedIds.includes(vid));
+  const selectAllVisible = () =>
+    setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
+  const clearSelection = () => setSelectedIds([]);
+
+  // Selected reviews (across all tabs) mapped to the batch engine's input shape.
+  const selectedReviews: BatchReviewInput[] = pendingItems
+    .filter((i) => selectedIds.includes(i.id))
+    .map((i) => ({
+      id: i.id,
+      type: i.type,
+      title: (i as any).title,
+      notes: (i as any).notes,
+      content: (i as any).content,
+    }));
+
+  const currentUserName = user?.name || "Reviewer";
 
   return (
     <Layout>
@@ -63,6 +152,164 @@ export default function ReviewDetailPage() {
           </div>
         </div>
 
+        {/* UX-7.1 — read-only review context (financial impact, age, priority, job, history) */}
+        <div
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          data-testid="review-detail-context"
+        >
+          <Card data-testid="review-detail-financial">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <PoundSterling className="h-4 w-4" />
+                <span className="text-[11px] font-medium uppercase tracking-wide">
+                  Financial Impact
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {reviewContext.exposure > 0 ? formatGbp(reviewContext.exposure) : "—"}
+              </p>
+              <p className="text-xs text-slate-500">Blocked pending approval</p>
+            </CardContent>
+          </Card>
+
+          <Card data-testid="review-detail-age">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <Clock className="h-4 w-4" />
+                <span className="text-[11px] font-medium uppercase tracking-wide">
+                  Oldest Pending
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {pendingItems.length > 0 ? formatAge(oldestAgeHours) : "—"}
+              </p>
+              <p className="text-xs text-slate-500">{pendingItems.length} item(s) pending</p>
+            </CardContent>
+          </Card>
+
+          <Card data-testid="review-detail-priority">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <ShieldAlert className="h-4 w-4" />
+                <span className="text-[11px] font-medium uppercase tracking-wide">
+                  Priority
+                </span>
+              </div>
+              <div className="mt-2">
+                <Badge variant="outline" className={priorityClass}>
+                  {detailPriority}
+                </Badge>
+              </div>
+              <p className="mt-1 text-xs text-slate-500 capitalize">
+                {job.priority} priority job · {job.status}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card data-testid="review-detail-history">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-slate-400">
+                <History className="h-4 w-4" />
+                <span className="text-[11px] font-medium uppercase tracking-wide">
+                  Approval History
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-slate-900">
+                {reviewContext.history.length}
+              </p>
+              <p className="text-xs text-slate-500">
+                {reviewContext.history.filter((h) => h.status === "approved").length} approved ·{" "}
+                {reviewContext.history.filter((h) => h.status === "rejected").length} rejected ·{" "}
+                {reviewContext.history.filter((h) => h.status === "corrected").length} corrected
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* UX-7.2 — Intelligent prioritisation detail (informational only) */}
+        {topPriorityReview && (
+          <Card data-testid="review-detail-priority-panel">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ListChecks className="h-4 w-4 text-blue-500" /> Review Priority
+              </CardTitle>
+              <CardDescription>
+                Guidance for what to review first — this does not change approval
+                behaviour.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6 lg:grid-cols-3">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Priority</span>
+                    <PriorityBadge category={topPriorityReview.priority.category} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Priority score</span>
+                    <span
+                      className="flex items-center gap-1 text-sm font-semibold text-slate-900"
+                      data-testid="review-detail-priority-score"
+                    >
+                      <Gauge className="h-3.5 w-3.5 text-slate-400" />
+                      {topPriorityReview.priority.score} / 100
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Queue position</span>
+                    <span className="text-sm font-semibold text-slate-900">
+                      #{topPriorityReview.queuePosition}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600">Financial exposure</span>
+                    <span className="text-sm font-semibold text-slate-900">
+                      {topPriorityReview.financialImpact > 0
+                        ? formatGbp(topPriorityReview.financialImpact)
+                        : "—"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-2">
+                  <p className="mb-2 text-sm font-medium text-slate-900">
+                    Contributing factors
+                  </p>
+                  <div className="space-y-2" data-testid="review-detail-priority-factors">
+                    {topPriorityReview.priority.factors.map((f, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 text-sm"
+                      >
+                        <span className="w-36 shrink-0 text-slate-600">
+                          {f.label}
+                        </span>
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full bg-blue-500"
+                            style={{
+                              width: `${Math.min(100, (f.points / 30) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="w-28 shrink-0 text-right text-xs text-slate-500">
+                          +{f.points} · {f.detail}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* UX-7.4 — Decision Intelligence (read-only consequence preview) */}
+        <ReviewDecisionPanel jobId={job.id} />
+
+        {/* UX-7.5 — Review Recommendations (read-only guidance) */}
+        <JobRecommendationPanel jobId={job.id} />
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <TabsList>
@@ -78,6 +325,40 @@ export default function ReviewDetailPage() {
             )}
           </div>
 
+          {/* UX-7.3 — selection toolbar */}
+          {filteredItems.length > 0 && (
+            <div
+              className="mb-4 flex items-center gap-3 text-sm"
+              data-testid="review-selection-toolbar"
+            >
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={allVisibleSelected}
+                  onCheckedChange={(v) => (v ? selectAllVisible() : clearSelection())}
+                  data-testid="select-all-visible"
+                />
+                <span className="text-slate-600">Select all visible</span>
+              </label>
+              {selectedIds.length > 0 && (
+                <>
+                  <span className="text-slate-400">·</span>
+                  <span className="font-medium text-slate-700" data-testid="selection-count">
+                    {selectedIds.length} selected
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7"
+                    data-testid="clear-selection"
+                    onClick={clearSelection}
+                  >
+                    Clear
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+
           <TabsContent value={activeTab} className="mt-0">
             {filteredItems.length === 0 ? (
               <Card>
@@ -92,6 +373,15 @@ export default function ReviewDetailPage() {
                 {filteredItems.map(item => (
                   <Card key={item.id} className="overflow-hidden">
                     <div className="flex flex-col md:flex-row">
+                      {/* UX-7.3 — selection checkbox */}
+                      <div className="flex items-start p-6 pr-0 pt-7">
+                        <Checkbox
+                          checked={selectedIds.includes(item.id)}
+                          onCheckedChange={() => toggleSelect(item.id)}
+                          data-testid={`select-review-${item.id}`}
+                          aria-label={`Select review ${item.title || item.id}`}
+                        />
+                      </div>
                       {/* Left side - Content */}
                       <div className="flex-1 p-6">
                         <div className="flex items-start justify-between mb-4">
@@ -202,6 +492,17 @@ export default function ReviewDetailPage() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* UX-7.3 — batch decision toolbar (appears when reviews are selected) */}
+        <BatchActionsBar
+          selected={selectedReviews}
+          currentUserName={currentUserName}
+          onApprove={handleBatchApprove}
+          onReject={handleBatchReject}
+          onCorrection={handleBatchCorrection}
+          onAssign={handleBatchAssign}
+          onClear={clearSelection}
+        />
       </div>
     </Layout>
   );
