@@ -31,6 +31,14 @@ import type { Worker } from "@/types/worker";
 import type { Job } from "@/types/job";
 import type { Role } from "@/types/auth";
 import type { JobStatus } from "@/types/common";
+import {
+  getMilestonesForProject,
+  getDeliverablesForProject,
+  getTimelineForProject,
+  type ClientMilestoneStatus,
+  type ClientDeliverableStatus,
+  type ClientTimelineEventType,
+} from "@/lib/portalProjectModels";
 
 // ── Projection models ──────────────────────────────────────────────────────
 
@@ -59,6 +67,7 @@ export interface PortalJob {
   startAt: string;
   endAt: string;
   locationAddress: string;
+  createdAt: string;
   crew: PortalCrewMember[];
   crewCount: number;
   /** Assigned PM name — a management contact the client may see (domain-permitted). */
@@ -172,6 +181,7 @@ export function toPortalJob(job: Job, workers: Worker[], roles: Role[]): PortalJ
     startAt: job.startAt,
     endAt: job.endAt,
     locationAddress: job.locationAddress,
+    createdAt: job.createdAt,
     crew,
     crewCount: crew.length,
     managerName,
@@ -218,6 +228,104 @@ export function projectClientJobs(
 
 export function projectClientInvoices(clientId: string, invoices: Invoice[]): PortalInvoice[] {
   return invoices.filter((i) => i.clientId === clientId).map(toPortalInvoice);
+}
+
+// ── Milestones / Deliverables / Timeline projections (CL-4) ─────────────────
+
+export interface PortalMilestone {
+  id: string;
+  title: string;
+  description: string;
+  status: ClientMilestoneStatus;
+  targetDate: string;
+  completedDate?: string;
+}
+
+export interface PortalDeliverable {
+  id: string;
+  title: string;
+  description: string;
+  issuedDate: string;
+  status: ClientDeliverableStatus;
+}
+
+export interface PortalTimelineEvent {
+  id: string;
+  type: ClientTimelineEventType;
+  title: string;
+  description: string;
+  date: string;
+}
+
+export interface PortalProjectProgress {
+  total: number;
+  completed: number;
+  remaining: number;
+  /** Overall completion percent, derived from milestones (0–100). */
+  completionPercent: number;
+}
+
+/** Project the milestones for a (client-visible) project. Whitelist only. */
+export function projectMilestones(projectId: string): PortalMilestone[] {
+  return getMilestonesForProject(projectId).map((m) => ({
+    id: m.id,
+    title: m.title,
+    description: m.description,
+    status: m.status,
+    targetDate: m.targetDate,
+    completedDate: m.completedDate,
+  }));
+}
+
+/** Project the deliverables for a (client-visible) project. Whitelist only. */
+export function projectDeliverables(projectId: string): PortalDeliverable[] {
+  return getDeliverablesForProject(projectId).map((d) => ({
+    id: d.id,
+    title: d.title,
+    description: d.description,
+    issuedDate: d.issuedDate,
+    status: d.status,
+  }));
+}
+
+/** Project the client-safe timeline for a project from a client-safe job. */
+export function projectTimeline(job: PortalJob): PortalTimelineEvent[] {
+  return getTimelineForProject(job.id, {
+    status: job.status,
+    startAt: job.startAt,
+    endAt: job.endAt,
+    createdAt: job.createdAt,
+    title: job.title,
+  }).map((e) => ({
+    id: e.id,
+    type: e.type,
+    title: e.title,
+    description: e.description,
+    date: e.date,
+  }));
+}
+
+/**
+ * Derive project progress from milestones. When a project has no milestones,
+ * fall back to a status-derived percentage (still derived — never a hardcoded
+ * per-project constant).
+ */
+export function computeProjectProgress(
+  milestones: PortalMilestone[],
+  status: JobStatus
+): PortalProjectProgress {
+  const total = milestones.length;
+  const completed = milestones.filter((m) => m.status === "Completed").length;
+  const remaining = total - completed;
+
+  let completionPercent: number;
+  if (total > 0) {
+    completionPercent = Math.round((completed / total) * 100);
+  } else {
+    completionPercent = status === "Completed" ? 100 : status === "Active" ? 50 : 0;
+  }
+
+  return { total, completed, remaining, completionPercent };
 }
 
 // Job statuses considered "in progress" for site/dashboard rollups.

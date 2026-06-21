@@ -4,16 +4,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Briefcase, Users, Calendar, MapPin, ArrowLeft, UserCog, MessageSquare, Send, UserCircle, CheckCircle2, Package, Wrench,
+  Briefcase, Users, Calendar, MapPin, ArrowLeft, UserCog, MessageSquare, Send, UserCircle, Building2, CalendarClock, Activity,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { PortalJob } from "@/lib/portalProjections";
+import {
+  projectMilestones,
+  projectDeliverables,
+  projectTimeline,
+  computeProjectProgress,
+  type PortalJob,
+} from "@/lib/portalProjections";
 
 import { ProjectProgress } from "@/components/portal/ProjectProgress";
 import { ProjectContacts } from "@/components/portal/ProjectContacts";
 import { AssignedCrew } from "@/components/portal/AssignedCrew";
 import { NextVisit } from "@/components/portal/NextVisit";
-import { ActivityTimeline } from "@/components/portal/ActivityTimeline";
+import { ProjectProgressSummary } from "@/components/portal/ProjectProgressSummary";
+import { ProjectMilestones } from "@/components/portal/ProjectMilestones";
+import { ProjectDeliverables } from "@/components/portal/ProjectDeliverables";
+import { ProjectTimeline } from "@/components/portal/ProjectTimeline";
 
 type StatusFilter = "all" | "active" | "completed";
 
@@ -148,12 +157,11 @@ function PortalJobDetail({
     scheduledDate: c.scheduledDate,
   }));
 
-  const mockActivities = [
-    { title: "Job Created", date: new Date(job.startAt).toLocaleDateString(), description: "Project created in system.", icon: CheckCircle2 },
-    { title: "Scheduled", date: new Date(job.startAt).toLocaleDateString(), description: "Crew and dates confirmed.", icon: Calendar },
-    { title: "Materials Ordered", date: new Date(job.startAt).toLocaleDateString(), description: "Supplies requested.", icon: Package },
-    { title: "Work Started", date: new Date(job.startAt).toLocaleDateString(), description: "Crew on site.", icon: Wrench },
-  ];
+  // Client-safe project data via the projection layer.
+  const milestones = projectMilestones(job.id);
+  const deliverables = projectDeliverables(job.id);
+  const timeline = projectTimeline(job);
+  const progress = computeProjectProgress(milestones, job.status);
 
   return (
     <div className="space-y-6 pb-12" data-testid="portal-job-detail">
@@ -175,34 +183,32 @@ function PortalJobDetail({
 
       <ProjectProgress status={job.status} />
 
+      {/* Project Summary */}
+      <Card className="shadow-sm border-slate-200" data-testid="portal-project-summary">
+        <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
+          <CardTitle className="text-lg">Project Summary</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-5 space-y-4 text-sm">
+          <p className="text-slate-700 leading-relaxed text-base">{job.description}</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-4 border-t border-slate-100">
+            <SummaryField icon={Building2} label="Site" value={job.locationAddress} testid="portal-summary-site" />
+            <SummaryField icon={Activity} label="Status" value={job.status} testid="portal-summary-status" />
+            <SummaryField icon={UserCog} label="Assigned PM" value={job.managerName || "—"} testid="portal-detail-pm" />
+            <SummaryField icon={Calendar} label="Start date" value={new Date(job.startAt).toLocaleDateString()} testid="portal-summary-start" />
+            <SummaryField icon={CalendarClock} label="Target completion" value={new Date(job.endAt).toLocaleDateString()} testid="portal-summary-target" />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-2">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="shadow-sm border-slate-200">
-            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
-              <CardTitle className="text-lg">Project Overview</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm pt-5">
-              <p className="text-slate-700 leading-relaxed text-base">{job.description}</p>
-              <div className="grid sm:grid-cols-2 gap-6 pt-5 border-t border-slate-100">
-                <div className="space-y-1.5">
-                  <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Location</span>
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 mt-0.5 text-slate-400 shrink-0" />
-                    <span className="text-slate-800 font-medium">{job.locationAddress}</span>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Assigned PM</span>
-                  <div className="flex items-start gap-2">
-                    <UserCog className="h-4 w-4 mt-0.5 text-slate-400 shrink-0" />
-                    <span className="text-slate-800 font-medium" data-testid="portal-detail-pm">{job.managerName || "—"}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ProjectProgressSummary progress={progress} />
 
-          <ActivityTimeline activities={mockActivities} />
+          <ProjectMilestones milestones={milestones} />
+
+          <ProjectDeliverables deliverables={deliverables} />
+
+          <ProjectTimeline events={timeline} />
 
           <Card className="shadow-sm border-slate-200">
             <CardHeader className="pb-3 border-b border-slate-100">
@@ -257,6 +263,28 @@ function PortalJobDetail({
             notes="Please ensure site access is clear before arrival."
           />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SummaryField({
+  icon: Icon,
+  label,
+  value,
+  testid,
+}: {
+  icon: typeof Building2;
+  label: string;
+  value: string;
+  testid: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{label}</span>
+      <div className="flex items-start gap-2">
+        <Icon className="h-4 w-4 mt-0.5 text-slate-400 shrink-0" />
+        <span className="text-slate-800 font-medium" data-testid={testid}>{value}</span>
       </div>
     </div>
   );

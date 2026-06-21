@@ -7,9 +7,11 @@ import {
   projectClientJobs,
   projectClientSites,
   projectClientInvoices,
+  projectMilestones,
+  projectDeliverables,
   type PortalJob,
 } from "@/lib/portalProjections";
-import { buildPortalActivity } from "@/lib/portalActivity";
+import { buildPortalActivity, type ActivityMilestone, type ActivityDeliverable } from "@/lib/portalActivity";
 import { getPortalBranding } from "@/lib/portalBranding";
 import { recordPortalAudit } from "@/lib/portalAudit";
 import { PortalShell, PORTAL_NAV, type PortalSectionKey } from "@/components/portal/PortalShell";
@@ -55,10 +57,15 @@ export default function PortalPage() {
     () => (account ? projectClientInvoices(account.clientId, invoices) : []),
     [account, invoices]
   );
-  const portalActivity = useMemo(
-    () => buildPortalActivity(portalJobs, portalInvoices),
-    [portalJobs, portalInvoices]
-  );
+  const portalActivity = useMemo(() => {
+    const milestones: ActivityMilestone[] = [];
+    const deliverables: ActivityDeliverable[] = [];
+    for (const job of portalJobs) {
+      for (const m of projectMilestones(job.id)) milestones.push({ jobTitle: job.title, milestone: m });
+      for (const d of projectDeliverables(job.id)) deliverables.push({ jobTitle: job.title, deliverable: d });
+    }
+    return buildPortalActivity(portalJobs, portalInvoices, milestones, deliverables);
+  }, [portalJobs, portalInvoices]);
 
   const selectedJob: PortalJob | null = jobId ? portalJobs.find((j) => j.id === jobId) ?? null : null;
 

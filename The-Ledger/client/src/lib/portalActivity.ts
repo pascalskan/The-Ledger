@@ -14,7 +14,17 @@
 // is built from projected jobs + invoices.)
 // ---------------------------------------------------------------------------
 
-import type { PortalJob, PortalInvoice } from "@/lib/portalProjections";
+import type { PortalJob, PortalInvoice, PortalMilestone, PortalDeliverable } from "@/lib/portalProjections";
+
+/** A milestone/deliverable paired with its parent project title for the feed. */
+export interface ActivityMilestone {
+  jobTitle: string;
+  milestone: PortalMilestone;
+}
+export interface ActivityDeliverable {
+  jobTitle: string;
+  deliverable: PortalDeliverable;
+}
 
 export type PortalActivityCategory = "project" | "document" | "invoice" | "request";
 
@@ -45,7 +55,9 @@ function projectStatusVerb(status: PortalJob["status"]): string {
  */
 export function buildPortalActivity(
   jobs: PortalJob[],
-  invoices: PortalInvoice[]
+  invoices: PortalInvoice[],
+  milestones: ActivityMilestone[] = [],
+  deliverables: ActivityDeliverable[] = []
 ): PortalActivityItem[] {
   const items: PortalActivityItem[] = [];
 
@@ -56,6 +68,31 @@ export function buildPortalActivity(
       title: `${job.title} — ${projectStatusVerb(job.status)}`,
       description: `Project ${job.jobId} is ${projectStatusVerb(job.status)}.`,
       date: job.startAt,
+    });
+  }
+
+  // Milestone completed events (client-safe project progress).
+  for (const { jobTitle, milestone } of milestones) {
+    if (milestone.status === "Completed" && milestone.completedDate) {
+      items.push({
+        id: `act-ms-${milestone.id}`,
+        category: "project",
+        title: `Milestone completed: ${milestone.title}`,
+        description: `${jobTitle} — ${milestone.title} completed.`,
+        date: milestone.completedDate,
+      });
+    }
+  }
+
+  // Deliverable submitted/approved events (Pending is internal-facing only).
+  for (const { jobTitle, deliverable } of deliverables) {
+    if (deliverable.status === "Pending") continue;
+    items.push({
+      id: `act-dl-${deliverable.id}`,
+      category: "document",
+      title: `Deliverable ${deliverable.status.toLowerCase()}: ${deliverable.title}`,
+      description: `${jobTitle} — ${deliverable.title} ${deliverable.status.toLowerCase()}.`,
+      date: deliverable.issuedDate,
     });
   }
 
