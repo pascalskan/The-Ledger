@@ -356,6 +356,107 @@ const INITIAL_LOCATIONS: Location[] = [];
 const INITIAL_STOCK_MOVEMENTS: StockMovement[] = [];
 const INITIAL_REVIEW_ITEMS: ReviewItem[] = [];
 
+// ─── JOB NOTES ───────────────────────────────────────────────────
+export interface JobNote {
+  id: string;
+  jobId: string;
+  companyId: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+  updatedAt?: string;
+  archived?: boolean;
+}
+
+// ─── JOB COMMUNICATIONS ──────────────────────────────────────────
+export interface JobCommunication {
+  id: string;
+  jobId: string;
+  companyId: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  type: 'pm-comment' | 'crew-update' | 'internal-update';
+  createdAt: string;
+}
+
+const DEMO_JOB_NOTES: JobNote[] = [
+  {
+    id: "note-pm-1",
+    jobId: "dj-pm-active-1",
+    companyId: DEMO_COMPANY_ID,
+    authorId: "du2",
+    authorName: "Alex Reid",
+    content: "Confirmed with client that Zone C work can proceed during off-peak hours (before 8am and after 6pm). Night shift approved for Mon/Tue.",
+    createdAt: new Date(Date.now() - 6 * 3600000).toISOString(),
+  },
+  {
+    id: "note-pm-2",
+    jobId: "dj-pm-active-1",
+    companyId: DEMO_COMPANY_ID,
+    authorId: "du2",
+    authorName: "Alex Reid",
+    content: "Legacy pipework asbestos survey booked with Enviro-Safe Ltd — awaiting confirmed appointment time. All work in Zone C paused pending clearance.",
+    createdAt: new Date(Date.now() - 28 * 3600000).toISOString(),
+  },
+  {
+    id: "note-pm-3",
+    jobId: "dj-pm-active-1",
+    companyId: DEMO_COMPANY_ID,
+    authorId: "du2",
+    authorName: "Alex Reid",
+    content: "Additional fixings ordered from HSS Direct — delivery expected Thursday. Marcus to check stock on arrival before proceeding with Zone C brackets.",
+    createdAt: new Date(Date.now() - 52 * 3600000).toISOString(),
+    archived: true,
+  },
+  {
+    id: "note-br-1",
+    jobId: "dj-boiler-room-2",
+    companyId: DEMO_COMPANY_ID,
+    authorId: "du2",
+    authorName: "Alex Reid",
+    content: "Site access restricted to loading bay entrance only. Security code is 4821. Must sign in at reception on arrival.",
+    createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
+  },
+];
+
+const DEMO_JOB_COMMUNICATIONS: JobCommunication[] = [
+  {
+    id: "comm-pm-1",
+    jobId: "dj-pm-active-1",
+    companyId: DEMO_COMPANY_ID,
+    authorId: "du2",
+    authorName: "Alex Reid",
+    content: "Zone B completed ahead of schedule — good work team. Insulation crew confirmed for Monday 7am start. Marcus to brief them on access route.",
+    type: "pm-comment",
+    createdAt: new Date(Date.now() - 4 * 3600000).toISOString(),
+  },
+  {
+    id: "comm-pm-2",
+    jobId: "dj-pm-active-1",
+    companyId: DEMO_COMPANY_ID,
+    authorId: "dw2",
+    authorName: "Marcus Cole",
+    content: "Zone A and B fully ducted. Zone C prep started but paused on the legacy pipework find. Photos submitted for review. Awaiting guidance before proceeding.",
+    type: "crew-update",
+    createdAt: new Date(Date.now() - 5 * 3600000).toISOString(),
+  },
+  {
+    id: "comm-pm-3",
+    jobId: "dj-pm-active-1",
+    companyId: DEMO_COMPANY_ID,
+    authorId: "du2",
+    authorName: "Alex Reid",
+    content: "H&S note: all crew to wear full PPE in Zone C until asbestos survey completed. Zero exceptions. Flagged with CEO and escalated for sign-off.",
+    type: "internal-update",
+    createdAt: new Date(Date.now() - 26 * 3600000).toISOString(),
+  },
+];
+
+let jobNotes: JobNote[] = [...DEMO_JOB_NOTES];
+let jobCommunications: JobCommunication[] = [...DEMO_JOB_COMMUNICATIONS];
+
 // --- DEMO DATA ---
 const DEMO_LOCATIONS: Location[] = [
   { id: "loc-1", name: "Main Warehouse", type: "warehouse", description: "Central hub for all materials", createdAt: new Date().toISOString(), companyId: DEMO_COMPANY_ID },
@@ -815,9 +916,44 @@ const DEMO_JOBS: Job[] = [
     locationAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
     latitude: 53.477,
     longitude: -2.244,
+    accessInstructions: "Enter via loading bay gate — code 4821. Park in bays marked B1–B6. Sign in at reception desk (Building C). Trading hours are 8am–6pm; night access must be pre-arranged with site manager.",
+    siteContacts: [
+      { name: "Brian Walsh", role: "Site Manager", phone: "07700 900 123", email: "b.walsh@hsslimited.co.uk" },
+      { name: "Sandra Yip", role: "Operations Lead", phone: "07700 900 456" },
+    ],
+    emergencyContacts: [
+      { name: "HSS Security Control", role: "On-site Security", phone: "0161 555 0199" },
+      { name: "Brian Walsh", role: "Site Manager", phone: "07700 900 123" },
+    ],
+    specialRequirements: "Trading hours: 8am–11pm. All shutdowns must be agreed 48hrs in advance. Zone C pipework area contains potential ACM — work paused pending asbestos survey. Full PPE mandatory in Zone C.",
     assignedWorkerIds: ["dw2", "dw3"],
     assignedEquipmentIds: [],
-    documents: [],
+    documents: [
+      {
+        id: "doc-pm-1",
+        name: "HVAC Replacement Specification v2.pdf",
+        url: "#",
+        uploadedAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+        category: "site",
+        uploadedBy: "Alex Reid",
+      },
+      {
+        id: "doc-pm-2",
+        name: "Risk Assessment — Block C Works.pdf",
+        url: "#",
+        uploadedAt: new Date(Date.now() - 6 * 86400000).toISOString(),
+        category: "compliance",
+        uploadedBy: "Alex Reid",
+      },
+      {
+        id: "doc-pm-3",
+        name: "Client Approval — Night Shift Access.pdf",
+        url: "#",
+        uploadedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+        category: "client",
+        uploadedBy: "Alex Reid",
+      },
+    ],
     costs: { labour: 0, equipment: 0, materials: 0, other: 0 },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -837,9 +973,26 @@ const DEMO_JOBS: Job[] = [
     locationAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
     latitude: 53.477,
     longitude: -2.244,
+    accessInstructions: "Loading bay entrance, security code 4821. Boiler room is sub-basement level — access via service lift only. No passenger lift access to sub-basement.",
+    siteContacts: [
+      { name: "Brian Walsh", role: "Site Manager", phone: "07700 900 123", email: "b.walsh@hsslimited.co.uk" },
+    ],
+    emergencyContacts: [
+      { name: "HSS Security Control", role: "On-site Security", phone: "0161 555 0199" },
+    ],
+    specialRequirements: "All work restricted to off-peak hours (before 7am and after 7pm). Gas isolation must be signed off by Brian Walsh before any pipework begins.",
     assignedWorkerIds: ["dw2"],
     assignedEquipmentIds: [],
-    documents: [],
+    documents: [
+      {
+        id: "doc-br-1",
+        name: "Boiler Room Pipework Drawings.pdf",
+        url: "#",
+        uploadedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+        category: "site",
+        uploadedBy: "Alex Reid",
+      },
+    ],
     costs: { labour: 0, equipment: 0, materials: 0, other: 0 },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -1301,6 +1454,9 @@ export const useStore = () => {
     }
   };
 
+  const filteredJobNotes = jobNotes.filter(n => n.companyId === currentCompanyId && !n.archived);
+  const filteredJobCommunications = jobCommunications.filter(c => c.companyId === currentCompanyId);
+
   return {
     clients: filteredClients,
     workers: filteredWorkers,
@@ -1318,6 +1474,40 @@ export const useStore = () => {
     reviewItems: filteredReviewItems,
     logs,
     companySettings: currentSettings,
+
+    // PM-6 — Job Notes & Communications
+    jobNotes: filteredJobNotes,
+    jobCommunications: filteredJobCommunications,
+    addJobNote: (note: Omit<JobNote, 'id' | 'companyId' | 'createdAt'>) => {
+      const entry: JobNote = {
+        ...note,
+        id: `note-${Math.random().toString(36).substr(2, 9)}`,
+        companyId: currentCompanyId,
+        createdAt: new Date().toISOString(),
+      };
+      jobNotes.unshift(entry);
+      addLog("CREATE", "JobNote", `Note added to job ${note.jobId}`);
+      refresh();
+    },
+    updateJobNote: (id: string, updates: Partial<JobNote>) => {
+      const idx = jobNotes.findIndex(n => n.id === id);
+      if (idx !== -1) {
+        jobNotes[idx] = { ...jobNotes[idx], ...updates, updatedAt: new Date().toISOString() };
+        addLog("UPDATE", "JobNote", `Note ${id} updated`);
+        refresh();
+      }
+    },
+    addJobCommunication: (comm: Omit<JobCommunication, 'id' | 'companyId' | 'createdAt'>) => {
+      const entry: JobCommunication = {
+        ...comm,
+        id: `comm-${Math.random().toString(36).substr(2, 9)}`,
+        companyId: currentCompanyId,
+        createdAt: new Date().toISOString(),
+      };
+      jobCommunications.unshift(entry);
+      addLog("CREATE", "JobCommunication", `Communication added to job ${comm.jobId}`);
+      refresh();
+    },
 
     // Phase 4.2 — Financial normalization tables
     timesheets: mockTimesheets,

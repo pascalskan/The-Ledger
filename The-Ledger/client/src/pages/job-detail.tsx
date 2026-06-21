@@ -4,8 +4,9 @@ import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { useRoute, useLocation } from "wouter";
-import { Calendar, MapPin, Users, Truck, ReceiptText, ArrowLeft, FileText, Eye, Search, FilePlus, ClipboardCheck, TriangleAlert, CheckCircle2, Clock, Wrench } from "lucide-react";
+import { Calendar, MapPin, Users, Truck, ReceiptText, ArrowLeft, FileText, Eye, Search, FilePlus, ClipboardCheck, TriangleAlert, CheckCircle2, Clock, Wrench, Phone, Mail, StickyNote, MessageSquare, Activity, ShieldCheck, PenLine, Archive, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -21,12 +22,17 @@ import { JobExceptionPanel } from "@/components/finance/JobExceptionPanel";
 import { INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS } from "@/lib/invoiceBuilder";
 
 export default function JobDetailPage() {
-  const { jobs, clients, workers, equipment, invoices, addInvoice, roles, updateJob, users, invoiceDrafts, reviewItems } = useStore();
+  const { jobs, clients, workers, equipment, invoices, addInvoice, roles, updateJob, users, invoiceDrafts, reviewItems, jobNotes, jobCommunications, addJobNote, updateJobNote, addJobCommunication } = useStore();
   const { user } = useAuth();
   const [match, params] = useRoute("/jobs/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [viewDoc, setViewDoc] = useState<{name: string, url: string} | null>(null);
+  const [newNoteContent, setNewNoteContent] = useState("");
+  const [showAddNote, setShowAddNote] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editNoteContent, setEditNoteContent] = useState("");
+  const [newCommContent, setNewCommContent] = useState("");
 
   const userIsPM = isProjectManager(user, roles);
   const userIsCEO = isCEO(user, roles);
@@ -413,31 +419,428 @@ export default function JobDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Documents */}
+          {/* Site Information */}
+          <Card data-testid="pm-workspace-site-info">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Site Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site Address</p>
+                <p className="flex items-start gap-2">
+                  <MapPin className="h-3.5 w-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                  <span>{job.locationAddress}</span>
+                </p>
+              </div>
+
+              {job.accessInstructions && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Access Instructions</p>
+                  <p className="text-slate-700 bg-slate-50 rounded p-2 border text-xs leading-relaxed" data-testid="pm-site-access-instructions">
+                    {job.accessInstructions}
+                  </p>
+                </div>
+              )}
+
+              {job.specialRequirements && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                    <ShieldCheck className="h-3 w-3" /> Special Requirements
+                  </p>
+                  <p className="text-slate-700 bg-amber-50 rounded p-2 border border-amber-100 text-xs leading-relaxed" data-testid="pm-site-special-requirements">
+                    {job.specialRequirements}
+                  </p>
+                </div>
+              )}
+
+              {job.siteContacts && job.siteContacts.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Site Contacts</p>
+                  <div className="space-y-2" data-testid="pm-site-contacts">
+                    {job.siteContacts.map((contact, i) => (
+                      <div key={i} className="flex items-start gap-3 border rounded p-2" data-testid={`pm-site-contact-${i}`}>
+                        <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700 shrink-0">
+                          {contact.name.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium">{contact.name}</p>
+                          <p className="text-xs text-muted-foreground">{contact.role}</p>
+                          <div className="flex flex-wrap gap-3 mt-1">
+                            <a href={`tel:${contact.phone}`} className="text-xs text-blue-600 flex items-center gap-1 hover:underline">
+                              <Phone className="h-3 w-3" />{contact.phone}
+                            </a>
+                            {contact.email && (
+                              <a href={`mailto:${contact.email}`} className="text-xs text-blue-600 flex items-center gap-1 hover:underline">
+                                <Mail className="h-3 w-3" />{contact.email}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {job.emergencyContacts && job.emergencyContacts.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-rose-600 flex items-center gap-1">
+                    <TriangleAlert className="h-3 w-3" /> Emergency Contacts
+                  </p>
+                  <div className="space-y-2" data-testid="pm-emergency-contacts">
+                    {job.emergencyContacts.map((contact, i) => (
+                      <div key={i} className="flex items-center gap-3 border border-rose-100 rounded p-2 bg-rose-50/30" data-testid={`pm-emergency-contact-${i}`}>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-rose-800">{contact.name}</p>
+                          <p className="text-xs text-rose-600">{contact.role}</p>
+                        </div>
+                        <a href={`tel:${contact.phone}`} className="text-xs text-rose-600 font-medium flex items-center gap-1 hover:underline shrink-0">
+                          <Phone className="h-3 w-3" />{contact.phone}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Documents — enhanced */}
           <Card data-testid="pm-workspace-documents">
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><FileText className="h-4 w-4" /> Documents</CardTitle>
             </CardHeader>
             <CardContent>
               {job.documents && job.documents.length > 0 ? (
-                <div className="space-y-2">
-                  {job.documents.map((doc, i) => (
-                    <div key={i} className="flex justify-between items-center border rounded p-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-blue-500" />
-                        <span>{doc.name}</span>
+                <div className="space-y-2" data-testid="pm-documents-list">
+                  {(['site', 'compliance', 'client', 'report', 'other'] as const).map(cat => {
+                    const catDocs = job.documents.filter(d => (d.category ?? 'other') === cat);
+                    if (catDocs.length === 0) return null;
+                    const catLabels: Record<string, string> = { site: 'Site Docs', compliance: 'Compliance', client: 'Client Docs', report: 'Reports', other: 'Other' };
+                    return (
+                      <div key={cat}>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{catLabels[cat]}</p>
+                        {catDocs.map((doc, i) => (
+                          <div key={doc.id || i} className="flex justify-between items-center border rounded p-2 text-sm mb-1.5" data-testid={`pm-doc-item-${doc.id || i}`}>
+                            <div className="flex items-center gap-2 min-w-0">
+                              <FileText className="h-4 w-4 text-blue-500 shrink-0" />
+                              <div className="min-w-0">
+                                <p className="truncate font-medium">{doc.name}</p>
+                                {doc.uploadedBy && (
+                                  <p className="text-[10px] text-muted-foreground">by {doc.uploadedBy} · {new Date(doc.uploadedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                                )}
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => setViewDoc(doc)} data-testid={`button-job-doc-view-${doc.id || i}`}>
+                              <Eye className="h-4 w-4 mr-1" /> View
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => setViewDoc(doc)} data-testid={`button-job-doc-view-${i}`}>
-                        <Eye className="h-4 w-4 mr-1" /> View
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground italic">No documents attached.</p>
+                <p className="text-sm text-muted-foreground italic" data-testid="pm-documents-empty">No documents attached.</p>
               )}
             </CardContent>
           </Card>
+
+          {/* Notes */}
+          {(() => {
+            const thisJobNotes = jobNotes.filter(n => n.jobId === job.id);
+            return (
+              <Card data-testid="pm-workspace-notes">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2"><StickyNote className="h-4 w-4" /> Notes</CardTitle>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => setShowAddNote(v => !v)}
+                      data-testid="pm-note-add-button"
+                    >
+                      <PenLine className="h-3 w-3" /> Add Note
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {showAddNote && (
+                    <div className="space-y-2 border rounded-md p-3 bg-slate-50" data-testid="pm-note-add-form">
+                      <Textarea
+                        placeholder="Write a note for this job..."
+                        value={newNoteContent}
+                        onChange={e => setNewNoteContent(e.target.value)}
+                        className="min-h-[80px] text-sm"
+                        data-testid="pm-note-input"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            if (!newNoteContent.trim()) return;
+                            addJobNote({
+                              jobId: job.id,
+                              authorId: user?.id ?? '',
+                              authorName: user?.name ?? 'PM',
+                              content: newNoteContent.trim(),
+                            });
+                            setNewNoteContent("");
+                            setShowAddNote(false);
+                            toast({ title: "Note saved", description: "Your note has been added to this job." });
+                          }}
+                          disabled={!newNoteContent.trim()}
+                          data-testid="pm-note-submit"
+                        >
+                          Save Note
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setShowAddNote(false); setNewNoteContent(""); }}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {thisJobNotes.length === 0 && !showAddNote ? (
+                    <p className="text-sm text-muted-foreground" data-testid="pm-notes-empty">No notes yet. Add the first note for this job.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {thisJobNotes.map(note => (
+                        <div key={note.id} className="border rounded-md p-3 text-sm" data-testid={`pm-note-${note.id}`}>
+                          {editingNoteId === note.id ? (
+                            <div className="space-y-2">
+                              <Textarea
+                                value={editNoteContent}
+                                onChange={e => setEditNoteContent(e.target.value)}
+                                className="min-h-[80px] text-sm"
+                                data-testid={`pm-note-edit-input-${note.id}`}
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  onClick={() => {
+                                    updateJobNote(note.id, { content: editNoteContent.trim() });
+                                    setEditingNoteId(null);
+                                  }}
+                                  data-testid={`pm-note-edit-submit-${note.id}`}
+                                >
+                                  Save
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setEditingNoteId(null)}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-slate-700 leading-relaxed">{note.content}</p>
+                              <div className="flex items-center justify-between mt-2">
+                                <p className="text-[11px] text-muted-foreground">
+                                  {note.authorName} · {new Date(note.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  {note.updatedAt && ' (edited)'}
+                                </p>
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 text-[11px] text-muted-foreground px-2"
+                                    onClick={() => { setEditingNoteId(note.id); setEditNoteContent(note.content); }}
+                                    data-testid={`pm-note-edit-${note.id}`}
+                                  >
+                                    <PenLine className="h-3 w-3 mr-1" /> Edit
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 text-[11px] text-muted-foreground px-2"
+                                    onClick={() => updateJobNote(note.id, { archived: true })}
+                                    data-testid={`pm-note-archive-${note.id}`}
+                                  >
+                                    <Archive className="h-3 w-3 mr-1" /> Archive
+                                  </Button>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
+
+          {/* Communication */}
+          {(() => {
+            const thisJobComms = jobCommunications.filter(c => c.jobId === job.id);
+            const commTypeLabels: Record<string, string> = {
+              'pm-comment': 'PM Comment',
+              'crew-update': 'Crew Update',
+              'internal-update': 'Internal',
+            };
+            const commTypeColors: Record<string, string> = {
+              'pm-comment': 'bg-blue-100 text-blue-700',
+              'crew-update': 'bg-green-100 text-green-700',
+              'internal-update': 'bg-amber-100 text-amber-700',
+            };
+            return (
+              <Card data-testid="pm-workspace-communication">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Communication</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {thisJobComms.length === 0 ? (
+                    <p className="text-sm text-muted-foreground" data-testid="pm-comm-empty">No communication yet on this job.</p>
+                  ) : (
+                    <div className="space-y-3" data-testid="pm-comm-list">
+                      {thisJobComms.map(comm => (
+                        <div key={comm.id} className="flex gap-3" data-testid={`pm-comm-item-${comm.id}`}>
+                          <div className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center text-[11px] font-bold text-slate-600 shrink-0">
+                            {comm.authorName.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-sm font-medium">{comm.authorName}</span>
+                              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${commTypeColors[comm.type] ?? 'bg-slate-100 text-slate-600'}`}>
+                                {commTypeLabels[comm.type] ?? comm.type}
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                {new Date(comm.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-700 leading-relaxed">{comm.content}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Post comment form */}
+                  <div className="pt-2 border-t space-y-2">
+                    <Textarea
+                      placeholder="Add a comment or update..."
+                      value={newCommContent}
+                      onChange={e => setNewCommContent(e.target.value)}
+                      className="min-h-[70px] text-sm"
+                      data-testid="pm-comm-input"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs gap-1"
+                      onClick={() => {
+                        if (!newCommContent.trim()) return;
+                        addJobCommunication({
+                          jobId: job.id,
+                          authorId: user?.id ?? '',
+                          authorName: user?.name ?? 'PM',
+                          content: newCommContent.trim(),
+                          type: 'pm-comment',
+                        });
+                        setNewCommContent("");
+                        toast({ title: "Comment posted", description: "Your update has been added to this job." });
+                      }}
+                      disabled={!newCommContent.trim()}
+                      data-testid="pm-comm-submit"
+                    >
+                      <Send className="h-3 w-3" /> Post Update
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
+          {/* Activity Timeline */}
+          {(() => {
+            type TimelineEvent = {
+              id: string;
+              label: string;
+              sub: string;
+              timestamp: string;
+              icon: 'review' | 'note' | 'comm' | 'doc' | 'status';
+            };
+
+            const events: TimelineEvent[] = [
+              // Reviews
+              ...reviewItems
+                .filter(r => r.jobId === job.id && r.submittedAt)
+                .map(r => ({
+                  id: `review-${r.id}`,
+                  label: `${r.type.charAt(0).toUpperCase() + r.type.slice(1)} submitted`,
+                  sub: `by ${(r as any).submittedBy ?? 'worker'} · ${r.status}`,
+                  timestamp: r.submittedAt!,
+                  icon: 'review' as const,
+                })),
+              // Notes
+              ...jobNotes
+                .filter(n => n.jobId === job.id)
+                .map(n => ({
+                  id: `note-${n.id}`,
+                  label: 'Note added',
+                  sub: `by ${n.authorName} · ${n.content.slice(0, 60)}${n.content.length > 60 ? '…' : ''}`,
+                  timestamp: n.createdAt,
+                  icon: 'note' as const,
+                })),
+              // Communications
+              ...jobCommunications
+                .filter(c => c.jobId === job.id)
+                .map(c => ({
+                  id: `comm-${c.id}`,
+                  label: c.type === 'crew-update' ? 'Crew update posted' : c.type === 'internal-update' ? 'Internal update posted' : 'PM comment posted',
+                  sub: `by ${c.authorName} · ${c.content.slice(0, 60)}${c.content.length > 60 ? '…' : ''}`,
+                  timestamp: c.createdAt,
+                  icon: 'comm' as const,
+                })),
+              // Documents
+              ...job.documents.map(d => ({
+                id: `doc-${d.id}`,
+                label: 'Document uploaded',
+                sub: `${d.name}${d.uploadedBy ? ` by ${d.uploadedBy}` : ''}`,
+                timestamp: d.uploadedAt,
+                icon: 'doc' as const,
+              })),
+            ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 12);
+
+            const iconEl = (type: TimelineEvent['icon']) => {
+              if (type === 'review') return <ClipboardCheck className="h-3.5 w-3.5 text-blue-500" />;
+              if (type === 'note') return <StickyNote className="h-3.5 w-3.5 text-amber-500" />;
+              if (type === 'comm') return <MessageSquare className="h-3.5 w-3.5 text-green-500" />;
+              if (type === 'doc') return <FileText className="h-3.5 w-3.5 text-purple-500" />;
+              return <Activity className="h-3.5 w-3.5 text-slate-400" />;
+            };
+
+            return (
+              <Card data-testid="pm-workspace-timeline">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Activity className="h-4 w-4" /> Activity Timeline</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {events.length === 0 ? (
+                    <p className="text-sm text-muted-foreground" data-testid="pm-timeline-empty">No activity recorded yet.</p>
+                  ) : (
+                    <div className="space-y-1" data-testid="pm-timeline-list">
+                      {events.map((evt, i) => (
+                        <div key={evt.id} className="flex gap-3 py-2 border-b last:border-0" data-testid={`pm-timeline-event-${i}`}>
+                          <div className="h-6 w-6 rounded-full bg-slate-50 border flex items-center justify-center shrink-0 mt-0.5">
+                            {iconEl(evt.icon)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{evt.label}</p>
+                            <p className="text-xs text-muted-foreground truncate">{evt.sub}</p>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground shrink-0 pt-0.5">
+                            {new Date(evt.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {/* Attention Required */}
           <Card data-testid="pm-workspace-attention">

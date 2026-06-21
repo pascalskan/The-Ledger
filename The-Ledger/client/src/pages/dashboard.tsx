@@ -12,6 +12,9 @@ import {
   ClipboardCheck,
   Calendar,
   ArrowRight,
+  Activity,
+  StickyNote,
+  MessageSquare,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -147,7 +150,7 @@ function PMKpiCard({
 // ──────────────────────────────────────────────────────
 
 function PMDashboard() {
-  const { jobs, workers, reviewItems } = useStore();
+  const { jobs, workers, reviewItems, jobNotes, jobCommunications } = useStore();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -205,6 +208,38 @@ function PMDashboard() {
     })
     .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
     .slice(0, 4);
+
+  // Recent Activity — aggregated from PM's jobs (notes, comms, reviews)
+  type ActivityEvent = { id: string; label: string; sub: string; timestamp: string; kind: 'review' | 'note' | 'comm' };
+  const recentActivity: ActivityEvent[] = [
+    ...reviewItems
+      .filter(r => pmJobIds.has(r.jobId) && r.submittedAt)
+      .map(r => ({
+        id: `r-${r.id}`,
+        label: `${r.type.charAt(0).toUpperCase() + r.type.slice(1)} submitted`,
+        sub: r.status,
+        timestamp: r.submittedAt!,
+        kind: 'review' as const,
+      })),
+    ...jobNotes
+      .filter(n => pmJobIds.has(n.jobId))
+      .map(n => ({
+        id: `n-${n.id}`,
+        label: 'Note added',
+        sub: n.content.slice(0, 50) + (n.content.length > 50 ? '…' : ''),
+        timestamp: n.createdAt,
+        kind: 'note' as const,
+      })),
+    ...jobCommunications
+      .filter(c => pmJobIds.has(c.jobId))
+      .map(c => ({
+        id: `c-${c.id}`,
+        label: c.type === 'crew-update' ? 'Crew update' : c.type === 'internal-update' ? 'Internal update' : 'PM comment',
+        sub: c.content.slice(0, 50) + (c.content.length > 50 ? '…' : ''),
+        timestamp: c.createdAt,
+        kind: 'comm' as const,
+      })),
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 6);
 
   const attentionItems = [
     ...overdueReviews.map(r => ({
@@ -422,6 +457,37 @@ function PMDashboard() {
               <ClipboardCheck className="h-3.5 w-3.5" />
               Open Review Queue
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card data-testid="pm-dashboard-activity">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-1.5">
+              <Activity className="h-4 w-4" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentActivity.length === 0 ? (
+              <p className="text-xs text-muted-foreground" data-testid="pm-dashboard-activity-empty">No recent activity.</p>
+            ) : (
+              <div className="space-y-2" data-testid="pm-dashboard-activity-list">
+                {recentActivity.map(evt => (
+                  <div key={evt.id} className="flex items-start gap-2 text-xs" data-testid={`pm-dashboard-activity-item-${evt.id}`}>
+                    <div className="mt-0.5 shrink-0">
+                      {evt.kind === 'review' && <ClipboardCheck className="h-3.5 w-3.5 text-blue-500" />}
+                      {evt.kind === 'note' && <StickyNote className="h-3.5 w-3.5 text-amber-500" />}
+                      {evt.kind === 'comm' && <MessageSquare className="h-3.5 w-3.5 text-green-500" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{evt.label}</p>
+                      <p className="text-muted-foreground truncate">{evt.sub}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
