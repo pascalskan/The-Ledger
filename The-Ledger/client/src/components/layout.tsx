@@ -49,6 +49,7 @@ import {
   Brain,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
+import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -289,53 +290,70 @@ export function Layout({ children }: { children: React.ReactNode }) {
     return userRoleNames.some((name) => allowed.includes(name));
   };
 
-  const isCEOorPM = hasAnyRole(["CEO", "Project Manager"]);
+  const userIsCEO = isCEO(user, roles);
+  const userIsPM = isProjectManager(user, roles);
+  const isCEOorPM = userIsCEO || userIsPM;
 
   const pendingReviewCount = reviewItems.filter(r => r.status === 'pending').length;
 
-  // ── CORE section ──────────────────────────────────────
-  const CORE_ITEMS: NavItem[] = [
-    { label: "Command", href: "/", icon: LayoutDashboard, roles: ["CEO", "Project Manager"] },
-    { label: "Review", href: "/review", icon: ClipboardCheck, roles: ["CEO", "Project Manager"], testId: "nav-review", badge: pendingReviewCount },
-  ].filter((item) => hasAnyRole(item.roles));
+  // ── CEO NAV ───────────────────────────────────────────
+  const CEO_CORE_ITEMS: NavItem[] = [
+    { label: "Command", href: "/", icon: LayoutDashboard, roles: [] },
+    { label: "Review", href: "/review", icon: ClipboardCheck, roles: [], testId: "nav-review", badge: pendingReviewCount },
+  ];
 
-  // ── OPERATIONAL section ───────────────────────────────
-  const OPERATIONAL_ITEMS: NavItem[] = [
-    { label: "Jobs", href: "/jobs", icon: Briefcase, roles: ["CEO", "Project Manager", "Worker"] },
-    { label: "Schedule", href: "/schedule", icon: Calendar, roles: ["CEO", "Project Manager", "Worker"] },
-    { label: "Workers", href: "/workers", icon: Users, roles: ["CEO", "Project Manager"] },
-    { label: "Clients", href: "/clients", icon: Building2, roles: ["CEO", "Project Manager"] },
-    { label: "Map", href: "/map", icon: MapIcon, roles: ["CEO", "Project Manager", "Worker"] },
-    { label: "Stock & Assets", href: "/equipment", icon: Package, roles: ["CEO", "Project Manager"] },
-    { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: ["CEO", "Project Manager"] },
-    { label: "Expenses", href: "/expenses", icon: ReceiptText, roles: ["CEO", "Admin", "Project Manager", "Worker"] },
-    { label: "Finance", href: "/finance", icon: DollarSign, roles: ["CEO"], testId: "nav-finance-hub" },
-  ].filter((item) => hasAnyRole(item.roles));
+  const CEO_OPERATIONAL_ITEMS: NavItem[] = [
+    { label: "Jobs", href: "/jobs", icon: Briefcase, roles: [] },
+    { label: "Schedule", href: "/schedule", icon: Calendar, roles: [] },
+    { label: "Workers", href: "/workers", icon: Users, roles: [] },
+    { label: "Clients", href: "/clients", icon: Building2, roles: [] },
+    { label: "Map", href: "/map", icon: MapIcon, roles: [] },
+    { label: "Stock & Assets", href: "/equipment", icon: Package, roles: [] },
+    { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: [] },
+    { label: "Expenses", href: "/expenses", icon: ReceiptText, roles: [] },
+    { label: "Finance", href: "/finance", icon: DollarSign, roles: [], testId: "nav-finance-hub" },
+  ];
 
-  // ── INTELLIGENCE section ──────────────────────────────
-  // UX-5: single "Intelligence" hub item for CEO; PM keeps the job-scoped
-  // "Notifications" entry (Notification Doctrine RBAC). Legacy centre
-  // entries consolidated into the hub (spec §5.1).
-  const INTELLIGENCE_ITEMS: NavItem[] = [
-    { label: "Intelligence", href: "/intelligence", icon: Brain, roles: ["CEO"], testId: "nav-intelligence-hub" },
-    { label: "Notifications", href: "/notifications", icon: Bell, roles: ["Project Manager"], testId: "nav-notifications" },
-  ].filter((item) => hasAnyRole(item.roles));
+  const CEO_INTELLIGENCE_ITEMS: NavItem[] = [
+    { label: "Intelligence", href: "/intelligence", icon: Brain, roles: [], testId: "nav-intelligence-hub" },
+  ];
 
-  // ── AUTOMATION section ────────────────────────────────
-  const AUTOMATION_ITEMS: NavItem[] = [
-    { label: "Automations", href: "/automations", icon: Zap, roles: ["CEO"] },
-    { label: "Workflows", href: "/workflows", icon: GitBranch, roles: ["CEO"], testId: "nav-workflow-centre" },
-    { label: "Automation Controls", href: "/automation-governance", icon: ShieldCheck, roles: ["CEO"], testId: "nav-automation-governance" },
-  ].filter((item) => hasAnyRole(item.roles));
+  const CEO_AUTOMATION_ITEMS: NavItem[] = [
+    { label: "Automations", href: "/automations", icon: Zap, roles: [] },
+    { label: "Workflows", href: "/workflows", icon: GitBranch, roles: [], testId: "nav-workflow-centre" },
+    { label: "Automation Controls", href: "/automation-governance", icon: ShieldCheck, roles: [], testId: "nav-automation-governance" },
+  ];
 
-  // ── ADMINISTRATION section ────────────────────────────
-  const ADMIN_ITEMS: NavItem[] = [
-    { label: "Manage Roles", href: "/roles", icon: UserCog, roles: ["CEO", "Admin"], testId: "nav-manage-roles" },
-    { label: "Audit Log", href: "/audit", icon: ShieldAlert, roles: ["CEO"], testId: "nav-audit-log" },
-    // UX-5: "Platform Events" removed — /event-monitor remains a hidden CEO-only route (spec §5.1)
-    { label: "Accounting Settings", href: "/finance?tab=accounting", icon: Link2Icon, roles: ["CEO"], testId: "nav-admin-accounting-settings" },
-    { label: "Settings", href: "/settings", icon: Settings, roles: ["CEO"], testId: "nav-settings" },
-  ].filter((item) => hasAnyRole(item.roles));
+  const CEO_ADMIN_ITEMS: NavItem[] = [
+    { label: "Manage Roles", href: "/roles", icon: UserCog, roles: [], testId: "nav-manage-roles" },
+    { label: "Audit Log", href: "/audit", icon: ShieldAlert, roles: [], testId: "nav-audit-log" },
+    { label: "Accounting Settings", href: "/finance?tab=accounting", icon: Link2Icon, roles: [], testId: "nav-admin-accounting-settings" },
+    { label: "Settings", href: "/settings", icon: Settings, roles: [], testId: "nav-settings" },
+  ];
+
+  // ── PM NAV — purpose-built, workflow-first ────────────
+  const PM_PRIMARY_ITEMS: NavItem[] = [
+    { label: "Overview", href: "/", icon: LayoutDashboard, roles: [], testId: "nav-pm-overview" },
+    { label: "My Jobs", href: "/jobs", icon: Briefcase, roles: [], testId: "nav-pm-jobs" },
+    { label: "Reviews", href: "/review", icon: ClipboardCheck, roles: [], testId: "nav-review", badge: pendingReviewCount },
+    { label: "Schedule", href: "/schedule", icon: Calendar, roles: [], testId: "nav-pm-schedule" },
+    { label: "Crew", href: "/workers", icon: Users, roles: [], testId: "nav-pm-crew" },
+  ];
+
+  const PM_SECONDARY_ITEMS: NavItem[] = [
+    { label: "Clients", href: "/clients", icon: Building2, roles: [], testId: "nav-pm-clients" },
+    { label: "Map", href: "/map", icon: MapIcon, roles: [], testId: "nav-pm-map" },
+    { label: "Stock & Assets", href: "/equipment", icon: Package, roles: [], testId: "nav-pm-stock" },
+    { label: "Notifications", href: "/notifications", icon: Bell, roles: [], testId: "nav-notifications" },
+    { label: "Expenses", href: "/expenses", icon: ReceiptText, roles: [], testId: "nav-pm-expenses" },
+  ];
+
+  // Legacy aliases kept so existing non-PM/CEO code paths still compile
+  const CORE_ITEMS = userIsCEO ? CEO_CORE_ITEMS : [];
+  const OPERATIONAL_ITEMS = userIsCEO ? CEO_OPERATIONAL_ITEMS : [];
+  const INTELLIGENCE_ITEMS = userIsCEO ? CEO_INTELLIGENCE_ITEMS : [];
+  const AUTOMATION_ITEMS = userIsCEO ? CEO_AUTOMATION_ITEMS : [];
+  const ADMIN_ITEMS = userIsCEO ? CEO_ADMIN_ITEMS : [];
 
   function NavLink({ item }: { item: NavItem }) {
     const isActive = location === item.href
@@ -398,69 +416,81 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <nav className="flex-1 px-2 py-4 overflow-y-auto">
         <TooltipProvider delayDuration={0}>
 
-          {/* CORE */}
-          {CORE_ITEMS.length > 0 && (
+          {userIsPM ? (
+            /* ── PM NAV — workflow-first, purpose-built ── */
             <>
-              <NavSectionLabel label="Core" collapsed={collapsed} />
+              <NavSectionLabel label="Primary" collapsed={collapsed} />
               <div className="space-y-0.5">
-                {CORE_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+                {PM_PRIMARY_ITEMS.map((item) => <NavLink key={item.href + item.label} item={item} />)}
+              </div>
+              <NavSectionLabel label="Secondary" collapsed={collapsed} />
+              <div className="space-y-0.5">
+                {PM_SECONDARY_ITEMS.map((item) => <NavLink key={item.href + item.label} item={item} />)}
               </div>
             </>
-          )}
-
-          {/* OPERATIONAL */}
-          {OPERATIONAL_ITEMS.length > 0 && (
+          ) : (
+            /* ── CEO NAV ── */
             <>
-              <NavSectionLabel label="Operational" collapsed={collapsed} />
-              <div className="space-y-0.5">
-                {OPERATIONAL_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
-              </div>
-            </>
-          )}
+              {CORE_ITEMS.length > 0 && (
+                <>
+                  <NavSectionLabel label="Core" collapsed={collapsed} />
+                  <div className="space-y-0.5">
+                    {CORE_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+                  </div>
+                </>
+              )}
 
-          {/* INTELLIGENCE */}
-          {INTELLIGENCE_ITEMS.length > 0 && (
-            <>
-              <NavSectionLabel label="Intelligence" collapsed={collapsed} />
-              <div className="space-y-0.5">
-                {INTELLIGENCE_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
-              </div>
-            </>
-          )}
+              {OPERATIONAL_ITEMS.length > 0 && (
+                <>
+                  <NavSectionLabel label="Operational" collapsed={collapsed} />
+                  <div className="space-y-0.5">
+                    {OPERATIONAL_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+                  </div>
+                </>
+              )}
 
-          {/* AUTOMATION */}
-          {AUTOMATION_ITEMS.length > 0 && (
-            <>
-              <NavSectionLabel label="Automation" collapsed={collapsed} />
-              <div className="space-y-0.5">
-                {AUTOMATION_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
-              </div>
-            </>
-          )}
+              {INTELLIGENCE_ITEMS.length > 0 && (
+                <>
+                  <NavSectionLabel label="Intelligence" collapsed={collapsed} />
+                  <div className="space-y-0.5">
+                    {INTELLIGENCE_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+                  </div>
+                </>
+              )}
 
-          {/* ADMINISTRATION (collapsible) */}
-          {ADMIN_ITEMS.length > 0 && (
-            <>
-              <NavSectionLabel label="Administration" collapsed={collapsed} />
-              {collapsed ? (
-                <div className="space-y-0.5">
-                  {ADMIN_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
-                </div>
-              ) : (
-                <Collapsible open={adminExpanded} onOpenChange={setAdminExpanded}>
-                  <CollapsibleTrigger asChild>
-                    <button data-testid="nav-admin-toggle" className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium w-full text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-                      <Settings className="h-5 w-5 flex-shrink-0" />
-                      <span className="flex-1 text-left">Administration</span>
-                      <ChevronDown className={cn("h-4 w-4 transition-transform", adminExpanded && "rotate-180")} />
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="space-y-0.5 ml-2 border-l border-sidebar-border pl-2 mt-1">
+              {AUTOMATION_ITEMS.length > 0 && (
+                <>
+                  <NavSectionLabel label="Automation" collapsed={collapsed} />
+                  <div className="space-y-0.5">
+                    {AUTOMATION_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+                  </div>
+                </>
+              )}
+
+              {ADMIN_ITEMS.length > 0 && (
+                <>
+                  <NavSectionLabel label="Administration" collapsed={collapsed} />
+                  {collapsed ? (
+                    <div className="space-y-0.5">
                       {ADMIN_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
                     </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                  ) : (
+                    <Collapsible open={adminExpanded} onOpenChange={setAdminExpanded}>
+                      <CollapsibleTrigger asChild>
+                        <button data-testid="nav-admin-toggle" className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium w-full text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
+                          <Settings className="h-5 w-5 flex-shrink-0" />
+                          <span className="flex-1 text-left">Administration</span>
+                          <ChevronDown className={cn("h-4 w-4 transition-transform", adminExpanded && "rotate-180")} />
+                        </button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="space-y-0.5 ml-2 border-l border-sidebar-border pl-2 mt-1">
+                          {ADMIN_ITEMS.map((item) => <NavLink key={item.href} item={item} />)}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                </>
               )}
             </>
           )}
