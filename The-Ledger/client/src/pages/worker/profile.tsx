@@ -1,11 +1,14 @@
 import { WorkerMobileLayout } from "@/components/WorkerMobileLayout";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
-import { LogOut, Briefcase, Building2, Shield } from "lucide-react";
+import { useOfflineQueueStore } from "@/lib/offlineQueueStore";
+import { getWorkerActivity, summariseActivity } from "@/lib/workerActivity";
+import { LogOut, Briefcase, Building2, Shield, FileText, AlertTriangle, UploadCloud, Clock, History } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function WorkerProfilePage() {
   const { user, logout } = useAuth();
-  const { jobs } = useStore();
+  const { jobs, reviewItems } = useStore();
+  const { queue } = useOfflineQueueStore();
   const [, setLocation] = useLocation();
 
   const handleLogout = () => {
@@ -15,6 +18,10 @@ export default function WorkerProfilePage() {
 
   const myJobs = jobs.filter((j) => j.assignedWorkerIds.includes(user?.id ?? ""));
   const activeJobCount = myJobs.filter((j) => j.status === "Active").length;
+
+  // Worker-scoped, operational activity metrics. No financial figures.
+  const activity = getWorkerActivity(user?.id, reviewItems as any, queue, jobs);
+  const summary = summariseActivity(activity);
 
   const companyName =
     user?.companyId === DEMO_COMPANY_ID ? "Demo Operations Ltd" : (user?.companyId ?? "—");
@@ -58,6 +65,70 @@ export default function WorkerProfilePage() {
               <span className="ml-auto font-semibold text-slate-800">
                 {activeJobCount} active · {myJobs.length} total
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Activity Summary */}
+        <div
+          data-testid="worker-profile-activity-summary"
+          className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Activity Summary
+            </h3>
+            <button
+              data-testid="worker-profile-view-activity"
+              onClick={() => setLocation("/worker/history")}
+              className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1"
+            >
+              <History className="w-3.5 h-3.5" /> View all
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { Icon: Briefcase, label: "Active Jobs", value: activeJobCount },
+              { Icon: FileText, label: "Reports Submitted", value: summary.reports },
+              { Icon: AlertTriangle, label: "Issues Logged", value: summary.issues },
+              { Icon: UploadCloud, label: "Uploads Submitted", value: summary.uploads },
+            ].map((m) => (
+              <div key={m.label} className="rounded-xl bg-slate-50 p-3 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-white text-slate-500 flex items-center justify-center shrink-0 border border-slate-100">
+                  <m.Icon className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-lg font-bold leading-none">{m.value}</div>
+                  <div className="text-[11px] text-slate-500 mt-1 leading-tight">{m.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Performance Snapshot */}
+        <div
+          data-testid="worker-profile-performance"
+          className="bg-slate-900 text-white rounded-2xl p-5 shadow-md"
+        >
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+            Performance Snapshot
+          </h3>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <div className="text-2xl font-bold text-emerald-400">{summary.totalShifts}</div>
+              <div className="text-[11px] text-slate-400 mt-1">Total Shifts</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-emerald-400 flex items-center justify-center gap-1">
+                <Clock className="w-4 h-4" />
+                {summary.totalHours}
+              </div>
+              <div className="text-[11px] text-slate-400 mt-1">Total Hours</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-emerald-400">{summary.reportsThisMonth}</div>
+              <div className="text-[11px] text-slate-400 mt-1">Reports / Month</div>
             </div>
           </div>
         </div>

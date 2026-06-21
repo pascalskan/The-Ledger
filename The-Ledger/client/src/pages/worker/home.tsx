@@ -2,6 +2,7 @@ import { WorkerMobileLayout } from "@/components/WorkerMobileLayout";
 import { useStore, useAuth } from "@/lib/mockData";
 import { useShiftStore } from "@/lib/shiftStore";
 import { useOfflineQueueStore } from "@/lib/offlineQueueStore";
+import { getWorkerActivity, summariseActivity, kindLabel } from "@/lib/workerActivity";
 import { useLocation } from "wouter";
 import {
   Play,
@@ -15,6 +16,7 @@ import {
   RefreshCw,
   WifiOff,
   UploadCloud,
+  RotateCcw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -27,11 +29,17 @@ function formatDuration(seconds: number) {
 }
 
 export default function WorkerHomePage() {
-  const { jobs } = useStore();
+  const { jobs, reviewItems } = useStore();
   const { user } = useAuth();
   const { activeShift, elapsedTime } = useShiftStore();
   const { queue, isOffline } = useOfflineQueueStore();
   const [, setLocation] = useLocation();
+
+  // Worker-scoped activity (WK-5) — drives Recent Activity, last shift, and
+  // outstanding corrections. Operational only; no financial data.
+  const activity = getWorkerActivity(user?.id, reviewItems as any, queue, jobs);
+  const summary = summariseActivity(activity);
+  const lastShift = activity.find((e) => (e.hours ?? 0) > 0);
 
   const myJobs = jobs
     .filter(
@@ -54,11 +62,6 @@ export default function WorkerHomePage() {
   const conflictItems = queue.filter((i) => i.syncStatus === "conflict");
   const pendingItems = queue.filter((i) => i.syncStatus === "pending");
   const attentionRequired = failedItems.length > 0 || conflictItems.length > 0 || pendingItems.length > 0 || isOffline;
-
-  const recentActivity = [...queue]
-    .filter((i) => i.syncStatus === "synced")
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 3);
 
   return (
     <WorkerMobileLayout title="Home">
@@ -383,13 +386,68 @@ export default function WorkerHomePage() {
           )}
         </section>
 
+        {/* ── Outstanding Corrections (own section — not sync attention) ── */}
+        {summary.outstandingCorrections > 0 && (
+          <section data-testid="worker-outstanding-corrections">
+            <div
+              onClick={() => setLocation("/worker/history")}
+              className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
+            >
+              <div className="flex items-center gap-3">
+                <RotateCcw className="w-5 h-5 text-orange-500 shrink-0" />
+                <div>
+                  <p className="font-semibold text-sm text-orange-800">
+                    {summary.outstandingCorrections} submission
+                    {summary.outstandingCorrections > 1 ? "s" : ""} need changes
+                  </p>
+                  <p className="text-xs text-orange-600 mt-0.5">Tap to review reviewer notes</p>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-orange-400 shrink-0" />
+            </div>
+          </section>
+        )}
+
+        {/* ── Last Shift ── */}
+        {lastShift && (
+          <section data-testid="worker-last-shift">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+              Last Shift
+            </h2>
+            <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm truncate">{lastShift.jobTitle}</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {new Date(lastShift.dateISO).toLocaleDateString()} ·{" "}
+                  {Math.floor(lastShift.hours ?? 0)}h{" "}
+                  {Math.round((((lastShift.hours ?? 0) % 1) * 60))}m
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ── Recent Activity ── */}
         <section data-testid="worker-recent-activity">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-            Recent Activity
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Recent Activity
+            </h2>
+            {activity.length > 0 && (
+              <button
+                data-testid="worker-home-view-activity"
+                onClick={() => setLocation("/worker/history")}
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900"
+              >
+                View all
+              </button>
+            )}
+          </div>
 
-          {recentActivity.length === 0 ? (
+          {activity.length === 0 ? (
             <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-3 text-slate-400">
               <CheckCircle2 className="w-5 h-5 shrink-0" />
               <p className="text-sm">
@@ -398,20 +456,37 @@ export default function WorkerHomePage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {recentActivity.map((item) => (
+              {activity.slice(0, 3).map((item) => (
                 <div
-                  key={item.id}
+                  key={`${item.source}-${item.id}`}
                   className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3"
                 >
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <CheckCircle2
+                    className={cn(
+                      "w-5 h-5 shrink-0",
+                      item.reviewStatus === "approved"
+                        ? "text-emerald-500"
+                        : item.reviewStatus === "needs-correction"
+                        ? "text-orange-500"
+                        : "text-slate-400"
+                    )}
+                  />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">Report submitted</p>
+                    <p className="font-medium text-sm truncate">
+                      {kindLabel(item.kind)} — {item.title}
+                    </p>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {new Date(item.createdAt).toLocaleString()}
+                      {new Date(item.dateISO).toLocaleDateString()}
                     </p>
                   </div>
-                  <Badge className="bg-emerald-50 text-emerald-700 border-none text-[10px] shrink-0">
-                    Synced
+                  <Badge className="bg-slate-100 text-slate-600 border-none text-[10px] shrink-0 capitalize">
+                    {item.source === "queue"
+                      ? item.syncStatus === "failed"
+                        ? "Failed"
+                        : "Pending"
+                      : item.reviewStatus === "needs-correction"
+                      ? "Changes"
+                      : item.reviewStatus}
                   </Badge>
                 </div>
               ))}

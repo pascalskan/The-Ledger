@@ -41,6 +41,7 @@ import WorkerReportPage from "@/pages/worker/report";
 import WorkerSchedulePage from "@/pages/worker/schedule";
 import WorkerUploadsPage from "@/pages/worker/uploads";
 import WorkerProfilePage from "@/pages/worker/profile";
+import WorkerHistoryPage from "@/pages/worker/history";
 import JobIntelligenceDashboard from "@/pages/job-intelligence";
 import AutomationsPage from "@/pages/automations";
 import AutomationGovernanceCentrePage from "@/pages/automation-governance";
@@ -149,6 +150,9 @@ function Router() {
       </Route>
       <Route path="/worker/uploads">
         <ProtectedRoute component={WorkerUploadsPage} roles={["Worker", "CEO", "Project Manager"]} />
+      </Route>
+      <Route path="/worker/history">
+        <ProtectedRoute component={WorkerHistoryPage} roles={["Worker", "CEO", "Project Manager"]} />
       </Route>
       <Route path="/worker/profile">
         <ProtectedRoute component={WorkerProfilePage} roles={["Worker", "CEO", "Project Manager"]} />

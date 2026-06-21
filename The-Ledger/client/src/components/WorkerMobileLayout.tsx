@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useLocation } from "wouter";
-import { Home, Briefcase, CalendarDays, UploadCloud, UserCircle, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { Home, Briefcase, CalendarDays, UploadCloud, UserCircle, Wifi, WifiOff, RefreshCw, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOfflineQueueStore } from "@/lib/offlineQueueStore";
 import { useAuth } from "@/lib/mockData";
@@ -20,7 +20,7 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
   const navItems = [
     { icon: Home, label: "Home", path: "/worker/home" },
     { icon: Briefcase, label: "My Jobs", path: "/worker/jobs" },
-    { icon: CalendarDays, label: "Schedule", path: "/worker/schedule" },
+    { icon: History, label: "Activity", path: "/worker/history" },
     { icon: UploadCloud, label: "Uploads", path: "/worker/uploads" },
     { icon: UserCircle, label: "Profile", path: "/worker/profile" },
   ];
@@ -66,6 +66,7 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
           return (
             <button
               key={item.label}
+              data-testid={`worker-nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
               onClick={() => setLocation(item.path)}
               className={cn(
                 "flex flex-col items-center justify-center w-full py-2 rounded-xl transition-all",
