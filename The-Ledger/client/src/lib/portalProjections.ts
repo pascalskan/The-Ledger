@@ -61,12 +61,27 @@ export interface PortalJob {
   locationAddress: string;
   crew: PortalCrewMember[];
   crewCount: number;
+  /** Assigned PM name — a management contact the client may see (domain-permitted). */
+  managerName?: string;
 }
 
 export interface PortalDocument {
   id: string;
   name: string;
   sharedAt?: string;
+}
+
+export interface PortalSite {
+  /** Stable id derived from the location address. */
+  id: string;
+  name: string;
+  address: string;
+  /** Count of client-visible jobs at this site that are currently in progress. */
+  activeJobCount: number;
+  /** Count of all client-visible jobs at this site. */
+  jobCount: number;
+  /** Derived site status: Active if any in-progress job, otherwise Inactive. */
+  status: "Active" | "Inactive";
 }
 
 export interface PortalInvoiceLine {
@@ -143,6 +158,11 @@ export function toPortalJob(job: Job, workers: Worker[], roles: Role[]): PortalJ
     })
     .filter((c): c is PortalCrewMember => c !== null);
 
+  // PM is a management contact — full name is permitted. Resolve against the
+  // worker directory; if the manager is not a worker record, leave undefined.
+  const manager = job.managerId ? workers.find((w) => w.id === job.managerId) : undefined;
+  const managerName = manager ? `${manager.firstName} ${manager.lastName}`.trim() : undefined;
+
   return {
     id: job.id,
     jobId: job.jobId,
@@ -154,6 +174,7 @@ export function toPortalJob(job: Job, workers: Worker[], roles: Role[]): PortalJ
     locationAddress: job.locationAddress,
     crew,
     crewCount: crew.length,
+    managerName,
   };
 }
 
@@ -197,4 +218,63 @@ export function projectClientJobs(
 
 export function projectClientInvoices(clientId: string, invoices: Invoice[]): PortalInvoice[] {
   return invoices.filter((i) => i.clientId === clientId).map(toPortalInvoice);
+}
+
+// Job statuses considered "in progress" for site/dashboard rollups.
+const IN_PROGRESS_STATUSES: JobStatus[] = ["Planned", "Active"];
+
+/**
+ * Derive the client's sites from their client-visible jobs, grouped by
+ * location address. Access notes, alarm codes, security info and internal
+ * site notes are never sourced — only the public address and rollup counts.
+ */
+export function projectClientSites(
+  clientId: string,
+  jobs: Job[],
+  workers: Worker[],
+  roles: Role[]
+): PortalSite[] {
+  const visibleJobs = projectClientJobs(clientId, jobs, workers, roles);
+
+  // We need original job status for rollups — re-read from source, scoped.
+  const sourceByAddress = new Map<string, Job[]>();
+  jobs
+    .filter((j) => j.clientId === clientId)
+    .filter(isJobClientVisible)
+    .forEach((j) => {
+      const key = j.locationAddress || "Unspecified location";
+      const arr = sourceByAddress.get(key) ?? [];
+      arr.push(j);
+      sourceByAddress.set(key, arr);
+    });
+
+  const sites: PortalSite[] = [];
+  Array.from(sourceByAddress.entries()).forEach(([address, group]) => {
+    const activeJobCount = group.filter((j) => IN_PROGRESS_STATUSES.includes(j.status)).length;
+    sites.push({
+      id: `site-${slugify(address)}`,
+      name: deriveSiteName(address),
+      address,
+      activeJobCount,
+      jobCount: group.length,
+      status: activeJobCount > 0 ? "Active" : "Inactive",
+    });
+  });
+  // Silence unused — visibleJobs kept for parity/readability of the scoping path.
+  void visibleJobs;
+  return sites.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
+
+/** A human site name derived from the first segment of the address. */
+function deriveSiteName(address: string): string {
+  const firstSegment = address.split(",")[0]?.trim();
+  return firstSegment || address;
 }

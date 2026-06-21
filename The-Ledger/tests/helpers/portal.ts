@@ -41,4 +41,12 @@ export async function portalLoginAsActive(page: Page, email = PORTAL_ACCOUNTS.dc
   await expect(page.getByTestId('portal-dashboard')).toBeVisible();
 }
 
+/** Click a desktop sidebar nav item (viewport is desktop width in CI config). */
+export async function portalNavTo(
+  page: Page,
+  key: 'dashboard' | 'sites' | 'jobs' | 'documents' | 'invoices' | 'requests' | 'notifications'
+) {
+  await page.getByTestId(`portal-nav-${key}`).click();
+}
+
 export { PORTAL_SESSION_KEY };

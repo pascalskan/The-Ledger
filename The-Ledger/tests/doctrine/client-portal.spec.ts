@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { gotoPortalClean, portalSignIn, portalLoginAsActive, PORTAL_ACCOUNTS } from '../helpers/portal';
+import { gotoPortalClean, portalSignIn, portalLoginAsActive, portalNavTo, PORTAL_ACCOUNTS } from '../helpers/portal';
 
 // ──────────────────────────────────────────────────────────────────────────
 // CL-2 — Client Portal Foundation, Provisioning & Authentication
@@ -60,6 +60,7 @@ test.describe('Client Portal — Isolation / RBAC (CL-2)', () => {
   // CP-06 — Client A sees only their own jobs
   test('CP-06: client A (HSS) sees only its own jobs', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
+    await portalNavTo(page, 'jobs');
     // HSS (dc1) owns dj-kitchen-extract-1; it must be visible.
     await expect(page.getByTestId('portal-job-card-dj-kitchen-extract-1')).toBeVisible();
     // Showcase (dc2) owns dj-office-fit-1; it must NOT be visible to HSS.
@@ -70,6 +71,7 @@ test.describe('Client Portal — Isolation / RBAC (CL-2)', () => {
   test('CP-07: client B (Showcase) cannot see client A jobs', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc2Active);
     await expect(page.getByTestId('portal-client-name')).toContainText('Showcase');
+    await portalNavTo(page, 'jobs');
     // Showcase must NOT see any HSS job cards.
     await expect(page.getByTestId('portal-job-card-dj-kitchen-extract-1')).toHaveCount(0);
     await expect(page.getByTestId('portal-job-card-dj-pm-active-1')).toHaveCount(0);
@@ -91,6 +93,7 @@ test.describe('Client Portal — Crew Visibility Doctrine (CL-2)', () => {
   // CP-09 — Crew first name is visible
   test('CP-09: crew first name is visible on a job', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
+    await portalNavTo(page, 'jobs');
     await page.getByTestId('portal-job-card-dj-kitchen-extract-1').click();
     await expect(page.getByTestId('portal-job-detail')).toBeVisible();
     // dw2 = Sophie Taylor → first name shown
@@ -101,6 +104,7 @@ test.describe('Client Portal — Crew Visibility Doctrine (CL-2)', () => {
   // CP-10 — Crew surname is NEVER exposed
   test('CP-10: crew surnames are never exposed', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
+    await portalNavTo(page, 'jobs');
     await page.getByTestId('portal-job-card-dj-kitchen-extract-1').click();
     await expect(page.getByTestId('portal-job-detail')).toBeVisible();
     // dw2 Sophie Taylor and dw3 Ben Hughes are on this job — surnames must not appear.
@@ -112,6 +116,7 @@ test.describe('Client Portal — Crew Visibility Doctrine (CL-2)', () => {
   // CP-11 — Each crew name is a single token (first name only)
   test('CP-11: crew names render as first name only (single token)', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
+    await portalNavTo(page, 'jobs');
     await page.getByTestId('portal-job-card-dj-kitchen-extract-1').click();
     await expect(page.getByTestId('portal-job-detail')).toBeVisible();
     const names = await page.getByTestId('portal-crew-name').allInnerTexts();
@@ -149,6 +154,7 @@ test.describe('Client Portal — Audit Infrastructure (CL-2)', () => {
   // CP-14 — Viewing a job generates a client_viewed_job audit event
   test('CP-14: opening a job creates a client_viewed_job audit event', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
+    await portalNavTo(page, 'jobs');
     const before = await page.evaluate(() => (window as any).__portalAudit.countByType('client_viewed_job'));
     await page.getByTestId('portal-job-card-dj-kitchen-extract-1').click();
     await expect(page.getByTestId('portal-job-detail')).toBeVisible();

@@ -1103,6 +1103,27 @@ const DEMO_JOBS: Job[] = [
     updatedAt: new Date().toISOString(),
     companyId: DEMO_COMPANY_ID,
   },
+  {
+    // Inert cancelled job — no crew, no manager. Exists to validate the Client
+    // Portal "cancelled jobs are never visible" doctrine (CLIENT_PORTAL_DOMAIN).
+    id: "dj-cancelled-1",
+    jobId: "DEMO-JOB-0206",
+    clientId: "dc1",
+    title: "Cancelled — duct survey (client withdrew)",
+    description: "Survey cancelled before scheduling.",
+    status: "Cancelled",
+    priority: "Low",
+    startAt: new Date(Date.now() - 4 * 86400000).toISOString(),
+    endAt: new Date(Date.now() - 4 * 86400000).toISOString(),
+    locationAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
+    assignedWorkerIds: [],
+    assignedEquipmentIds: [],
+    documents: [],
+    costs: { labour: 0, equipment: 0, materials: 0, other: 0 },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    companyId: DEMO_COMPANY_ID,
+  },
 ];
 
 const DEMO_INVOICES: Invoice[] = [
@@ -1643,6 +1664,7 @@ export const useStore = () => {
     allEquipment: equipment,
     allStockItems: stockItems,
     allAssets: assets,
+    allInvoices: invoices,
 
     // Core CRUD with Refresh - Automatically injects correct companyId
     addClient: (c: Omit<Client, "id" | "clientId" | "companyId">) => {

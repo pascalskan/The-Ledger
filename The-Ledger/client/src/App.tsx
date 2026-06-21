@@ -124,7 +124,11 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      {/* Client Portal — self-authenticating surface. The single page controller
+          renders the portal shell + the active section from the URL. */}
       <Route path="/portal" component={PortalPage} />
+      <Route path="/portal/:section" component={PortalPage} />
+      <Route path="/portal/:section/:id" component={PortalPage} />
       <Route path="/review">
         <ProtectedRoute component={ReviewPage} roles={["CEO", "Project Manager"]} />
       </Route>
