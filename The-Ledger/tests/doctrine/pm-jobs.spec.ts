@@ -107,8 +107,9 @@ test('PM-JOBS-05: CEO jobs page shows all jobs and Create Job button', async ({ 
   await page.goto('/jobs');
   await page.waitForSelector('[data-testid="page-jobs"]');
 
-  // CEO sees both demo jobs
-  await expect(page.getByTestId('card-job-dj-kitchen-extract-1')).toBeVisible();
+  // CEO sees all company jobs — including PM-managed and unmanaged ones.
+  // dj-kitchen-extract-1 is Completed and hidden by showCompleted=false (default filter).
+  await expect(page.getByTestId('card-job-dj-pm-active-1')).toBeVisible();
   await expect(page.getByTestId('card-job-dj-showcase-maint-1')).toBeVisible();
 
   // CEO has Create Job button

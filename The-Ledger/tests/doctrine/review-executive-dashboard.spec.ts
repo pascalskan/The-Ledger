@@ -98,8 +98,8 @@ test('REV-EXE-07 Executive insights are generated', async ({ page }) => {
 test('REV-EXE-08 PMs do not see the CEO executive dashboard', async ({ page }) => {
   await loginAsPM(page);
   await openReviewCenter(page);
-  // The legacy queue is still available to PMs...
-  await expect(page.getByText('Jobs Requiring Review')).toBeVisible();
+  // PM gets the PM Review Operations Centre (pm-review-page)...
+  await expect(page.getByTestId('pm-review-page')).toBeVisible();
   // ...but the CEO-only Review Operations Centre is not rendered.
   await expect(page.getByTestId('review-hub-tabs')).toHaveCount(0);
   await expect(page.getByTestId('review-executive-dashboard')).toHaveCount(0);

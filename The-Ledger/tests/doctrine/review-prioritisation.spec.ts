@@ -95,7 +95,7 @@ test('REV-PRI-08 Review detail shows priority, score, queue position and factors
 test('REV-PRI-09 PMs do not see the CEO priority panel or order toggle', async ({ page }) => {
   await loginAsPM(page);
   await openReviewCenter(page);
-  await expect(page.getByText('Jobs Requiring Review')).toBeVisible();
+  await expect(page.getByTestId('pm-review-page')).toBeVisible();
   await expect(page.getByTestId('review-priority-panel')).toHaveCount(0);
   await expect(page.getByTestId('review-order-toggle')).toHaveCount(0);
 });

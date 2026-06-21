@@ -59,7 +59,7 @@ test('ROC-04 The live review queue is always visible below the hub', async ({ pa
 test('ROC-05 PMs get the scoped queue but not the executive hub', async ({ page }) => {
   await loginAsPM(page);
   await openReviewCenter(page);
-  await expect(page.getByText('Jobs Requiring Review')).toBeVisible();
+  await expect(page.getByTestId('pm-review-page')).toBeVisible();
   await expect(page.getByTestId('review-hub-tabs')).toHaveCount(0);
 });
 
