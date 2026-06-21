@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useLocation } from "wouter";
-import { Briefcase, CalendarDays, UploadCloud, UserCircle, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { Home, Briefcase, CalendarDays, UploadCloud, UserCircle, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkerStore } from "@/lib/workerStore";
 import { useAuth } from "@/lib/mockData";
@@ -11,6 +11,7 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
   const { user } = useAuth();
 
   const navItems = [
+    { icon: Home, label: "Home", path: "/worker/home" },
     { icon: Briefcase, label: "My Jobs", path: "/worker/jobs" },
     { icon: CalendarDays, label: "Schedule", path: "/worker/schedule" },
     { icon: UploadCloud, label: "Uploads", path: "/worker/uploads" },
