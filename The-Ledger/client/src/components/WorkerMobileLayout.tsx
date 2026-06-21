@@ -1,18 +1,27 @@
 import { ReactNode } from "react";
 import { useLocation } from "wouter";
-import { Briefcase, CalendarDays, UploadCloud, UserCircle, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { Home, Briefcase, CalendarDays, UploadCloud, UserCircle, Wifi, WifiOff, RefreshCw, History } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useWorkerStore } from "@/lib/workerStore";
+import { useOfflineQueueStore } from "@/lib/offlineQueueStore";
 import { useAuth } from "@/lib/mockData";
 
 export function WorkerMobileLayout({ children, title }: { children: ReactNode, title: string }) {
   const [location, setLocation] = useLocation();
-  const { isOnline, pendingSyncCount, toggleOnline } = useWorkerStore();
+  // Consolidated onto the canonical offline queue store. The banner now toggles
+  // the real offline mode and reflects the real pending-sync queue depth.
+  const { isOffline, setOfflineMode, queue } = useOfflineQueueStore();
+  const isOnline = !isOffline;
+  const pendingSyncCount = queue.filter(
+    (item) => item.syncStatus === "pending" || item.syncStatus === "failed"
+  ).length;
+  const toggleOnline = () => setOfflineMode(!isOffline);
   const { user } = useAuth();
 
   const navItems = [
-    { icon: Briefcase, label: "My Jobs", path: "/worker/jobs" },
+    { icon: Home, label: "Home", path: "/worker/home" },
+    { icon: Briefcase, label: "Jobs", path: "/worker/jobs" },
     { icon: CalendarDays, label: "Schedule", path: "/worker/schedule" },
+    { icon: History, label: "Activity", path: "/worker/history" },
     { icon: UploadCloud, label: "Uploads", path: "/worker/uploads" },
     { icon: UserCircle, label: "Profile", path: "/worker/profile" },
   ];
@@ -20,7 +29,8 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
   return (
     <div className="flex flex-col min-h-[100dvh] bg-slate-50 text-slate-900 pb-[80px]">
       {/* Offline/Sync Banner */}
-      <div 
+      <div
+        data-testid="worker-offline-banner"
         className={cn(
           "h-8 px-4 flex items-center justify-between text-xs font-medium cursor-pointer transition-colors",
           isOnline ? "bg-green-600 text-white" : "bg-red-600 text-white"
@@ -51,15 +61,21 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 flex justify-between px-2 py-2 pb-safe-area shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50">
+      <nav
+        aria-label="Worker navigation"
+        className="fixed bottom-0 w-full bg-white border-t border-slate-200 flex justify-between px-1 py-2 pb-safe-area shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50"
+      >
         {navItems.map((item) => {
           const isActive = location.startsWith(item.path);
           return (
             <button
               key={item.label}
+              data-testid={`worker-nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
               onClick={() => setLocation(item.path)}
+              aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center justify-center w-full py-2 rounded-xl transition-all",
+                "flex flex-col items-center justify-center w-full py-2 rounded-xl transition-all min-w-0",
                 isActive ? "text-primary bg-primary/5" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
               )}
             >
@@ -71,7 +87,7 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-medium tracking-wide">{item.label}</span>
+              <span className="text-[10px] font-medium tracking-tight truncate max-w-full px-0.5">{item.label}</span>
             </button>
           )
         })}

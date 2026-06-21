@@ -10,7 +10,26 @@ import {
   Trash2,
   X,
   ImageIcon,
+  RefreshCw,
+  AlertTriangle,
+  Clock,
+  FileText,
+  Receipt,
 } from "lucide-react";
+
+// Human label + icon for each worker submission type carried on a queue item.
+// All worker submissions ride a single queue (WK-3), so the surface must name
+// the real submission rather than the legacy hardcoded "Worker Report".
+function describeSubmission(payload: any): { label: string; Icon: any } {
+  const type = payload?.type;
+  if (type === "issue-log") return { label: payload?.title || "Issue", Icon: AlertTriangle };
+  if (type === "timesheet") return { label: payload?.title || "Timesheet", Icon: Clock };
+  if (payload?.uploads?.length && !payload?.notes && !payload?.materialsUsed?.length) {
+    return { label: payload?.title || "Photo Upload", Icon: ImageIcon };
+  }
+  if (payload?.expenses?.length) return { label: payload?.title || "Report (with expenses)", Icon: Receipt };
+  return { label: payload?.title || "Worker Report", Icon: FileText };
+}
 
 export default function WorkerUploadsPage() {
   const {
@@ -19,10 +38,23 @@ export default function WorkerUploadsPage() {
     clearSyncedItems,
     syncQueue,
     retryUpload,
+    retryQueueItem,
     removeUpload,
     markQueueItemUnderReview,
     markQueueItemResubmitted,
   } = useOfflineQueueStore();
+
+  // Aggregate queue health so the worker immediately knows what is waiting,
+  // syncing, delivered, or needs action — the WK-4 sync-confidence requirement.
+  const counts = {
+    pending: queue.filter((i) => i.syncStatus === "pending").length,
+    syncing: queue.filter((i) => i.syncStatus === "syncing").length,
+    synced: queue.filter((i) => i.syncStatus === "synced").length,
+    failed: queue.filter((i) => i.syncStatus === "failed").length,
+    attention: queue.filter(
+      (i) => i.syncStatus === "failed" || i.syncStatus === "conflict"
+    ).length,
+  };
 
   const [previewUpload, setPreviewUpload] =
     useState<any | null>(null);
@@ -47,7 +79,7 @@ export default function WorkerUploadsPage() {
         {/* SYNC STATUS CARD */}
         {/* ============================================ */}
 
-        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <div data-testid="worker-sync-status" className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
 
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center shrink-0">
@@ -96,8 +128,26 @@ export default function WorkerUploadsPage() {
             </div>
           )}
 
+          {/* Queue health summary — pending / syncing / synced / action needed */}
+          {queue.length > 0 && (
+            <div data-testid="worker-queue-summary" className="grid grid-cols-4 gap-2 mt-4">
+              {[
+                { key: "pending", label: "Pending", value: counts.pending, cls: "bg-orange-50 text-orange-700" },
+                { key: "syncing", label: "Syncing", value: counts.syncing, cls: "bg-blue-50 text-blue-700" },
+                { key: "synced", label: "Synced", value: counts.synced, cls: "bg-green-50 text-green-700" },
+                { key: "failed", label: "Action", value: counts.attention, cls: "bg-red-50 text-red-700" },
+              ].map((c) => (
+                <div key={c.key} className={`rounded-xl p-3 text-center ${c.cls}`}>
+                  <div className="text-lg font-bold leading-none">{c.value}</div>
+                  <div className="text-[10px] font-medium mt-1 uppercase tracking-wide">{c.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {queue.length > 0 && !isOffline && (
             <button
+              data-testid="worker-force-sync-btn"
               onClick={syncQueue}
               className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-semibold text-sm transition-colors"
             >
@@ -119,30 +169,40 @@ export default function WorkerUploadsPage() {
         {/* QUEUE ITEMS */}
         {/* ============================================ */}
 
-        {queue.map((item) => (
+        {queue.map((item) => {
+          const { label, Icon } = describeSubmission(item.payload);
+          return (
           <div
             key={item.id}
+            data-testid="worker-queue-item"
+            data-sync-status={item.syncStatus}
             className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-4"
           >
 
             {/* ============================================ */}
-            {/* REPORT STATUS */}
+            {/* SUBMISSION STATUS */}
             {/* ============================================ */}
 
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-sm">
-                  Worker Report
-                </p>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">
+                    {label}
+                  </p>
 
-                <p className="text-xs text-slate-500 mt-1">
-                  {new Date(
-                    item.createdAt
-                  ).toLocaleString()}
-                </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {new Date(
+                      item.createdAt
+                    ).toLocaleString()}
+                  </p>
+                </div>
               </div>
 
               <div
+                data-testid="worker-queue-item-status"
                 className={`
                   px-3 py-1 rounded-full text-xs font-semibold capitalize
                   ${
@@ -166,6 +226,35 @@ export default function WorkerUploadsPage() {
               </div>
 
             </div>
+
+            {/* ============================================ */}
+            {/* QUEUE-ITEM FAILED STATE — worker resolution */}
+            {/* ============================================ */}
+
+            {item.syncStatus === "failed" && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-red-800">
+                      Sync failed — your work is still saved
+                    </p>
+                    <p className="text-xs text-red-700 mt-1 leading-relaxed">
+                      {item.errorMessage ||
+                        "The submission could not be delivered to the Review Centre."}{" "}
+                      It remains stored on this device. Tap retry to try again.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  data-testid="worker-queue-retry-btn"
+                  onClick={() => retryQueueItem(item.id)}
+                  className="w-full rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-2 transition-colors flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Retry Sync
+                </button>
+              </div>
+            )}
               {item.syncStatus ===
               "conflict" && (
 
@@ -250,6 +339,7 @@ export default function WorkerUploadsPage() {
                             onClick={() =>
                               setPreviewUpload(upload)
                             }
+                            aria-label={`Preview ${upload.fileName || "upload"}`}
                             className="w-9 h-9 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-sm"
                           >
                             <Eye className="w-4 h-4" />
@@ -265,6 +355,7 @@ export default function WorkerUploadsPage() {
                                   upload.uploadId,
                               })
                             }
+                            aria-label={`Remove ${upload.fileName || "upload"}`}
                             className="w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-sm"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -425,7 +516,20 @@ export default function WorkerUploadsPage() {
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
+
+        {queue.length === 0 && (
+          <div data-testid="worker-queue-empty" className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm text-center">
+            <div className="w-12 h-12 mx-auto bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-3">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <p className="font-semibold text-slate-800">Everything is synced</p>
+            <p className="text-sm text-slate-500 mt-1">
+              No submissions are waiting. Anything you log offline will appear here until it syncs.
+            </p>
+          </div>
+        )}
 
         {/* ============================================ */}
         {/* PREVIEW MODAL */}

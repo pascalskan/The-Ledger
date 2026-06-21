@@ -34,12 +34,14 @@ import ReviewDetailPage from "@/pages/review-detail";
 import StockDetailPage from "@/pages/stock-detail";
 import AssetDetailPage from "@/pages/asset-detail";
 import LocationDetailPage from "@/pages/location-detail";
+import WorkerHomePage from "@/pages/worker/home";
 import WorkerJobsPage from "@/pages/worker/jobs";
 import WorkerJobDetailPage from "@/pages/worker/job-detail";
 import WorkerReportPage from "@/pages/worker/report";
 import WorkerSchedulePage from "@/pages/worker/schedule";
 import WorkerUploadsPage from "@/pages/worker/uploads";
 import WorkerProfilePage from "@/pages/worker/profile";
+import WorkerHistoryPage from "@/pages/worker/history";
 import JobIntelligenceDashboard from "@/pages/job-intelligence";
 import AutomationsPage from "@/pages/automations";
 import AutomationGovernanceCentrePage from "@/pages/automation-governance";
@@ -80,9 +82,9 @@ function ProtectedRoute({ component: Component, roles }: { component: React.Comp
     return <UnauthorizedPage />;
   }
 
-  // If they are a worker and trying to access a non-worker route, redirect to worker dashboard
+  // If they are a worker and trying to access a non-worker route, redirect to worker home
   if (primaryRoleName === "Worker" && !location.startsWith("/worker")) {
-    setLocation("/worker/jobs");
+    setLocation("/worker/home");
     return null;
   }
 
@@ -131,6 +133,9 @@ function Router() {
       </Route>
       
       {/* Worker Mobile Routes */}
+      <Route path="/worker/home">
+        <ProtectedRoute component={WorkerHomePage} roles={["Worker", "CEO", "Project Manager"]} />
+      </Route>
       <Route path="/worker/jobs">
         <ProtectedRoute component={WorkerJobsPage} roles={["Worker", "CEO", "Project Manager"]} />
       </Route>
@@ -145,6 +150,9 @@ function Router() {
       </Route>
       <Route path="/worker/uploads">
         <ProtectedRoute component={WorkerUploadsPage} roles={["Worker", "CEO", "Project Manager"]} />
+      </Route>
+      <Route path="/worker/history">
+        <ProtectedRoute component={WorkerHistoryPage} roles={["Worker", "CEO", "Project Manager"]} />
       </Route>
       <Route path="/worker/profile">
         <ProtectedRoute component={WorkerProfilePage} roles={["Worker", "CEO", "Project Manager"]} />

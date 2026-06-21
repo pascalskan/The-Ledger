@@ -18,20 +18,21 @@ export default function WorkerJobsPage() {
 
   return (
     <WorkerMobileLayout title="My Jobs">
-      <div className="p-4 space-y-6">
-        
+      <div className="p-4 space-y-6" data-testid="worker-jobs">
+
         {/* Active Jobs */}
         <section>
           <h2 className="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Today / Upcoming</h2>
           <div className="space-y-4">
             {activeJobs.length === 0 && (
-              <p className="text-slate-500 text-sm text-center py-8">No assigned jobs right now.</p>
+              <p data-testid="worker-jobs-empty" className="text-slate-500 text-sm text-center py-8">No assigned jobs right now.</p>
             )}
             {activeJobs.map(job => {
               const client = clients.find(c => c.id === job.clientId);
               return (
-                <div 
-                  key={job.id} 
+                <div
+                  key={job.id}
+                  data-testid={`worker-job-card-${job.id}`}
                   className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 active:scale-[0.98] transition-transform cursor-pointer"
                   onClick={() => setLocation(`/worker/jobs/${job.id}`)}
                 >
@@ -56,7 +57,7 @@ export default function WorkerJobsPage() {
                     </div>
                   </div>
 
-                  <button className="w-full bg-slate-900 text-white rounded-xl py-3.5 font-semibold text-sm flex items-center justify-center gap-2">
+                  <button aria-label={`Open Job — ${job.title}`} className="w-full bg-slate-900 text-white rounded-xl py-3.5 font-semibold text-sm flex items-center justify-center gap-2">
                     Open Job <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -69,10 +70,15 @@ export default function WorkerJobsPage() {
         <section>
           <h2 className="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Recent History</h2>
           <div className="space-y-3">
+            {completedJobs.length === 0 && (
+              <p data-testid="worker-jobs-history-empty" className="text-slate-400 text-sm text-center py-6">
+                No completed jobs yet.
+              </p>
+            )}
             {completedJobs.slice(0, 3).map(job => (
-              <div 
-                key={job.id} 
-                className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex items-center justify-between"
+              <div
+                key={job.id}
+                className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex items-center justify-between cursor-pointer"
                 onClick={() => setLocation(`/worker/jobs/${job.id}`)}
               >
                 <div>

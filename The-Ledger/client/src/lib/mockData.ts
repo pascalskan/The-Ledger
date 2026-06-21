@@ -595,6 +595,89 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     workerId: "dw2",
     jobId: "dj-boiler-room-2",
     companyId: DEMO_COMPANY_ID
+  },
+
+  // ── Demo Worker (du3) own history — powers the WK-5 worker History,
+  //    Shift History, Activity Timeline, and Profile metrics. Attributed to
+  //    du3's assigned jobs so RBAC scoping (own-activity-only) holds.
+  {
+    id: "rev-du3-1",
+    type: "worker-report",
+    title: "Daily Progress Report",
+    submittedBy: "Demo Worker",
+    submittedAt: new Date(Date.now() - 8 * 86400000).toISOString(),
+    status: "approved" as const,
+    content: "Canopy and primary duct run installed. Commissioning checks passed.",
+    notes: "Canopy and primary duct run installed. Commissioning checks passed.",
+    laborEntries: [
+      {
+        workerId: "du3",
+        workerName: "Demo Worker",
+        hours: 7.5,
+        shiftStart: new Date(Date.now() - 8 * 86400000).toISOString(),
+        shiftEnd: new Date(Date.now() - 8 * 86400000 + 7.5 * 3600000).toISOString(),
+      },
+    ],
+    workerId: "du3",
+    jobId: "dj-kitchen-extract-1",
+    companyId: DEMO_COMPANY_ID,
+  },
+  {
+    id: "rev-du3-2",
+    type: "timesheet",
+    title: "Shift Timesheet",
+    submittedBy: "Demo Worker",
+    submittedAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+    status: "approved" as const,
+    laborEntries: [
+      {
+        workerId: "du3",
+        workerName: "Demo Worker",
+        hours: 8,
+        shiftStart: new Date(Date.now() - 7 * 86400000).toISOString(),
+        shiftEnd: new Date(Date.now() - 7 * 86400000 + 8 * 3600000).toISOString(),
+      },
+    ],
+    workerId: "du3",
+    jobId: "dj-kitchen-extract-1",
+    companyId: DEMO_COMPANY_ID,
+  },
+  {
+    id: "rev-du3-3",
+    type: "issue-log",
+    title: "Issue Reported — High",
+    submittedBy: "Demo Worker",
+    submittedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+    status: "needs-correction" as const,
+    correctionNotes: "Please add the access-panel location and a photo of the obstruction.",
+    notes: "Loading bay access blocked by parked vehicles; delayed material drop.",
+    priority: "High",
+    workerId: "du3",
+    jobId: "dj-kitchen-extract-1",
+    companyId: DEMO_COMPANY_ID,
+  },
+  {
+    id: "rev-du3-4",
+    type: "worker-report",
+    title: "Site Photo",
+    submittedBy: "Demo Worker",
+    submittedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+    status: "pending" as const,
+    uploads: [
+      {
+        id: "up-du3-1",
+        uploadId: "up-du3-1",
+        type: "general",
+        fileName: "Site Photo.jpg",
+        uploadedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+        url: "mock-upload-url",
+        syncStatus: "uploaded",
+        uploadProgress: 100,
+      },
+    ],
+    workerId: "du3",
+    jobId: "dj-kitchen-extract-1",
+    companyId: DEMO_COMPANY_ID,
   }
 ];
 

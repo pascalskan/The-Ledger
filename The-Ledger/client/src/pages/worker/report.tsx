@@ -1,7 +1,7 @@
 import { WorkerMobileLayout } from "@/components/WorkerMobileLayout";
 import { useStore, useAuth } from "@/lib/mockData";
 import { useLocation, useRoute } from "wouter";
-import { ArrowLeft, Save, Plus, Trash2, Search, Settings, Wrench, Package } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Search, Settings, Wrench, Package, Clock, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,25 +10,57 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useOfflineQueueStore } from "@/lib/offlineQueueStore";
+import { useShiftStore } from "@/lib/shiftStore";
 import { useEffect, useState } from "react";
 import type { UploadPayload } from "@/lib/mockData";
+
+const EXPENSE_CATEGORIES = ["Travel", "Materials", "Parking", "Subsistence", "Tools", "Other"];
 
 export default function WorkerReportPage() {
   const [, params] = useRoute("/worker/jobs/:id/report");
   const [, setLocation] = useLocation();
   const { jobs, stockItems, assets, addReviewItem } = useStore();
-  const {isOffline, addToQueue, queue, setOfflineMode, syncQueue, updateQueueItem, clearSyncedItems, retryUpload} = useOfflineQueueStore();
+  const {isOffline, addToQueue, queue, syncQueue, updateQueueItem, clearSyncedItems, retryUpload} = useOfflineQueueStore();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { activeShift, elapsedTime } = useShiftStore();
 
   const jobId = params?.id;
   const job = jobs.find(j => j.id === jobId);
+
+  // Pre-fill timesheet hours from the live shift timer when the report is
+  // opened for the job the worker is currently clocked into. Editable below.
+  const shiftSecondsForJob = activeShift?.jobId === jobId ? elapsedTime : 0;
+  const [hours, setHours] = useState<number>(
+    () => Math.round((shiftSecondsForJob / 3600) * 100) / 100
+  );
 
   const [notes, setNotes] = useState("");
   const [stockSearch, setStockSearch] = useState("");
   const [assetSearch, setAssetSearch] = useState("");
   const [uploads, setUploads] = useState<UploadPayload[]>([]);
   const [hydrated, setHydrated] = useState(false);
+
+  // Expense rows — fed into the review item's expenses[] payload (pending,
+  // no financial mutation until approved in the Review Centre).
+  const [expenses, setExpenses] = useState<{
+    id: string;
+    category: string;
+    amount: number;
+    notes: string;
+  }[]>([]);
+
+  const addExpense = () =>
+    setExpenses(prev => [
+      ...prev,
+      { id: crypto.randomUUID(), category: EXPENSE_CATEGORIES[0], amount: 0, notes: "" },
+    ]);
+
+  const updateExpense = (id: string, patch: Partial<{ category: string; amount: number; notes: string }>) =>
+    setExpenses(prev => prev.map(e => (e.id === id ? { ...e, ...patch } : e)));
+
+  const removeExpense = (id: string) =>
+    setExpenses(prev => prev.filter(e => e.id !== id));
 
   // Local state for stock used
   const [stockUsed, setStockUsed] = useState<{
@@ -215,9 +247,22 @@ export default function WorkerReportPage() {
         workerId: user?.id || "",
         workerName: user?.name || "Unknown Worker",
 
-        hours: 0,
+        // Real worked hours from the shift timer (editable above) — no longer
+        // hardcoded to zero. Carries shift bounds when a shift was active.
+        hours: Number.isFinite(hours) ? hours : 0,
+        shiftStart: activeShift?.jobId === jobId ? activeShift.lastStartedAt : undefined,
+        shiftEnd: activeShift?.jobId === jobId ? new Date().toISOString() : undefined,
       },
     ];
+
+    const expensePayloads = expenses
+      .filter(e => e.amount > 0 || e.notes.trim())
+      .map(e => ({
+        id: e.id,
+        category: e.category,
+        amount: Number(e.amount) || 0,
+        notes: e.notes.trim() || undefined,
+      }));
 
     // ======================================================
     // REVIEW ITEM
@@ -248,7 +293,7 @@ export default function WorkerReportPage() {
 
       equipmentUsage,
 
-      expenses: [],
+      expenses: expensePayloads,
 
       uploads: uploads.map((upload) => ({
         ...upload,
@@ -340,6 +385,7 @@ return (
       <div className="flex items-center gap-3">
         <button
           onClick={() => setLocation(`/worker/jobs/${job.id}`)}
+          aria-label="Back to job"
           className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center active:scale-95 transition-transform"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -358,20 +404,6 @@ return (
 
       {/* RIGHT SIDE */}
       <div className="flex items-center gap-2">
-
-        <button
-          type="button"
-          onClick={() => setOfflineMode(!isOffline)}
-          className={`text-xs px-3 py-2 rounded-lg font-medium transition-colors ${
-            isOffline
-              ? "bg-red-100 text-red-700"
-              : "bg-green-100 text-green-700"
-          }`}
-        >
-          {isOffline
-            ? "Simulate Reconnection"
-            : "Simulate Offline Mode"}
-        </button>
 
         <Button
           onClick={handleSubmit}
@@ -672,6 +704,113 @@ return (
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
+        </section>
+
+        {/* Hours Worked */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-100">
+            <Clock className="w-5 h-5" />
+            <h3 className="font-bold text-lg">Hours Worked</h3>
+          </div>
+          {shiftSecondsForJob > 0 && (
+            <p className="text-xs text-emerald-600 font-medium">
+              Pre-filled from your active shift ({Math.floor(shiftSecondsForJob / 3600)}h{" "}
+              {Math.floor((shiftSecondsForJob % 3600) / 60)}m). Adjust if needed.
+            </p>
+          )}
+          <div className="flex items-center gap-3">
+            <Label className="text-sm font-medium text-slate-700">Hours:</Label>
+            <Input
+              data-testid="worker-report-hours"
+              type="number"
+              min="0"
+              step="0.25"
+              value={hours}
+              onChange={(e) => setHours(parseFloat(e.target.value) || 0)}
+              className="h-10 w-28 rounded-lg text-center font-bold"
+            />
+          </div>
+        </section>
+
+        {/* Expenses */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-emerald-100">
+            <div className="flex items-center gap-2 text-emerald-700">
+              <Receipt className="w-5 h-5" />
+              <h3 className="font-bold text-lg">Expenses</h3>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              data-testid="worker-add-expense-btn"
+              onClick={addExpense}
+              className="rounded-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add
+            </Button>
+          </div>
+
+          {expenses.length === 0 ? (
+            <p className="text-sm text-slate-500 italic">No expenses added.</p>
+          ) : (
+            <div className="space-y-3">
+              {expenses.map((exp) => (
+                <div
+                  key={exp.id}
+                  data-testid="worker-expense-row"
+                  className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative space-y-3"
+                >
+                  <button
+                    onClick={() => removeExpense(exp.id)}
+                    className="absolute top-2 right-2 text-slate-400 hover:text-red-500 p-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-3 pr-8">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-500">Category</Label>
+                      <select
+                        value={exp.category}
+                        onChange={(e) => updateExpense(exp.id, { category: e.target.value })}
+                        className="w-full h-9 rounded-lg border border-slate-200 text-sm px-2 bg-white"
+                      >
+                        {EXPENSE_CATEGORIES.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-slate-500">Amount (£)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={exp.amount}
+                        onChange={(e) => updateExpense(exp.id, { amount: parseFloat(e.target.value) || 0 })}
+                        className="h-9 rounded-lg"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-slate-500">Description</Label>
+                    <Input
+                      type="text"
+                      placeholder="What was this expense for?"
+                      value={exp.notes}
+                      onChange={(e) => updateExpense(exp.id, { notes: e.target.value })}
+                      className="h-9 rounded-lg"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-xs text-slate-400">
+            Expenses remain unapproved until reviewed. No financial record is created here.
+          </p>
         </section>
 
         {/* Consumable Stock */}
