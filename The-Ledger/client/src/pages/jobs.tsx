@@ -1,5 +1,6 @@
 import { Layout } from "@/components/layout";
-import { useStore, Job, Worker, Equipment, Client } from "@/lib/mockData";
+import { useStore, useAuth, Job, Worker, Equipment, Client } from "@/lib/mockData";
+import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,18 +15,22 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, MapPin, Calendar, Users, Truck, FileText, Trash2, ReceiptText, Save, Pencil, Filter } from "lucide-react";
+import { Plus, Search, MapPin, Calendar, Users, Truck, FileText, Trash2, ReceiptText, Save, Pencil, Filter, ClipboardCheck, TriangleAlert, CheckCircle2, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 export default function JobsPage() {
-  const { jobs, addJob, updateJob, deleteJob, workers, equipment, clients, addInvoice, addClient, users } = useStore();
+  const { jobs, addJob, updateJob, deleteJob, workers, equipment, clients, addInvoice, addClient, users, roles, reviewItems } = useStore();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreateClientOpen, setIsCreateClientOpen] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  const userIsPM = isProjectManager(user, roles);
+  const userIsCEO = isCEO(user, roles);
 
   // Filters
   const [showCompleted, setShowCompleted] = useState(false);
@@ -113,31 +118,167 @@ export default function JobsPage() {
     toast({ title: "Client Created", description: `${createClientForm.name.trim()} has been added.` });
   };
 
+  // CEO: full job list with search/date filters
   const filteredJobs = jobs.filter(j => {
     const matchesSearch = j.title.toLowerCase().includes(search.toLowerCase()) || j.jobId.toLowerCase().includes(search.toLowerCase());
     const isCompleted = j.status === "Completed" || j.status === "Cancelled";
-    
+
     if (!showCompleted && isCompleted) return false;
 
     const jobDate = new Date(j.startAt);
     const startFilter = new Date(dateFilter.start);
     const endFilter = new Date(dateFilter.end);
-    // Simple date range check
     const inDateRange = jobDate >= startFilter && jobDate <= endFilter;
 
     return matchesSearch && inDateRange;
   }).sort((a, b) => {
-    // Sort Order: Active -> Planned -> Completed
     const statusOrder = { "Active": 0, "Planned": 1, "Completed": 2, "Cancelled": 3 };
     const scoreA = statusOrder[a.status] ?? 99;
     const scoreB = statusOrder[b.status] ?? 99;
-
     if (scoreA !== scoreB) return scoreA - scoreB;
-
-    // Within group, sort by date
     return new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
   });
 
+  // PM: only jobs where managerId matches the current PM user
+  const pmJobs = jobs
+    .filter(j => j.managerId === user?.id)
+    .sort((a, b) => {
+      const statusOrder = { "Active": 0, "Planned": 1, "Completed": 2, "Cancelled": 3 };
+      const scoreA = statusOrder[a.status] ?? 99;
+      const scoreB = statusOrder[b.status] ?? 99;
+      if (scoreA !== scoreB) return scoreA - scoreB;
+      return new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
+    });
+
+  function getJobState(job: Job) {
+    const pending = reviewItems.filter(r => r.jobId === job.id && r.status === 'pending').length;
+    if (job.priority === 'High' || job.priority === 'Critical') return 'high-priority';
+    if (pending > 0) return 'attention';
+    if (job.status === 'Active') return 'on-track';
+    return 'normal';
+  }
+
+  function PMJobCard({ job }: { job: Job }) {
+    const client = clients.find(c => c.id === job.clientId);
+    const pending = reviewItems.filter(r => r.jobId === job.id && r.status === 'pending').length;
+    const state = getJobState(job);
+
+    const stateConfig = {
+      'high-priority': { label: 'High Priority', class: 'border-amber-200 bg-amber-50/40', badgeClass: 'border-amber-300 text-amber-700' },
+      'attention': { label: 'Attention Required', class: 'border-red-200 bg-red-50/40', badgeClass: 'border-red-300 text-red-700' },
+      'on-track': { label: 'On Track', class: 'border-emerald-200 bg-emerald-50/20', badgeClass: 'border-emerald-300 text-emerald-700' },
+      'normal': { label: '', class: '', badgeClass: '' },
+    }[state];
+
+    return (
+      <Card
+        key={job.id}
+        className={`cursor-pointer hover:border-primary/50 transition-all ${stateConfig.class}`}
+        onClick={() => setLocation(`/jobs/${job.id}`)}
+        data-testid={`pm-job-card-${job.id}`}
+      >
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-base leading-snug truncate" title={job.title} data-testid={`text-job-title-${job.id}`}>
+                {job.title}
+              </CardTitle>
+              <CardDescription className="font-mono text-xs truncate" data-testid={`text-job-id-${job.id}`}>
+                {job.jobId}
+              </CardDescription>
+            </div>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <Badge
+                variant={job.status === 'Active' ? 'default' : job.status === 'Completed' ? 'secondary' : 'outline'}
+                className="text-[10px] h-5"
+                data-testid={`badge-job-status-${job.id}`}
+              >
+                {job.status}
+              </Badge>
+              {stateConfig.label && (
+                <Badge variant="outline" className={`text-[10px] h-5 ${stateConfig.badgeClass}`} data-testid={`badge-pm-job-state-${job.id}`}>
+                  {stateConfig.label}
+                </Badge>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-3">
+          <div className="space-y-1.5 text-sm text-muted-foreground">
+            {client && (
+              <div className="flex items-center gap-2 font-medium text-foreground">
+                <Building2 className="h-3.5 w-3.5" />
+                <span className="truncate">{client.name}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+              <span className="truncate">{job.locationAddress}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+              <span>{new Date(job.startAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 pt-1 border-t border-slate-100">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`pm-job-crew-count-${job.id}`}>
+              <Users className="h-3.5 w-3.5" />
+              <span>{job.assignedWorkerIds.length} crew</span>
+            </div>
+            {pending > 0 && (
+              <div className="flex items-center gap-1 text-xs text-amber-700" data-testid={`pm-job-pending-${job.id}`}>
+                <ClipboardCheck className="h-3.5 w-3.5" />
+                <span>{pending} pending review{pending !== 1 ? 's' : ''}</span>
+              </div>
+            )}
+            {pending === 0 && job.status === 'Active' && (
+              <div className="flex items-center gap-1 text-xs text-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Queue clear</span>
+              </div>
+            )}
+            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ── PM VIEW ────────────────────────────────────────────
+  if (userIsPM) {
+    return (
+      <Layout>
+        <div className="space-y-6 max-w-6xl mx-auto" data-testid="page-jobs">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">My Jobs</h2>
+            <p className="text-muted-foreground mt-1">
+              {pmJobs.length > 0
+                ? `${pmJobs.filter(j => j.status === 'Active').length} active · ${pmJobs.length} total assigned`
+                : 'No jobs currently assigned to you.'}
+            </p>
+          </div>
+
+          {pmJobs.length === 0 ? (
+            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-slate-50 dark:bg-slate-900/50" data-testid="pm-jobs-empty">
+              <div className="mx-auto w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center mb-4">
+                <FileText className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium">No assigned jobs</h3>
+              <p className="text-muted-foreground">Your assigned jobs will appear here.</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" data-testid="pm-jobs-grid">
+              {pmJobs.map((job) => (
+                <PMJobCard key={job.id} job={job} />
+              ))}
+            </div>
+          )}
+        </div>
+      </Layout>
+    );
+  }
+
+  // ── CEO VIEW ───────────────────────────────────────────
   return (
     <Layout>
       <div className="space-y-6 max-w-6xl mx-auto" data-testid="page-jobs">
@@ -160,16 +301,16 @@ export default function JobsPage() {
             <div className="flex gap-2 items-center">
                 <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <Input 
-                        type="date" 
-                        className="h-6 w-auto border-0 p-0 focus-visible:ring-0" 
+                    <Input
+                        type="date"
+                        className="h-6 w-auto border-0 p-0 focus-visible:ring-0"
                         value={dateFilter.start}
                         onChange={(e) => setDateFilter({...dateFilter, start: e.target.value})}
                     />
                     <span className="text-muted-foreground">-</span>
-                    <Input 
-                        type="date" 
-                        className="h-6 w-auto border-0 p-0 focus-visible:ring-0" 
+                    <Input
+                        type="date"
+                        className="h-6 w-auto border-0 p-0 focus-visible:ring-0"
                         value={dateFilter.end}
                         onChange={(e) => setDateFilter({...dateFilter, end: e.target.value})}
                     />

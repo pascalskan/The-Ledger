@@ -1,10 +1,11 @@
 import { Layout } from "@/components/layout";
-import { useStore } from "@/lib/mockData";
+import { useStore, useAuth } from "@/lib/mockData";
+import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRoute, useLocation } from "wouter";
-import { Calendar, MapPin, Users, Truck, ReceiptText, ArrowLeft, FileText, Eye, Search, FilePlus } from "lucide-react";
+import { Calendar, MapPin, Users, Truck, ReceiptText, ArrowLeft, FileText, Eye, Search, FilePlus, ClipboardCheck, TriangleAlert, CheckCircle2, Clock, Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -20,11 +21,15 @@ import { JobExceptionPanel } from "@/components/finance/JobExceptionPanel";
 import { INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS } from "@/lib/invoiceBuilder";
 
 export default function JobDetailPage() {
-  const { jobs, clients, workers, equipment, invoices, addInvoice, roles, updateJob, users, invoiceDrafts } = useStore();
+  const { jobs, clients, workers, equipment, invoices, addInvoice, roles, updateJob, users, invoiceDrafts, reviewItems } = useStore();
+  const { user } = useAuth();
   const [match, params] = useRoute("/jobs/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [viewDoc, setViewDoc] = useState<{name: string, url: string} | null>(null);
+
+  const userIsPM = isProjectManager(user, roles);
+  const userIsCEO = isCEO(user, roles);
 
   if (!match || !params?.id) {
     return (
@@ -46,6 +51,26 @@ export default function JobDetailPage() {
           <h2 className="text-2xl font-semibold">Job not found</h2>
           <p className="text-muted-foreground">This job might have been deleted or does not exist.</p>
           <Button variant="outline" onClick={() => setLocation("/jobs")} data-testid="button-back-jobs-not-found">Back to Jobs</Button>
+        </div>
+      </Layout>
+    );
+  }
+
+  // PM access control — PM may only view jobs they manage
+  if (userIsPM && job.managerId !== user?.id) {
+    return (
+      <Layout>
+        <div className="space-y-4 max-w-xl mx-auto mt-12 text-center" data-testid="pm-job-access-denied">
+          <div className="mx-auto w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+            <TriangleAlert className="h-6 w-6 text-amber-600" />
+          </div>
+          <h2 className="text-xl font-semibold">Access Restricted</h2>
+          <p className="text-muted-foreground text-sm">
+            You can only view jobs that are assigned to you. This job is managed by another Project Manager.
+          </p>
+          <Button variant="outline" onClick={() => setLocation("/jobs")} data-testid="button-pm-access-denied-back">
+            Back to My Jobs
+          </Button>
         </div>
       </Layout>
     );
@@ -171,6 +196,293 @@ export default function JobDetailPage() {
     setIsEditing(false);
   };
 
+  // ── PM WORKSPACE ────────────────────────────────────────────────
+  if (userIsPM) {
+    const jobReviewItems = reviewItems.filter(r => r.jobId === job.id);
+    const pendingReviews = jobReviewItems.filter(r => r.status === 'pending');
+    const correctionsNeeded = jobReviewItems.filter(r => r.status === 'needs-correction');
+    const assignedWorkers = workers.filter(w => job.assignedWorkerIds.includes(w.id));
+    const assignedEquipment = equipment.filter(e => job.assignedEquipmentIds.includes(e.id));
+    const hasAttention = pendingReviews.length > 0 || correctionsNeeded.length > 0;
+
+    return (
+      <Layout>
+        <div className="space-y-6" data-testid={`pm-job-workspace-${job.id}`}>
+          {/* Header */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLocation("/jobs")}
+                data-testid="button-back-jobs"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="font-mono" data-testid="badge-job-id">{job.jobId}</Badge>
+                  <Badge data-testid="badge-job-status">{job.status}</Badge>
+                  {job.priority === 'High' || job.priority === 'Critical' ? (
+                    <Badge variant="outline" className="border-amber-300 text-amber-700">{job.priority} Priority</Badge>
+                  ) : null}
+                </div>
+                <h1 className="text-2xl font-bold mt-1" data-testid="text-job-title">{job.title}</h1>
+                {client && (
+                  <p className="text-sm text-muted-foreground" data-testid="text-job-client">for {client.name}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Attention Required Banner */}
+          {hasAttention && (
+            <div
+              className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4"
+              data-testid="pm-workspace-attention-banner"
+            >
+              <TriangleAlert className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-amber-900">This job requires attention</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  {pendingReviews.length > 0 && `${pendingReviews.length} pending review${pendingReviews.length !== 1 ? 's' : ''}`}
+                  {pendingReviews.length > 0 && correctionsNeeded.length > 0 && ' · '}
+                  {correctionsNeeded.length > 0 && `${correctionsNeeded.length} correction${correctionsNeeded.length !== 1 ? 's' : ''} needed`}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Overview */}
+          <Card data-testid="pm-workspace-overview">
+            <CardHeader>
+              <CardTitle>Overview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {job.description && (
+                <p className="text-muted-foreground">{job.description}</p>
+              )}
+              <div className="grid gap-2 sm:grid-cols-2 pt-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>Starts {new Date(job.startAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>Ends {new Date(job.endAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  <span>{job.locationAddress}</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Users className="h-4 w-4" />
+                  <span>{assignedWorkers.length} crew member{assignedWorkers.length !== 1 ? 's' : ''} assigned</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Crew */}
+          <Card data-testid="pm-workspace-crew">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Users className="h-4 w-4" /> Crew</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {assignedWorkers.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No crew assigned to this job.</p>
+              ) : (
+                <div className="divide-y text-sm">
+                  {assignedWorkers.map(w => (
+                    <div key={w.id} className="flex items-center justify-between py-2" data-testid={`pm-crew-row-${w.id}`}>
+                      <span className="font-medium">{w.firstName} {w.lastName}</span>
+                      <Badge variant="outline" className={`text-xs ${w.status === 'Active' ? 'border-emerald-300 text-emerald-700' : ''}`}>{w.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Reviews */}
+          <Card data-testid="pm-workspace-reviews">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><ClipboardCheck className="h-4 w-4" /> Reviews</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {jobReviewItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No submissions for this job yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex gap-4 text-sm mb-3">
+                    <span className="text-muted-foreground">
+                      <span className="font-semibold text-foreground">{pendingReviews.length}</span> pending
+                    </span>
+                    <span className="text-muted-foreground">
+                      <span className="font-semibold text-foreground">{correctionsNeeded.length}</span> corrections
+                    </span>
+                    <span className="text-muted-foreground">
+                      <span className="font-semibold text-foreground">{jobReviewItems.filter(r => r.status === 'approved').length}</span> approved
+                    </span>
+                  </div>
+                  <div className="divide-y text-sm">
+                    {jobReviewItems.slice(0, 5).map(r => {
+                      const submitter = workers.find(w => w.id === r.workerId);
+                      return (
+                        <div key={r.id} className="flex items-center justify-between py-2" data-testid={`pm-review-row-${r.id}`}>
+                          <div>
+                            <span className="font-medium capitalize">{r.type}</span>
+                            {submitter && <span className="text-xs text-muted-foreground ml-2">by {submitter.name}</span>}
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className={
+                              r.status === 'pending' ? 'border-amber-300 text-amber-700' :
+                              r.status === 'approved' ? 'border-emerald-300 text-emerald-700' :
+                              r.status === 'needs-correction' ? 'border-red-300 text-red-700' :
+                              ''
+                            }
+                          >
+                            {r.status === 'needs-correction' ? 'Correction Needed' : r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {jobReviewItems.length > 5 && (
+                    <p className="text-xs text-muted-foreground pt-1">+{jobReviewItems.length - 5} more submissions</p>
+                  )}
+                  <div className="pt-2">
+                    <Button variant="outline" size="sm" onClick={() => setLocation('/review')} data-testid="pm-workspace-open-review-queue">
+                      Open Review Queue
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Schedule */}
+          <Card data-testid="pm-workspace-schedule">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Clock className="h-4 w-4" /> Schedule</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Start Date</p>
+                  <p className="font-medium">{new Date(job.startAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">End Date</p>
+                  <p className="font-medium">{new Date(job.endAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                </div>
+              </div>
+              {(job as any).schedule && (job as any).schedule.length > 0 ? (
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Upcoming Shifts</p>
+                  <div className="divide-y">
+                    {((job as any).schedule as any[]).slice(0, 5).map((shift: any, i: number) => (
+                      <div key={i} className="flex justify-between py-2 text-sm" data-testid={`pm-schedule-shift-${i}`}>
+                        <span>{shift.date || shift.day}</span>
+                        <span className="text-muted-foreground">{shift.start || shift.startTime} — {shift.end || shift.endTime}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">No individual shifts scheduled.</p>
+              )}
+              <Button variant="outline" size="sm" onClick={() => setLocation('/schedule')} data-testid="pm-workspace-open-schedule">
+                Open Schedule
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Documents */}
+          <Card data-testid="pm-workspace-documents">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><FileText className="h-4 w-4" /> Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {job.documents && job.documents.length > 0 ? (
+                <div className="space-y-2">
+                  {job.documents.map((doc, i) => (
+                    <div key={i} className="flex justify-between items-center border rounded p-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-blue-500" />
+                        <span>{doc.name}</span>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setViewDoc(doc)} data-testid={`button-job-doc-view-${i}`}>
+                        <Eye className="h-4 w-4 mr-1" /> View
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">No documents attached.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Attention Required */}
+          <Card data-testid="pm-workspace-attention">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><TriangleAlert className="h-4 w-4 text-amber-500" /> Attention Required</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {!hasAttention ? (
+                <div className="flex items-center gap-2 text-sm text-emerald-600">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Nothing requires attention on this job.</span>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {pendingReviews.length > 0 && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50/40 p-3 text-sm">
+                      <p className="font-medium text-amber-900">{pendingReviews.length} pending review{pendingReviews.length !== 1 ? 's' : ''} awaiting your decision</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => setLocation('/review')}
+                        data-testid="pm-workspace-attention-review-link"
+                      >
+                        Go to Review Queue
+                      </Button>
+                    </div>
+                  )}
+                  {correctionsNeeded.length > 0 && (
+                    <div className="rounded-md border border-red-200 bg-red-50/40 p-3 text-sm">
+                      <p className="font-medium text-red-900">{correctionsNeeded.length} submission{correctionsNeeded.length !== 1 ? 's' : ''} need correction</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Doc preview dialog */}
+          <Dialog open={!!viewDoc} onOpenChange={(o) => !o && setViewDoc(null)}>
+            <DialogContent className="sm:max-w-[600px] h-[80vh]">
+              <DialogHeader>
+                <DialogTitle>{viewDoc?.name}</DialogTitle>
+                <DialogDescription>Document Preview</DialogDescription>
+              </DialogHeader>
+              <div className="flex-1 w-full h-full bg-slate-100 rounded-md flex items-center justify-center border">
+                <div className="text-center p-8">
+                  <FileText className="h-16 w-16 mx-auto text-slate-400 mb-4" />
+                  <p className="text-muted-foreground">Preview not available in demo mode.</p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </Layout>
+    );
+  }
+
+  // ── CEO VIEW ───────────────────────────────────────────
   return (
     <Layout>
       <div className="space-y-6" data-testid={`page-job-${job.id}`}>

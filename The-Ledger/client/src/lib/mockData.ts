@@ -622,6 +622,7 @@ const DEMO_JOBS: Job[] = [
     id: "dj-kitchen-extract-1",
     jobId: "DEMO-JOB-0201",
     clientId: "dc1",
+    managerId: "du2",
     title: "Kitchen extraction & ventilation install",
     description:
       "Supply & install a compliant commercial kitchen extraction and ventilation system, including canopy, ducting, access panels, fan set, and commissioning. Work to be coordinated around trading hours with staged shutdowns.",
