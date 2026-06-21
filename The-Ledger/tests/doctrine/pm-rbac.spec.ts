@@ -200,3 +200,60 @@ test('PM-RBAC-17: CEO navigation retains Core/Operational/Intelligence/Automatio
   await expect(page.getByTestId('nav-workflow-centre')).toBeVisible();
   await expect(page.getByTestId('nav-review')).toBeVisible();
 });
+
+// ────────────────────────────────────────────────────────────────
+// PM-RBAC-18 — PM "My Jobs" dashboard card scoped to assigned jobs (PM-7 fix)
+// ────────────────────────────────────────────────────────────────
+
+test('PM-RBAC-18: PM dashboard My Jobs card shows only assigned jobs', async ({ page }) => {
+  await loginAsPM(page);
+  await page.goto('/');
+  await page.waitForSelector('[data-testid="pm-dashboard-page"]');
+
+  const myJobsCard = page.getByTestId('pm-dashboard-my-jobs');
+  await expect(myJobsCard).toBeVisible();
+
+  // Demo PM (du2 / Alex Reid) is assigned to dj-kitchen-extract-1, dj-pm-active-1,
+  // dj-boiler-room-2, dj-office-fit-1. An unassigned job (dj-showcase-maint-1)
+  // must NOT appear in the My Jobs card.
+  await expect(myJobsCard).not.toContainText('Showcase Maintenance');
+  // At least one assigned job title appears
+  await expect(myJobsCard).toContainText('HVAC system replacement');
+});
+
+// ────────────────────────────────────────────────────────────────
+// PM-RBAC-19 — PM Attention Required scoped to assigned jobs (PM-7 fix)
+// ────────────────────────────────────────────────────────────────
+
+test('PM-RBAC-19: PM Attention Required section does not expose unassigned job titles', async ({ page }) => {
+  await loginAsPM(page);
+  await page.goto('/');
+  await page.waitForSelector('[data-testid="pm-dashboard-page"]');
+
+  // Showcase Maintenance (dj-showcase-maint-1) is not managed by du2; must not appear
+  const attentionCard = page.getByTestId('pm-dashboard-attention');
+  await expect(attentionCard).toBeVisible();
+  await expect(attentionCard).not.toContainText('Showcase Maintenance');
+});
+
+// ────────────────────────────────────────────────────────────────
+// PM-RBAC-20 — canonical isCEO helper used in review.tsx (PM-7 fix)
+// ────────────────────────────────────────────────────────────────
+
+test('PM-RBAC-20: CEO review page renders intelligence tabs; PM gets PM Centre — verifies canonical role resolution', async ({ page }) => {
+  // CEO path
+  await loginAsCEO(page);
+  await page.goto('/review');
+  await page.waitForSelector('[data-testid="review-hub-tabs"]');
+  await expect(page.getByTestId('review-hub-tabs')).toBeVisible();
+  await expect(page.getByTestId('pm-review-page')).not.toBeVisible();
+
+  // PM path
+  await page.goto('/');
+  await clearBrowserState(page);
+  await loginAsPM(page);
+  await page.goto('/review');
+  await page.waitForSelector('[data-testid="pm-review-page"]');
+  await expect(page.getByTestId('pm-review-page')).toBeVisible();
+  await expect(page.getByTestId('review-hub-tabs')).not.toBeVisible();
+});

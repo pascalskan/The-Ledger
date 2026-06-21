@@ -15,7 +15,7 @@ import { getJobPriority, getJobPriorityRank } from "@/lib/reviewPriorityEngine";
 import { RecommendationDistributionPanel } from "@/components/review/ReviewRecommendations";
 import { ReviewAnalyticsDashboard } from "@/components/review/ReviewAnalyticsDashboard";
 import { ReviewExecutiveBriefing } from "@/components/review/ReviewExecutiveBriefing";
-import { isProjectManager } from "@/lib/roleHelpers";
+import { isProjectManager, isCEO as isCEOHelper } from "@/lib/roleHelpers";
 
 export default function ReviewPage() {
   const { jobs, workers, reviewItems, roles, updateReviewItem } = useStore();
@@ -35,7 +35,7 @@ export default function ReviewPage() {
   const userIsPM = isProjectManager(user, roles);
   // UX-7.1 — executive visibility layer is CEO-only; PMs keep the scoped queue.
   const isPM = userIsPM;
-  const isCEO = user?.roleIds?.includes("role-ceo") || user?.roleIds?.includes("drole-ceo");
+  const isCEO = isCEOHelper(user, roles);
 
   const jobsWithReviews = jobs.filter(j => {
     if (j.status !== 'Active' && j.status !== 'Completed') return false;

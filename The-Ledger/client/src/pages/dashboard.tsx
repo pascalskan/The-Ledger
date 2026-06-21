@@ -180,9 +180,9 @@ function PMDashboard() {
     return t >= now && t <= in7days && (j.status === 'Active' || j.status === 'Planned');
   });
 
-  // My Jobs — active + planned, sorted by start date
+  // My Jobs — scoped to PM's assigned jobs, sorted by start date
   const myJobs = [...jobs]
-    .filter(j => j.status === 'Active' || j.status === 'Planned' || j.status === 'Completed')
+    .filter(j => j.managerId === user?.id && (j.status === 'Active' || j.status === 'Planned' || j.status === 'Completed'))
     .sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime())
     .slice(0, 6);
 
@@ -195,6 +195,7 @@ function PMDashboard() {
   });
 
   const highPriorityPending = jobs.filter(j =>
+    pmJobIds.has(j.id) &&
     j.priority === 'High' &&
     (j.status === 'Active' || j.status === 'Planned') &&
     reviewItems.some(r => r.jobId === j.id && r.status === 'pending')
