@@ -339,6 +339,7 @@ export default function WorkerUploadsPage() {
                             onClick={() =>
                               setPreviewUpload(upload)
                             }
+                            aria-label={`Preview ${upload.fileName || "upload"}`}
                             className="w-9 h-9 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-sm"
                           >
                             <Eye className="w-4 h-4" />
@@ -354,6 +355,7 @@ export default function WorkerUploadsPage() {
                                   upload.uploadId,
                               })
                             }
+                            aria-label={`Remove ${upload.fileName || "upload"}`}
                             className="w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-sm"
                           >
                             <Trash2 className="w-4 h-4" />

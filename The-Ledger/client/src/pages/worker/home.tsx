@@ -95,6 +95,9 @@ export default function WorkerHomePage() {
 
               <div
                 data-testid="worker-shift-timer"
+                role="timer"
+                aria-live="polite"
+                aria-label={`Shift elapsed time ${formatDuration(elapsedTime)}`}
                 className="text-4xl font-mono font-bold text-emerald-400 mb-1 tracking-wider"
               >
                 {formatDuration(elapsedTime)}

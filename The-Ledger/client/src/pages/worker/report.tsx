@@ -385,6 +385,7 @@ return (
       <div className="flex items-center gap-3">
         <button
           onClick={() => setLocation(`/worker/jobs/${job.id}`)}
+          aria-label="Back to job"
           className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center active:scale-95 transition-transform"
         >
           <ArrowLeft className="w-5 h-5" />

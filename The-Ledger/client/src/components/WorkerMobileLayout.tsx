@@ -19,7 +19,8 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
 
   const navItems = [
     { icon: Home, label: "Home", path: "/worker/home" },
-    { icon: Briefcase, label: "My Jobs", path: "/worker/jobs" },
+    { icon: Briefcase, label: "Jobs", path: "/worker/jobs" },
+    { icon: CalendarDays, label: "Schedule", path: "/worker/schedule" },
     { icon: History, label: "Activity", path: "/worker/history" },
     { icon: UploadCloud, label: "Uploads", path: "/worker/uploads" },
     { icon: UserCircle, label: "Profile", path: "/worker/profile" },
@@ -60,7 +61,10 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 flex justify-between px-2 py-2 pb-safe-area shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50">
+      <nav
+        aria-label="Worker navigation"
+        className="fixed bottom-0 w-full bg-white border-t border-slate-200 flex justify-between px-1 py-2 pb-safe-area shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50"
+      >
         {navItems.map((item) => {
           const isActive = location.startsWith(item.path);
           return (
@@ -68,8 +72,10 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
               key={item.label}
               data-testid={`worker-nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
               onClick={() => setLocation(item.path)}
+              aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center justify-center w-full py-2 rounded-xl transition-all",
+                "flex flex-col items-center justify-center w-full py-2 rounded-xl transition-all min-w-0",
                 isActive ? "text-primary bg-primary/5" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
               )}
             >
@@ -81,7 +87,7 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-medium tracking-wide">{item.label}</span>
+              <span className="text-[10px] font-medium tracking-tight truncate max-w-full px-0.5">{item.label}</span>
             </button>
           )
         })}
