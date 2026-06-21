@@ -57,7 +57,7 @@ export default function WorkerJobsPage() {
                     </div>
                   </div>
 
-                  <button aria-label={`Open ${job.title}`} className="w-full bg-slate-900 text-white rounded-xl py-3.5 font-semibold text-sm flex items-center justify-center gap-2">
+                  <button aria-label={`Open Job — ${job.title}`} className="w-full bg-slate-900 text-white rounded-xl py-3.5 font-semibold text-sm flex items-center justify-center gap-2">
                     Open Job <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
