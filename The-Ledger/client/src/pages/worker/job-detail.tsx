@@ -347,7 +347,7 @@ export default function WorkerJobDetailPage() {
 
       {/* Log Issue Bottom Sheet */}
       {issueOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setIssueOpen(false)}>
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40" onClick={() => setIssueOpen(false)}>
           <div
             data-testid="worker-log-issue-sheet"
             className="w-full max-w-md bg-white rounded-t-3xl p-5 space-y-4 shadow-2xl"

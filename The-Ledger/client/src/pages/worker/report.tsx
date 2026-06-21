@@ -797,6 +797,7 @@ return (
                   <div className="space-y-1">
                     <Label className="text-xs text-slate-500">Description</Label>
                     <Input
+                      type="text"
                       placeholder="What was this expense for?"
                       value={exp.notes}
                       onChange={(e) => updateExpense(exp.id, { notes: e.target.value })}

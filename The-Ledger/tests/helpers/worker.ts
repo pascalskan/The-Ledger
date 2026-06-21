@@ -2,6 +2,9 @@ import { Page, expect } from '@playwright/test';
 
 export async function submitBasicReport(page: Page, description: string = 'Basic report', jobText?: string) {
   if (jobText) {
+    // The worker lands on Home after login; the job's reference (e.g. DEMO-JOB-0202)
+    // is shown on the My Jobs list, so navigate there before targeting the card.
+    await page.getByTestId('worker-nav-jobs').click();
     await page.locator('.space-y-4 > div', { hasText: jobText }).getByRole('button', { name: /Open Job/i }).click();
   } else {
     await page.getByRole('button', { name: /Open Job/i }).first().click();

@@ -676,7 +676,7 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
       },
     ],
     workerId: "du3",
-    jobId: "dj-showcase-maint-1",
+    jobId: "dj-kitchen-extract-1",
     companyId: DEMO_COMPANY_ID,
   }
 ];
