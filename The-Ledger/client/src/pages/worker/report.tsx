@@ -20,7 +20,7 @@ export default function WorkerReportPage() {
   const [, params] = useRoute("/worker/jobs/:id/report");
   const [, setLocation] = useLocation();
   const { jobs, stockItems, assets, addReviewItem } = useStore();
-  const {isOffline, addToQueue, queue, setOfflineMode, syncQueue, updateQueueItem, clearSyncedItems, retryUpload} = useOfflineQueueStore();
+  const {isOffline, addToQueue, queue, syncQueue, updateQueueItem, clearSyncedItems, retryUpload} = useOfflineQueueStore();
   const { user } = useAuth();
   const { toast } = useToast();
   const { activeShift, elapsedTime } = useShiftStore();
@@ -403,20 +403,6 @@ return (
 
       {/* RIGHT SIDE */}
       <div className="flex items-center gap-2">
-
-        <button
-          type="button"
-          onClick={() => setOfflineMode(!isOffline)}
-          className={`text-xs px-3 py-2 rounded-lg font-medium transition-colors ${
-            isOffline
-              ? "bg-red-100 text-red-700"
-              : "bg-green-100 text-green-700"
-          }`}
-        >
-          {isOffline
-            ? "Simulate Reconnection"
-            : "Simulate Offline Mode"}
-        </button>
 
         <Button
           onClick={handleSubmit}

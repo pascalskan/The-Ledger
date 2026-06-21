@@ -51,6 +51,9 @@ interface OfflineQueueStore {
   submitWorkerItem: (reviewItem: any) => { queued: boolean };
   removeFromQueue: (id: string) => void;
   updateQueueItem: (id: string, updates: Partial<OfflineQueueItem>) => void;
+  // Worker-facing retry for a whole queue item (report/issue/timesheet replay
+  // that failed). Resets to pending and re-runs the queue.
+  retryQueueItem: (id: string) => void;
   updateUploadState: (queueItemId: string, uploadId: string, updates: any) => void;
   retryUpload: (queueItemId: string, uploadId: string) => Promise<void>;
   clearSyncedItems: () => void;
@@ -133,6 +136,12 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
         set((state) => ({
           queue: state.queue.filter((item) => item.id !== id),
         })),
+
+      retryQueueItem: (id) => {
+        get().updateQueueItem(id, { syncStatus: "pending", errorMessage: undefined });
+        logSyncEvent({ type: "retry_triggered", entityId: id, entityType: "queueItem" });
+        get().syncQueue();
+      },
 
       updateQueueItem: (id, updates) =>
         set((state) => ({
