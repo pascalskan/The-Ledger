@@ -201,6 +201,7 @@ export default function JobDetailPage() {
     const jobReviewItems = reviewItems.filter(r => r.jobId === job.id);
     const pendingReviews = jobReviewItems.filter(r => r.status === 'pending');
     const correctionsNeeded = jobReviewItems.filter(r => r.status === 'needs-correction');
+    const escalatedReviews = jobReviewItems.filter(r => r.status === 'escalated');
     const assignedWorkers = workers.filter(w => job.assignedWorkerIds.includes(w.id));
     const assignedEquipment = equipment.filter(e => job.assignedEquipmentIds.includes(e.id));
     const hasAttention = pendingReviews.length > 0 || correctionsNeeded.length > 0;
@@ -314,13 +315,18 @@ export default function JobDetailPage() {
                 <p className="text-sm text-muted-foreground">No submissions for this job yet.</p>
               ) : (
                 <div className="space-y-2">
-                  <div className="flex gap-4 text-sm mb-3">
+                  <div className="flex flex-wrap gap-4 text-sm mb-3">
                     <span className="text-muted-foreground">
                       <span className="font-semibold text-foreground">{pendingReviews.length}</span> pending
                     </span>
                     <span className="text-muted-foreground">
                       <span className="font-semibold text-foreground">{correctionsNeeded.length}</span> corrections
                     </span>
+                    {escalatedReviews.length > 0 && (
+                      <span className="text-muted-foreground">
+                        <span className="font-semibold text-purple-700">{escalatedReviews.length}</span> escalated
+                      </span>
+                    )}
                     <span className="text-muted-foreground">
                       <span className="font-semibold text-foreground">{jobReviewItems.filter(r => r.status === 'approved').length}</span> approved
                     </span>
@@ -332,7 +338,7 @@ export default function JobDetailPage() {
                         <div key={r.id} className="flex items-center justify-between py-2" data-testid={`pm-review-row-${r.id}`}>
                           <div>
                             <span className="font-medium capitalize">{r.type}</span>
-                            {submitter && <span className="text-xs text-muted-foreground ml-2">by {submitter.name}</span>}
+                            {submitter && <span className="text-xs text-muted-foreground ml-2">by {submitter.firstName} {submitter.lastName}</span>}
                           </div>
                           <Badge
                             variant="outline"
@@ -340,10 +346,13 @@ export default function JobDetailPage() {
                               r.status === 'pending' ? 'border-amber-300 text-amber-700' :
                               r.status === 'approved' ? 'border-emerald-300 text-emerald-700' :
                               r.status === 'needs-correction' ? 'border-red-300 text-red-700' :
+                              r.status === 'escalated' ? 'border-purple-300 text-purple-700' :
                               ''
                             }
                           >
-                            {r.status === 'needs-correction' ? 'Correction Needed' : r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                            {r.status === 'needs-correction' ? 'Correction Needed' :
+                             r.status === 'escalated' ? 'Escalated' :
+                             r.status.charAt(0).toUpperCase() + r.status.slice(1)}
                           </Badge>
                         </div>
                       );
@@ -353,9 +362,14 @@ export default function JobDetailPage() {
                     <p className="text-xs text-muted-foreground pt-1">+{jobReviewItems.length - 5} more submissions</p>
                   )}
                   <div className="pt-2">
-                    <Button variant="outline" size="sm" onClick={() => setLocation('/review')} data-testid="pm-workspace-open-review-queue">
-                      Open Review Queue
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setLocation(`/review/${job.id}`)} data-testid="pm-workspace-open-review-queue">
+                        Review This Job
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setLocation('/review')} data-testid="pm-workspace-open-all-reviews">
+                        All Reviews
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

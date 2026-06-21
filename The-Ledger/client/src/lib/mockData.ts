@@ -310,7 +310,12 @@ export interface ReviewItem {
     | "pending"
     | "approved"
     | "rejected"
-    | "needs-correction";
+    | "needs-correction"
+    | "escalated";
+
+  escalatedAt?: string;
+  escalatedBy?: string;
+  correctionNotes?: string;
 
   workerId: string;
 
@@ -422,6 +427,72 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     status: "approved",
     content: "Worker slipped on wet surface near entrance. No injuries but area needs better signage.",
     jobId: "dj-showcase-maint-1",
+    companyId: DEMO_COMPANY_ID
+  },
+
+  // PM demo review items — dj-pm-active-1 (HVAC system replacement)
+  {
+    id: "rev-pm-1",
+    type: "report",
+    title: "End of Day Report — Day 5",
+    submittedBy: "Marcus Cole",
+    submittedAt: new Date(Date.now() - 3 * 3600000).toISOString(),
+    status: "pending" as const,
+    content: "Completed duct installation in Zones A and B. Zone C requires additional fixings before insulation can proceed. All health & safety checks passed.",
+    workerId: "dw2",
+    jobId: "dj-pm-active-1",
+    companyId: DEMO_COMPANY_ID
+  },
+  {
+    id: "rev-pm-2",
+    type: "photo",
+    title: "Zone B Duct Installation Complete",
+    submittedBy: "Marcus Cole",
+    submittedAt: new Date(Date.now() - 52 * 3600000).toISOString(), // 52 hours ago → overdue
+    status: "pending" as const,
+    url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
+    notes: "Zone B fully ducted and ready for sign-off before insulation team arrives Monday.",
+    workerId: "dw2",
+    jobId: "dj-pm-active-1",
+    companyId: DEMO_COMPANY_ID
+  },
+  {
+    id: "rev-pm-3",
+    type: "report",
+    title: "Materials Request — Zone C Fixings",
+    submittedBy: "Jordan Reed",
+    submittedAt: new Date(Date.now() - 18 * 3600000).toISOString(),
+    status: "needs-correction" as const,
+    correctionNotes: "Please include exact part numbers and quantities for the additional fixings required. Reference the HVAC spec sheet section 4.2.",
+    content: "Need additional fixings for Zone C ceiling brackets. Current stock insufficient.",
+    workerId: "dw3",
+    jobId: "dj-pm-active-1",
+    companyId: DEMO_COMPANY_ID
+  },
+  {
+    id: "rev-pm-4",
+    type: "report",
+    title: "Asbestos Survey — Legacy Pipework Area",
+    submittedBy: "Marcus Cole",
+    submittedAt: new Date(Date.now() - 36 * 3600000).toISOString(),
+    status: "escalated" as const,
+    escalatedAt: new Date(Date.now() - 24 * 3600000).toISOString(),
+    escalatedBy: "du2",
+    content: "Uncovered legacy pipework during Zone C prep. Possible asbestos-containing material (ACM). Work paused in this area. Awaiting specialist assessment.",
+    workerId: "dw2",
+    jobId: "dj-pm-active-1",
+    companyId: DEMO_COMPANY_ID
+  },
+  {
+    id: "rev-pm-5",
+    type: "report",
+    title: "Site Preparation Report",
+    submittedBy: "Marcus Cole",
+    submittedAt: new Date(Date.now() - 1 * 3600000).toISOString(),
+    status: "pending" as const,
+    content: "Boiler room site preparation complete. Area cleared and secured. Ready to begin pipework replacement.",
+    workerId: "dw2",
+    jobId: "dj-boiler-room-2",
     companyId: DEMO_COMPANY_ID
   }
 ];

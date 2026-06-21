@@ -155,10 +155,12 @@ function PMDashboard() {
   const in7days = now + 7 * 86_400_000;
   const in24h = now + 86_400_000;
 
-  // KPI data
+  // KPI data — scoped to PM's jobs where applicable
+  const pmJobIds = new Set(jobs.filter(j => j.managerId === user?.id).map(j => j.id));
   const activeJobs = jobs.filter(j => j.status === 'Active');
-  const pendingReviews = reviewItems.filter(r => r.status === 'pending');
-  const correctedReviews = reviewItems.filter(r => r.status === 'needs-correction');
+  const pendingReviews = reviewItems.filter(r => r.status === 'pending' && pmJobIds.has(r.jobId));
+  const correctedReviews = reviewItems.filter(r => r.status === 'needs-correction' && pmJobIds.has(r.jobId));
+  const escalatedReviews = reviewItems.filter(r => r.status === 'escalated' && pmJobIds.has(r.jobId));
 
   const crewOnSiteToday = workers.filter(w =>
     w.status === 'Active' &&
@@ -181,10 +183,11 @@ function PMDashboard() {
     .sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime())
     .slice(0, 6);
 
-  // Attention required queue
+  // Attention required queue — scoped to PM's jobs
   const overdueReviews = reviewItems.filter(r => {
     if (r.status !== 'pending') return false;
     if (!r.submittedAt) return false;
+    if (!pmJobIds.has(r.jobId)) return false;
     return daysSince(r.submittedAt) >= 2;
   });
 
@@ -372,6 +375,16 @@ function PMDashboard() {
                 <span className="text-muted-foreground">Overdue (&gt;2 days)</span>
                 <Badge variant={overdueReviews.length > 0 ? 'outline' : 'secondary'} className="text-[10px] h-5 border-red-300 text-red-700">
                   {overdueReviews.length}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Escalated</span>
+                <Badge
+                  variant={escalatedReviews.length > 0 ? 'outline' : 'secondary'}
+                  className="text-[10px] h-5 border-purple-300 text-purple-700"
+                  data-testid="pm-dashboard-escalations-badge"
+                >
+                  {escalatedReviews.length}
                 </Badge>
               </div>
             </div>
