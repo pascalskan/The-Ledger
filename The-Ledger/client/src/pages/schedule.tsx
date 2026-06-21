@@ -1,13 +1,17 @@
 import { Layout } from "@/components/layout";
-import { useStore } from "@/lib/mockData";
+import { useStore, useAuth } from "@/lib/mockData";
+import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { WeeklyIntelligenceStrip } from "@/components/schedule/WeeklyIntelligenceStrip";
 import { JobScheduleCard } from "@/components/schedule/JobScheduleCard";
 import { SmartFilters } from "@/components/schedule/SmartFilters";
 import { OperationalDrawer } from "@/components/schedule/OperationalDrawer";
 import { startOfWeek, addDays, format, isSameDay } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, TriangleAlert, CheckCircle2, ClipboardCheck, Calendar, MapPin } from "lucide-react";
+import { useLocation } from "wouter";
 import { Job } from "@/types/job";
 
 type DayRollup = Date;
@@ -27,7 +31,11 @@ type OperationalJob = Job & {
 };
 
 export default function SchedulePage() {
-  const { jobs, clients } = useStore();
+  const { jobs, clients, workers, roles, reviewItems } = useStore();
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+
+  const userIsPM = isProjectManager(user, roles);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filters, setFilters] = useState({
@@ -199,9 +207,324 @@ export default function SchedulePage() {
 
     setDrawerType("day");
   };
+
+  // ── PM SCHEDULE VIEW ────────────────────────────────────────────
+  if (userIsPM) {
+    const pmJobs = jobs.filter(j => j.managerId === user?.id);
+    const now = new Date();
+    const sevenDaysAhead = addDays(now, 7);
+
+    const activeJobs = pmJobs.filter(j => j.status === 'Active');
+    const plannedJobs = pmJobs.filter(j => j.status === 'Planned');
+
+    // Jobs starting within next 7 days
+    const upcomingJobs = [...activeJobs, ...plannedJobs].filter(j => {
+      const start = new Date(j.startAt);
+      return start >= now && start <= sevenDaysAhead;
+    });
+
+    // Workers across all PM jobs
+    const allWorkerIds = new Set(pmJobs.flatMap(j => j.assignedWorkerIds));
+    const assignedWorkers = workers.filter(w => allWorkerIds.has(w.id));
+
+    // Conflict detection: worker on 2+ non-completed PM jobs with overlapping date ranges
+    type WorkerConflict = { workerId: string; jobs: Job[] };
+    const workerConflicts: WorkerConflict[] = [];
+    const nonCompletedJobs = pmJobs.filter(j => j.status !== 'Completed' && j.status !== 'Cancelled');
+    for (const workerId of Array.from(allWorkerIds)) {
+      const workerJobs = nonCompletedJobs.filter(j => j.assignedWorkerIds.includes(workerId));
+      if (workerJobs.length < 2) continue;
+      for (let a = 0; a < workerJobs.length; a++) {
+        for (let b = a + 1; b < workerJobs.length; b++) {
+          const jA = workerJobs[a], jB = workerJobs[b];
+          const aStart = new Date(jA.startAt), aEnd = new Date(jA.endAt);
+          const bStart = new Date(jB.startAt), bEnd = new Date(jB.endAt);
+          if (aStart <= bEnd && bStart <= aEnd) {
+            if (!workerConflicts.find(c => c.workerId === workerId)) {
+              workerConflicts.push({ workerId, jobs: [jA, jB] });
+            }
+          }
+        }
+      }
+    }
+
+    // Crew shortage: active/planned job with 0 assigned workers
+    const understaffedJobs = nonCompletedJobs.filter(j => j.assignedWorkerIds.length === 0);
+
+    // Resource alerts: planned jobs starting within 7 days with 0 workers
+    const resourceAlerts = understaffedJobs.filter(j => {
+      const start = new Date(j.startAt);
+      return start >= now && start <= sevenDaysAhead;
+    });
+
+    const totalAlerts = workerConflicts.length + understaffedJobs.length;
+
+    // All active/planned jobs sorted by start date
+    const scheduledDisplay = [...activeJobs, ...plannedJobs].sort(
+      (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+    );
+
+    return (
+      <Layout>
+        <div className="space-y-6 max-w-5xl mx-auto" data-testid="pm-schedule-page">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Schedule</h2>
+            <p className="text-muted-foreground mt-1">Your assigned jobs, crew allocation, and upcoming work.</p>
+          </div>
+
+          {/* Workforce Snapshot KPI Strip */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="pm-schedule-workforce-snapshot">
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Jobs Active</div>
+                <div className="text-2xl font-bold" data-testid="pm-sched-kpi-active">{activeJobs.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Jobs Planned</div>
+                <div className="text-2xl font-bold" data-testid="pm-sched-kpi-planned">{plannedJobs.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Crew Assigned</div>
+                <div className="text-2xl font-bold" data-testid="pm-sched-kpi-crew">{assignedWorkers.length}</div>
+              </CardContent>
+            </Card>
+            <Card className={totalAlerts > 0 ? 'border-amber-200 bg-amber-50/40' : ''}>
+              <CardContent className="p-4">
+                <div className={`text-xs uppercase tracking-wide mb-1 ${totalAlerts > 0 ? 'text-amber-700' : 'text-muted-foreground'}`}>
+                  Alerts
+                </div>
+                <div className={`text-2xl font-bold ${totalAlerts > 0 ? 'text-amber-700' : ''}`} data-testid="pm-sched-kpi-alerts">
+                  {totalAlerts}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Conflict & Alerts Section */}
+          <Card data-testid="pm-schedule-conflicts">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <TriangleAlert className="h-4 w-4 text-amber-500" /> Alerts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {workerConflicts.length === 0 && understaffedJobs.length === 0 ? (
+                <div className="flex items-center gap-2 text-sm text-emerald-600">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>No workforce conflicts or crew shortages detected.</span>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {workerConflicts.map((conflict, i) => {
+                    const w = workers.find(wk => wk.id === conflict.workerId);
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50/40 p-3"
+                        data-testid={`pm-conflict-worker-${conflict.workerId}`}
+                      >
+                        <TriangleAlert className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-red-900">Worker Conflict</p>
+                          <p className="text-xs text-red-700 mt-0.5">
+                            {w ? `${w.firstName} ${w.lastName}` : conflict.workerId} is assigned to overlapping jobs:{' '}
+                            {conflict.jobs.map(j => j.title).join(' and ')}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {understaffedJobs.map(j => {
+                    const isAlert = resourceAlerts.some(r => r.id === j.id);
+                    const daysUntilStart = Math.ceil((new Date(j.startAt).getTime() - now.getTime()) / 86400000);
+                    return (
+                      <div
+                        key={j.id}
+                        className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50/40 p-3"
+                        data-testid={`pm-shortage-job-${j.id}`}
+                      >
+                        <TriangleAlert className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-amber-900">
+                            {isAlert ? 'Resource Alert — ' : ''}Crew Shortage
+                          </p>
+                          <p className="text-xs text-amber-700 mt-0.5">
+                            {j.title} has no crew assigned
+                            {isAlert && daysUntilStart > 0 ? ` and starts in ${daysUntilStart} day${daysUntilStart !== 1 ? 's' : ''}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* My Scheduled Jobs */}
+          <div data-testid="pm-schedule-my-jobs">
+            <h3 className="text-lg font-semibold mb-3">My Scheduled Jobs</h3>
+            {scheduledDisplay.length === 0 ? (
+              <div className="text-center py-8 border-2 border-dashed rounded-lg bg-slate-50">
+                <p className="text-muted-foreground text-sm">No active or planned jobs.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {scheduledDisplay.map(job => {
+                  const client = clients.find(c => c.id === job.clientId);
+                  const pending = reviewItems.filter(r => r.jobId === job.id && r.status === 'pending').length;
+                  const isShortage = understaffedJobs.some(j => j.id === job.id);
+                  const hasConflict = workerConflicts.some(c => c.jobs.some(cj => cj.id === job.id));
+                  return (
+                    <Card
+                      key={job.id}
+                      className={`cursor-pointer hover:border-primary/50 transition-all ${isShortage || hasConflict ? 'border-amber-200 bg-amber-50/20' : ''}`}
+                      onClick={() => setLocation(`/jobs/${job.id}`)}
+                      data-testid={`pm-sched-job-${job.id}`}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                              <h4 className="font-semibold text-sm truncate">{job.title}</h4>
+                              <Badge
+                                variant={job.status === 'Active' ? 'default' : 'outline'}
+                                className="text-[10px] h-5"
+                              >
+                                {job.status}
+                              </Badge>
+                              {isShortage && (
+                                <Badge variant="outline" className="text-[10px] h-5 border-amber-300 text-amber-700">
+                                  No Crew
+                                </Badge>
+                              )}
+                              {hasConflict && (
+                                <Badge variant="outline" className="text-[10px] h-5 border-red-300 text-red-700">
+                                  Conflict
+                                </Badge>
+                              )}
+                            </div>
+                            {client && (
+                              <p className="text-xs text-muted-foreground">{client.name}</p>
+                            )}
+                          </div>
+                          <div className="text-right text-xs text-muted-foreground shrink-0 space-y-0.5">
+                            <div className="flex items-center gap-1 justify-end">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(job.startAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            </div>
+                            <div>→ {new Date(job.endAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1" data-testid={`pm-sched-crew-${job.id}`}>
+                            <Users className="h-3 w-3" />
+                            {job.assignedWorkerIds.length} crew
+                          </span>
+                          {pending > 0 && (
+                            <span className="flex items-center gap-1 text-amber-700">
+                              <ClipboardCheck className="h-3 w-3" />
+                              {pending} pending review{pending !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Upcoming Work — Next 7 Days */}
+          <div data-testid="pm-schedule-upcoming">
+            <h3 className="text-lg font-semibold mb-3">Upcoming — Next 7 Days</h3>
+            {upcomingJobs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No jobs starting in the next 7 days.</p>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {upcomingJobs.map(j => (
+                  <Card
+                    key={j.id}
+                    className="cursor-pointer hover:border-primary/50"
+                    onClick={() => setLocation(`/jobs/${j.id}`)}
+                    data-testid={`pm-upcoming-${j.id}`}
+                  >
+                    <CardContent className="p-4 text-sm">
+                      <p className="font-medium">{j.title}</p>
+                      <p className="text-muted-foreground text-xs mt-1 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        Starts {new Date(j.startAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Crew Availability */}
+          <Card data-testid="pm-schedule-crew-availability">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Users className="h-4 w-4" /> Crew Availability
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {assignedWorkers.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No crew currently assigned to your jobs.</p>
+              ) : (
+                <div className="divide-y">
+                  {assignedWorkers.map(w => {
+                    const wJobs = nonCompletedJobs.filter(j => j.assignedWorkerIds.includes(w.id));
+                    const hasConflict = workerConflicts.some(c => c.workerId === w.id);
+                    return (
+                      <div
+                        key={w.id}
+                        className="flex items-center justify-between py-3"
+                        data-testid={`pm-crew-availability-${w.id}`}
+                      >
+                        <div>
+                          <span className="font-medium text-sm">{w.firstName} {w.lastName}</span>
+                          {wJobs.length > 0 && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {wJobs.map(j => j.title).join(' · ')}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {hasConflict && (
+                            <Badge variant="outline" className="text-[10px] border-red-300 text-red-700">
+                              Conflict
+                            </Badge>
+                          )}
+                          <Badge
+                            variant={w.status === 'Active' ? 'default' : 'secondary'}
+                            className="text-[10px]"
+                          >
+                            {w.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
+
+  // ── CEO SCHEDULE VIEW ──────────────────────────────────────────
   return (
     <Layout>
-      <div className="flex h-[calc(100vh-80px)] overflow-hidden">
+      <div className="flex h-[calc(100vh-80px)] overflow-hidden" data-testid="ceo-schedule-page">
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0 pr-4 pl-1 pb-4">
           {/* Header */}
