@@ -43,6 +43,12 @@ interface OfflineQueueStore {
   pendingBatchCount: number;
 
   addToQueue: (item: OfflineQueueItem) => void;
+  // ── Consolidated worker submission pipeline ──
+  // Single ingress for ALL worker-generated submissions (reports, issues,
+  // timesheets, photo uploads). Offline → queued + replayed to Review Centre.
+  // Online → submitted directly to Review Centre and recorded as synced so
+  // the Home/Uploads history surfaces it. Returns whether it was queued.
+  submitWorkerItem: (reviewItem: any) => { queued: boolean };
   removeFromQueue: (id: string) => void;
   updateQueueItem: (id: string, updates: Partial<OfflineQueueItem>) => void;
   updateUploadState: (queueItemId: string, uploadId: string, updates: any) => void;
@@ -92,6 +98,35 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
       addToQueue: (item) => {
         set((state) => ({ queue: [...state.queue, item] }));
         logSyncEvent({ type: "queued", entityId: item.id, entityType: "queueItem" });
+      },
+
+      submitWorkerItem: (reviewItem) => {
+        const state = get();
+        const queueItemId = `wq_${crypto.randomUUID()}`;
+        const baseItem: OfflineQueueItem = {
+          id: queueItemId,
+          type: "worker-report",
+          payload: reviewItem,
+          createdAt: new Date().toISOString(),
+          syncStatus: "pending",
+          retryCount: 0,
+        };
+
+        if (state.isOffline) {
+          // Offline: queue for replay. The Queue → Replay → Review Centre
+          // bridge in processQueueBatch performs the addReviewItemDirect call.
+          state.addToQueue(baseItem);
+          return { queued: true };
+        }
+
+        // Online: submit straight to Review Centre, idempotently stamped so a
+        // later replay cannot duplicate it. Record as synced for history.
+        addReviewItemDirect({ ...reviewItem, sourceQueueId: queueItemId });
+        set((s) => ({
+          queue: [...s.queue, { ...baseItem, syncStatus: "synced" }],
+        }));
+        logSyncEvent({ type: "replay_completed", entityId: queueItemId, entityType: "queueItem" });
+        return { queued: false };
       },
 
       removeFromQueue: (id) =>

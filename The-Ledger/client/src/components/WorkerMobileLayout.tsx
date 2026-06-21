@@ -2,12 +2,19 @@ import { ReactNode } from "react";
 import { useLocation } from "wouter";
 import { Home, Briefcase, CalendarDays, UploadCloud, UserCircle, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useWorkerStore } from "@/lib/workerStore";
+import { useOfflineQueueStore } from "@/lib/offlineQueueStore";
 import { useAuth } from "@/lib/mockData";
 
 export function WorkerMobileLayout({ children, title }: { children: ReactNode, title: string }) {
   const [location, setLocation] = useLocation();
-  const { isOnline, pendingSyncCount, toggleOnline } = useWorkerStore();
+  // Consolidated onto the canonical offline queue store. The banner now toggles
+  // the real offline mode and reflects the real pending-sync queue depth.
+  const { isOffline, setOfflineMode, queue } = useOfflineQueueStore();
+  const isOnline = !isOffline;
+  const pendingSyncCount = queue.filter(
+    (item) => item.syncStatus === "pending" || item.syncStatus === "failed"
+  ).length;
+  const toggleOnline = () => setOfflineMode(!isOffline);
   const { user } = useAuth();
 
   const navItems = [
@@ -21,7 +28,8 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
   return (
     <div className="flex flex-col min-h-[100dvh] bg-slate-50 text-slate-900 pb-[80px]">
       {/* Offline/Sync Banner */}
-      <div 
+      <div
+        data-testid="worker-offline-banner"
         className={cn(
           "h-8 px-4 flex items-center justify-between text-xs font-medium cursor-pointer transition-colors",
           isOnline ? "bg-green-600 text-white" : "bg-red-600 text-white"

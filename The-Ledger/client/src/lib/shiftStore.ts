@@ -16,6 +16,18 @@ interface ActiveShift {
   isRunning: boolean;
 }
 
+// Snapshot returned by endShift so the caller can build a doctrine-compliant
+// timesheet submission. Returning it (rather than logging to console) is what
+// fixes the WK-1 "shift hours are lost on end" data-loss defect.
+export interface EndedShift {
+  activeShiftId: string;
+  jobId: string;
+  workerId: string;
+  startedAt: string;
+  endedAt: string;
+  totalDurationSeconds: number;
+}
+
 interface ShiftStore {
   activeShift: ActiveShift | null;
   elapsedTime: number; // Live display time in seconds
@@ -23,7 +35,7 @@ interface ShiftStore {
   startShift: (jobId: string, workerId: string) => void;
   stopShiftTimer: () => void; // pause
   resumeShiftTimer: () => void;
-  endShift: () => void;
+  endShift: () => EndedShift | null;
   restoreShiftTimer: () => void;
   _tick: () => void;
 }
@@ -101,15 +113,22 @@ export const useShiftStore = create<ShiftStore>()(
         const finalShiftState = get().activeShift;
         const finalElapsedTime = get().elapsedTime;
 
+        let ended: EndedShift | null = null;
         if (finalShiftState) {
-          // TODO: Add to offline queue
-          console.log("Shift Ended:", {
-            ...finalShiftState,
+          // Hand the captured shift back to the caller so it can be submitted
+          // through the offline queue → Review Centre. No data is lost here.
+          ended = {
+            activeShiftId: finalShiftState.activeShiftId,
+            jobId: finalShiftState.jobId,
+            workerId: finalShiftState.workerId,
+            startedAt: finalShiftState.lastStartedAt,
+            endedAt: new Date().toISOString(),
             totalDurationSeconds: finalElapsedTime,
-          });
+          };
         }
 
         set({ activeShift: null, elapsedTime: 0 });
+        return ended;
       },
 
       restoreShiftTimer: () => {

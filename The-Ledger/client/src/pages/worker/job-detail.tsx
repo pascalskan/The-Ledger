@@ -1,33 +1,44 @@
 import { WorkerMobileLayout } from "@/components/WorkerMobileLayout";
 import { useStore, useAuth } from "@/lib/mockData";
-import { useWorkerStore } from "@/lib/workerStore";
 import { useShiftStore } from "@/lib/shiftStore";
+import { useOfflineQueueStore } from "@/lib/offlineQueueStore";
+import { useToast } from "@/hooks/use-toast";
 import { useLocation, useRoute } from "wouter";
-import { MapPin, Users, Truck, Clock, FileText, Camera, Upload, CheckCircle2, AlertTriangle, ArrowLeft, ClipboardList } from "lucide-react";
+import { MapPin, Users, Truck, Clock, FileText, Camera, Upload, CheckCircle2, AlertTriangle, ArrowLeft, ClipboardList, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+
+type IssuePriority = "Low" | "Medium" | "High" | "Emergency";
 
 export default function WorkerJobDetailPage() {
   const [match, params] = useRoute("/worker/jobs/:id");
   const [, setLocation] = useLocation();
   const { jobs, clients, workers, equipment } = useStore();
   const { user } = useAuth();
-  const { isOnline, addPendingSync } = useWorkerStore();
+  // Single submission pipeline: everything routes through the offline queue
+  // store (offline → queued + replayed; online → straight to Review Centre).
+  const { isOffline, submitWorkerItem } = useOfflineQueueStore();
+  const isOnline = !isOffline;
   const { activeShift, elapsedTime, startShift, endShift } = useShiftStore();
+  const { toast } = useToast();
 
   const job = jobs.find((j) => j.id === params?.id);
   const client = clients.find((c) => c.id === job?.clientId);
-  
+
   const [activeTab, setActiveTab] = useState<"overview" | "crew" | "assets" | "docs">("overview");
+  const [issueOpen, setIssueOpen] = useState(false);
+  const [issueText, setIssueText] = useState("");
+  const [issuePriority, setIssuePriority] = useState<IssuePriority>("Medium");
 
   if (!job) return <WorkerMobileLayout title="Job Not Found"><div className="p-8 text-center text-slate-500">Job not found or access denied.</div></WorkerMobileLayout>;
 
   const assignedWorkers = workers.filter(w => job.assignedWorkerIds.includes(w.id));
   const assignedEquipment = equipment.filter(e => job.assignedEquipmentIds.includes(e.id));
   const isShiftActiveForJob = activeShift?.jobId === job.id && activeShift?.isRunning;
-  
+
   const formatDuration = (seconds: number) => {
     const s = Math.floor(seconds % 60);
     const m = Math.floor((seconds / 60) % 60);
@@ -35,18 +46,104 @@ export default function WorkerJobDetailPage() {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const notifySubmitted = (label: string, queued: boolean) => {
+    toast({
+      title: queued ? `${label} Queued` : `${label} Submitted`,
+      description: queued
+        ? "Saved locally — will sync to the Review Centre once connection is restored."
+        : "Sent to the Review Centre for approval.",
+    });
+  };
+
   const handleUploadPhoto = () => {
-    // Mock photo upload
-    addPendingSync("PhotoUpload", { jobId: job.id, type: "site-photo" });
-    alert(isOnline ? "Photo uploaded successfully!" : "Offline mode: Photo queued for sync.");
+    // Doctrine-compliant photo upload: a worker-report review item carrying a
+    // single site-photo upload, submitted through the consolidated queue.
+    const nowISO = new Date().toISOString();
+    const reviewItem = {
+      id: crypto.randomUUID(),
+      type: "worker-report",
+      title: "Site Photo",
+      status: "pending",
+      workerId: user?.id || "",
+      submittedBy: user?.name || "Unknown Worker",
+      submittedAt: nowISO,
+      jobId: job.id,
+      uploads: [
+        {
+          id: crypto.randomUUID(),
+          uploadId: crypto.randomUUID(),
+          type: "general",
+          fileName: `Site Photo ${new Date().toLocaleDateString()}.jpg`,
+          uploadedAt: nowISO,
+          url: "mock-upload-url",
+          syncStatus: isOffline ? "pending" : "uploaded",
+          uploadProgress: isOffline ? 0 : 100,
+          retryCount: 0,
+          lastAttemptAt: nowISO,
+        },
+      ],
+    };
+    const { queued } = submitWorkerItem(reviewItem);
+    notifySubmitted("Photo", queued);
+  };
+
+  const handleSubmitIssue = () => {
+    if (!issueText.trim()) return;
+    const reviewItem = {
+      id: crypto.randomUUID(),
+      type: "issue-log",
+      title: `Issue Reported — ${issuePriority}`,
+      status: "pending",
+      workerId: user?.id || "",
+      submittedBy: user?.name || "Unknown Worker",
+      submittedAt: new Date().toISOString(),
+      jobId: job.id,
+      priority: issuePriority,
+      notes: issueText.trim(),
+    };
+    const { queued } = submitWorkerItem(reviewItem);
+    setIssueOpen(false);
+    setIssueText("");
+    setIssuePriority("Medium");
+    notifySubmitted("Issue", queued);
   };
 
   const handleToggleShift = () => {
     if (isShiftActiveForJob) {
-      endShift();
+      // Capture the shift, then submit the hours as a timesheet. Hours are
+      // computed from the live timer — never zero, never silently dropped.
+      const ended = endShift();
+      if (ended) {
+        const hours = Math.round((ended.totalDurationSeconds / 3600) * 100) / 100;
+        const reviewItem = {
+          id: crypto.randomUUID(),
+          type: "timesheet",
+          title: "Shift Timesheet",
+          status: "pending",
+          workerId: ended.workerId || user?.id || "",
+          submittedBy: user?.name || "Unknown Worker",
+          submittedAt: new Date().toISOString(),
+          jobId: ended.jobId,
+          laborEntries: [
+            {
+              workerId: ended.workerId || user?.id || "",
+              workerName: user?.name || "Unknown Worker",
+              hours,
+              shiftStart: ended.startedAt,
+              shiftEnd: ended.endedAt,
+            },
+          ],
+        };
+        const { queued } = submitWorkerItem(reviewItem);
+        notifySubmitted("Timesheet", queued);
+      }
     } else {
       if (activeShift && activeShift.jobId !== job.id) {
-        alert("You already have an active shift for another job. Please end it first.");
+        toast({
+          title: "Shift Already Active",
+          description: "You already have an active shift for another job. End it first.",
+          variant: "destructive",
+        });
         return;
       }
       startShift(job.id, user?.id || "unknown-worker");
@@ -116,6 +213,7 @@ export default function WorkerJobDetailPage() {
               isShiftActiveForJob ? "bg-red-500 hover:bg-red-600 text-white" : "bg-emerald-500 hover:bg-emerald-600 text-white"
             )}
             onClick={handleToggleShift}
+            data-testid={isShiftActiveForJob ? "worker-end-shift-btn" : "worker-start-shift-btn"}
           >
             {isShiftActiveForJob ? "End Shift" : "Start Shift"}
           </Button>
@@ -128,7 +226,8 @@ export default function WorkerJobDetailPage() {
 
         {/* Quick Actions Grid */}
         <div className="grid grid-cols-3 gap-3">
-          <button 
+          <button
+            data-testid="worker-upload-photo-btn"
             className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center gap-2 border border-slate-100 shadow-sm active:scale-95 transition-transform"
             onClick={handleUploadPhoto}
           >
@@ -138,7 +237,11 @@ export default function WorkerJobDetailPage() {
             <span className="font-semibold text-sm text-center leading-tight">Upload<br/>Photo</span>
           </button>
           
-          <button className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center gap-2 border border-slate-100 shadow-sm active:scale-95 transition-transform">
+          <button
+            data-testid="worker-log-issue-btn"
+            className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center gap-2 border border-slate-100 shadow-sm active:scale-95 transition-transform"
+            onClick={() => setIssueOpen(true)}
+          >
              <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center mb-1">
               <AlertTriangle className="w-5 h-5" />
             </div>
@@ -235,6 +338,73 @@ export default function WorkerJobDetailPage() {
         </div>
 
       </div>
+
+      {/* Log Issue Bottom Sheet */}
+      {issueOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setIssueOpen(false)}>
+          <div
+            data-testid="worker-log-issue-sheet"
+            className="w-full max-w-md bg-white rounded-t-3xl p-5 space-y-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-orange-500" /> Log Issue
+              </h3>
+              <button onClick={() => setIssueOpen(false)} className="p-2 -mr-2 text-slate-400 hover:text-slate-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Priority</label>
+              <div className="grid grid-cols-4 gap-2">
+                {(["Low", "Medium", "High", "Emergency"] as IssuePriority[]).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setIssuePriority(p)}
+                    className={cn(
+                      "py-2 rounded-lg text-xs font-semibold border transition-colors",
+                      issuePriority === p
+                        ? "bg-slate-900 text-white border-slate-900"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+                    )}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">Description</label>
+              <Textarea
+                data-testid="worker-issue-text"
+                placeholder="Describe the hazard, incident, or blocker..."
+                className="min-h-[120px] rounded-xl resize-none"
+                value={issueText}
+                onChange={(e) => setIssueText(e.target.value)}
+              />
+            </div>
+
+            {!isOnline && (
+              <p className="text-xs text-amber-600 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> Offline: issue will sync when reconnected.
+              </p>
+            )}
+
+            <Button
+              data-testid="worker-issue-submit-btn"
+              size="lg"
+              className="w-full h-12 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold"
+              disabled={!issueText.trim()}
+              onClick={handleSubmitIssue}
+            >
+              Submit Issue
+            </Button>
+          </div>
+        </div>
+      )}
     </WorkerMobileLayout>
   );
 }
