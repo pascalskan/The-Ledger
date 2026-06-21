@@ -19,6 +19,15 @@ export interface JobDocument {
   name: string;
   url: string;
   uploadedAt: string;
+  category?: 'site' | 'compliance' | 'report' | 'client' | 'other';
+  uploadedBy?: string;
+}
+
+export interface JobSiteContact {
+  name: string;
+  role: string;
+  phone: string;
+  email?: string;
 }
 
 export interface EquipmentUsage {
@@ -57,6 +66,11 @@ export interface Job {
   equipmentUsage?: EquipmentUsage[];
 
   documents: JobDocument[];
+
+  accessInstructions?: string;
+  siteContacts?: JobSiteContact[];
+  emergencyContacts?: JobSiteContact[];
+  specialRequirements?: string;
 
   estimatedRevenue?: number;
 

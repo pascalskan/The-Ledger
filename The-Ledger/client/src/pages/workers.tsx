@@ -1,12 +1,14 @@
 import { Layout } from "@/components/layout";
-import { useStore, Worker } from "@/lib/mockData";
+import { useStore, useAuth, Worker } from "@/lib/mockData";
+import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Trash2, Edit } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Users } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -24,11 +26,14 @@ const workerSchema = z.object({
 });
 
 export default function WorkersPage() {
-  const { workers, addWorker, updateWorker, deleteWorker, roles } = useStore();
+  const { workers, addWorker, updateWorker, deleteWorker, roles, jobs } = useStore();
+  const { user } = useAuth();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [, setLocation] = useLocation();
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
   const [search, setSearch] = useState("");
+
+  const userIsPM = isProjectManager(user, roles);
 
   const form = useForm<z.infer<typeof workerSchema>>({
     resolver: zodResolver(workerSchema),
@@ -68,14 +73,106 @@ export default function WorkersPage() {
     }
   };
 
-  const filteredWorkers = workers.filter(w => 
-    w.firstName.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredWorkers = workers.filter(w =>
+    w.firstName.toLowerCase().includes(search.toLowerCase()) ||
     w.lastName.toLowerCase().includes(search.toLowerCase())
   );
 
+  // ── PM WORKFORCE VIEW ──────────────────────────────────────────
+  if (userIsPM) {
+    const pmJobs = jobs.filter(j => j.managerId === user?.id && (j.status === 'Active' || j.status === 'Planned'));
+    const allWorkerIds = new Set(pmJobs.flatMap(j => j.assignedWorkerIds));
+    const pmWorkers = workers.filter(w => allWorkerIds.has(w.id));
+
+    return (
+      <Layout>
+        <div className="space-y-6" data-testid="pm-workforce-page">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Crew</h2>
+            <p className="text-muted-foreground mt-1">
+              Workers assigned to your active and planned jobs.
+            </p>
+          </div>
+
+          {/* Active & Planned Jobs Summary */}
+          <div data-testid="pm-workforce-my-jobs">
+            <h3 className="text-base font-semibold mb-3">Active & Planned Jobs</h3>
+            {pmJobs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No active or planned jobs.</p>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-3">
+                {pmJobs.map(j => (
+                  <Card
+                    key={j.id}
+                    className="cursor-pointer hover:border-primary/50"
+                    onClick={() => setLocation(`/jobs/${j.id}`)}
+                    data-testid={`pm-workforce-job-${j.id}`}
+                  >
+                    <CardContent className="p-3 text-sm">
+                      <p className="font-medium truncate">{j.title}</p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <Badge variant={j.status === 'Active' ? 'default' : 'outline'} className="text-[10px] h-5">
+                          {j.status}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {j.assignedWorkerIds.length} crew
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Crew List */}
+          <div data-testid="pm-workforce-crew-list">
+            <h3 className="text-base font-semibold mb-3">Assigned Crew</h3>
+            {pmWorkers.length === 0 ? (
+              <div className="text-center py-8 border-2 border-dashed rounded-lg bg-slate-50">
+                <Users className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">No crew assigned to your active or planned jobs.</p>
+              </div>
+            ) : (
+              <div className="border rounded-md" data-testid="pm-workforce-crew-table">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Worker</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Assigned Jobs</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pmWorkers.map(w => {
+                      const workerJobs = pmJobs.filter(j => j.assignedWorkerIds.includes(w.id));
+                      return (
+                        <TableRow key={w.id} data-testid={`pm-workforce-row-${w.id}`}>
+                          <TableCell className="font-medium">{w.firstName} {w.lastName}</TableCell>
+                          <TableCell>
+                            <Badge variant={w.status === 'Active' ? 'default' : 'secondary'}>{w.status}</Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {workerJobs.map(j => j.title).join(', ') || '—'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // ── CEO WORKFORCE VIEW ─────────────────────────────────────────
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-6" data-testid="ceo-workforce-page">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Workers</h2>

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, XCircle, Clock, FileText, Image as ImageIcon, Search, AlertCircle, ChevronLeft, ArrowRight, User, PoundSterling, ShieldAlert, History, ListChecks, Gauge } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, FileText, Image as ImageIcon, Search, AlertCircle, ChevronLeft, ArrowRight, User, PoundSterling, ShieldAlert, History, ListChecks, Gauge, Users, Briefcase } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { getJobReviewContext, formatGbp, formatAge, ageHoursOf } from "@/lib/reviewIntelligenceEngine";
@@ -15,11 +15,13 @@ import { BatchActionsBar } from "@/components/review/BatchActionsBar";
 import type { BatchReviewInput } from "@/lib/reviewBatchEngine";
 import { ReviewDecisionPanel } from "@/components/review/ReviewDecisionPanel";
 import { JobRecommendationPanel } from "@/components/review/ReviewRecommendations";
+import { isProjectManager } from "@/lib/roleHelpers";
 
 export default function ReviewDetailPage() {
   const { id } = useParams();
-  const { jobs, workers, reviewItems, updateReviewItem } = useStore();
+  const { jobs, workers, reviewItems, roles, updateReviewItem } = useStore();
   const { user } = useAuth();
+  const userIsPM = isProjectManager(user, roles);
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("all");
   // UX-7.3 — batch selection. Keyed by id so it persists across tab filtering.
@@ -157,20 +159,23 @@ export default function ReviewDetailPage() {
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
           data-testid="review-detail-context"
         >
-          <Card data-testid="review-detail-financial">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-slate-400">
-                <PoundSterling className="h-4 w-4" />
-                <span className="text-[11px] font-medium uppercase tracking-wide">
-                  Financial Impact
-                </span>
-              </div>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {reviewContext.exposure > 0 ? formatGbp(reviewContext.exposure) : "—"}
-              </p>
-              <p className="text-xs text-slate-500">Blocked pending approval</p>
-            </CardContent>
-          </Card>
+          {/* Financial Impact — CEO only; PMs must not see financial exposure */}
+          {!userIsPM && (
+            <Card data-testid="review-detail-financial">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-slate-400">
+                  <PoundSterling className="h-4 w-4" />
+                  <span className="text-[11px] font-medium uppercase tracking-wide">
+                    Financial Impact
+                  </span>
+                </div>
+                <p className="mt-2 text-2xl font-bold text-slate-900">
+                  {reviewContext.exposure > 0 ? formatGbp(reviewContext.exposure) : "—"}
+                </p>
+                <p className="text-xs text-slate-500">Blocked pending approval</p>
+              </CardContent>
+            </Card>
+          )}
 
           <Card data-testid="review-detail-age">
             <CardContent className="p-4">
@@ -226,8 +231,8 @@ export default function ReviewDetailPage() {
           </Card>
         </div>
 
-        {/* UX-7.2 — Intelligent prioritisation detail (informational only) */}
-        {topPriorityReview && (
+        {/* UX-7.2 — Intelligent prioritisation detail (informational only, CEO-only due to financial factors) */}
+        {!userIsPM && topPriorityReview && (
           <Card data-testid="review-detail-priority-panel">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -304,11 +309,89 @@ export default function ReviewDetailPage() {
           </Card>
         )}
 
-        {/* UX-7.4 — Decision Intelligence (read-only consequence preview) */}
-        <ReviewDecisionPanel jobId={job.id} />
+        {/* PM Review Workspace — worker info, job context, review timeline */}
+        {userIsPM && (
+          <div className="grid gap-4 sm:grid-cols-3" data-testid="pm-review-workspace">
+            <Card data-testid="pm-review-worker-info">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm"><Users className="h-4 w-4" /> Worker Information</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-2">
+                {pendingItems.length > 0 ? (
+                  <div className="space-y-1">
+                    {Array.from(new Set(pendingItems.map(i => (i as any).submittedBy).filter(Boolean))).map((name, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-medium text-slate-600">
+                          {(name as string).charAt(0)}
+                        </div>
+                        <span className="text-slate-700">{name as string}</span>
+                      </div>
+                    ))}
+                    <p className="text-xs text-muted-foreground pt-1">{pendingItems.length} pending submission{pendingItems.length !== 1 ? 's' : ''}</p>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-xs">No pending submissions.</p>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* UX-7.5 — Review Recommendations (read-only guidance) */}
-        <JobRecommendationPanel jobId={job.id} />
+            <Card data-testid="pm-review-job-context">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm"><Briefcase className="h-4 w-4" /> Job Context</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <Badge variant={job.status === 'Active' ? 'default' : 'secondary'} className="text-[10px]">{job.status}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Priority</span>
+                  <Badge variant="outline" className="text-[10px] capitalize">{job.priority}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Crew</span>
+                  <span className="font-medium">{job.assignedWorkerIds.length} assigned</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">All items</span>
+                  <span className="font-medium">{jobReviewItems.length} total</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card data-testid="pm-review-timeline">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm"><Clock className="h-4 w-4" /> Review Timeline</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-xs">
+                  {[
+                    { label: "Submitted", count: jobReviewItems.length, color: "bg-blue-500" },
+                    { label: "Pending", count: pendingItems.length, color: "bg-amber-500" },
+                    { label: "Correction Sent", count: jobReviewItems.filter(r => r.status === 'needs-correction').length, color: "bg-orange-500" },
+                    { label: "Escalated", count: jobReviewItems.filter(r => r.status === 'escalated').length, color: "bg-purple-500" },
+                    { label: "Approved", count: jobReviewItems.filter(r => r.status === 'approved').length, color: "bg-emerald-500" },
+                    { label: "Rejected", count: jobReviewItems.filter(r => r.status === 'rejected').length, color: "bg-rose-500" },
+                  ].map(({ label, count, color }) => (
+                    <div key={label} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`h-2 w-2 rounded-full ${color}`} />
+                        <span className="text-muted-foreground">{label}</span>
+                      </div>
+                      <span className="font-medium">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* UX-7.4 — Decision Intelligence (read-only consequence preview, CEO-only) */}
+        {!userIsPM && <ReviewDecisionPanel jobId={job.id} />}
+
+        {/* UX-7.5 — Review Recommendations (read-only guidance, CEO-only) */}
+        {!userIsPM && <JobRecommendationPanel jobId={job.id} />}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
