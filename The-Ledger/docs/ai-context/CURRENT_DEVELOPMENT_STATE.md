@@ -62,6 +62,10 @@ Closes the workstream's largest gap and resolves both outstanding ratification i
 - Deleted `placeholders.tsx` — all portal sections are now real implementations.
 - Tests: `client-portal-requests.spec.ts` (CR-01…CR-23).
 
+**Verification:** full Playwright suite **915 / 915 passed** (owner-run, July 19 2026), reconciling
+exactly with the pre-CL-8 baseline of 892 plus 23 new tests. Build PASS. Client Portal doctrine
+tests total 116 across 7 specs.
+
 **No outstanding gaps against the frozen Client Portal and Client Request domains.**
 
 ---

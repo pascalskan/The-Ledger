@@ -360,6 +360,23 @@ Requests) are now real implementations.
 
 **Tests:** `client-portal-requests.spec.ts` (CR-01…CR-23).
 
+### CL-8 verification
+
+**Full Playwright suite GREEN — 915 / 915 passed**, run by the repository owner on
+July 19, 2026 under the new `workers: 3` / `headless: true` configuration.
+
+This reconciles exactly with the pre-CL-8 baseline: 892 + 23 new CL-8 tests = 915. No tests were
+lost, replaced or double-counted by the Messages→Requests navigation fold — the CL-5 conversation
+specs continue to pass via the updated `portalNavTo` helper.
+
+It also confirms two things the CL-7 config change had not yet been exercised against:
+
+- Parallel execution at 3 workers remains safe with the new Client Requests module (which, like
+  the rest of the portal, holds module-level mock state).
+- Headless mode introduced no rendering or interaction regressions.
+
+Client Portal doctrine tests now total **116** across 7 specification files.
+
 ---
 
 ## ITEMS REQUIRING OWNER RATIFICATION
