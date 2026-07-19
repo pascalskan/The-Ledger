@@ -9,7 +9,7 @@ export function ProjectProgressSummary({ progress }: { progress: PortalProjectPr
       <CardContent className="p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-slate-600 text-sm font-medium">
-            <Gauge className="h-4 w-4 text-slate-400" /> Project Progress
+            <Gauge className="h-4 w-4 text-slate-500" /> Project Progress
           </div>
           <span className="text-2xl font-bold text-slate-900" data-testid="portal-progress-percent">{pct}%</span>
         </div>
@@ -28,7 +28,7 @@ export function ProjectProgressSummary({ progress }: { progress: PortalProjectPr
             <span className="text-slate-700"><span className="font-semibold">{progress.completed}</span> completed</span>
           </div>
           <div className="flex items-center gap-2 text-sm" data-testid="portal-progress-remaining">
-            <ListTodo className="h-4 w-4 text-slate-400 shrink-0" />
+            <ListTodo className="h-4 w-4 text-slate-500 shrink-0" />
             <span className="text-slate-700"><span className="font-semibold">{progress.remaining}</span> remaining</span>
           </div>
         </div>

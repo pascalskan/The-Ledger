@@ -26,7 +26,7 @@ export function AssignedCrew({ crew }: { crew: any[] }) {
                 </div>
                 <div className="flex justify-between items-center mt-0.5">
                   <span className="text-xs text-slate-500 truncate" data-testid="portal-crew-role">{w.role}</span>
-                  {w.scheduledDate && <span className="text-[10px] text-slate-400 shrink-0 ml-2">{w.scheduledDate}</span>}
+                  {w.scheduledDate && <span className="text-[10px] text-slate-500 shrink-0 ml-2">{w.scheduledDate}</span>}
                 </div>
               </div>
             </div>

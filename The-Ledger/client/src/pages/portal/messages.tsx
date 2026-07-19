@@ -103,8 +103,9 @@ function ThreadList({
             )}
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs">Project</Label>
+                <Label htmlFor="portal-thread-project-select" className="text-xs">Project</Label>
                 <select
+                  id="portal-thread-project-select"
                   className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm"
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
@@ -116,8 +117,9 @@ function ThreadList({
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Topic</Label>
+                <Label htmlFor="portal-thread-topic-select" className="text-xs">Topic</Label>
                 <select
+                  id="portal-thread-topic-select"
                   className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value as ClientThreadTopic)}
@@ -130,8 +132,9 @@ function ThreadList({
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Subject</Label>
+              <Label htmlFor="portal-thread-subject-input" className="text-xs">Subject</Label>
               <Input
+                id="portal-thread-subject-input"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="e.g. Access window for filter replacement"
@@ -139,8 +142,9 @@ function ThreadList({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Message</Label>
+              <Label htmlFor="portal-thread-message-input" className="text-xs">Message</Label>
               <textarea
+                id="portal-thread-message-input"
                 className="min-h-[96px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -160,7 +164,7 @@ function ThreadList({
 
       {threads.length === 0 ? (
         <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-white" data-testid="portal-messages-empty">
-          <MessagesSquare className="h-8 w-8 mx-auto text-slate-400 mb-3" />
+          <MessagesSquare className="h-8 w-8 mx-auto text-slate-500 mb-3" />
           <h3 className="text-lg font-medium text-slate-800">No conversations yet</h3>
           <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1">
             Start a conversation with your project team and it will appear here.
@@ -190,7 +194,7 @@ function ThreadList({
                   <Badge variant="outline" className={STATUS_CLS[t.status]} data-testid={`portal-thread-status-${t.id}`}>
                     {t.status}
                   </Badge>
-                  <span className="text-[11px] text-slate-400">{new Date(t.updatedAt).toLocaleDateString()}</span>
+                  <span className="text-[11px] text-slate-500">{new Date(t.updatedAt).toLocaleDateString()}</span>
                 </div>
               </div>
             </button>
@@ -204,7 +208,7 @@ function ThreadList({
 const SENDER_META = {
   Client: { icon: User, label: "You", cls: "bg-slate-900 text-white" },
   ProjectManager: { icon: UserCog, label: "Project Manager", cls: "bg-slate-100 text-slate-600" },
-  System: { icon: Settings2, label: "System", cls: "bg-slate-50 text-slate-400" },
+  System: { icon: Settings2, label: "System", cls: "bg-slate-50 text-slate-500" },
 } as const;
 
 function ThreadDetail({
@@ -264,7 +268,7 @@ function ThreadDetail({
                       <span className="text-sm font-medium text-slate-800" data-testid={`portal-message-sender-${m.id}`}>
                         {m.senderType === "Client" ? m.senderName : meta.label}
                       </span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-[11px] text-slate-500">
                         {new Date(m.createdAt).toLocaleString()}
                       </span>
                     </div>
@@ -281,9 +285,10 @@ function ThreadDetail({
             </div>
           ) : (
             <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
-              <Label className="text-xs">Add a reply</Label>
+              <Label htmlFor="portal-thread-reply-input" className="text-xs">Add a reply</Label>
               <div className="flex gap-2">
                 <textarea
+                  id="portal-thread-reply-input"
                   className="min-h-[72px] flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}

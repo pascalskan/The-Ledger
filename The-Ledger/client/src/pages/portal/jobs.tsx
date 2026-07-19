@@ -98,22 +98,22 @@ export function PortalJobs({ jobs, selectedJob, threads, onOpenJob, onBack, onOp
             <CardContent>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-slate-600">
-                  <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
+                  <MapPin className="h-4 w-4 shrink-0 text-slate-500" />
                   <span className="truncate">{job.locationAddress}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">
-                  <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
+                  <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
                   <span>{new Date(job.startAt).toLocaleDateString()}</span>
                 </div>
                 {job.managerName && (
                   <div className="flex items-center gap-2 text-slate-600" data-testid={`portal-job-pm-${job.id}`}>
-                    <UserCog className="h-4 w-4 shrink-0 text-slate-400" />
+                    <UserCog className="h-4 w-4 shrink-0 text-slate-500" />
                     <span className="truncate">PM: {job.managerName}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-3 mt-1 border-t border-slate-100">
                   <div className="flex items-center gap-1.5 text-slate-600">
-                    <Users className="h-4 w-4 text-slate-400" />
+                    <Users className="h-4 w-4 text-slate-500" />
                     <span>{job.crewCount} Crew</span>
                   </div>
                   <Button variant="ghost" size="sm" className="h-8 text-slate-700">View Details</Button>
@@ -125,7 +125,7 @@ export function PortalJobs({ jobs, selectedJob, threads, onOpenJob, onBack, onOp
 
         {filtered.length === 0 && (
           <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-white" data-testid="portal-jobs-empty">
-            <Briefcase className="h-8 w-8 mx-auto text-slate-400 mb-3" />
+            <Briefcase className="h-8 w-8 mx-auto text-slate-500 mb-3" />
             <h3 className="text-lg font-medium text-slate-800">No projects found</h3>
             <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1">There are no projects matching this filter.</p>
           </div>
@@ -279,7 +279,7 @@ function SummaryField({
     <div className="space-y-1.5">
       <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{label}</span>
       <div className="flex items-start gap-2">
-        <Icon className="h-4 w-4 mt-0.5 text-slate-400 shrink-0" />
+        <Icon className="h-4 w-4 mt-0.5 text-slate-500 shrink-0" />
         <span className="text-slate-800 font-medium" data-testid={testid}>{value}</span>
       </div>
     </div>

@@ -35,7 +35,7 @@ const INVOICE_STATUS_CLS: Record<PortalInvoice["status"], string> = {
   "Part Paid": "bg-blue-50 text-blue-700 border-blue-200",
   Issued: "bg-slate-100 text-slate-600 border-slate-200",
   Overdue: "bg-red-50 text-red-700 border-red-200",
-  Cancelled: "bg-slate-100 text-slate-400 border-slate-200",
+  Cancelled: "bg-slate-100 text-slate-500 border-slate-200",
 };
 
 const QUOTE_STATUS_CLS: Record<PortalQuote["status"], string> = {
@@ -79,18 +79,28 @@ export function PortalFinance(props: PortalFinanceProps) {
         <p className="text-slate-500 mt-1">Your quotes, invoices and payment history.</p>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-px" data-testid="portal-finance-tabs">
+      <div
+        className="flex flex-wrap gap-2 border-b border-slate-200 pb-px"
+        role="tablist"
+        aria-label="Financial Centre sections"
+        data-testid="portal-finance-tabs"
+      >
         {TABS.map((t) => (
           <button
             key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.key}
+            aria-controls={`portal-finance-panel-${t.key}`}
+            id={`portal-finance-tab-btn-${t.key}`}
             onClick={() => {
               setTab(t.key);
               if (t.key === "payments") onViewPayments();
             }}
-            className={`px-3.5 py-2 text-sm font-medium rounded-t-md transition ${
+            className={`px-3.5 py-2 text-sm font-medium rounded-t-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 ${
               tab === t.key
                 ? "bg-white border border-b-white border-slate-200 text-slate-900 -mb-px"
-                : "text-slate-500 hover:text-slate-800"
+                : "text-slate-600 hover:text-slate-900"
             }`}
             data-testid={`portal-finance-tab-${t.key}`}
           >
@@ -99,11 +109,18 @@ export function PortalFinance(props: PortalFinanceProps) {
         ))}
       </div>
 
-      {tab === "overview" && <Overview financials={financials} branding={branding} onOpenInvoice={onOpenInvoice} />}
-      {tab === "quotes" && <Quotes quotes={financials.quotes} onViewQuote={onViewQuote} />}
-      {tab === "variations" && <Variations financials={financials} />}
-      {tab === "invoices" && <Invoices invoices={financials.invoices} onOpenInvoice={onOpenInvoice} />}
-      {tab === "payments" && <Payments payments={financials.payments} creditNotes={financials.creditNotes} />}
+      <div
+        role="tabpanel"
+        id={`portal-finance-panel-${tab}`}
+        aria-labelledby={`portal-finance-tab-btn-${tab}`}
+      >
+
+        {tab === "overview" && <Overview financials={financials} branding={branding} onOpenInvoice={onOpenInvoice} />}
+        {tab === "quotes" && <Quotes quotes={financials.quotes} onViewQuote={onViewQuote} />}
+        {tab === "variations" && <Variations financials={financials} />}
+        {tab === "invoices" && <Invoices invoices={financials.invoices} onOpenInvoice={onOpenInvoice} />}
+        {tab === "payments" && <Payments payments={financials.payments} creditNotes={financials.creditNotes} />}
+      </div>
     </div>
   );
 }
@@ -216,11 +233,11 @@ function Overview({
             <div className="font-medium text-slate-800" data-testid="portal-finance-company">{branding.companyName}</div>
             <div className="text-slate-600" data-testid="portal-payment-contact-name">{branding.paymentContactName}</div>
             <div className="flex items-center gap-2 text-slate-600">
-              <Mail className="h-4 w-4 text-slate-400 shrink-0" />
+              <Mail className="h-4 w-4 text-slate-500 shrink-0" />
               <span data-testid="portal-accounts-email">{branding.accountsEmail}</span>
             </div>
             <div className="flex items-center gap-2 text-slate-600">
-              <Phone className="h-4 w-4 text-slate-400 shrink-0" />
+              <Phone className="h-4 w-4 text-slate-500 shrink-0" />
               <span data-testid="portal-payments-phone">{branding.paymentsPhone}</span>
             </div>
           </CardContent>
@@ -247,7 +264,7 @@ function Quotes({ quotes, onViewQuote }: { quotes: PortalQuote[]; onViewQuote: (
                 </Badge>
               </div>
               <p className="text-sm text-slate-800 mt-1 font-medium truncate">{q.description}</p>
-              <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-slate-400">
+              <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-slate-500">
                 <span>{q.projectTitle}</span>
                 <span>Issued {new Date(q.issueDate).toLocaleDateString()}</span>
                 <span data-testid={`portal-quote-expiry-${q.id}`}>Expires {new Date(q.expiryDate).toLocaleDateString()}</span>
@@ -290,7 +307,7 @@ function Variations({ financials }: { financials: ClientFinancialProjection }) {
                 </Badge>
               </div>
               <p className="text-sm text-slate-800 mt-1 font-medium">{v.description}</p>
-              <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-slate-400">
+              <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-slate-500">
                 <span>{v.projectTitle}</span>
                 {v.approvalDate && <span>Decided {new Date(v.approvalDate).toLocaleDateString()}</span>}
               </div>
@@ -321,7 +338,7 @@ function Invoices({ invoices, onOpenInvoice }: { invoices: PortalInvoice[]; onOp
                   {inv.status}
                 </Badge>
               </div>
-              <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-slate-400">
+              <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-slate-500">
                 {inv.projectTitle && <span data-testid={`portal-invoice-project-${inv.id}`}>{inv.projectTitle}</span>}
                 <span>Issued {new Date(inv.issueDate).toLocaleDateString()}</span>
                 <span data-testid={`portal-invoice-due-${inv.id}`}>Due {new Date(inv.dueDate).toLocaleDateString()}</span>
@@ -398,7 +415,7 @@ function Payments({
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-slate-800">{c.creditNoteNumber}</div>
                     <div className="text-[11px] text-slate-500">{c.reason}</div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">
+                    <div className="text-[11px] text-slate-500 mt-0.5">
                       Against invoice {c.invoiceNumber} · {new Date(c.issueDate).toLocaleDateString()}
                     </div>
                   </div>
@@ -545,7 +562,7 @@ function InvoiceDetail({
         </CardContent>
       </Card>
 
-      <div className="text-xs text-slate-400" data-testid="portal-invoice-footer-contact">
+      <div className="text-xs text-slate-500" data-testid="portal-invoice-footer-contact">
         Questions about this invoice? Contact {branding.paymentContactName} at {branding.accountsEmail} or {branding.paymentsPhone}.
       </div>
     </div>
@@ -568,7 +585,7 @@ function EmptyState({
 }) {
   return (
     <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-white" data-testid={testid}>
-      <Icon className="h-8 w-8 mx-auto text-slate-400 mb-3" />
+      <Icon className="h-8 w-8 mx-auto text-slate-500 mb-3" />
       <h3 className="text-lg font-medium text-slate-800">{title}</h3>
       <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1">{body}</p>
     </div>

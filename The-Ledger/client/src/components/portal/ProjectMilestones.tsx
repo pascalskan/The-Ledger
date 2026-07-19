@@ -48,7 +48,7 @@ export function ProjectMilestones({ milestones }: { milestones: PortalMilestone[
                       </Badge>
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">{m.description}</p>
-                    <p className="text-[11px] text-slate-400 mt-1">{dateLabel}</p>
+                    <p className="text-[11px] text-slate-500 mt-1">{dateLabel}</p>
                   </div>
                 </li>
               );

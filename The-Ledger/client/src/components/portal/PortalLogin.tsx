@@ -96,7 +96,7 @@ export function PortalLogin({ branding, signIn }: PortalLoginProps) {
             </div>
           </CardContent>
         </Card>
-        <div className="text-center mt-6 text-xs text-slate-400">
+        <div className="text-center mt-6 text-xs text-slate-500">
           Protected by The Ledger Operations Platform
         </div>
       </div>

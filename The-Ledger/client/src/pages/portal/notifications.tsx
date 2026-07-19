@@ -44,7 +44,7 @@ export function PortalNotifications({ activity }: PortalNotificationsProps) {
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-slate-800">{item.title}</div>
                       <div className="text-xs text-slate-500">{item.description}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{new Date(item.date).toLocaleDateString()}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">{new Date(item.date).toLocaleDateString()}</div>
                     </div>
                   </li>
                 );

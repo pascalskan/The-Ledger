@@ -17,7 +17,7 @@ export function PortalSites({ sites }: PortalSitesProps) {
 
       {sites.length === 0 ? (
         <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-white" data-testid="portal-sites-empty">
-          <Building2 className="h-8 w-8 mx-auto text-slate-400 mb-3" />
+          <Building2 className="h-8 w-8 mx-auto text-slate-500 mb-3" />
           <h3 className="text-lg font-medium text-slate-800">No sites yet</h3>
           <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1">
             Sites appear here once work is scheduled at your locations.
@@ -41,11 +41,11 @@ export function PortalSites({ sites }: PortalSitesProps) {
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex items-start gap-2 text-slate-600">
-                  <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-slate-400" />
+                  <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-slate-500" />
                   <span data-testid={`portal-site-address-${site.id}`}>{site.address}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600 pt-2 border-t border-slate-100">
-                  <Briefcase className="h-4 w-4 text-slate-400" />
+                  <Briefcase className="h-4 w-4 text-slate-500" />
                   <span data-testid={`portal-site-jobcount-${site.id}`}>
                     {site.activeJobCount} active · {site.jobCount} total
                   </span>

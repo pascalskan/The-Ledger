@@ -60,8 +60,13 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+            <label htmlFor="portal-documents-search-input" className="sr-only">
+              Search documents
+            </label>
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" aria-hidden="true" />
             <Input
+              id="portal-documents-search-input"
+              type="search"
               placeholder="Search documents..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -69,24 +74,37 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
               data-testid="portal-documents-search"
             />
           </div>
-          <select
-            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            data-testid="portal-documents-sort"
-          >
-            <option value="shared-desc">Newest first</option>
-            <option value="shared-asc">Oldest first</option>
-            <option value="title">Name (A–Z)</option>
-          </select>
+          <div>
+            <label htmlFor="portal-documents-sort-select" className="sr-only">
+              Sort documents
+            </label>
+            <select
+              id="portal-documents-sort-select"
+              className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              data-testid="portal-documents-sort"
+            >
+              <option value="shared-desc">Newest first</option>
+              <option value="shared-asc">Oldest first</option>
+              <option value="title">Name (A–Z)</option>
+            </select>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2" data-testid="portal-documents-filters">
+        <div
+          className="flex flex-wrap gap-2"
+          role="group"
+          aria-label="Filter documents by category"
+          data-testid="portal-documents-filters"
+        >
           {FILTERS.map((f) => (
             <button
               key={f.key}
+              type="button"
+              aria-pressed={filter === f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3 py-1.5 text-xs rounded-full border transition ${
+              className={`px-3 py-1.5 text-xs rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 ${
                 filter === f.key
                   ? "bg-slate-900 text-white border-slate-900"
                   : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -102,7 +120,7 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
       {/* List */}
       {visible.length === 0 ? (
         <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-white" data-testid="portal-documents-empty">
-          <FolderOpen className="h-8 w-8 mx-auto text-slate-400 mb-3" />
+          <FolderOpen className="h-8 w-8 mx-auto text-slate-500 mb-3" />
           <h3 className="text-lg font-medium text-slate-800">No documents found</h3>
           <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1">
             Documents appear here once your project team shares them with you.
@@ -128,7 +146,7 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
                     </Badge>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5 truncate">{doc.description}</p>
-                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-400">
+                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-500">
                     <span data-testid={`portal-document-project-${doc.id}`}>
                       {projectTitleById[doc.projectId] ?? "Project"}
                     </span>

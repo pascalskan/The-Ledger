@@ -124,7 +124,7 @@ export function PortalShell({ active, branding, client, onSignOut, children }: P
             );
           })}
 
-          <div className="mt-auto pt-6 px-3 text-[11px] text-slate-400 leading-relaxed" data-testid="portal-support">
+          <div className="mt-auto pt-6 px-3 text-[11px] text-slate-500 leading-relaxed" data-testid="portal-support">
             <div className="font-medium text-slate-500">Need help?</div>
             <div data-testid="portal-support-email">{branding.supportEmail}</div>
             <div data-testid="portal-support-phone">{branding.supportPhone}</div>
@@ -152,7 +152,7 @@ export function PortalShell({ active, branding, client, onSignOut, children }: P
               data-testid={`portal-nav-mobile-${item.key}`}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 rounded-lg transition-colors",
-                isActive ? "text-slate-900" : "text-slate-400 hover:text-slate-700"
+                isActive ? "text-slate-900" : "text-slate-500 hover:text-slate-700"
               )}
             >
               <item.icon className={cn("h-5 w-5 mb-0.5", isActive && "stroke-[2.5px]")} />

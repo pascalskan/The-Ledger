@@ -45,7 +45,7 @@ export function ProjectDeliverables({ deliverables }: { deliverables: PortalDeli
                       </Badge>
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">{d.description}</p>
-                    <p className="text-[11px] text-slate-400 mt-1">
+                    <p className="text-[11px] text-slate-500 mt-1">
                       Issued {new Date(d.issuedDate).toLocaleDateString()}
                     </p>
                   </div>

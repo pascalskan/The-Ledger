@@ -1,7 +1,56 @@
 # THE LEDGER
 ## Current Development State
 
-Last Updated: June 16, 2026
+Last Updated: July 19, 2026
+
+---
+
+## WORKSTREAM D — CLIENT PORTAL (CL-1 → CL-7)
+
+Status: **COMPLETE — awaiting review and merge**
+Branch: `feature/client-portal-workstream` (forked from `main` after the Worker workstream merge)
+Handoff: `docs/handoffs/client-portal-workstream-handoff.md`
+
+The Client Portal was rebuilt from a single unauthenticated mock page into a complete,
+doctrine-compliant customer-facing surface.
+
+| Phase | Title | Commit |
+|---|---|---|
+| CL-1 | Client Portal Audit | — |
+| CL-2 | Foundation, Provisioning & Authentication | `d3c82ba` |
+| CL-3 | Portal Shell, Dashboard & Navigation | `3cb66c0` |
+| CL-4 | Project Visibility & Deliverables | `f718798` |
+| CL-5 | Documents & Communication | `29ef52a` |
+| CL-6 | Financial Transparency | `167ecc1` |
+| CL-7 | Final Validation, Audit & Merge Readiness | (final commit) |
+
+Delivered:
+
+- **Projection layer** (`client/src/lib/portalProjections.ts`) — the doctrine boundary. Every
+  portal view consumes projections; only the portal controller touches the store. Cost, margin,
+  payroll, review, governance and accounting-sync data are structurally unreachable.
+- **Portal authentication** — `PortalAccount` (Active/Disabled/Pending), session separate from
+  internal auth, CEO-only provisioning.
+- **Responsive shell** with 8 sections (desktop / tablet / mobile).
+- **Project experience** — milestones, deliverables, derived progress, client-safe timeline.
+- **Documents** — explicit PM/CEO sharing with non-destructive, audited revocation.
+- **Communication Centre** — structured threads replacing the free-text comment box.
+- **Financial Centre** — quotes, variations, invoices, payments, credit notes, derived KPIs.
+- **Audit** — 15 client-portal audit event types.
+- **Doctrine tests** — 62 across 6 client-portal specification files.
+
+Resolved from the CL-1 audit: the cosmetic hardcoded login, the absent projection layer, the
+missing audit trail, hardcoded financial figures, and an active doctrine violation (crew
+surnames exposed to clients).
+
+**Outstanding:** the frozen `CLIENT_REQUEST_DOMAIN.md` (8 request types, routing, escalation,
+resolution/decline) is **not implemented** — the Requests section is a placeholder. Two
+implementation decisions require owner ratification (an 8th navigation item, and financial
+visibility extended to quotes/variations/credit notes). See the handoff document.
+
+---
+
+## (Previous state below — last updated June 16, 2026)
 
 ---
 

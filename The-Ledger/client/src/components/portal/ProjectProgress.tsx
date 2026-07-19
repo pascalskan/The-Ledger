@@ -29,12 +29,12 @@ export function ProjectProgress({ status }: { status: string }) {
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors
                   ${isCompleted ? "bg-slate-800 border-slate-800 text-white" : 
                     isCurrent ? "bg-white border-slate-800 text-slate-800 shadow-sm" : 
-                    "bg-white border-slate-200 text-slate-400"}`}
+                    "bg-white border-slate-200 text-slate-500"}`}
               >
                 {isCompleted ? <Check className="h-4 w-4" /> : index + 1}
               </div>
               <span className={`text-[10px] sm:text-xs font-medium uppercase tracking-wider text-center
-                ${isCurrent ? "text-slate-800 font-bold" : isCompleted ? "text-slate-600" : "text-slate-400 hidden sm:block"}`}>
+                ${isCurrent ? "text-slate-800 font-bold" : isCompleted ? "text-slate-600" : "text-slate-500 hidden sm:block"}`}>
                 {stage}
               </span>
             </div>

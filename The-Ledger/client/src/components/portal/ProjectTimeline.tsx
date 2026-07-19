@@ -34,7 +34,7 @@ export function ProjectTimeline({ events }: { events: PortalTimelineEvent[] }) {
                   </span>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium text-slate-800">{e.title}</span>
-                    <span className="text-[11px] text-slate-400 shrink-0">{new Date(e.date).toLocaleDateString()}</span>
+                    <span className="text-[11px] text-slate-500 shrink-0">{new Date(e.date).toLocaleDateString()}</span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">{e.description}</p>
                 </li>
