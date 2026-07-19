@@ -40,8 +40,12 @@ export const PORTAL_NAV: PortalNavItem[] = [
   { key: "sites", label: "Sites", path: "/portal/sites", icon: MapPin },
   { key: "jobs", label: "Jobs", path: "/portal/jobs", icon: Briefcase },
   { key: "documents", label: "Documents", path: "/portal/documents", icon: FileText },
-  { key: "messages", label: "Messages", path: "/portal/messages", icon: MessagesSquare },
   { key: "invoices", label: "Invoices", path: "/portal/invoices", icon: ReceiptText },
+  // CL-8: Requests is the single client-communication destination. It hosts
+  // both formal Client Requests and informal Conversations as tabs, which
+  // returns the portal to the seven sections defined by
+  // CLIENT_PORTAL_DOMAIN.md § Portal Navigation Structure. The `messages`
+  // route remains valid for deep links into a specific conversation.
   { key: "requests", label: "Requests", path: "/portal/requests", icon: MessageSquare },
   { key: "notifications", label: "Notifications", path: "/portal/notifications", icon: Bell },
 ];

@@ -11,6 +11,7 @@ import JobsPage from "@/pages/jobs";
 import JobDetailPage from "@/pages/job-detail";
 import ClientsPage from "@/pages/clients";
 import ClientDetailPage from "@/pages/client-detail";
+import ClientRequestsPage from "@/pages/client-requests";
 import InvoicesPage from "@/pages/invoices";
 import InvoiceDetailPage from "@/pages/invoice-detail";
 import FinancialsPage from "@/pages/expenses";
@@ -250,6 +251,12 @@ function Router() {
       </Route>
       <Route path="/jobs/:id">
         <ProtectedRoute component={JobDetailPage} />
+      </Route>
+      {/* CL-8: Client Requests management surface — deliberately separate from
+          the Review Centre (CLIENT_REQUEST_DOMAIN.md). CEO sees all requests;
+          PM sees requests for jobs they are assigned to. */}
+      <Route path="/client-requests">
+        <ProtectedRoute component={ClientRequestsPage} roles={["CEO", "Project Manager"]} />
       </Route>
       <Route path="/clients">
         <ProtectedRoute component={ClientsPage} roles={["CEO", "Project Manager"]} />

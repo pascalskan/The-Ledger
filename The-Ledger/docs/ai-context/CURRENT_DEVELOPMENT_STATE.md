@@ -43,10 +43,26 @@ Resolved from the CL-1 audit: the cosmetic hardcoded login, the absent projectio
 missing audit trail, hardcoded financial figures, and an active doctrine violation (crew
 surnames exposed to clients).
 
-**Outstanding:** the frozen `CLIENT_REQUEST_DOMAIN.md` (8 request types, routing, escalation,
-resolution/decline) is **not implemented** — the Requests section is a placeholder. Two
-implementation decisions require owner ratification (an 8th navigation item, and financial
-visibility extended to quotes/variations/credit notes). See the handoff document.
+### CL-8 — Client Requests (branch `feature/cl-8-client-requests`)
+
+Closes the workstream's largest gap and resolves both outstanding ratification items.
+
+- **`CLIENT_REQUEST_DOMAIN.md` implemented in full** — 8 request types, 6-state lifecycle with an
+  enforced transition allow-list, mandatory resolution notes and decline reasons, terminal declined
+  state, derived (never stored) escalation, and a human-actor requirement on every mutator so
+  automation cannot resolve or decline.
+- **PM/CEO management surface** at `/client-requests` — deliberately separate from the Review
+  Centre. CEO sees all; PM sees only requests for jobs they manage.
+- **7 new audit events** — `client_request_submitted`, `_acknowledged`, `_in_progress`,
+  `_resolved`, `_declined`, `_escalated`, `job_created_from_client_request`.
+- **Ratification 1 resolved** — Messages folded into Requests as a Conversations tab; portal is
+  back to the domain's seven sections.
+- **Ratification 2 resolved** — `CLIENT_PORTAL_DOMAIN.md` amended to **v1.1**, adding quotes,
+  approved variations, credit notes and payment history to the Financial Visibility table.
+- Deleted `placeholders.tsx` — all portal sections are now real implementations.
+- Tests: `client-portal-requests.spec.ts` (CR-01…CR-23).
+
+**No outstanding gaps against the frozen Client Portal and Client Request domains.**
 
 ---
 

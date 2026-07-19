@@ -271,11 +271,10 @@ Centre and the expanded invoice seed.
 
 ## KNOWN LIMITATIONS
 
-1. **Client Requests are not implemented.** The frozen `CLIENT_REQUEST_DOMAIN.md` (8 request
-   types, routing, escalation thresholds, resolution/decline with mandatory reasons, PM/CEO
-   management surface, `source_request_id` job linkage) is **not built**. The Requests section
-   is a placeholder. CL-5's communication threads are explicitly *not* formal client requests.
-   **This is the single largest outstanding gap in Workstream D.**
+1. ~~**Client Requests are not implemented.**~~ **RESOLVED in CL-8** — see the CL-8 section below.
+   `CLIENT_REQUEST_DOMAIN.md` is now implemented: 8 request types, 6-state lifecycle, mandatory
+   resolution notes and decline reasons, derived escalation, PM/CEO management surface at
+   `/client-requests`, and 7 new audit event types.
 2. **Authentication is a frontend mock.** Passwords are not validated; any password signs in an
    Active account. Real credential handling, password reset and session expiry require a backend.
 3. **Job status mapping is approximate.** The domain specifies `scheduled`, `active`,
@@ -298,7 +297,74 @@ Centre and the expanded invoice seed.
 
 ---
 
+## CL-8 — CLIENT REQUESTS (July 19, 2026)
+
+Branch: `feature/cl-8-client-requests`
+
+CL-8 closed the largest gap in the workstream and resolved both outstanding ratification items.
+
+### Client Requests implemented
+
+`client/src/lib/portalRequests.ts` implements `CLIENT_REQUEST_DOMAIN.md` in full:
+
+- **8 request types** — additional_service, quality_complaint, site_access, document_request,
+  billing_query, scheduling_change, emergency, general_enquiry
+- **6-state lifecycle** — open → acknowledged → in_progress → resolved → closed, plus declined,
+  with transitions enforced by an explicit allow-list (`canTransition`)
+- **Mandatory notes** — resolution requires a note; decline requires a reason. Both are shared
+  with the client, enforced in the mutator rather than only in the UI
+- **Terminal states** — declined and closed permit no further transitions, so a declined request
+  cannot be reopened
+- **Derived escalation** — thresholds per type (emergency immediate, scheduling_change 4h,
+  additional_service 24h, others 48h). Escalation is computed at read time, never stored, because
+  the domain defines it as a notification action that "does not change request ownership or modify
+  the request record"
+- **Human actor required** — every lifecycle mutator takes an `actor` argument and there is no
+  system/automated caller path, satisfying "automation may not resolve, decline or approve"
+
+### Doctrine guarantees, structurally enforced
+
+| Guarantee | How |
+|---|---|
+| Requests never enter the Review Centre | The module shares no type, store or code path with `ReviewItem`. Verified by grep |
+| No request creates a financial record | No invoice, payment, revenue or cost concept exists in the module |
+| Client never sees internal routing | `routedTo`, escalation state and `resultingJobId` are absent from `PortalRequest` |
+| No silent decline | `declineRequest` rejects an empty reason before any state change |
+
+### Management surface
+
+`/client-requests` (CEO + PM). **Deliberately separate from the Review Centre.** CEO sees all
+requests; PM sees only requests for jobs they manage. Escalation flags, decision-required markers,
+and resolve/decline dialogs enforcing mandatory notes.
+
+### Ratification items resolved
+
+1. **8th nav item — resolved by folding.** Messages was folded into Requests as a Conversations
+   tab, restoring the domain's seven sections. The two remain distinct models; only the navigation
+   is unified, so a client is not asked to classify their own need before raising it. The
+   `/portal/messages` route remains valid for conversation deep links.
+2. **Financial visibility — resolved by ratification.** `CLIENT_PORTAL_DOMAIN.md` amended to v1.1,
+   adding quotes, approved variations, credit notes and payment history to the Financial Visibility
+   table with recorded rationale.
+
+   The differing treatment is deliberate: **conform the code to doctrine where conforming is cheap;
+   amend doctrine only where its own principle already covers the case and conforming would destroy
+   value.** The nav count was arbitrary and cheap to conform to. The financial list was an
+   incomplete enumeration under a principle ("the client's commercial statement") that already
+   admits those artefacts.
+
+### Also in CL-8
+
+`client/src/pages/portal/placeholders.tsx` deleted — all three placeholders (Documents, Invoices,
+Requests) are now real implementations.
+
+**Tests:** `client-portal-requests.spec.ts` (CR-01…CR-23).
+
+---
+
 ## ITEMS REQUIRING OWNER RATIFICATION
+
+> **Both items below were resolved in CL-8.** Retained for the decision record.
 
 Two implementation decisions deviate from frozen documents. Both were flagged when made and
 are restated here for an explicit decision before merge.
