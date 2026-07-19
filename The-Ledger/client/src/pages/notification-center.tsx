@@ -18,6 +18,7 @@
 
 import { useState, useMemo } from 'react';
 import { Layout } from '@/components/layout';
+import { PageHeader } from '@/components/page-shell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -176,13 +177,11 @@ export default function NotificationCentrePage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Bell className="h-6 w-6" />
-              Notification Centre
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Platform-wide operational and governance events — informational only
-            </p>
+            <PageHeader
+              title="Notification Centre"
+              icon={Bell}
+              description="Platform-wide operational and governance events — informational only"
+            />
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 text-xs text-muted-foreground bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-md">

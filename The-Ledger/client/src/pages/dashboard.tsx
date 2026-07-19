@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore, useAuth } from "@/lib/mockData";
 import {
@@ -269,14 +270,10 @@ function PMDashboard() {
   return (
     <div className="space-y-6" data-testid="pm-dashboard-page">
       {/* HEADER */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          {getGreeting()}, {user?.name?.split(' ')[0]}.
-        </h2>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {formatDate()} — Your operational overview.
-        </p>
-      </div>
+      <PageHeader
+        title={`${getGreeting()}, ${user?.name?.split(' ')[0]}.`}
+        description={`${formatDate()} — Your operational overview.`}
+      />
 
       {/* KPI STRIP */}
       <div
@@ -741,14 +738,10 @@ function CEODashboard() {
     <div className="space-y-6" data-testid="dashboard-page">
 
       {/* HEADER */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          {getGreeting()}, {user?.name?.split(' ')[0]}.
-        </h2>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {formatDate()} — Here is what needs your attention today.
-        </p>
-      </div>
+      <PageHeader
+        title={`${getGreeting()}, ${user?.name?.split(' ')[0]}.`}
+        description={`${formatDate()} — Here is what needs your attention today.`}
+      />
 
       {/* ZONE A — ATTENTION REQUIRED */}
       <div data-testid="dashboard-zone-a" className="grid gap-4 md:grid-cols-3">

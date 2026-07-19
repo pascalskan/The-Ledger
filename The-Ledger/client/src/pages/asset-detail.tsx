@@ -47,7 +47,7 @@ export default function AssetDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900">{asset.name}</h2>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">{asset.name}</h1>
               {getStatusBadge(asset.status)}
             </div>
             <p className="text-slate-500 mt-1 flex items-center gap-2">

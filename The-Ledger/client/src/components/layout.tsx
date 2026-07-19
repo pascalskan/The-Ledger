@@ -323,7 +323,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const CEO_AUTOMATION_ITEMS: NavItem[] = [
     { label: "Automations", href: "/automations", icon: Zap, roles: [] },
     { label: "Workflows", href: "/workflows", icon: GitBranch, roles: [], testId: "nav-workflow-centre" },
-    { label: "Automation Controls", href: "/automation-governance", icon: ShieldCheck, roles: [], testId: "nav-automation-governance" },
+    { label: "Automation Governance", href: "/automation-governance", icon: ShieldCheck, roles: [], testId: "nav-automation-governance" },
   ];
 
   const CEO_ADMIN_ITEMS: NavItem[] = [

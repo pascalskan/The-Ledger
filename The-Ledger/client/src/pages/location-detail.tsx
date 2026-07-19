@@ -44,7 +44,7 @@ export default function LocationDetailPage() {
               <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
                 <MapPin className="h-5 w-5" />
               </div>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900">{location.name}</h2>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">{location.name}</h1>
             </div>
             <p className="text-slate-500 mt-1 flex items-center gap-2 ml-14">
               <Badge variant="outline" className="capitalize">{location.type}</Badge>

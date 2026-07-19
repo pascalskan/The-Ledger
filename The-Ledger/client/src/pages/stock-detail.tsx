@@ -38,7 +38,7 @@ export default function StockDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900">{stock.name}</h2>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">{stock.name}</h1>
               {isLowStock && <Badge variant="destructive" className="flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> Low Stock</Badge>}
             </div>
             <p className="text-slate-500 mt-1 flex items-center gap-2">

@@ -147,7 +147,7 @@ export default function ReviewDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900">{job.title}</h2>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">{job.title}</h1>
               <Badge variant="outline">{job.jobId}</Badge>
             </div>
             <p className="text-slate-500 mt-1">Review pending submissions for this job.</p>

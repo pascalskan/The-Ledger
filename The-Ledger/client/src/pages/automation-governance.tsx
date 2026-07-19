@@ -20,6 +20,7 @@
 
 import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout";
+import { PageHeader } from '@/components/page-shell';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -564,13 +565,11 @@ export default function AutomationGovernanceCentrePage() {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <ShieldAlert className="h-6 w-6 text-primary" />
-              Automation Governance Centre
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Monitor automation risk, compliance and financial safeguards.
-            </p>
+            <PageHeader
+              title="Automation Governance Centre"
+              icon={ShieldAlert}
+              description="Monitor automation risk, compliance and financial safeguards."
+            />
           </div>
           <div className="text-xs text-muted-foreground bg-muted/50 border rounded-md px-3 py-2 max-w-sm text-right">
             CEO authority. All governance actions are audited and immutable.
