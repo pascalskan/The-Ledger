@@ -20,7 +20,7 @@ import {
 } from "./mockData";
 
 import type { Job } from "@/types/job";
-import type { ReviewItem } from "@/types/review";
+import type { ReviewItem } from "@/lib/mockData";
 
 // ──────────────────────────────────────────────────────
 // TYPE: PayrollStagingRecord

@@ -255,8 +255,10 @@ export default function WorkerReportPage() {
         // Real worked hours from the shift timer (editable above) — no longer
         // hardcoded to zero. Carries shift bounds when a shift was active.
         hours: Number.isFinite(hours) ? hours : 0,
-        shiftStart: activeShift?.jobId === jobId ? activeShift.lastStartedAt : undefined,
-        shiftEnd: activeShift?.jobId === jobId ? new Date().toISOString() : undefined,
+        // `activeShift && ...` rather than `activeShift?.` so TypeScript narrows
+        // activeShift to non-null for the .lastStartedAt access on the true branch.
+        shiftStart: activeShift && activeShift.jobId === jobId ? activeShift.lastStartedAt : undefined,
+        shiftEnd: activeShift && activeShift.jobId === jobId ? new Date().toISOString() : undefined,
       },
     ];
 
@@ -280,7 +282,9 @@ export default function WorkerReportPage() {
 
       title: "Daily Progress Report",
 
-      status: "pending",
+      // `as const` so the literal keeps its narrow type instead of widening to
+      // `string`, which is not assignable to ReviewItem's status union.
+      status: "pending" as const,
 
       workerId: user?.id || "",
 
@@ -303,9 +307,12 @@ export default function WorkerReportPage() {
       uploads: uploads.map((upload) => ({
         ...upload,
 
+        // `as const` on both branches so the ternary keeps its literal type
+        // instead of widening to `string`, which is not assignable to
+        // UploadPayload["syncStatus"].
         syncStatus: isOffline
-          ? "pending"
-          : "uploaded",
+          ? ("pending" as const)
+          : ("uploaded" as const),
 
         uploadProgress: isOffline
           ? 0
