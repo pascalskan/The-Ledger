@@ -35,18 +35,6 @@ function Placeholder({
   );
 }
 
-export function PortalDocuments() {
-  return (
-    <Placeholder
-      testid="portal-documents"
-      title="Documents"
-      subtitle="Reports, certificates and drawings shared with you."
-      body="Your project documents will appear here once your account manager shares them with you."
-      icon={FileText}
-    />
-  );
-}
-
 export function PortalInvoices() {
   return (
     <Placeholder

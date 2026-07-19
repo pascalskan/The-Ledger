@@ -9,6 +9,7 @@ import {
   FileText,
   ReceiptText,
   MessageSquare,
+  MessagesSquare,
   Bell,
   ShieldCheck,
   Building2,
@@ -22,6 +23,7 @@ export type PortalSectionKey =
   | "sites"
   | "jobs"
   | "documents"
+  | "messages"
   | "invoices"
   | "requests"
   | "notifications";
@@ -38,6 +40,7 @@ export const PORTAL_NAV: PortalNavItem[] = [
   { key: "sites", label: "Sites", path: "/portal/sites", icon: MapPin },
   { key: "jobs", label: "Jobs", path: "/portal/jobs", icon: Briefcase },
   { key: "documents", label: "Documents", path: "/portal/documents", icon: FileText },
+  { key: "messages", label: "Messages", path: "/portal/messages", icon: MessagesSquare },
   { key: "invoices", label: "Invoices", path: "/portal/invoices", icon: ReceiptText },
   { key: "requests", label: "Requests", path: "/portal/requests", icon: MessageSquare },
   { key: "notifications", label: "Notifications", path: "/portal/notifications", icon: Bell },

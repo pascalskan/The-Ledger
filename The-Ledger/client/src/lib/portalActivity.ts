@@ -14,7 +14,14 @@
 // is built from projected jobs + invoices.)
 // ---------------------------------------------------------------------------
 
-import type { PortalJob, PortalInvoice, PortalMilestone, PortalDeliverable } from "@/lib/portalProjections";
+import type {
+  PortalJob,
+  PortalInvoice,
+  PortalMilestone,
+  PortalDeliverable,
+  PortalDocument,
+  PortalThread,
+} from "@/lib/portalProjections";
 
 /** A milestone/deliverable paired with its parent project title for the feed. */
 export interface ActivityMilestone {
@@ -57,7 +64,9 @@ export function buildPortalActivity(
   jobs: PortalJob[],
   invoices: PortalInvoice[],
   milestones: ActivityMilestone[] = [],
-  deliverables: ActivityDeliverable[] = []
+  deliverables: ActivityDeliverable[] = [],
+  documents: PortalDocument[] = [],
+  threads: PortalThread[] = []
 ): PortalActivityItem[] {
   const items: PortalActivityItem[] = [];
 
@@ -93,6 +102,31 @@ export function buildPortalActivity(
       title: `Deliverable ${deliverable.status.toLowerCase()}: ${deliverable.title}`,
       description: `${jobTitle} — ${deliverable.title} ${deliverable.status.toLowerCase()}.`,
       date: deliverable.issuedDate,
+    });
+  }
+
+  // New document available (only documents actually shared with the client).
+  for (const doc of documents) {
+    items.push({
+      id: `act-doc-${doc.id}`,
+      category: "document",
+      title: `New document available: ${doc.title}`,
+      description: `${doc.title} was shared with you by ${doc.sharedBy}.`,
+      date: doc.sharedAt,
+    });
+  }
+
+  // Communication thread created / updated.
+  for (const thread of threads) {
+    const updated = thread.updatedAt !== thread.createdAt;
+    items.push({
+      id: `act-th-${thread.id}`,
+      category: "request",
+      title: updated
+        ? `Conversation updated: ${thread.subject}`
+        : `Conversation started: ${thread.subject}`,
+      description: `${thread.projectTitle} — ${thread.status}.`,
+      date: thread.updatedAt,
     });
   }
 

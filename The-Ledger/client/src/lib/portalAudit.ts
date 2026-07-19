@@ -21,7 +21,12 @@ export type PortalAuditEventType =
   | "client_viewed_job"
   | "client_viewed_document"
   | "client_viewed_invoice"
-  | "client_created_request";
+  | "client_created_request"
+  // CL-5 — documents & communication
+  | "document_shared_with_client"
+  | "document_access_revoked"
+  | "client_created_thread"
+  | "client_viewed_thread";
 
 export interface PortalAuditEntry {
   id: string;

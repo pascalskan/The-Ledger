@@ -39,6 +39,17 @@ import {
   type ClientDeliverableStatus,
   type ClientTimelineEventType,
 } from "@/lib/portalProjectModels";
+import {
+  getSharedDocumentsForProjects,
+  type ClientDocumentCategory,
+} from "@/lib/portalDocuments";
+import {
+  getThreadsForProjects,
+  getMessagesForThread,
+  type ClientThreadStatus,
+  type ClientThreadTopic,
+  type ClientMessageSenderType,
+} from "@/lib/portalCommunication";
 
 // ── Projection models ──────────────────────────────────────────────────────
 
@@ -76,8 +87,14 @@ export interface PortalJob {
 
 export interface PortalDocument {
   id: string;
-  name: string;
-  sharedAt?: string;
+  projectId: string;
+  title: string;
+  description: string;
+  category: ClientDocumentCategory;
+  uploadedAt: string;
+  sharedAt: string;
+  sharedBy: string;
+  fileType: string;
 }
 
 export interface PortalSite {
@@ -302,6 +319,80 @@ export function projectTimeline(job: PortalJob): PortalTimelineEvent[] {
     title: e.title,
     description: e.description,
     date: e.date,
+  }));
+}
+
+// ── Documents & Communication projections (CL-5) ────────────────────────────
+
+export interface PortalThread {
+  id: string;
+  projectId: string;
+  /** Parent project title, resolved for display. */
+  projectTitle: string;
+  subject: string;
+  topic: ClientThreadTopic;
+  status: ClientThreadStatus;
+  createdAt: string;
+  updatedAt: string;
+  messageCount: number;
+}
+
+export interface PortalMessage {
+  id: string;
+  senderType: ClientMessageSenderType;
+  senderName: string;
+  message: string;
+  createdAt: string;
+}
+
+/**
+ * Project the documents SHARED with this client. Scoped to the client's own
+ * visible projects; revoked documents are excluded at source. Internal
+ * documents never enter this pipeline at all.
+ */
+export function projectSharedDocuments(visibleProjectIds: string[]): PortalDocument[] {
+  return getSharedDocumentsForProjects(visibleProjectIds)
+    .map((d) => ({
+      id: d.id,
+      projectId: d.projectId,
+      title: d.title,
+      description: d.description,
+      category: d.category,
+      uploadedAt: d.uploadedAt,
+      sharedAt: d.sharedAt,
+      sharedBy: d.sharedBy,
+      fileType: d.fileType,
+    }))
+    .sort((a, b) => (a.sharedAt < b.sharedAt ? 1 : -1));
+}
+
+/** Project the client's communication threads, scoped to their projects. */
+export function projectThreads(
+  visibleProjectIds: string[],
+  jobs: PortalJob[]
+): PortalThread[] {
+  const titleById = new Map(jobs.map((j) => [j.id, j.title]));
+  return getThreadsForProjects(visibleProjectIds).map((t) => ({
+    id: t.id,
+    projectId: t.projectId,
+    projectTitle: titleById.get(t.projectId) ?? "Project",
+    subject: t.subject,
+    topic: t.topic,
+    status: t.status,
+    createdAt: t.createdAt,
+    updatedAt: t.updatedAt,
+    messageCount: getMessagesForThread(t.id).length,
+  }));
+}
+
+/** Project the messages within a thread. Internal notes are never sourced. */
+export function projectMessages(threadId: string): PortalMessage[] {
+  return getMessagesForThread(threadId).map((m) => ({
+    id: m.id,
+    senderType: m.senderType,
+    senderName: m.senderName,
+    message: m.message,
+    createdAt: m.createdAt,
   }));
 }
 

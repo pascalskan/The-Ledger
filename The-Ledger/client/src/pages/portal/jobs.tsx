@@ -4,15 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Briefcase, Users, Calendar, MapPin, ArrowLeft, UserCog, MessageSquare, Send, UserCircle, Building2, CalendarClock, Activity,
+  Briefcase, Users, Calendar, MapPin, ArrowLeft, UserCog, MessagesSquare, Building2, CalendarClock, Activity,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import {
   projectMilestones,
   projectDeliverables,
   projectTimeline,
   computeProjectProgress,
   type PortalJob,
+  type PortalThread,
 } from "@/lib/portalProjections";
 
 import { ProjectProgress } from "@/components/portal/ProjectProgress";
@@ -29,17 +29,24 @@ type StatusFilter = "all" | "active" | "completed";
 interface PortalJobsProps {
   jobs: PortalJob[];
   selectedJob: PortalJob | null;
+  threads: PortalThread[];
   onOpenJob: (job: PortalJob) => void;
   onBack: () => void;
+  onOpenMessages: () => void;
 }
 
-export function PortalJobs({ jobs, selectedJob, onOpenJob, onBack }: PortalJobsProps) {
-  const { toast } = useToast();
+export function PortalJobs({ jobs, selectedJob, threads, onOpenJob, onBack, onOpenMessages }: PortalJobsProps) {
   const [filter, setFilter] = useState<StatusFilter>("all");
-  const [newComment, setNewComment] = useState("");
 
   if (selectedJob) {
-    return <PortalJobDetail job={selectedJob} onBack={onBack} newComment={newComment} setNewComment={setNewComment} toast={toast} />;
+    return (
+      <PortalJobDetail
+        job={selectedJob}
+        threads={threads.filter((t) => t.projectId === selectedJob.id)}
+        onBack={onBack}
+        onOpenMessages={onOpenMessages}
+      />
+    );
   }
 
   const filtered = jobs.filter((j) => {
@@ -130,26 +137,15 @@ export function PortalJobs({ jobs, selectedJob, onOpenJob, onBack }: PortalJobsP
 
 function PortalJobDetail({
   job,
+  threads,
   onBack,
-  newComment,
-  setNewComment,
-  toast,
+  onOpenMessages,
 }: {
   job: PortalJob;
+  threads: PortalThread[];
   onBack: () => void;
-  newComment: string;
-  setNewComment: (v: string) => void;
-  toast: ReturnType<typeof useToast>["toast"];
+  onOpenMessages: () => void;
 }) {
-  const [comments, setComments] = useState<{ author: string; text: string; date: string }[]>([]);
-
-  const handleAddComment = () => {
-    if (!newComment.trim()) return;
-    setComments((prev) => [...prev, { author: "You", text: newComment, date: new Date().toISOString() }]);
-    setNewComment("");
-    toast({ title: "Message sent", description: "Your message has been shared with the project team." });
-  };
-
   const mappedCrew = job.crew.map((c) => ({
     initials: c.initial,
     name: c.firstName,
@@ -210,45 +206,45 @@ function PortalJobDetail({
 
           <ProjectTimeline events={timeline} />
 
-          <Card className="shadow-sm border-slate-200">
+          {/* Project conversations — the Communication Centre is the primary
+              workflow (CL-5). The former free-text comment box is retired. */}
+          <Card className="shadow-sm border-slate-200" data-testid="portal-project-conversations">
             <CardHeader className="pb-3 border-b border-slate-100">
               <CardTitle className="text-lg flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-slate-500" /> Messages
+                <MessagesSquare className="h-5 w-5 text-slate-500" /> Conversations
               </CardTitle>
-              <CardDescription>Leave a message for the project team. (Structured requests arrive soon.)</CardDescription>
+              <CardDescription>Project discussions with your delivery team.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 pt-5">
-              <div className="space-y-5 max-h-[320px] overflow-y-auto pr-2">
-                <div className="flex gap-3">
-                  <div className="h-9 w-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 border border-slate-200">
-                    <UserCircle className="h-5 w-5" />
-                  </div>
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl rounded-tl-none p-4 text-sm flex-1">
-                    <div className="font-medium mb-1.5 text-slate-800">Project Manager</div>
-                    <p className="text-slate-700 leading-relaxed">Hi, let us know if you have any questions about the works.</p>
-                  </div>
-                </div>
-                {comments.map((c, i) => (
-                  <div key={i} className="flex gap-3 flex-row-reverse">
-                    <div className="h-9 w-9 rounded-full bg-slate-800 text-white flex items-center justify-center shrink-0 font-bold text-xs">YOU</div>
-                    <div className="bg-white border border-slate-200 rounded-xl rounded-tr-none p-4 text-sm flex-1">
-                      <p className="text-slate-700 leading-relaxed">{c.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-3 pt-5 border-t border-slate-100">
-                <Input
-                  placeholder="Type a message..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
-                  className="bg-slate-50 border-slate-200"
-                />
-                <Button onClick={handleAddComment} size="icon" className="shrink-0 bg-slate-800 hover:bg-slate-700 text-white">
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+            <CardContent className="pt-4 space-y-3">
+              {threads.length === 0 ? (
+                <p className="text-sm text-slate-500 italic" data-testid="portal-project-conversations-empty">
+                  No conversations for this project yet.
+                </p>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {threads.map((t) => (
+                    <li key={t.id} className="py-2.5 flex items-start justify-between gap-3" data-testid={`portal-project-thread-${t.id}`}>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-slate-800 truncate">{t.subject}</div>
+                        <div className="text-[11px] text-slate-500">
+                          {t.topic} · {t.messageCount} message{t.messageCount === 1 ? "" : "s"}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="shrink-0 bg-slate-50 text-slate-600 border-slate-200">
+                        {t.status}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={onOpenMessages}
+                data-testid="portal-project-open-messages"
+              >
+                <MessagesSquare className="h-4 w-4 mr-2" /> Open Messages
+              </Button>
             </CardContent>
           </Card>
         </div>
