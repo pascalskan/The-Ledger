@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Layout } from '@/components/layout';
+import { PageHeader } from '@/components/page-shell';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -114,13 +115,11 @@ export default function EventMonitorPage() {
         {/* Header */}
         <div className="flex justify-between items-end">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <Radio className="h-7 w-7 text-primary" />
-              Event Monitor
-            </h2>
-            <p className="text-muted-foreground mt-1">
-              Real-time visibility into the Event Bus pipeline across The Ledger.
-            </p>
+            <PageHeader
+              title="Event Monitor"
+              icon={Radio}
+              description="Real-time visibility into the Event Bus pipeline across The Ledger."
+            />
           </div>
           <Badge variant="outline" className="px-3 py-1 text-xs font-mono uppercase tracking-wider border-primary/20 bg-primary/5">
             CEO Only

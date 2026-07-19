@@ -14,6 +14,7 @@
 
 import { useState, useMemo } from 'react';
 import { Layout } from '@/components/layout';
+import { PageHeader } from '@/components/page-shell';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -483,13 +484,11 @@ export default function WorkflowCentrePage() {
         {/* Header */}
         <div className="flex justify-between items-end">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <GitBranch className="h-7 w-7 text-primary" />
-              Workflow Centre
-            </h2>
-            <p className="text-muted-foreground mt-1">
-              Cross-module workflow orchestration and execution visibility.
-            </p>
+            <PageHeader
+              title="Workflow Centre"
+              icon={GitBranch}
+              description="Cross-module workflow orchestration and execution visibility."
+            />
           </div>
           <Badge
             variant="outline"

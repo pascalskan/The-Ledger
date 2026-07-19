@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore } from "@/lib/mockData";
 import { groupTimesheetsForPayroll } from "@/lib/profitabilityEngine";
 import {
@@ -59,12 +60,10 @@ export function PayrollProcessingContent() {
   return (
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payroll Staging</h2>
-          <p className="text-muted-foreground mt-1">
-            Approved labour hours grouped by worker. Review before payroll export.
-          </p>
-        </div>
+        <PageHeader
+          title="Payroll Staging"
+          description="Approved labour hours grouped by worker. Review before payroll export."
+        />
 
         {/* Staging disclaimer */}
         <Alert className="border-amber-200 bg-amber-50 text-amber-800">

@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore, useAuth, Worker } from "@/lib/mockData";
 import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { Button } from "@/components/ui/button";
@@ -87,12 +88,10 @@ export default function WorkersPage() {
     return (
       <Layout>
         <div className="space-y-6" data-testid="pm-workforce-page">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Crew</h2>
-            <p className="text-muted-foreground mt-1">
-              Workers assigned to your active and planned jobs.
-            </p>
-          </div>
+          <PageHeader
+            title="Crew"
+            description="Workers assigned to your active and planned jobs."
+          />
 
           {/* Active & Planned Jobs Summary */}
           <div data-testid="pm-workforce-my-jobs">
@@ -174,10 +173,10 @@ export default function WorkersPage() {
     <Layout>
       <div className="space-y-6" data-testid="ceo-workforce-page">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Workers</h2>
-            <p className="text-muted-foreground mt-1">Manage your workforce.</p>
-          </div>
+          <PageHeader
+            title="Workers"
+            description="Manage your workforce."
+          />
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
             <Button data-testid="button-open-create-worker">

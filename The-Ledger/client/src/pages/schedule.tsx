@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore, useAuth } from "@/lib/mockData";
 import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { useState, useMemo } from "react";

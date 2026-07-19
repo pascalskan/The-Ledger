@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -108,10 +109,11 @@ export default function StockAssetsPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-              <Package className="h-8 w-8 text-slate-700" /> Stock & Assets
-            </h2>
-            <p className="text-slate-500 mt-1">Manage consumable stock and long-term assets across locations.</p>
+            <PageHeader
+              title="Stock & Assets"
+              icon={Package}
+              description="Manage consumable stock and long-term assets across locations."
+            />
           </div>
           <div className="flex gap-2">
             <Dialog open={isAddStockOpen} onOpenChange={setIsAddStockOpen}>

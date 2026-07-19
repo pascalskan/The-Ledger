@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore } from "@/lib/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,10 +50,10 @@ export function InvoicesContent({ statusFilter, embedded }: { statusFilter?: str
         {!embedded && (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900">Billing Overview</h2>
-              <p className="text-slate-500 mt-1">
-                {isConnected ? `Read-only view of invoices synced from ${providerName}.` : "Manage and track all client invoices."}
-              </p>
+              <PageHeader
+                title="Billing Overview"
+                description={isConnected ? `Read-only view of invoices synced from ${providerName}.` : "Manage and track all client invoices."}
+              />
             </div>
           </div>
         )}

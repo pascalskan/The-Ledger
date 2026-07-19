@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -120,12 +121,10 @@ export default function JobIntelligenceDashboard() {
   return (
     <Layout>
       <div className="space-y-8 pb-12">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Job Intelligence</h2>
-          <p className="text-muted-foreground mt-1">
-            Financial analytics derived from approved operational activity.
-          </p>
-        </div>
+        <PageHeader
+          title="Job Intelligence"
+          description="Financial analytics derived from approved operational activity."
+        />
 
         {/* Portfolio Profitability Strip */}
         <PortfolioProfitabilityStrip />

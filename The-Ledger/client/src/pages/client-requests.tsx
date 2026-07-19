@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore, useAuth } from "@/lib/mockData";
 import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -110,20 +111,18 @@ export default function ClientRequestsPage() {
   return (
     <Layout>
       <div className="space-y-6" data-testid="client-requests-page">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Client Requests</h2>
-            <p className="text-muted-foreground mt-1">
-              Requests submitted by clients through the portal.
-            </p>
-          </div>
-          {escalatedCount > 0 && (
-            <Badge variant="destructive" className="self-start" data-testid="client-requests-escalated-badge">
-              <TriangleAlert className="h-3.5 w-3.5 mr-1.5" />
-              {escalatedCount} escalated
-            </Badge>
-          )}
-        </div>
+        <PageHeader
+          title="Client Requests"
+          description="Requests submitted by clients through the portal."
+          actions={
+            escalatedCount > 0 ? (
+              <Badge variant="destructive" className="self-start" data-testid="client-requests-escalated-badge">
+                <TriangleAlert className="h-3.5 w-3.5 mr-1.5" />
+                {escalatedCount} escalated
+              </Badge>
+            ) : null
+          }
+        />
 
         {/* Doctrine notice */}
         <div

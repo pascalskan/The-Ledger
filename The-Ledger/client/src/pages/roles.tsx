@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { PERMISSION_LABELS, PermissionKey, Role, useStore } from "@/lib/mockData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -80,12 +81,10 @@ export default function RolesPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Roles & Permissions</h2>
-            <p className="text-muted-foreground mt-1">Define access levels and user responsibilities.</p>
-          </div>
-        </div>
+        <PageHeader
+          title="Roles & Permissions"
+          description="Define access levels and user responsibilities."
+        />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative max-w-md w-full">

@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { FinancialSnapshot } from "@/components/finance/FinancialSnapshot";
 import { JobProfitabilityTable } from "@/components/finance/JobProfitabilityTable";
 import { ExpenseExposurePanel } from "@/components/finance/ExpenseExposurePanel";
