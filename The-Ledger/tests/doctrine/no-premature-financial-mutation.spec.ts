@@ -124,7 +124,8 @@ test('Online submission creates a pending ReviewItem and does NOT deduct stock',
 
   await page.locator('.cursor-pointer', { hasText: '1/2 Copper Elbow' }).first().click();
 
-  const addedItemCard = page.locator('.bg-white.rounded-xl', { hasText: '1/2 Copper Elbow' });
+  // Selects by testid, not by utility class — see tests/helpers/worker.ts.
+  const addedItemCard = page.getByTestId('worker-material-row').filter({ hasText: '1/2 Copper Elbow' });
   await addedItemCard.locator('input[type="number"]').fill('3');
 
   await page.getByRole('button', { name: /Save/i }).click();

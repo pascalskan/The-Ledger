@@ -865,7 +865,7 @@ return (
                 if (!stock) return null;
 
                 return (
-                  <div key={item.id} className="bg-card rounded-xl p-4 border border-border shadow-sm relative overflow-hidden flex flex-col gap-3">
+                  <div key={item.id} data-testid="worker-material-row" className="bg-card rounded-xl p-4 border border-border shadow-sm relative overflow-hidden flex flex-col gap-3">
                     <button
                       onClick={() => handleRemoveStock(item.id)}
                       className="absolute top-2 right-2 text-muted-foreground hover:text-red-500 p-2"

@@ -407,7 +407,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {!collapsed && (
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 bg-primary rounded-sm flex items-center justify-center font-bold text-primary-foreground">L</div>
-            <h1 className="font-bold text-lg truncate">The Ledger</h1>
+            {/* Brand mark, not a document heading. The page's own PageHeader
+                owns the single <h1>; an app name as h1 on every route tells a
+                screen-reader user what the product is called, never what page
+                they are on. Matches the mobile header, which already uses a div. */}
+            <div className="font-bold text-lg truncate">The Ledger</div>
           </div>
         )}
         {collapsed && <div className="mx-auto h-8 w-8 bg-primary rounded-sm flex items-center justify-center font-bold text-primary-foreground">L</div>}

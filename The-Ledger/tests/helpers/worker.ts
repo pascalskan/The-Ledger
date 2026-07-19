@@ -42,8 +42,10 @@ export async function submitMaterialReport(
     .first()
     .click();
 
-  // Find the added item card and fill its quantity
-  const addedItemCard = page.locator('.bg-white.rounded-xl', { hasText: materialName });
+  // Find the added item card and fill its quantity.
+  // Selects by testid, not by utility class — the previous `.bg-white.rounded-xl`
+  // selector broke the moment the card was restyled (Workstream E token sweep).
+  const addedItemCard = page.getByTestId('worker-material-row').filter({ hasText: materialName });
   await addedItemCard.locator('input[type="number"]').fill(String(quantity));
 
   // Save the report

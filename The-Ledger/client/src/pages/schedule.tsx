@@ -530,14 +530,10 @@ export default function SchedulePage() {
         <div className="flex-1 flex flex-col min-w-0 pr-4 pl-1 pb-4">
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 shrink-0">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                Operational Schedule
-              </h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Profit-aware planning & resource control.
-              </p>
-            </div>
+            <PageHeader
+              title="Operational Schedule"
+              description="Profit-aware planning & resource control."
+            />
 
             <div className="flex flex-col sm:flex-row items-center gap-3">
               <SmartFilters

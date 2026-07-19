@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Layers, FileText, Wallet, Link2, Users, FileDown, RefreshCw, GitMerge, TriangleAlert, Calendar } from "lucide-react";
 import { useLocation, useSearch } from "wouter";

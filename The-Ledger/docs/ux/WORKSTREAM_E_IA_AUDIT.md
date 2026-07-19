@@ -111,13 +111,29 @@ as-is to avoid churn in 4 spec files for zero user-visible benefit.
 
 ## F-2 — No page-header primitive; heading hierarchy is broken — HIGH
 
+> **CORRECTION (post-implementation).** As first written, this finding claimed that
+> "roughly 30 of 48 internal pages render no `<h1>` anywhere on the page." **That was
+> wrong.** It came from grepping `client/src/pages/*.tsx` without checking the `Layout`
+> wrapper that every page renders inside. `layout.tsx:410` rendered
+> `<h1>The Ledger</h1>` in the sidebar, so every page always had exactly one `h1`.
+>
+> The real defect was different, and narrower: that single `h1` was the **application
+> name**, not the page title. It told a screen-reader user what the product is called,
+> never what page they were on — and it was inconsistent with the mobile header, which
+> already rendered the brand as a `div`.
+>
+> The correction cost real time. Adopting `PageHeader` initially produced a *second*
+> `h1` on every page, which failed 25 of the new IA tests until `layout.tsx` was fixed
+> to render the brand mark as a `div`. Recorded here because the audit was the input to
+> every later phase, and an unverified premise propagated straight through it.
+
 33 pages hand-roll their page title. There is no `PageHeader` component.
 
 Two consequences:
 
-**Accessibility defect.** Roughly 30 of 48 internal pages render their page title as
-`<h2>` with no `<h1>` anywhere on the page. Screen-reader users receive a document with
-no top-level heading. Examples: `audit.tsx:13`, `clients.tsx:77`, `jobs.tsx:253`,
+**Accessibility defect.** The only `<h1>` on any page was the sidebar brand mark. Page
+titles rendered as `<h2>`, so the document outline began at level 2 and no heading
+described the current page. Examples: `audit.tsx:13`, `clients.tsx:77`, `jobs.tsx:253`,
 `schedule.tsx:271`, `roles.tsx:85`, `review.tsx:246`, `automations.tsx:1267`.
 
 **Visual inconsistency.** Where an `h1` does exist, size is unpredictable:

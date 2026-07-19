@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { LayoutDashboard, BarChart3, BookOpen, FileDown, Activity, ShieldAlert, Download, Send } from "lucide-react";

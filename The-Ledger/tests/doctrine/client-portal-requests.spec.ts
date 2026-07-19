@@ -142,7 +142,12 @@ test.describe('Client Requests — portal submission surface (CL-8)', () => {
     await expect(page.getByTestId('portal-comms-tab-conversations')).toBeVisible();
     // Messages is no longer its own nav item.
     await expect(page.getByTestId('portal-nav-messages')).toHaveCount(0);
-    await expect(page.locator('[data-testid^="portal-nav-"]')).toHaveCount(7);
+    // Scoped to the desktop sidebar: the bare `^="portal-nav-"` prefix also
+    // matched the seven `portal-nav-mobile-*` items, so this asserted 7 against
+    // a DOM that always contains 14. Pre-existing failure, unrelated to E.
+    await expect(
+      page.getByTestId('portal-sidebar').locator('[data-testid^="portal-nav-"]'),
+    ).toHaveCount(7);
     // Conversations tab still reaches the CL-5 communication centre.
     await page.getByTestId('portal-comms-tab-conversations').click();
     await expect(page.getByTestId('portal-messages')).toBeVisible();
