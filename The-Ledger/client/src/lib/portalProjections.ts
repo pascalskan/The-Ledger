@@ -51,6 +51,13 @@ import {
   type ClientMessageSenderType,
 } from "@/lib/portalCommunication";
 import {
+  getRequestsForClient,
+  getRequestTypeMeta,
+  REQUEST_STATUS_LABELS,
+  type ClientRequestType,
+  type ClientRequestStatus,
+} from "@/lib/portalRequests";
+import {
   getQuotesForProjects,
   getVariationsForProjects,
   getPaymentsForProjects,
@@ -594,6 +601,61 @@ export function buildClientFinancialProjection(
     payments,
     creditNotes,
   };
+}
+
+// ── Client Request projections (CL-8) ───────────────────────────────────────
+//
+// Doctrine: CLIENT_REQUEST_DOMAIN.md § Visibility
+//
+//   "Clients do not see internal PM notes (only the response shared
+//    externally), internal routing decisions, or financial implications of
+//    their requests."
+//
+// `routedTo`, escalation state and `resultingJobId` are therefore never copied.
+
+export interface PortalRequest {
+  id: string;
+  requestNumber: string;
+  type: ClientRequestType;
+  typeLabel: string;
+  subject: string;
+  description: string;
+  status: ClientRequestStatus;
+  statusLabel: string;
+  submittedAt: string;
+  updatedAt: string;
+  projectId?: string;
+  projectTitle?: string;
+  /** PM/CEO response shared with the client on resolution. */
+  resolutionNote?: string;
+  /** Decline reason — always shared; there is no silent decline. */
+  declineReason?: string;
+}
+
+/**
+ * Project the client's own requests. Scoped by clientId — a client can never
+ * see another client's requests.
+ */
+export function projectClientRequests(
+  clientId: string,
+  projectTitleById: Record<string, string> = {}
+): PortalRequest[] {
+  return getRequestsForClient(clientId).map((r) => ({
+    id: r.id,
+    requestNumber: r.requestNumber,
+    type: r.type,
+    typeLabel: getRequestTypeMeta(r.type).label,
+    subject: r.subject,
+    description: r.description,
+    status: r.status,
+    statusLabel: REQUEST_STATUS_LABELS[r.status],
+    submittedAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    projectId: r.projectId,
+    projectTitle: r.projectId ? projectTitleById[r.projectId] : undefined,
+    resolutionNote: r.resolutionNote,
+    declineReason: r.declineReason,
+  }));
 }
 
 // ── Documents & Communication projections (CL-5) ────────────────────────────

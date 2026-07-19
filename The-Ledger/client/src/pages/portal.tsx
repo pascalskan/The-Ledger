@@ -12,6 +12,7 @@ import {
   projectSharedDocuments,
   projectThreads,
   projectMessages,
+  projectClientRequests,
   projectClientQuotes,
   projectClientVariations,
   projectClientPayments,
@@ -22,7 +23,10 @@ import {
   type PortalThread,
   type PortalInvoice,
   type PortalQuote,
+  type PortalRequest,
 } from "@/lib/portalProjections";
+import { createClientRequest, type ClientRequestType } from "@/lib/portalRequests";
+import { PortalRequests, ClientCommsTabs } from "@/pages/portal/requests";
 import { buildPortalActivity, type ActivityMilestone, type ActivityDeliverable } from "@/lib/portalActivity";
 import { getPortalBranding } from "@/lib/portalBranding";
 import { recordPortalAudit } from "@/lib/portalAudit";
@@ -36,10 +40,11 @@ import { PortalDocumentsPage } from "@/pages/portal/documents";
 import { PortalMessages } from "@/pages/portal/messages";
 import { PortalNotifications } from "@/pages/portal/notifications";
 import { PortalFinance } from "@/pages/portal/finance";
-import { PortalRequests } from "@/pages/portal/placeholders";
 import { useToast } from "@/hooks/use-toast";
 
-const VALID_SECTIONS = PORTAL_NAV.map((n) => n.key);
+// `messages` is no longer a nav item (CL-8 folded it under Requests) but the
+// route remains valid so conversation deep links keep working.
+const VALID_SECTIONS = [...PORTAL_NAV.map((n) => n.key), "messages"];
 
 export default function PortalPage() {
   const { allClients: clients, allJobs: jobs, allWorkers: workers, allRoles: roles, allInvoices: invoices } = useStore();
@@ -62,6 +67,7 @@ export default function PortalPage() {
   const jobId = section === "jobs" ? segs[1] : undefined;
   const threadId = section === "messages" ? segs[1] : undefined;
   const invoiceId = section === "invoices" ? segs[1] : undefined;
+  const requestId = section === "requests" ? segs[1] : undefined;
 
   // ── Client-safe projections (scoped to account.clientId) ───────────────────
   const portalClient = useMemo(
@@ -106,6 +112,11 @@ export default function PortalPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [account, visibleProjectIds, portalJobs, commVersion]
   );
+  const portalRequests = useMemo(
+    () => (account ? projectClientRequests(account.clientId, projectTitleById) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [account, projectTitleById, commVersion]
+  );
   const portalActivity = useMemo(() => {
     const milestones: ActivityMilestone[] = [];
     const deliverables: ActivityDeliverable[] = [];
@@ -131,6 +142,9 @@ export default function PortalPage() {
     : null;
   const selectedInvoice: PortalInvoice | null = invoiceId
     ? portalInvoices.find((i) => i.id === invoiceId) ?? null
+    : null;
+  const selectedRequest: PortalRequest | null = requestId
+    ? portalRequests.find((r) => r.id === requestId) ?? null
     : null;
   const threadMessages = useMemo(
     () => (selectedThread ? projectMessages(selectedThread.id) : []),
@@ -252,6 +266,31 @@ export default function PortalPage() {
     });
   };
 
+  // ── Client Requests (CL-8) ──────────────────────────────────────────────────
+  const handleOpenRequest = (r: PortalRequest) => setLocation(`/portal/requests/${r.id}`);
+  const handleBackToRequests = () => setLocation("/portal/requests");
+
+  const handleCreateRequest = (input: {
+    type: ClientRequestType;
+    projectId?: string;
+    subject: string;
+    description: string;
+  }) => {
+    createClientRequest({
+      ...input,
+      clientId: account.clientId,
+      who: account.email,
+    });
+    setCommVersion((v) => v + 1);
+    toast({
+      title: "Request submitted",
+      description: "Your delivery team has been notified and will respond shortly.",
+    });
+  };
+
+  const handleCommsTab = (tab: "requests" | "conversations") =>
+    setLocation(tab === "requests" ? "/portal/requests" : "/portal/messages");
+
   const handleOpenThread = (thread: PortalThread) => setLocation(`/portal/messages/${thread.id}`);
   const handleBackToThreads = () => setLocation("/portal/messages");
 
@@ -314,16 +353,19 @@ export default function PortalPage() {
         />
       )}
       {section === "messages" && (
-        <PortalMessages
-          threads={portalThreads}
-          selectedThread={selectedThread}
-          messages={threadMessages}
-          jobs={portalJobs}
-          onOpenThread={handleOpenThread}
-          onBack={handleBackToThreads}
-          onCreateThread={handleCreateThread}
-          onReply={handleReply}
-        />
+        <div className="space-y-6">
+          {!selectedThread && <ClientCommsTabs active="conversations" onSelect={handleCommsTab} />}
+          <PortalMessages
+            threads={portalThreads}
+            selectedThread={selectedThread}
+            messages={threadMessages}
+            jobs={portalJobs}
+            onOpenThread={handleOpenThread}
+            onBack={handleBackToThreads}
+            onCreateThread={handleCreateThread}
+            onReply={handleReply}
+          />
+        </div>
       )}
       {section === "invoices" && (
         <PortalFinance
@@ -337,7 +379,19 @@ export default function PortalPage() {
           onViewPayments={handleViewPayments}
         />
       )}
-      {section === "requests" && <PortalRequests />}
+      {section === "requests" && (
+        <div className="space-y-6">
+          {!selectedRequest && <ClientCommsTabs active="requests" onSelect={handleCommsTab} />}
+          <PortalRequests
+            requests={portalRequests}
+            selectedRequest={selectedRequest}
+            jobs={portalJobs}
+            onOpenRequest={handleOpenRequest}
+            onBack={handleBackToRequests}
+            onCreateRequest={handleCreateRequest}
+          />
+        </div>
+      )}
       {section === "notifications" && <PortalNotifications activity={portalActivity} />}
     </PortalShell>
   );

@@ -47,6 +47,7 @@ import {
   GitBranch,
   DollarSign,
   Brain,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { isCEO, isProjectManager } from "@/lib/roleHelpers";
@@ -307,6 +308,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Schedule", href: "/schedule", icon: Calendar, roles: [] },
     { label: "Workers", href: "/workers", icon: Users, roles: [] },
     { label: "Clients", href: "/clients", icon: Building2, roles: [] },
+    { label: "Client Requests", href: "/client-requests", icon: MessageSquare, roles: [], testId: "nav-client-requests" },
     { label: "Map", href: "/map", icon: MapIcon, roles: [] },
     { label: "Stock & Assets", href: "/equipment", icon: Package, roles: [] },
     { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: [] },
@@ -342,6 +344,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const PM_SECONDARY_ITEMS: NavItem[] = [
     { label: "Clients", href: "/clients", icon: Building2, roles: [], testId: "nav-pm-clients" },
+    { label: "Client Requests", href: "/client-requests", icon: MessageSquare, roles: [], testId: "nav-client-requests" },
     { label: "Map", href: "/map", icon: MapIcon, roles: [], testId: "nav-pm-map" },
     { label: "Stock & Assets", href: "/equipment", icon: Package, roles: [], testId: "nav-pm-stock" },
     { label: "Notifications", href: "/notifications", icon: Bell, roles: [], testId: "nav-notifications" },

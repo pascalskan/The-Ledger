@@ -2,10 +2,18 @@
 
 ## Frozen Domain Definition
 
-Version: 1.0
-Status: FROZEN
-Date: June 4, 2026
+Version: 1.1
+Status: FROZEN (amended)
+Date: June 4, 2026 · Amended July 19, 2026
 Authority: Domain Definition Session — June 4, 2026
+Amendment Authority: Workstream D owner ratification — July 19, 2026 (CL-8)
+
+### Amendment log
+
+| Version | Date | Change |
+|---|---|---|
+| 1.0 | June 4, 2026 | Original frozen definition |
+| 1.1 | July 19, 2026 | Financial Visibility extended to quotes, approved variations, credit notes and payment history (CL-6). Portal Navigation clarified — Requests hosts both Requests and Conversations tabs, restoring seven sections (CL-8). |
 
 ---
 
@@ -212,6 +220,10 @@ Clients have limited, read-only financial visibility. They see the commercial di
 | Invoice line items | Yes | Description and amount per line — same as the invoice document |
 | Payment status | Yes | Paid, outstanding, overdue |
 | Financial summary | Yes | Total invoiced to date, total outstanding |
+| Quote | Yes | Quote number, issue date, expiry date, status, total value. **Draft quotes are never visible.** |
+| Approved variation | Yes | Variation number, description, value, decision date, status. **Pending-approval variations are never visible.** |
+| Credit note | Yes | Credit note number, issue date, amount, reason, related invoice |
+| Payment history | Yes | Payment date, amount, reference, related invoice |
 
 ### What Clients Never See
 
@@ -225,6 +237,17 @@ Clients have limited, read-only financial visibility. They see the commercial di
 | Job profitability | No |
 | Worker pay rates | No |
 | Internal cost breakdowns | No |
+
+**Amendment v1.1 (CL-6 / CL-8, July 19, 2026):** Quotes, approved variations, credit notes and
+payment history were added to the visible list above. These are commercial artefacts to which the
+client is a **party** — documents the company issued to them, changes they approved, credits raised
+in their favour, and payments they themselves made. They fall squarely within this section's own
+stated rationale ("the client's commercial statement, not the company's management accounts") and
+expose no cost, margin, labour rate or internal cost breakdown. Draft quotes and pending-approval
+variations remain internal working state and are never projected.
+
+The original enumeration was incomplete relative to the principle it expressed; the principle itself
+is unchanged and undiminished.
 
 **Decision rationale:** Clients have a legitimate commercial interest in their invoices and payment status. They do not have a legitimate interest in the company's internal cost structure, margins, or labour rates. Exposing cost data to clients would compromise the company's commercial position (clients could use margin information in contract negotiations). The portal financial view is the client's commercial statement, not the company's management accounts.
 
@@ -276,6 +299,19 @@ The client portal provides the following navigation sections:
 5. **Invoices** — All invoices for this client with payment status
 6. **Requests** — Client's submitted requests and their statuses
 7. **Notifications** — In-portal notifications for request updates, job status changes, invoice issuance
+
+**Clarification v1.1 (CL-8, July 19, 2026):** The **Requests** section is the single client
+communication destination and hosts two tabs:
+
+- **Requests** — formal Client Requests carrying the full lifecycle, routing and escalation defined
+  in `CLIENT_REQUEST_DOMAIN.md`
+- **Conversations** — informal project message threads, which are explicitly **not** Client Requests
+  and carry no lifecycle, routing or escalation
+
+CL-5 briefly introduced a separate eighth "Messages" section for conversations. CL-8 folded it back
+under Requests, restoring the seven sections specified above. The two remain distinct **models** —
+only the navigation is unified, so a client is not asked to classify their own need before they can
+raise it.
 
 ---
 

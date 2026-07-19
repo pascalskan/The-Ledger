@@ -41,11 +41,22 @@ export async function portalLoginAsActive(page: Page, email = PORTAL_ACCOUNTS.dc
   await expect(page.getByTestId('portal-dashboard')).toBeVisible();
 }
 
-/** Click a desktop sidebar nav item (viewport is desktop width in CI config). */
+/**
+ * Click a desktop sidebar nav item (viewport is desktop width in CI config).
+ *
+ * `messages` is not a nav item — CL-8 folded conversations under Requests as a
+ * tab, restoring the domain's seven sections. Navigating to 'messages'
+ * therefore goes via Requests → Conversations.
+ */
 export async function portalNavTo(
   page: Page,
-  key: 'dashboard' | 'sites' | 'jobs' | 'documents' | 'invoices' | 'requests' | 'notifications'
+  key: 'dashboard' | 'sites' | 'jobs' | 'documents' | 'invoices' | 'requests' | 'notifications' | 'messages'
 ) {
+  if (key === 'messages') {
+    await page.getByTestId('portal-nav-requests').click();
+    await page.getByTestId('portal-comms-tab-conversations').click();
+    return;
+  }
   await page.getByTestId(`portal-nav-${key}`).click();
 }
 

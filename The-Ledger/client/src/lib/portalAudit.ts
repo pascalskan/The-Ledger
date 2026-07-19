@@ -30,7 +30,15 @@ export type PortalAuditEventType =
   // CL-6 — financial transparency
   | "client_viewed_quote"
   | "client_viewed_payment"
-  | "client_downloaded_invoice";
+  | "client_downloaded_invoice"
+  // CL-8 — client requests (CLIENT_REQUEST_DOMAIN.md § Audit Requirements)
+  | "client_request_submitted"
+  | "client_request_acknowledged"
+  | "client_request_in_progress"
+  | "client_request_resolved"
+  | "client_request_declined"
+  | "client_request_escalated"
+  | "job_created_from_client_request";
 
 export interface PortalAuditEntry {
   id: string;
