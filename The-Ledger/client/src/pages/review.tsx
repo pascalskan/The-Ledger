@@ -439,7 +439,7 @@ export default function ReviewPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-              {isCEO ? "Review Operations Centre" : "Review Center"}
+              {isCEO ? "Review Operations Centre" : "Review Centre"}
             </h2>
             <p className="text-slate-500 mt-1">
               {isCEO

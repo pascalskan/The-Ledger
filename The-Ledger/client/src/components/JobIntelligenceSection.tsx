@@ -199,7 +199,7 @@ export function JobIntelligenceSection({ jobId }: { jobId: string }) {
             <Activity className="h-10 w-10 mb-3 opacity-20" />
             <p className="text-sm font-medium">No approved financial activity yet.</p>
             <p className="text-xs mt-1 opacity-70">
-              Approve a worker report in the Review Center to populate live financials.
+              Approve a worker report in the Review Centre to populate live financials.
             </p>
             {/* Schedule risk still shows even without approved financials */}
             {risks.length > 0 && (

@@ -32,7 +32,7 @@ export default function QAPage() {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">QA Center</h2>
+          <h2 className="text-3xl font-bold tracking-tight">QA Centre</h2>
           <p className="text-muted-foreground mt-1">Verification of core application flows and enterprise hardening.</p>
         </div>
 

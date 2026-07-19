@@ -312,7 +312,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Map", href: "/map", icon: MapIcon, roles: [] },
     { label: "Stock & Assets", href: "/equipment", icon: Package, roles: [] },
     { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: [] },
-    { label: "Expenses", href: "/expenses", icon: ReceiptText, roles: [] },
+    { label: "Financial Insights", href: "/expenses", icon: ReceiptText, roles: [] },
     { label: "Finance", href: "/finance", icon: DollarSign, roles: [], testId: "nav-finance-hub" },
   ];
 
@@ -348,7 +348,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Map", href: "/map", icon: MapIcon, roles: [], testId: "nav-pm-map" },
     { label: "Stock & Assets", href: "/equipment", icon: Package, roles: [], testId: "nav-pm-stock" },
     { label: "Notifications", href: "/notifications", icon: Bell, roles: [], testId: "nav-notifications" },
-    { label: "Expenses", href: "/expenses", icon: ReceiptText, roles: [], testId: "nav-pm-expenses" },
+    { label: "Financial Insights", href: "/expenses", icon: ReceiptText, roles: [], testId: "nav-pm-expenses" },
   ];
 
   // Legacy aliases kept so existing non-PM/CEO code paths still compile

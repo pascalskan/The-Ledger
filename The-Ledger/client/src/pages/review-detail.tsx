@@ -40,7 +40,7 @@ export default function ReviewDetailPage() {
           <AlertCircle className="mx-auto h-12 w-12 text-slate-400 mb-4" />
           <h2 className="text-2xl font-bold text-slate-900">Job Not Found</h2>
           <p className="text-slate-500 mt-2 mb-6">The job you are looking for does not exist or you don't have access.</p>
-          <Button onClick={() => setLocation("/review")}>Back to Review Center</Button>
+          <Button onClick={() => setLocation("/review")}>Back to Review Centre</Button>
         </div>
       </Layout>
     );

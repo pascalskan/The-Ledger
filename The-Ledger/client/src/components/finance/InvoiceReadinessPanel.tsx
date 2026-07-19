@@ -46,7 +46,7 @@ export function InvoiceReadinessPanel({ jobId }: { jobId: string }) {
             <div>
               <p className="italic">No approved invoice line items for this job yet.</p>
               <p className="text-xs mt-1">
-                Invoice lines are created when the PM approves a worker report in the Review Center.
+                Invoice lines are created when the PM approves a worker report in the Review Centre.
                 Legacy invoices created manually are shown on the Invoices page.
               </p>
             </div>

@@ -49,7 +49,7 @@ export function PendingExposurePanel({ jobId }: { jobId: string }) {
           </Badge>
         </div>
         <p className="text-xs text-amber-700/70 mt-1">
-          Estimate only — these figures are from unapproved submissions. They will become financial facts when a PM approves them via the Review Center.
+          Estimate only — these figures are from unapproved submissions. They will become financial facts when a PM approves them via the Review Centre.
         </p>
       </CardHeader>
       <CardContent className="pt-0">

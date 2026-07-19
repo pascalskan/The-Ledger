@@ -161,7 +161,7 @@ export function PayrollExportContent() {
           <AlertDescription>
             <strong>Payroll export — not a payment instruction.</strong> Exports are
             generated from approved TimesheetEntry records only. Hours and costs are
-            sourced from the Review Center approval engine. Final payroll must be
+            sourced from the Review Centre approval engine. Final payroll must be
             verified and authorised in your payroll system.
           </AlertDescription>
         </Alert>
@@ -251,7 +251,7 @@ export function PayrollExportContent() {
             <Activity className="h-10 w-10 mb-3 opacity-20" />
             <p className="text-sm font-medium">No approved timesheet records for this period.</p>
             <p className="text-xs mt-1 opacity-70">
-              Approve worker reports in the Review Center to populate payroll data.
+              Approve worker reports in the Review Centre to populate payroll data.
             </p>
           </div>
         ) : (

@@ -222,7 +222,7 @@ export function JobForecastPanel({ jobId }: { jobId: string }) {
         {forecast.hasPendingExposure && (
           <p className="text-xs text-muted-foreground italic border-t pt-2">
             Exposure is an estimate. Pending items must be approved via the
-            Review Center before they become financial facts. An 85%
+            Review Centre before they become financial facts. An 85%
             realisation factor is applied.
           </p>
         )}
