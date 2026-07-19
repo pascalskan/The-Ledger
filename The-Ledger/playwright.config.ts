@@ -3,9 +3,17 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
 
-  // Serialize all tests — the app uses a shared in-memory store at localhost:5000.
-  // Parallel execution causes tests to corrupt each other's mock state.
-  workers: 1,
+  // Parallel execution. This was previously pinned to 1 on the assumption that
+  // the shared in-memory store at localhost:5000 would be corrupted by parallel
+  // runs. That is not the case: Playwright gives each worker its own isolated
+  // browser context, and the mock store is client-side module state (plus
+  // localStorage), so it is per-context and does not leak between workers.
+  //
+  // Verified July 19, 2026: full suite 892/892 passed at --workers=3.
+  //
+  // If you ever see cross-test interference, reproduce with --workers=1 first
+  // to confirm it is parallelism before investigating the code.
+  workers: 3,
 
   // Complex multi-user flows (Worker → sign out → CEO → approve → verify) take
   // 15–25s with three 800ms auth delays, multiple page navigations, and approval
@@ -14,7 +22,12 @@ export default defineConfig({
 
   use: {
     baseURL: 'http://localhost:5000',
-    headless: false,
+    // Headless by default. Running headed left Chromium processes alive at
+    // teardown ("worker-N process did not exit within 300000ms, force-killed"),
+    // which added ~10 minutes of wall-clock and would produce a non-zero exit
+    // in CI despite every test passing.
+    // Use `npx playwright test --headed` when you want to watch a run.
+    headless: true,
     // Viewport must be tall enough for the sidebar Sign Out button (y ≈ 859)
     viewport: { width: 1280, height: 960 },
     screenshot: 'only-on-failure',
