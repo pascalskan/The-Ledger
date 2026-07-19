@@ -51,7 +51,7 @@ function priorityBadge(priority: DerivedReview["priority"]) {
   const map: Record<DerivedReview["priority"], string> = {
     Critical: "bg-rose-50 text-rose-700 border-rose-200",
     High: "bg-amber-50 text-amber-700 border-amber-200",
-    Standard: "bg-slate-50 text-slate-600 border-slate-200",
+    Standard: "bg-muted text-muted-foreground border-border",
   };
   return map[priority];
 }
@@ -81,11 +81,11 @@ function KpiTile({ label, value, icon, tone = "default", testId }: KpiTileProps)
       ? "text-amber-600"
       : tone === "good"
       ? "text-emerald-600"
-      : "text-slate-900";
+      : "text-foreground";
   return (
     <Card data-testid={testId}>
       <CardContent className="p-4">
-        <div className="flex items-center gap-2 text-slate-400">
+        <div className="flex items-center gap-2 text-muted-foreground">
           {icon}
           <span className="text-[11px] font-medium uppercase tracking-wide">
             {label}
@@ -106,10 +106,10 @@ export function ReviewExecutiveDashboard() {
     <div className="space-y-6" data-testid="review-executive-dashboard">
       {/* Executive header */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-900">
+        <h3 className="text-lg font-semibold text-foreground">
           Executive Review Overview
         </h3>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           The decision engine of the business — what requires your attention
           right now. Visibility only; every approval still happens in the queue
           below.
@@ -179,7 +179,7 @@ export function ReviewExecutiveDashboard() {
         <Card className="lg:col-span-1" data-testid="review-financial-exposure">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <PoundSterling className="h-4 w-4 text-slate-400" /> Financial
+              <PoundSterling className="h-4 w-4 text-muted-foreground" /> Financial
               Exposure
             </CardTitle>
           </CardHeader>
@@ -196,15 +196,15 @@ export function ReviewExecutiveDashboard() {
               label="Payroll awaiting approval"
               value={formatGbp(exposure.payrollAwaiting)}
             />
-            <div className="border-t border-slate-100 pt-3">
+            <div className="border-t border-border pt-3">
               <ExposureRow
                 label="Total exposure"
                 value={formatGbp(exposure.totalExposure)}
                 bold
               />
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-muted-foreground">
                 Estimated profitability impact of approval delays:{" "}
-                <span className="font-semibold text-slate-700">
+                <span className="font-semibold text-foreground">
                   {formatGbp(exposure.profitabilityImpact)}
                 </span>
               </p>
@@ -216,7 +216,7 @@ export function ReviewExecutiveDashboard() {
         <Card className="lg:col-span-1" data-testid="review-type-breakdown">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Layers className="h-4 w-4 text-slate-400" /> Reviews By Type
+              <Layers className="h-4 w-4 text-muted-foreground" /> Reviews By Type
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -228,16 +228,16 @@ export function ReviewExecutiveDashboard() {
                   .toLowerCase()
                   .replace(/\s+/g, "-")}`}
               >
-                <span className="w-32 shrink-0 text-sm text-slate-600">
+                <span className="w-32 shrink-0 text-sm text-muted-foreground">
                   {t.type}
                 </span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full bg-blue-500"
                     style={{ width: `${t.percent}%` }}
                   />
                 </div>
-                <span className="w-16 shrink-0 text-right text-sm font-medium text-slate-700">
+                <span className="w-16 shrink-0 text-right text-sm font-medium text-foreground">
                   {t.count} · {t.percent}%
                 </span>
               </div>
@@ -249,7 +249,7 @@ export function ReviewExecutiveDashboard() {
         <Card className="lg:col-span-1" data-testid="review-workload-summary">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Activity className="h-4 w-4 text-slate-400" /> Workload Summary
+              <Activity className="h-4 w-4 text-muted-foreground" /> Workload Summary
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
@@ -261,8 +261,8 @@ export function ReviewExecutiveDashboard() {
               value={workload.correctedToday}
             />
             <WorkloadRow label="Backlog size" value={workload.backlog} />
-            <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-              <span className="text-slate-600">Throughput trend</span>
+            <div className="flex items-center justify-between border-t border-border pt-2">
+              <span className="text-muted-foreground">Throughput trend</span>
               <Badge
                 variant="outline"
                 className="capitalize"
@@ -287,17 +287,17 @@ export function ReviewExecutiveDashboard() {
         <CardContent className="p-0">
           {attentionQueue.length === 0 ? (
             <div
-              className="flex flex-col items-center justify-center py-10 text-slate-500"
+              className="flex flex-col items-center justify-center py-10 text-muted-foreground"
               data-testid="review-attention-empty"
             >
               <CheckCircle2 className="mb-3 h-10 w-10 text-emerald-500" />
-              <p className="font-medium text-slate-900">Nothing demands attention</p>
+              <p className="font-medium text-foreground">Nothing demands attention</p>
               <p className="text-sm">No pending reviews require executive focus.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-slate-50/50">
+                <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead>Review</TableHead>
                     <TableHead>Type</TableHead>
@@ -312,7 +312,7 @@ export function ReviewExecutiveDashboard() {
                 <TableBody>
                   {attentionQueue.map((r) => (
                     <TableRow key={r.id} data-testid={`review-attention-row-${r.id}`}>
-                      <TableCell className="font-medium text-slate-700">
+                      <TableCell className="font-medium text-foreground">
                         {r.id}
                         {r.awaitingCeo && (
                           <Badge
@@ -325,10 +325,10 @@ export function ReviewExecutiveDashboard() {
                       </TableCell>
                       <TableCell>{r.reviewType}</TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <div className="font-medium text-slate-700">
+                        <div className="font-medium text-foreground">
                           {r.jobCode}
                         </div>
-                        <div className="text-xs text-slate-500">{r.jobTitle}</div>
+                        <div className="text-xs text-muted-foreground">{r.jobTitle}</div>
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {r.financialImpact > 0 ? formatGbp(r.financialImpact) : "—"}
@@ -340,7 +340,7 @@ export function ReviewExecutiveDashboard() {
                               ? "font-semibold text-rose-600"
                               : r.approachingSla
                               ? "font-medium text-amber-600"
-                              : "text-slate-600"
+                              : "text-muted-foreground"
                           }
                         >
                           {r.ageLabel}
@@ -385,7 +385,7 @@ export function ReviewExecutiveDashboard() {
             {insights.map((insight, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2 text-sm text-slate-700"
+                className="flex items-start gap-2 text-sm text-foreground"
                 data-testid="review-insight"
               >
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -410,10 +410,10 @@ function ExposureRow({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-slate-600">{label}</span>
+      <span className="text-sm text-muted-foreground">{label}</span>
       <span
         className={`text-sm ${
-          bold ? "font-bold text-slate-900" : "font-medium text-slate-700"
+          bold ? "font-bold text-foreground" : "font-medium text-foreground"
         }`}
       >
         {value}
@@ -425,8 +425,8 @@ function ExposureRow({
 function WorkloadRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-slate-600">{label}</span>
-      <span className="font-semibold text-slate-900">{value}</span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-semibold text-foreground">{value}</span>
     </div>
   );
 }

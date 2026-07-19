@@ -59,7 +59,7 @@ const CANONICAL_PRIORITY_DOTS: Record<CanonicalPriority, string> = {
 const CANONICAL_PRIORITY_TEXT: Record<CanonicalPriority, string> = {
   critical: "text-red-700",
   warning: "text-amber-700",
-  info: "text-slate-600",
+  info: "text-muted-foreground",
 };
 
 // ─────────────────────────────────────────────────────────────────────
@@ -490,7 +490,7 @@ export function ActivityHub() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 gap-1 text-xs text-slate-600"
+                          className="h-7 gap-1 text-xs text-muted-foreground"
                           aria-label={`Dismiss: ${row.record.title}`}
                           onClick={() => handleDismiss(row.record)}
                         >

@@ -75,10 +75,10 @@ export function RecommendationDistributionPanel() {
   return (
     <div className="space-y-6" data-testid="review-recommendation-panel">
       <div>
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Sparkles className="h-5 w-5 text-violet-500" /> Review Recommendations
         </h3>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           Historical intelligence — "what you'd normally do here". Guidance only;
           every decision remains yours.
         </p>
@@ -101,12 +101,12 @@ export function RecommendationDistributionPanel() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-2">
                   <span className={`h-2.5 w-2.5 rounded-full ${meta.dotClass}`} />
-                  <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                     {d.type}
                   </span>
                 </div>
-                <p className="mt-2 text-2xl font-bold text-slate-900">{d.count}</p>
-                <p className="text-xs text-slate-500">{d.percent}% of pending</p>
+                <p className="mt-2 text-2xl font-bold text-foreground">{d.count}</p>
+                <p className="text-xs text-muted-foreground">{d.percent}% of pending</p>
               </CardContent>
             </Card>
           );
@@ -130,7 +130,7 @@ export function RecommendationDistributionPanel() {
               {insights.map((insight, i) => (
                 <li
                   key={i}
-                  className="flex items-start gap-2 text-sm text-slate-700"
+                  className="flex items-start gap-2 text-sm text-foreground"
                   data-testid="recommendation-insight"
                 >
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
@@ -153,7 +153,7 @@ export function RecommendationDistributionPanel() {
               {guidance.map((g, i) => (
                 <li
                   key={i}
-                  className="flex items-start gap-2 text-sm text-slate-700"
+                  className="flex items-start gap-2 text-sm text-foreground"
                   data-testid="recommendation-guidance-item"
                 >
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -189,14 +189,14 @@ export function JobRecommendationPanel({ jobId }: { jobId: string }) {
         {recs.map(({ record, recommendation }) => (
           <div
             key={record.id}
-            className="rounded-md border border-slate-100 p-4"
+            className="rounded-md border border-border p-4"
             data-testid={`recommendation-row-${record.id}`}
           >
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="font-medium text-slate-700">{record.id}</span>
-              <span className="text-xs text-slate-400">{record.reviewType}</span>
+              <span className="font-medium text-foreground">{record.id}</span>
+              <span className="text-xs text-muted-foreground">{record.reviewType}</span>
               <RecommendationBadge type={recommendation.type} />
-              <span className="text-xs text-slate-500">Confidence:</span>
+              <span className="text-xs text-muted-foreground">Confidence:</span>
               <ConfidenceBadge confidence={recommendation.confidence} />
               <Badge variant="outline" className="ml-auto capitalize">
                 {recommendation.risk} risk
@@ -204,13 +204,13 @@ export function JobRecommendationPanel({ jobId }: { jobId: string }) {
             </div>
 
             {/* Supporting rationale */}
-            <p className="text-sm text-slate-700" data-testid="recommendation-reason">
+            <p className="text-sm text-foreground" data-testid="recommendation-reason">
               {recommendation.reason}
             </p>
 
             {/* Similar decisions / historical patterns */}
             <div
-              className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-slate-500"
+              className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-muted-foreground"
               data-testid="recommendation-similar"
             >
               <span className="flex items-center gap-1">

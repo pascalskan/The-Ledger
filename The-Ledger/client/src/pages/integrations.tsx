@@ -156,7 +156,7 @@ export default function IntegrationsPage() {
           <Button variant="ghost" size="sm" onClick={() => setLocation("/settings")} className="-ml-2 mb-2">
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to Settings
           </Button>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Accounting Integrations</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Accounting Integrations</h1>
           <p className="text-muted-foreground mt-2">Connect The Ledger to your financial providers to synchronize invoices, payments, and clients.</p>
         </div>
 
@@ -168,7 +168,7 @@ export default function IntegrationsPage() {
             const isSyncing = status === "Syncing";
 
             return (
-              <Card key={provider.id} className={`border-2 transition-all ${isConnected ? 'border-primary shadow-sm' : 'border-slate-200 opacity-90 hover:opacity-100 hover:border-slate-300'}`}>
+              <Card key={provider.id} className={`border-2 transition-all ${isConnected ? 'border-primary shadow-sm' : 'border-border opacity-90 hover:opacity-100 hover:border-slate-300'}`}>
                 <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                   <div>
                     <CardTitle className="text-xl font-semibold flex items-center gap-2">
@@ -176,13 +176,13 @@ export default function IntegrationsPage() {
                       {isConnected && status === "Connected" && <Badge variant="default" className="bg-green-600 hover:bg-green-600 ml-2">Connected</Badge>}
                       {isConnected && status === "Error" && <Badge variant="destructive" className="ml-2">Error</Badge>}
                       {isConnected && status === "Syncing" && <Badge variant="secondary" className="ml-2 animate-pulse">Syncing...</Badge>}
-                      {!isConnected && <Badge variant="outline" className="ml-2 text-slate-500">Not Connected</Badge>}
+                      {!isConnected && <Badge variant="outline" className="ml-2 text-muted-foreground">Not Connected</Badge>}
                     </CardTitle>
                     <CardDescription className="mt-1">
                       Sync financial data with {provider.name}.
                     </CardDescription>
                   </div>
-                  <div className="h-10 w-10 bg-slate-100 rounded-md flex items-center justify-center border text-slate-500 font-bold">
+                  <div className="h-10 w-10 bg-muted rounded-md flex items-center justify-center border text-muted-foreground font-bold">
                     {provider.name.charAt(0)}
                   </div>
                 </CardHeader>
@@ -191,7 +191,7 @@ export default function IntegrationsPage() {
                     {isConnected ? (
                       <>
                         <div className="grid grid-cols-2 gap-1">
-                          <span className="text-slate-500">Last Sync</span>
+                          <span className="text-muted-foreground">Last Sync</span>
                           <span className="font-medium flex items-center gap-1">
                             {activeIntegration?.lastSyncAt ? new Date(activeIntegration.lastSyncAt).toLocaleString() : "Never"}
                             {activeIntegration?.lastSyncStatus === "Success" && <CheckCircle2 className="h-3 w-3 text-green-600" />}
@@ -206,7 +206,7 @@ export default function IntegrationsPage() {
                         )}
                       </>
                     ) : (
-                      <p className="text-slate-500">
+                      <p className="text-muted-foreground">
                         Connect to {provider.name} to start syncing your financial records. Only one provider can be connected at a time.
                       </p>
                     )}

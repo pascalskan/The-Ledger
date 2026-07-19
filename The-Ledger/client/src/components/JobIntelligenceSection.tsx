@@ -73,30 +73,30 @@ export function JobIntelligenceSection({ jobId }: { jobId: string }) {
         {summary.hasActivity ? (
           <>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
+              <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">
                   Approved Revenue
                 </p>
-                <p className="text-2xl font-bold text-slate-900">{fmt(totalRevenue)}</p>
+                <p className="text-2xl font-bold text-foreground">{fmt(totalRevenue)}</p>
                 <div className="mt-3 flex items-center justify-between text-xs border-t pt-2">
-                  <span className="text-slate-500">Invoiced:</span>
+                  <span className="text-muted-foreground">Invoiced:</span>
                   <span className="font-medium">{fmt(invoicedAmount)}</span>
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
+              <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">
                   Approved Cost
                 </p>
-                <p className="text-2xl font-bold text-slate-900">{fmt(totalCost)}</p>
+                <p className="text-2xl font-bold text-foreground">{fmt(totalCost)}</p>
                 <div className="mt-3 flex items-center justify-between text-xs border-t pt-2">
-                  <span className="text-slate-500">Remaining:</span>
-                  <span className="font-medium text-slate-700">{fmt(remaining)}</span>
+                  <span className="text-muted-foreground">Remaining:</span>
+                  <span className="font-medium text-foreground">{fmt(remaining)}</span>
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
+              <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">
                   Gross Profit
                 </p>
                 <div className="flex items-baseline gap-2">
@@ -112,7 +112,7 @@ export function JobIntelligenceSection({ jobId }: { jobId: string }) {
                   >
                     {margin.toFixed(1)}%
                   </p>
-                  <span className="text-sm font-medium text-slate-500">
+                  <span className="text-sm font-medium text-muted-foreground">
                     ({profit < 0 ? "-" : ""}{fmt(profit)})
                   </span>
                 </div>
@@ -132,8 +132,8 @@ export function JobIntelligenceSection({ jobId }: { jobId: string }) {
                 </div>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
+              <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">
                   Cost / Revenue
                 </p>
                 <p
@@ -143,13 +143,13 @@ export function JobIntelligenceSection({ jobId }: { jobId: string }) {
                       ? "text-red-600"
                       : burn > 85
                       ? "text-yellow-600"
-                      : "text-slate-900"
+                      : "text-foreground"
                   )}
                 >
                   {burn.toFixed(1)}%
                 </p>
                 <div className="mt-3 flex items-center justify-between text-xs border-t pt-2">
-                  <span className="text-slate-500">Collection Rate:</span>
+                  <span className="text-muted-foreground">Collection Rate:</span>
                   <span
                     className={cn(
                       "font-medium",
@@ -165,9 +165,9 @@ export function JobIntelligenceSection({ jobId }: { jobId: string }) {
             </div>
 
             {risks.length > 0 && (
-              <div className="mt-6 p-4 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="mt-6 p-4 rounded-xl bg-muted border border-border">
                 <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-slate-400" /> Active Risk Factors
+                  <AlertTriangle className="w-4 h-4 text-muted-foreground" /> Active Risk Factors
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {risks.map((risk, idx) => (

@@ -249,7 +249,7 @@ export function AccountingSyncTab() {
       label: "Pending Sync",
       value: kpis.pending,
       icon: Clock,
-      color: "text-slate-600",
+      color: "text-muted-foreground",
       testId: "kpi-sync-pending",
       filter: "pending" as SyncStatus,
     },

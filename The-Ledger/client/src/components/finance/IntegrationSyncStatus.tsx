@@ -23,7 +23,7 @@ export function IntegrationSyncStatus({ lastSync }: { lastSync: string }) {
   const providerName = getProviderName(activeIntegration.provider);
 
   return (
-    <Card className="shadow-sm border-slate-200 bg-slate-50/50">
+    <Card className="shadow-sm border-border bg-muted/50">
       <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center border border-green-200 shrink-0">
@@ -31,16 +31,16 @@ export function IntegrationSyncStatus({ lastSync }: { lastSync: string }) {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-800">{providerName}</span>
+              <span className="font-semibold text-foreground">{providerName}</span>
               <span className="text-[10px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded border border-green-200 font-medium">Connected</span>
             </div>
-            <div className="text-xs text-slate-500 mt-0.5">Last synced: {lastSync}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Last synced: {lastSync}</div>
           </div>
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="text-xs text-slate-400 italic">Powered by {providerName} API</div>
-          <Button variant="outline" size="sm" className="bg-white text-slate-600 h-8 gap-2 border-slate-200">
+          <div className="text-xs text-muted-foreground italic">Powered by {providerName} API</div>
+          <Button variant="outline" size="sm" className="bg-card text-muted-foreground h-8 gap-2 border-border">
             <RefreshCw className="h-3 w-3" /> Refresh Data
           </Button>
         </div>

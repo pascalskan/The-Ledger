@@ -143,7 +143,7 @@ export default function EventMonitorPage() {
         {/* KPI Strip */}
         <div data-testid="em-kpi-strip" className="grid gap-4 md:grid-cols-5">
           {kpiCards.map((kpi) => (
-            <Card key={kpi.testId} data-testid={kpi.testId} className="border-slate-200/60 shadow-sm">
+            <Card key={kpi.testId} data-testid={kpi.testId} className="border-border/60 shadow-sm">
               <CardContent className="pt-4 pb-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -163,7 +163,7 @@ export default function EventMonitorPage() {
           {/* Event Stream */}
           <div className="lg:col-span-2 space-y-4">
             {/* Filters */}
-            <Card className="border-slate-200/60 shadow-sm">
+            <Card className="border-border/60 shadow-sm">
               <CardContent className="pt-4 pb-3">
                 <div className="flex flex-wrap gap-3">
                   <div className="relative flex-1 min-w-48">
@@ -209,7 +209,7 @@ export default function EventMonitorPage() {
             </Card>
 
             {/* Event Table */}
-            <Card className="border-slate-200/60 shadow-sm">
+            <Card className="border-border/60 shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Activity className="h-4 w-4 text-primary" />
@@ -228,7 +228,7 @@ export default function EventMonitorPage() {
                     <div
                       key={event.id}
                       data-testid={`em-event-row-${event.id}`}
-                      className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
+                      className="flex items-start gap-3 px-4 py-3 hover:bg-muted transition-colors"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -278,7 +278,7 @@ export default function EventMonitorPage() {
 
           {/* Subscriber Panel */}
           <div className="space-y-4">
-            <Card className="border-slate-200/60 shadow-sm">
+            <Card className="border-border/60 shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
@@ -292,7 +292,7 @@ export default function EventMonitorPage() {
                     <div
                       key={sub.id}
                       data-testid={`em-subscriber-${sub.id}`}
-                      className="p-3 rounded-lg border border-slate-200 bg-slate-50/60"
+                      className="p-3 rounded-lg border border-border bg-muted/60"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium truncate">{sub.name}</p>
@@ -317,7 +317,7 @@ export default function EventMonitorPage() {
             {selectedEvent && (
               <Card
                 data-testid="em-event-detail"
-                className="border-slate-200/60 shadow-sm"
+                className="border-border/60 shadow-sm"
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">

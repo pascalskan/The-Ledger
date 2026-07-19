@@ -42,7 +42,7 @@ export default function InvoiceDetailPage() {
     return (
       <Layout>
         <div className="space-y-4 text-center py-12">
-          <p className="text-slate-500">Invalid invoice URL.</p>
+          <p className="text-muted-foreground">Invalid invoice URL.</p>
           <Button variant="outline" onClick={() => setLocation("/invoices")}>Back to Billing</Button>
         </div>
       </Layout>
@@ -55,8 +55,8 @@ export default function InvoiceDetailPage() {
     return (
       <Layout>
         <div className="space-y-4 text-center py-12">
-          <h2 className="text-xl font-semibold text-slate-800">Invoice not found</h2>
-          <p className="text-slate-500">This invoice might have been deleted or hasn't synced yet.</p>
+          <h2 className="text-xl font-semibold text-foreground">Invoice not found</h2>
+          <p className="text-muted-foreground">This invoice might have been deleted or hasn't synced yet.</p>
           <Button variant="outline" onClick={() => setLocation("/invoices")}>Back to Billing</Button>
         </div>
       </Layout>
@@ -106,7 +106,7 @@ export default function InvoiceDetailPage() {
         return <Badge className="bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200 shadow-none font-normal px-2.5 py-0.5">Overdue</Badge>;
       case "Draft":
       default:
-        return <Badge className="bg-slate-50 text-slate-700 hover:bg-slate-100 border-slate-200 shadow-none font-normal px-2.5 py-0.5">Draft</Badge>;
+        return <Badge className="bg-muted text-foreground hover:bg-muted border-border shadow-none font-normal px-2.5 py-0.5">Draft</Badge>;
     }
   };
 
@@ -118,13 +118,13 @@ export default function InvoiceDetailPage() {
             <Button
               variant="ghost"
               size="icon"
-              className="text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted"
               onClick={() => setLocation("/invoices")}
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 Invoice {invoice.invoiceId || `QB-${invoice.id.split("-")[1]}`}
               </h1>
               {getStatusBadge(invoice.status)}
@@ -160,52 +160,52 @@ export default function InvoiceDetailPage() {
           </div>
         )}
 
-        <Card className="shadow-sm border-slate-200">
+        <Card className="shadow-sm border-border">
           <CardContent className="p-8 space-y-8">
             {/* Header */}
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-xl font-bold text-slate-900 mb-1">{companySettings.companyLegalName}</h2>
-                <div className="text-sm text-slate-500 whitespace-pre-line">
+                <h2 className="text-xl font-bold text-foreground mb-1">{companySettings.companyLegalName}</h2>
+                <div className="text-sm text-muted-foreground whitespace-pre-line">
                   {companySettings.address}
                 </div>
               </div>
               <div className="text-right">
                  <div className="text-3xl font-bold text-slate-200 tracking-wider">INVOICE</div>
-                 <div className="text-sm font-medium text-slate-600 mt-2">#{invoice.invoiceId || `QB-${invoice.id.split("-")[1]}`}</div>
+                 <div className="text-sm font-medium text-muted-foreground mt-2">#{invoice.invoiceId || `QB-${invoice.id.split("-")[1]}`}</div>
               </div>
             </div>
 
-            <Separator className="bg-slate-100" />
+            <Separator className="bg-muted" />
 
             {/* Bill To & Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <h4 className="font-semibold text-xs text-slate-400 uppercase tracking-wider mb-3">Billed To</h4>
+                <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-3">Billed To</h4>
                 {client ? (
-                  <div className="text-sm space-y-1 text-slate-700">
-                    <p className="font-semibold text-slate-900">{client.name}</p>
+                  <div className="text-sm space-y-1 text-foreground">
+                    <p className="font-semibold text-foreground">{client.name}</p>
                     <p>{client.billingAddress}</p>
-                    <p className="text-slate-500">{client.email}</p>
+                    <p className="text-muted-foreground">{client.email}</p>
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-500 italic">Client information unavailable</p>
+                  <p className="text-sm text-muted-foreground italic">Client information unavailable</p>
                 )}
               </div>
               
-              <div className="grid grid-cols-2 gap-6 text-sm bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+              <div className="grid grid-cols-2 gap-6 text-sm bg-muted/50 p-4 rounded-lg border border-border">
                 <div>
-                  <h4 className="font-semibold text-xs text-slate-400 uppercase tracking-wider mb-1.5">Issue Date</h4>
-                  <p className="font-medium text-slate-900">{new Date(invoice.issueDate).toLocaleDateString()}</p>
+                  <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-1.5">Issue Date</h4>
+                  <p className="font-medium text-foreground">{new Date(invoice.issueDate).toLocaleDateString()}</p>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-xs text-slate-400 uppercase tracking-wider mb-1.5">Due Date</h4>
-                  <p className="font-medium text-slate-900">{new Date(invoice.dueDate).toLocaleDateString()}</p>
+                  <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-1.5">Due Date</h4>
+                  <p className="font-medium text-foreground">{new Date(invoice.dueDate).toLocaleDateString()}</p>
                 </div>
                 {job && (
-                  <div className="col-span-2 pt-2 border-t border-slate-200/60">
-                    <h4 className="font-semibold text-xs text-slate-400 uppercase tracking-wider mb-1.5">Linked Job</h4>
-                    <p className="text-slate-700 font-medium">
+                  <div className="col-span-2 pt-2 border-t border-border/60">
+                    <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-1.5">Linked Job</h4>
+                    <p className="text-foreground font-medium">
                       {job.jobId} - {job.title}
                     </p>
                   </div>
@@ -214,8 +214,8 @@ export default function InvoiceDetailPage() {
             </div>
 
             {/* Line Items */}
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <div className="grid grid-cols-12 gap-4 bg-slate-50 p-3 text-xs font-semibold uppercase text-slate-500 tracking-wider">
+            <div className="border border-border rounded-lg overflow-hidden">
+              <div className="grid grid-cols-12 gap-4 bg-muted p-3 text-xs font-semibold uppercase text-muted-foreground tracking-wider">
                 <div className="col-span-6">Description</div>
                 <div className="col-span-2 text-right">Qty</div>
                 <div className="col-span-2 text-right">Rate</div>
@@ -224,11 +224,11 @@ export default function InvoiceDetailPage() {
 
               <div className="divide-y divide-slate-100">
                 {invoice.lineItems.map((item, i) => (
-                  <div key={i} className="grid grid-cols-12 gap-4 p-3 text-sm items-center bg-white">
-                    <div className="col-span-6 text-slate-800 font-medium">{item.description}</div>
-                    <div className="col-span-2 text-right text-slate-600">{item.qty}</div>
-                    <div className="col-span-2 text-right text-slate-600">{formatCur(item.unitPrice)}</div>
-                    <div className="col-span-2 text-right font-medium text-slate-900">{formatCur(item.qty * item.unitPrice)}</div>
+                  <div key={i} className="grid grid-cols-12 gap-4 p-3 text-sm items-center bg-card">
+                    <div className="col-span-6 text-foreground font-medium">{item.description}</div>
+                    <div className="col-span-2 text-right text-muted-foreground">{item.qty}</div>
+                    <div className="col-span-2 text-right text-muted-foreground">{formatCur(item.unitPrice)}</div>
+                    <div className="col-span-2 text-right font-medium text-foreground">{formatCur(item.qty * item.unitPrice)}</div>
                   </div>
                 ))}
               </div>
@@ -236,17 +236,17 @@ export default function InvoiceDetailPage() {
 
             {/* Totals */}
             <div className="flex justify-end">
-              <div className="w-full sm:w-1/2 md:w-1/3 space-y-3 p-4 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="w-full sm:w-1/2 md:w-1/3 space-y-3 p-4 bg-muted rounded-lg border border-border">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Subtotal</span>
-                  <span className="font-medium text-slate-700">{formatCur(subtotal)}</span>
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-medium text-foreground">{formatCur(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Tax (20%)</span>
-                  <span className="font-medium text-slate-700">{formatCur(tax)}</span>
+                  <span className="text-muted-foreground">Tax (20%)</span>
+                  <span className="font-medium text-foreground">{formatCur(tax)}</span>
                 </div>
                 <Separator className="bg-slate-200" />
-                <div className="flex justify-between font-bold text-lg text-slate-900">
+                <div className="flex justify-between font-bold text-lg text-foreground">
                   <span>Total GBP</span>
                   <span>{formatCur(total)}</span>
                 </div>

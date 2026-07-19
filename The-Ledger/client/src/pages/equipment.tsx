@@ -222,13 +222,13 @@ export default function StockAssetsPage() {
 
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input placeholder="Search inventory or assets..." className="pl-9 bg-white border-slate-200" value={search} onChange={e => setSearch(e.target.value)} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search inventory or assets..." className="pl-9 bg-card border-border" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
           <div className="flex gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[140px] bg-white border-slate-200">
-                <Filter className="h-4 w-4 mr-2 text-slate-400" />
+              <SelectTrigger className="w-[140px] bg-card border-border">
+                <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
@@ -238,7 +238,7 @@ export default function StockAssetsPage() {
               </SelectContent>
             </Select>
             <Select value={locationFilter} onValueChange={setLocationFilter}>
-              <SelectTrigger className="w-[160px] bg-white border-slate-200">
+              <SelectTrigger className="w-[160px] bg-card border-border">
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
               <SelectContent>
@@ -250,12 +250,12 @@ export default function StockAssetsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-slate-100 border border-slate-200 p-1">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">Overview</TabsTrigger>
-            <TabsTrigger value="stock" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">Stock</TabsTrigger>
-            <TabsTrigger value="assets" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">Assets</TabsTrigger>
-            <TabsTrigger value="locations" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">Locations</TabsTrigger>
-            <TabsTrigger value="alerts" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm">
+          <TabsList className="bg-muted border border-border p-1">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm">Overview</TabsTrigger>
+            <TabsTrigger value="stock" className="data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm">Stock</TabsTrigger>
+            <TabsTrigger value="assets" className="data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm">Assets</TabsTrigger>
+            <TabsTrigger value="locations" className="data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm">Locations</TabsTrigger>
+            <TabsTrigger value="alerts" className="data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm">
               Alerts
               {(lowStock.length > 0 || serviceAlerts.length > 0) && (
                 <span className="ml-2 h-4 w-4 rounded-full bg-rose-500 text-[10px] font-bold text-white flex items-center justify-center">

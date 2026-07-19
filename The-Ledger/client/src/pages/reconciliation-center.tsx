@@ -186,7 +186,7 @@ export function ReconciliationContent() {
       label: "Total Syncs",
       value: SEED_SYNC_HEALTH.totalSyncs,
       icon: RefreshCw,
-      color: "text-slate-600",
+      color: "text-muted-foreground",
       testId: "rc-ops-total-syncs",
     },
     {
@@ -445,7 +445,7 @@ export function ReconciliationContent() {
 
               {/* Avg Duration */}
               <div className="flex items-center gap-3 p-3 rounded-md bg-muted/30 border">
-                <Activity className="h-5 w-5 text-slate-500" />
+                <Activity className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm font-medium">Average Sync Duration</p>
                   <p className="text-xs text-muted-foreground" data-testid="rc-ops-avg-duration">

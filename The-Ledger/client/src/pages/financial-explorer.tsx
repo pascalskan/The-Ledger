@@ -1,5 +1,5 @@
 import { Layout } from "@/components/layout";
-import { PageHeader } from "@/components/page-shell";
+import { EmptyState, PageHeader } from "@/components/page-shell";
 import { useStore } from "@/lib/mockData";
 import {
   Table,
@@ -46,14 +46,7 @@ function fmtDate(iso: string) {
 }
 
 
-function EmptyState({ label }: { label: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-      <Activity className="h-10 w-10 mb-3 opacity-20" />
-      <p className="text-sm">{label}</p>
-    </div>
-  );
-}
+
 
 export function FinancialRecordsContent({ embedded }: { embedded?: boolean } = {}) {
   const {
@@ -173,7 +166,7 @@ export function FinancialRecordsContent({ embedded }: { embedded?: boolean } = {
 
               {/* Draft table */}
               {invoiceDrafts.length === 0 ? (
-                <EmptyState label="No invoice drafts in the pipeline. Generate drafts from the Invoice Builder." />
+                <EmptyState icon={Activity} title="No invoice drafts in the pipeline. Generate drafts from the Invoice Builder." />
               ) : (
                 <div className="border rounded-md">
                   <Table>
@@ -222,7 +215,7 @@ export function FinancialRecordsContent({ embedded }: { embedded?: boolean } = {
           <TabsContent value="timesheets">
             <div className="border rounded-md mt-4">
               {timesheets.length === 0 ? (
-                <EmptyState label="No timesheet records generated yet." />
+                <EmptyState icon={Activity} title="No timesheet records generated yet." />
               ) : (
                 <Table>
                   <TableHeader>
@@ -264,7 +257,7 @@ export function FinancialRecordsContent({ embedded }: { embedded?: boolean } = {
           <TabsContent value="expenses">
             <div className="border rounded-md mt-4">
               {expenses.length === 0 ? (
-                <EmptyState label="No expense records generated yet." />
+                <EmptyState icon={Activity} title="No expense records generated yet." />
               ) : (
                 <Table>
                   <TableHeader>
@@ -308,7 +301,7 @@ export function FinancialRecordsContent({ embedded }: { embedded?: boolean } = {
           <TabsContent value="inventory">
             <div className="border rounded-md mt-4">
               {inventoryMutations.length === 0 ? (
-                <EmptyState label="No inventory mutation records generated yet." />
+                <EmptyState icon={Activity} title="No inventory mutation records generated yet." />
               ) : (
                 <Table>
                   <TableHeader>
@@ -352,7 +345,7 @@ export function FinancialRecordsContent({ embedded }: { embedded?: boolean } = {
           <TabsContent value="equipment">
             <div className="border rounded-md mt-4">
               {equipmentUsageRecords.length === 0 ? (
-                <EmptyState label="No equipment usage records generated yet." />
+                <EmptyState icon={Activity} title="No equipment usage records generated yet." />
               ) : (
                 <Table>
                   <TableHeader>

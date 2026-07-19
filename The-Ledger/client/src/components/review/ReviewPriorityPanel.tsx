@@ -77,10 +77,10 @@ export function ReviewPriorityPanel() {
   return (
     <div className="space-y-6" data-testid="review-priority-panel">
       <div>
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <ListChecks className="h-5 w-5 text-blue-500" /> Recommended Work Queue
         </h3>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           Intelligent prioritisation — what to review first. Guidance only; every
           decision still happens in the queue below.
         </p>
@@ -101,14 +101,14 @@ export function ReviewPriorityPanel() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-2">
                   <span className={`h-2.5 w-2.5 rounded-full ${meta.dotClass}`} />
-                  <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                     {d.category}
                   </span>
                 </div>
-                <p className="mt-2 text-2xl font-bold text-slate-900">
+                <p className="mt-2 text-2xl font-bold text-foreground">
                   {d.count}
                 </p>
-                <p className="text-xs text-slate-500">{d.percent}% of queue</p>
+                <p className="text-xs text-muted-foreground">{d.percent}% of queue</p>
               </CardContent>
             </Card>
           );
@@ -127,7 +127,7 @@ export function ReviewPriorityPanel() {
             {insights.map((insight, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2 text-sm text-slate-700"
+                className="flex items-start gap-2 text-sm text-foreground"
                 data-testid="priority-insight"
               >
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -142,7 +142,7 @@ export function ReviewPriorityPanel() {
       <Card data-testid="review-priority-queue">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <ListChecks className="h-4 w-4 text-slate-400" /> Priority Queue
+            <ListChecks className="h-4 w-4 text-muted-foreground" /> Priority Queue
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -151,7 +151,7 @@ export function ReviewPriorityPanel() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-slate-50/50">
+                <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead className="w-12">#</TableHead>
                     <TableHead>Review</TableHead>
@@ -170,10 +170,10 @@ export function ReviewPriorityPanel() {
                       key={r.id}
                       data-testid={`priority-queue-row-${r.id}`}
                     >
-                      <TableCell className="font-semibold text-slate-400">
+                      <TableCell className="font-semibold text-muted-foreground">
                         {r.queuePosition}
                       </TableCell>
-                      <TableCell className="font-medium text-slate-700">
+                      <TableCell className="font-medium text-foreground">
                         {r.id}
                       </TableCell>
                       <TableCell>
@@ -191,10 +191,10 @@ export function ReviewPriorityPanel() {
                         {r.reviewType}
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
-                        <div className="font-medium text-slate-700">
+                        <div className="font-medium text-foreground">
                           {r.jobCode}
                         </div>
-                        <div className="text-xs text-slate-500">{r.jobTitle}</div>
+                        <div className="text-xs text-muted-foreground">{r.jobTitle}</div>
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {r.financialImpact > 0
@@ -206,7 +206,7 @@ export function ReviewPriorityPanel() {
                           className={
                             r.priority.overdue
                               ? "font-semibold text-rose-600"
-                              : "text-slate-600"
+                              : "text-muted-foreground"
                           }
                         >
                           {r.ageLabel}
@@ -284,14 +284,14 @@ function AttentionList({
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
           {icon} {title}
-          <span className="ml-auto text-xs font-normal text-slate-400">
+          <span className="ml-auto text-xs font-normal text-muted-foreground">
             {items.length}
           </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {items.length === 0 ? (
-          <p className="text-xs text-slate-400">{emptyLabel}</p>
+          <p className="text-xs text-muted-foreground">{emptyLabel}</p>
         ) : (
           items.map((r) => (
             <div
@@ -299,14 +299,14 @@ function AttentionList({
               className="flex items-center justify-between gap-2 text-sm"
             >
               <div className="min-w-0">
-                <div className="truncate font-medium text-slate-700">
+                <div className="truncate font-medium text-foreground">
                   {r.id}
                 </div>
-                <div className="truncate text-xs text-slate-500">
+                <div className="truncate text-xs text-muted-foreground">
                   {r.reviewType}
                 </div>
               </div>
-              <span className="shrink-0 text-xs font-medium text-slate-600">
+              <span className="shrink-0 text-xs font-medium text-muted-foreground">
                 {showMoney
                   ? formatGbp(r.financialImpact)
                   : showAge
@@ -324,11 +324,11 @@ function AttentionList({
 function EmptyQueue() {
   return (
     <div
-      className="flex flex-col items-center justify-center py-10 text-slate-500"
+      className="flex flex-col items-center justify-center py-10 text-muted-foreground"
       data-testid="review-priority-empty"
     >
       <CheckCircle2 className="mb-3 h-10 w-10 text-emerald-500" />
-      <p className="font-medium text-slate-900">Queue is clear</p>
+      <p className="font-medium text-foreground">Queue is clear</p>
       <p className="text-sm">No pending reviews to prioritise.</p>
     </div>
   );

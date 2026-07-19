@@ -47,16 +47,16 @@ function priorityClass(p: AttentionItem["priority"]): string {
     ? "bg-amber-50 text-amber-700 border-amber-200"
     : p === "Medium"
     ? "bg-sky-50 text-sky-700 border-sky-200"
-    : "bg-slate-50 text-slate-600 border-slate-200";
+    : "bg-muted text-muted-foreground border-border";
 }
 
 function Kpi({ label, value, testId }: { label: string; value: string; testId: string }) {
   return (
-    <div className="rounded-md border border-slate-100 p-3" data-testid={testId}>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+    <div className="rounded-md border border-border p-3" data-testid={testId}>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 text-xl font-bold text-slate-900">{value}</p>
+      <p className="mt-1 text-xl font-bold text-foreground">{value}</p>
     </div>
   );
 }
@@ -67,10 +67,10 @@ export function ReviewExecutiveBriefing() {
   return (
     <div className="space-y-6" data-testid="review-executive-briefing">
       <div>
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Briefcase className="h-5 w-5 text-blue-600" /> Executive Review Briefing
         </h3>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           What decisions require your attention today — consolidated across the
           Review Centre. Summary only; every decision still happens below.
         </p>
@@ -82,7 +82,7 @@ export function ReviewExecutiveBriefing() {
           <Card key={r.area} data-testid={`readiness-${r.area.toLowerCase().replace(/\s+/g, "-")}`}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   {r.area}
                 </span>
                 <Gauge className="h-3.5 w-3.5 text-slate-300" />
@@ -92,7 +92,7 @@ export function ReviewExecutiveBriefing() {
                   {r.level}
                 </Badge>
               </div>
-              <p className="mt-1 text-xs text-slate-500">{r.detail}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>
             </CardContent>
           </Card>
         ))}
@@ -110,7 +110,7 @@ export function ReviewExecutiveBriefing() {
             {m.dailyBriefing.map((line, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2 text-sm text-slate-700"
+                className="flex items-start gap-2 text-sm text-foreground"
                 data-testid="briefing-daily-line"
               >
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
@@ -126,7 +126,7 @@ export function ReviewExecutiveBriefing() {
         <Card data-testid="briefing-approval-health">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <CheckCircle2 className="h-4 w-4 text-slate-400" /> Approval Health
+              <CheckCircle2 className="h-4 w-4 text-muted-foreground" /> Approval Health
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
@@ -140,7 +140,7 @@ export function ReviewExecutiveBriefing() {
         <Card data-testid="briefing-financial-health">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <PoundSterling className="h-4 w-4 text-slate-400" /> Financial Exposure
+              <PoundSterling className="h-4 w-4 text-muted-foreground" /> Financial Exposure
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
@@ -154,7 +154,7 @@ export function ReviewExecutiveBriefing() {
         <Card data-testid="briefing-operational-health">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <Activity className="h-4 w-4 text-slate-400" /> Operational Health
+              <Activity className="h-4 w-4 text-muted-foreground" /> Operational Health
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
@@ -176,26 +176,26 @@ export function ReviewExecutiveBriefing() {
         </CardHeader>
         <CardContent className="space-y-2">
           {m.attentionFeed.length === 0 ? (
-            <p className="text-sm text-slate-400" data-testid="briefing-attention-empty">
+            <p className="text-sm text-muted-foreground" data-testid="briefing-attention-empty">
               Nothing requires executive attention.
             </p>
           ) : (
             m.attentionFeed.map((a) => (
               <div
                 key={a.id}
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-slate-100 p-2 text-sm"
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-border p-2 text-sm"
                 data-testid={`briefing-attention-${a.id}`}
               >
                 <Badge variant="outline" className={priorityClass(a.priority)}>
                   {a.priority}
                 </Badge>
-                <span className="font-medium text-slate-700">{a.id}</span>
-                <span className="text-xs text-slate-400">{a.category}</span>
-                <span className="ml-auto text-xs text-slate-500">
+                <span className="font-medium text-foreground">{a.id}</span>
+                <span className="text-xs text-muted-foreground">{a.category}</span>
+                <span className="ml-auto text-xs text-muted-foreground">
                   {a.financialImpact > 0 ? formatGbp(a.financialImpact) : "—"} ·{" "}
                   {a.ageLabel}
                 </span>
-                <span className="w-full text-xs text-slate-500 sm:w-auto">
+                <span className="w-full text-xs text-muted-foreground sm:w-auto">
                   {a.recommendedAttention}
                 </span>
               </div>
@@ -209,7 +209,7 @@ export function ReviewExecutiveBriefing() {
         <Card data-testid="briefing-exposure-summary">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <PoundSterling className="h-4 w-4 text-slate-400" /> Financial Exposure Summary
+              <PoundSterling className="h-4 w-4 text-muted-foreground" /> Financial Exposure Summary
             </CardTitle>
             <CardDescription>{m.exposure.interpretation}</CardDescription>
           </CardHeader>
@@ -227,7 +227,7 @@ export function ReviewExecutiveBriefing() {
         <Card data-testid="briefing-decision-rollup">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <GitCompare className="h-4 w-4 text-slate-400" /> Decision Impact Roll-Up
+              <GitCompare className="h-4 w-4 text-muted-foreground" /> Decision Impact Roll-Up
             </CardTitle>
             <CardDescription>{m.decisionRollup.summary}</CardDescription>
           </CardHeader>
@@ -268,7 +268,7 @@ export function ReviewExecutiveBriefing() {
             <Row label="High-confidence approvals" value={`${m.recommendationRollup.highConfidenceApprovals}`} />
             <Row label="High-confidence corrections" value={`${m.recommendationRollup.highConfidenceCorrections}`} />
             <Row label="Requires manual review" value={`${m.recommendationRollup.requiresManualReview}`} />
-            <div className="mt-2 border-t border-slate-100 pt-2">
+            <div className="mt-2 border-t border-border pt-2">
               {m.recommendationRollup.distribution.map((d) => (
                 <Row key={d.type} label={d.type} value={`${d.count} (${d.percent}%)`} />
               ))}
@@ -281,7 +281,7 @@ export function ReviewExecutiveBriefing() {
       <Card data-testid="briefing-weekly-summary">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <CalendarRange className="h-4 w-4 text-slate-400" /> Weekly Review Summary
+            <CalendarRange className="h-4 w-4 text-muted-foreground" /> Weekly Review Summary
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
@@ -311,7 +311,7 @@ export function ReviewExecutiveBriefing() {
             {m.strategicInsights.map((insight, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2 text-sm text-slate-700"
+                className="flex items-start gap-2 text-sm text-foreground"
                 data-testid="briefing-insight"
               >
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -328,8 +328,8 @@ export function ReviewExecutiveBriefing() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-0.5">
-      <span className="text-slate-600">{label}</span>
-      <span className="font-medium text-slate-900">{value}</span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium text-foreground">{value}</span>
     </div>
   );
 }

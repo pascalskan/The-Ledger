@@ -69,7 +69,7 @@ function PayrollHub({ activeSub, onSubChange }: { activeSub: string; onSubChange
   return (
     <div className="space-y-4">
       <div
-        className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm flex-wrap"
+        className="flex items-center gap-3 px-4 py-2.5 bg-muted border border-border rounded-lg text-sm flex-wrap"
         data-testid="payroll-status-banner"
       >
         <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />

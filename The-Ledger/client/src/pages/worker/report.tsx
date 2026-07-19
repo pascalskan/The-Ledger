@@ -396,7 +396,7 @@ return (
             Submit Report
           </h1>
 
-          <p className="text-slate-400 text-xs truncate max-w-[200px]">
+          <p className="text-muted-foreground text-xs truncate max-w-[200px]">
             {job.title}
           </p>
         </div>
@@ -428,16 +428,16 @@ return (
       {/* ====================================================== */}
 
       {hydrated && queue.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
 
           <div className="mb-4 flex items-center justify-between">
 
             <div>
-              <p className="font-semibold text-slate-900">
+              <p className="font-semibold text-foreground">
                 Offline Queue
               </p>
 
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 {queue.length} queued submission
                 {queue.length !== 1 ? "s" : ""}
               </p>
@@ -446,7 +446,7 @@ return (
             <button
               type="button"
               onClick={clearSyncedItems}
-              className="text-xs font-medium text-slate-600 hover:text-slate-900"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground"
             >
               Clear Synced
             </button>
@@ -457,17 +457,17 @@ return (
             {queue.map(item => (
               <div
                 key={item.id}
-                className="rounded-lg border border-slate-200 p-3"
+                className="rounded-lg border border-border p-3"
               >
 
                 <div className="flex items-start justify-between">
 
                   <div>
-                    <p className="font-medium text-slate-900">
+                    <p className="font-medium text-foreground">
                       Worker Report
                     </p>
 
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       {new Date(
                         item.createdAt
                       ).toLocaleString()}
@@ -535,14 +535,14 @@ return (
       {/* UPLOADS & QA */}
       {/* ====================================================== */}
 
-      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
 
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Uploads & QA
           </h3>
 
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             Attach receipts, QA photos, safety reports,
             or before/after documentation.
           </p>
@@ -553,13 +553,13 @@ return (
           <button
             type="button"
             onClick={() => addMockUpload("qa-photo")}
-            className="rounded-xl border border-slate-200 p-3 text-left hover:border-slate-400 transition-colors"
+            className="rounded-xl border border-border p-3 text-left hover:border-slate-400 transition-colors"
           >
-            <p className="font-medium text-slate-900">
+            <p className="font-medium text-foreground">
               QA Photo
             </p>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Completion verification
             </p>
           </button>
@@ -567,13 +567,13 @@ return (
           <button
             type="button"
             onClick={() => addMockUpload("receipt")}
-            className="rounded-xl border border-slate-200 p-3 text-left hover:border-slate-400 transition-colors"
+            className="rounded-xl border border-border p-3 text-left hover:border-slate-400 transition-colors"
           >
-            <p className="font-medium text-slate-900">
+            <p className="font-medium text-foreground">
               Receipt
             </p>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Expense attachment
             </p>
           </button>
@@ -581,13 +581,13 @@ return (
           <button
             type="button"
             onClick={() => addMockUpload("before-photo")}
-            className="rounded-xl border border-slate-200 p-3 text-left hover:border-slate-400 transition-colors"
+            className="rounded-xl border border-border p-3 text-left hover:border-slate-400 transition-colors"
           >
-            <p className="font-medium text-slate-900">
+            <p className="font-medium text-foreground">
               Before Photo
             </p>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Pre-work documentation
             </p>
           </button>
@@ -595,13 +595,13 @@ return (
           <button
             type="button"
             onClick={() => addMockUpload("after-photo")}
-            className="rounded-xl border border-slate-200 p-3 text-left hover:border-slate-400 transition-colors"
+            className="rounded-xl border border-border p-3 text-left hover:border-slate-400 transition-colors"
           >
-            <p className="font-medium text-slate-900">
+            <p className="font-medium text-foreground">
               After Photo
             </p>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Final result documentation
             </p>
           </button>
@@ -623,13 +623,13 @@ return (
           <button
             type="button"
             onClick={() => addMockUpload("general")}
-            className="rounded-xl border border-slate-200 p-3 text-left hover:border-slate-400 transition-colors"
+            className="rounded-xl border border-border p-3 text-left hover:border-slate-400 transition-colors"
           >
-            <p className="font-medium text-slate-900">
+            <p className="font-medium text-foreground">
               General Upload
             </p>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Other documentation
             </p>
           </button>
@@ -643,15 +643,15 @@ return (
       {/* ====================================================== */}
 
       {uploads.length > 0 && (
-        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
 
           <div className="flex items-center justify-between">
 
-            <h3 className="text-lg font-semibold text-slate-900">
+            <h3 className="text-lg font-semibold text-foreground">
               Attached Uploads
             </h3>
 
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-muted-foreground">
               {uploads.length} file
               {uploads.length !== 1 ? "s" : ""}
             </span>
@@ -663,15 +663,15 @@ return (
             {uploads.map(upload => (
               <div
                 key={upload.id}
-                className="flex items-center justify-between rounded-xl border border-slate-200 p-3"
+                className="flex items-center justify-between rounded-xl border border-border p-3"
               >
 
                 <div>
-                  <p className="font-medium text-slate-900">
+                  <p className="font-medium text-foreground">
                     {upload.fileName}
                   </p>
 
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     {upload.type} •{" "}
                     {new Date(
                       upload.uploadedAt
@@ -697,10 +697,10 @@ return (
         </div>
       )}
         <section className="space-y-3">
-          <Label className="text-slate-700 font-semibold text-base">Work Summary</Label>
+          <Label className="text-foreground font-semibold text-base">Work Summary</Label>
           <Textarea
             placeholder="Describe the work completed today..."
-            className="min-h-[120px] rounded-xl bg-white border-slate-200 resize-none shadow-sm"
+            className="min-h-[120px] rounded-xl bg-card border-border resize-none shadow-sm"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
@@ -708,7 +708,7 @@ return (
 
         {/* Hours Worked */}
         <section className="space-y-3">
-          <div className="flex items-center gap-2 text-slate-700 pb-2 border-b border-slate-100">
+          <div className="flex items-center gap-2 text-foreground pb-2 border-b border-border">
             <Clock className="w-5 h-5" />
             <h3 className="font-bold text-lg">Hours Worked</h3>
           </div>
@@ -719,7 +719,7 @@ return (
             </p>
           )}
           <div className="flex items-center gap-3">
-            <Label className="text-sm font-medium text-slate-700">Hours:</Label>
+            <Label className="text-sm font-medium text-foreground">Hours:</Label>
             <Input
               data-testid="worker-report-hours"
               type="number"
@@ -752,29 +752,29 @@ return (
           </div>
 
           {expenses.length === 0 ? (
-            <p className="text-sm text-slate-500 italic">No expenses added.</p>
+            <p className="text-sm text-muted-foreground italic">No expenses added.</p>
           ) : (
             <div className="space-y-3">
               {expenses.map((exp) => (
                 <div
                   key={exp.id}
                   data-testid="worker-expense-row"
-                  className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative space-y-3"
+                  className="bg-card rounded-xl p-4 border border-border shadow-sm relative space-y-3"
                 >
                   <button
                     onClick={() => removeExpense(exp.id)}
-                    className="absolute top-2 right-2 text-slate-400 hover:text-red-500 p-2"
+                    className="absolute top-2 right-2 text-muted-foreground hover:text-red-500 p-2"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
 
                   <div className="grid grid-cols-2 gap-3 pr-8">
                     <div className="space-y-1">
-                      <Label className="text-xs text-slate-500">Category</Label>
+                      <Label className="text-xs text-muted-foreground">Category</Label>
                       <select
                         value={exp.category}
                         onChange={(e) => updateExpense(exp.id, { category: e.target.value })}
-                        className="w-full h-9 rounded-lg border border-slate-200 text-sm px-2 bg-white"
+                        className="w-full h-9 rounded-lg border border-border text-sm px-2 bg-card"
                       >
                         {EXPENSE_CATEGORIES.map((c) => (
                           <option key={c} value={c}>{c}</option>
@@ -782,7 +782,7 @@ return (
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-slate-500">Amount (£)</Label>
+                      <Label className="text-xs text-muted-foreground">Amount (£)</Label>
                       <Input
                         type="number"
                         min="0"
@@ -795,7 +795,7 @@ return (
                   </div>
 
                   <div className="space-y-1">
-                    <Label className="text-xs text-slate-500">Description</Label>
+                    <Label className="text-xs text-muted-foreground">Description</Label>
                     <Input
                       type="text"
                       placeholder="What was this expense for?"
@@ -808,7 +808,7 @@ return (
               ))}
             </div>
           )}
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Expenses remain unapproved until reviewed. No financial record is created here.
           </p>
         </section>
@@ -821,28 +821,28 @@ return (
           </div>
 
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+            <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Search materials to log..."
-              className="pl-10 rounded-xl bg-white shadow-sm h-12 border-indigo-100 focus-visible:ring-indigo-500"
+              className="pl-10 rounded-xl bg-card shadow-sm h-12 border-indigo-100 focus-visible:ring-indigo-500"
               value={stockSearch}
               onChange={(e) => setStockSearch(e.target.value)}
             />
           </div>
 
           {stockSearch && (
-            <Card className="absolute z-10 w-[calc(100%-2rem)] mt-1 shadow-xl border-slate-200 max-h-60 overflow-y-auto">
+            <Card className="absolute z-10 w-[calc(100%-2rem)] mt-1 shadow-xl border-border max-h-60 overflow-y-auto">
               <CardContent className="p-2 space-y-1">
                 {filteredStock.length > 0 ? (
                   filteredStock.map(item => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100"
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer border border-transparent hover:border-border"
                       onClick={() => handleAddStock(item.id)}
                     >
                       <div>
                         <p className="font-semibold text-sm">{item.name}</p>
-                        <p className="text-xs text-slate-500">{item.sku} • {item.quantity} available</p>
+                        <p className="text-xs text-muted-foreground">{item.sku} • {item.quantity} available</p>
                       </div>
                       <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-700">
                         <Plus className="h-4 w-4" />
@@ -850,7 +850,7 @@ return (
                     </div>
                   ))
                 ) : (
-                  <div className="p-4 text-center text-slate-500 text-sm">No items found</div>
+                  <div className="p-4 text-center text-muted-foreground text-sm">No items found</div>
                 )}
               </CardContent>
             </Card>
@@ -858,28 +858,28 @@ return (
 
           <div className="space-y-3 mt-4">
             {stockUsed.length === 0 ? (
-              <p className="text-sm text-slate-500 italic">No materials added.</p>
+              <p className="text-sm text-muted-foreground italic">No materials added.</p>
             ) : (
               stockUsed.map((item) => {
                 const stock = stockItems.find(s => s.id === item.stockItemId);
                 if (!stock) return null;
 
                 return (
-                  <div key={item.id} className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col gap-3">
+                  <div key={item.id} className="bg-card rounded-xl p-4 border border-border shadow-sm relative overflow-hidden flex flex-col gap-3">
                     <button
                       onClick={() => handleRemoveStock(item.id)}
-                      className="absolute top-2 right-2 text-slate-400 hover:text-red-500 p-2"
+                      className="absolute top-2 right-2 text-muted-foreground hover:text-red-500 p-2"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
 
                     <div className="pr-8">
-                      <p className="font-bold text-slate-800">{stock.name}</p>
-                      <p className="text-xs text-slate-500">{stock.sku} • <span className={stock.quantity < item.quantity ? "text-red-500 font-medium" : ""}>{stock.quantity} available</span></p>
+                      <p className="font-bold text-foreground">{stock.name}</p>
+                      <p className="text-xs text-muted-foreground">{stock.sku} • <span className={stock.quantity < item.quantity ? "text-red-500 font-medium" : ""}>{stock.quantity} available</span></p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <Label className="text-sm font-medium text-slate-700">Qty Used:</Label>
+                      <Label className="text-sm font-medium text-foreground">Qty Used:</Label>
                       <Input
                         type="number"
                         min="1"
@@ -904,28 +904,28 @@ return (
           </div>
 
           <div className="relative">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+            <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Search assigned assets..."
-              className="pl-10 rounded-xl bg-white shadow-sm h-12 border-amber-100 focus-visible:ring-amber-500"
+              className="pl-10 rounded-xl bg-card shadow-sm h-12 border-amber-100 focus-visible:ring-amber-500"
               value={assetSearch}
               onChange={(e) => setAssetSearch(e.target.value)}
             />
           </div>
 
           {assetSearch && (
-            <Card className="absolute z-10 w-[calc(100%-2rem)] mt-1 shadow-xl border-slate-200 max-h-60 overflow-y-auto">
+            <Card className="absolute z-10 w-[calc(100%-2rem)] mt-1 shadow-xl border-border max-h-60 overflow-y-auto">
               <CardContent className="p-2 space-y-1">
                 {filteredAssets.length > 0 ? (
                   filteredAssets.map(asset => (
                     <div
                       key={asset.id}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-100"
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer border border-transparent hover:border-border"
                       onClick={() => handleAddAsset(asset.id)}
                     >
                       <div>
                         <p className="font-semibold text-sm">{asset.name}</p>
-                        <p className="text-xs text-slate-500">{asset.type} {asset.serialNumber ? `• ${asset.serialNumber}` : ''}</p>
+                        <p className="text-xs text-muted-foreground">{asset.type} {asset.serialNumber ? `• ${asset.serialNumber}` : ''}</p>
                       </div>
                       <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-amber-600 bg-amber-50 hover:bg-amber-100 hover:text-amber-700">
                         <Plus className="h-4 w-4" />
@@ -933,7 +933,7 @@ return (
                     </div>
                   ))
                 ) : (
-                  <div className="p-4 text-center text-slate-500 text-sm">No assets found</div>
+                  <div className="p-4 text-center text-muted-foreground text-sm">No assets found</div>
                 )}
               </CardContent>
             </Card>
@@ -941,24 +941,24 @@ return (
 
           <div className="space-y-3 mt-4">
             {assetsUsed.length === 0 ? (
-              <p className="text-sm text-slate-500 italic">No assets selected.</p>
+              <p className="text-sm text-muted-foreground italic">No assets selected.</p>
             ) : (
               assetsUsed.map((item) => {
                 const asset = assets.find(a => a.id === item.assetId);
                 if (!asset) return null;
 
                 return (
-                  <div key={item.id} className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative overflow-hidden flex justify-between items-center">
+                  <div key={item.id} className="bg-card rounded-xl p-4 border border-border shadow-sm relative overflow-hidden flex justify-between items-center">
                     <div>
-                      <p className="font-bold text-slate-800">{asset.name}</p>
+                      <p className="font-bold text-foreground">{asset.name}</p>
                       <div className="flex gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs font-normal bg-slate-50">{asset.type}</Badge>
+                        <Badge variant="outline" className="text-xs font-normal bg-muted">{asset.type}</Badge>
                         {asset.serialNumber && <Badge variant="secondary" className="text-xs font-mono">{asset.serialNumber}</Badge>}
                       </div>
                     </div>
                     <button
                       onClick={() => handleRemoveAsset(item.id)}
-                      className="text-slate-400 hover:text-red-500 p-2"
+                      className="text-muted-foreground hover:text-red-500 p-2"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>

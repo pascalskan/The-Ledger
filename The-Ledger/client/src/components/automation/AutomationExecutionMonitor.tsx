@@ -176,7 +176,7 @@ export function AutomationExecutionMonitor({
   }, []);
 
   const kpis = [
-    { label: "Total Executions", value: model.total, icon: Activity, color: "text-slate-600", testId: "aut-mon-kpi-total" },
+    { label: "Total Executions", value: model.total, icon: Activity, color: "text-muted-foreground", testId: "aut-mon-kpi-total" },
     { label: "Successful", value: model.successful, icon: CheckCircle2, color: "text-emerald-600", testId: "aut-mon-kpi-success" },
     { label: "Failed", value: model.failed, icon: XCircle, color: "text-red-600", testId: "aut-mon-kpi-failed" },
     { label: "Approval-Blocked", value: model.blocked, icon: ShieldCheck, color: "text-violet-600", testId: "aut-mon-kpi-blocked" },

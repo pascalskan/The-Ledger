@@ -37,9 +37,9 @@ export default function ReviewDetailPage() {
     return (
       <Layout>
         <div className="text-center py-12">
-          <AlertCircle className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900">Job Not Found</h2>
-          <p className="text-slate-500 mt-2 mb-6">The job you are looking for does not exist or you don't have access.</p>
+          <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-bold text-foreground">Job Not Found</h2>
+          <p className="text-muted-foreground mt-2 mb-6">The job you are looking for does not exist or you don't have access.</p>
           <Button onClick={() => setLocation("/review")}>Back to Review Centre</Button>
         </div>
       </Layout>
@@ -102,7 +102,7 @@ export default function ReviewDetailPage() {
       ? "bg-rose-50 text-rose-700 border-rose-200"
       : detailPriority === "High"
       ? "bg-amber-50 text-amber-700 border-amber-200"
-      : "bg-slate-50 text-slate-600 border-slate-200";
+      : "bg-muted text-muted-foreground border-border";
 
   // UX-7.2 — intelligent prioritisation context for this job (informational
   // only; does not affect approval). Uses the most urgent pending review on
@@ -150,7 +150,7 @@ export default function ReviewDetailPage() {
               <h1 className="text-3xl font-bold tracking-tight text-foreground">{job.title}</h1>
               <Badge variant="outline">{job.jobId}</Badge>
             </div>
-            <p className="text-slate-500 mt-1">Review pending submissions for this job.</p>
+            <p className="text-muted-foreground mt-1">Review pending submissions for this job.</p>
           </div>
         </div>
 
@@ -163,38 +163,38 @@ export default function ReviewDetailPage() {
           {!userIsPM && (
             <Card data-testid="review-detail-financial">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-slate-400">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <PoundSterling className="h-4 w-4" />
                   <span className="text-[11px] font-medium uppercase tracking-wide">
                     Financial Impact
                   </span>
                 </div>
-                <p className="mt-2 text-2xl font-bold text-slate-900">
+                <p className="mt-2 text-2xl font-bold text-foreground">
                   {reviewContext.exposure > 0 ? formatGbp(reviewContext.exposure) : "—"}
                 </p>
-                <p className="text-xs text-slate-500">Blocked pending approval</p>
+                <p className="text-xs text-muted-foreground">Blocked pending approval</p>
               </CardContent>
             </Card>
           )}
 
           <Card data-testid="review-detail-age">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-slate-400">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4" />
                 <span className="text-[11px] font-medium uppercase tracking-wide">
                   Oldest Pending
                 </span>
               </div>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
+              <p className="mt-2 text-2xl font-bold text-foreground">
                 {pendingItems.length > 0 ? formatAge(oldestAgeHours) : "—"}
               </p>
-              <p className="text-xs text-slate-500">{pendingItems.length} item(s) pending</p>
+              <p className="text-xs text-muted-foreground">{pendingItems.length} item(s) pending</p>
             </CardContent>
           </Card>
 
           <Card data-testid="review-detail-priority">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-slate-400">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <ShieldAlert className="h-4 w-4" />
                 <span className="text-[11px] font-medium uppercase tracking-wide">
                   Priority
@@ -205,7 +205,7 @@ export default function ReviewDetailPage() {
                   {detailPriority}
                 </Badge>
               </div>
-              <p className="mt-1 text-xs text-slate-500 capitalize">
+              <p className="mt-1 text-xs text-muted-foreground capitalize">
                 {job.priority} priority job · {job.status}
               </p>
             </CardContent>
@@ -213,16 +213,16 @@ export default function ReviewDetailPage() {
 
           <Card data-testid="review-detail-history">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-slate-400">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <History className="h-4 w-4" />
                 <span className="text-[11px] font-medium uppercase tracking-wide">
                   Approval History
                 </span>
               </div>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
+              <p className="mt-2 text-2xl font-bold text-foreground">
                 {reviewContext.history.length}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 {reviewContext.history.filter((h) => h.status === "approved").length} approved ·{" "}
                 {reviewContext.history.filter((h) => h.status === "rejected").length} rejected ·{" "}
                 {reviewContext.history.filter((h) => h.status === "corrected").length} corrected
@@ -247,28 +247,28 @@ export default function ReviewDetailPage() {
               <div className="grid gap-6 lg:grid-cols-3">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Priority</span>
+                    <span className="text-sm text-muted-foreground">Priority</span>
                     <PriorityBadge category={topPriorityReview.priority.category} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Priority score</span>
+                    <span className="text-sm text-muted-foreground">Priority score</span>
                     <span
-                      className="flex items-center gap-1 text-sm font-semibold text-slate-900"
+                      className="flex items-center gap-1 text-sm font-semibold text-foreground"
                       data-testid="review-detail-priority-score"
                     >
-                      <Gauge className="h-3.5 w-3.5 text-slate-400" />
+                      <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
                       {topPriorityReview.priority.score} / 100
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Queue position</span>
-                    <span className="text-sm font-semibold text-slate-900">
+                    <span className="text-sm text-muted-foreground">Queue position</span>
+                    <span className="text-sm font-semibold text-foreground">
                       #{topPriorityReview.queuePosition}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Financial exposure</span>
-                    <span className="text-sm font-semibold text-slate-900">
+                    <span className="text-sm text-muted-foreground">Financial exposure</span>
+                    <span className="text-sm font-semibold text-foreground">
                       {topPriorityReview.financialImpact > 0
                         ? formatGbp(topPriorityReview.financialImpact)
                         : "—"}
@@ -277,7 +277,7 @@ export default function ReviewDetailPage() {
                 </div>
 
                 <div className="lg:col-span-2">
-                  <p className="mb-2 text-sm font-medium text-slate-900">
+                  <p className="mb-2 text-sm font-medium text-foreground">
                     Contributing factors
                   </p>
                   <div className="space-y-2" data-testid="review-detail-priority-factors">
@@ -286,10 +286,10 @@ export default function ReviewDetailPage() {
                         key={i}
                         className="flex items-center gap-3 text-sm"
                       >
-                        <span className="w-36 shrink-0 text-slate-600">
+                        <span className="w-36 shrink-0 text-muted-foreground">
                           {f.label}
                         </span>
-                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                           <div
                             className="h-full rounded-full bg-blue-500"
                             style={{
@@ -297,7 +297,7 @@ export default function ReviewDetailPage() {
                             }}
                           />
                         </div>
-                        <span className="w-28 shrink-0 text-right text-xs text-slate-500">
+                        <span className="w-28 shrink-0 text-right text-xs text-muted-foreground">
                           +{f.points} · {f.detail}
                         </span>
                       </div>
@@ -321,10 +321,10 @@ export default function ReviewDetailPage() {
                   <div className="space-y-1">
                     {Array.from(new Set(pendingItems.map(i => (i as any).submittedBy).filter(Boolean))).map((name, idx) => (
                       <div key={idx} className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-medium text-slate-600">
+                        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium text-muted-foreground">
                           {(name as string).charAt(0)}
                         </div>
-                        <span className="text-slate-700">{name as string}</span>
+                        <span className="text-foreground">{name as string}</span>
                       </div>
                     ))}
                     <p className="text-xs text-muted-foreground pt-1">{pendingItems.length} pending submission{pendingItems.length !== 1 ? 's' : ''}</p>
@@ -420,12 +420,12 @@ export default function ReviewDetailPage() {
                   onCheckedChange={(v) => (v ? selectAllVisible() : clearSelection())}
                   data-testid="select-all-visible"
                 />
-                <span className="text-slate-600">Select all visible</span>
+                <span className="text-muted-foreground">Select all visible</span>
               </label>
               {selectedIds.length > 0 && (
                 <>
-                  <span className="text-slate-400">·</span>
-                  <span className="font-medium text-slate-700" data-testid="selection-count">
+                  <span className="text-muted-foreground">·</span>
+                  <span className="font-medium text-foreground" data-testid="selection-count">
                     {selectedIds.length} selected
                   </span>
                   <Button
@@ -447,8 +447,8 @@ export default function ReviewDetailPage() {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
-                  <h3 className="text-xl font-bold text-slate-900">All Caught Up!</h3>
-                  <p className="text-slate-500 mt-2">There are no pending items of this type to review.</p>
+                  <h3 className="text-xl font-bold text-foreground">All Caught Up!</h3>
+                  <p className="text-muted-foreground mt-2">There are no pending items of this type to review.</p>
                 </CardContent>
               </Card>
             ) : (
@@ -474,12 +474,12 @@ export default function ReviewDetailPage() {
                               <Badge variant="secondary" className="capitalize">
                                 {item.type}
                               </Badge>
-                              <span className="text-sm text-slate-500 flex items-center gap-1">
+                              <span className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Clock className="h-3 w-3" /> {item.submittedAt}
                               </span>
                             </div>
-                            <h3 className="text-xl font-semibold text-slate-900">{item.title}</h3>
-                            <div className="flex items-center gap-2 mt-2 text-sm text-slate-600">
+                            <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                            <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                               <User className="h-4 w-4" /> Submitted by <span className="font-medium">{item.submittedBy}</span>
                             </div>
                           </div>
@@ -489,26 +489,26 @@ export default function ReviewDetailPage() {
                           <div className="mt-4 space-y-4">
                             {item.content && (
                               <div>
-                                <h4 className="text-sm font-medium text-slate-900 mb-1">Summary</h4>
-                                <p className="text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-100">{item.content}</p>
+                                <h4 className="text-sm font-medium text-foreground mb-1">Summary</h4>
+                                <p className="text-muted-foreground bg-muted p-3 rounded-md border border-border">{item.content}</p>
                               </div>
                             )}
 
                             {item.notes && !item.content && (
                                <div>
-                                 <h4 className="text-sm font-medium text-slate-900 mb-1">Summary</h4>
-                                 <p className="text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-100">{item.notes}</p>
+                                 <h4 className="text-sm font-medium text-foreground mb-1">Summary</h4>
+                                 <p className="text-muted-foreground bg-muted p-3 rounded-md border border-border">{item.notes}</p>
                                </div>
                             )}
                             
                             {/* Legacy Items */}
                             {item.items && item.items.length > 0 && (
                               <div>
-                                <h4 className="text-sm font-medium text-slate-900 mb-2">Materials Logged</h4>
-                                <div className="bg-white border rounded-md overflow-hidden">
+                                <h4 className="text-sm font-medium text-foreground mb-2">Materials Logged</h4>
+                                <div className="bg-card border rounded-md overflow-hidden">
                                   {item.items.map((mat, idx) => (
                                     <div key={idx} className={`flex justify-between p-2 px-3 ${idx !== 0 ? 'border-t' : ''}`}>
-                                      <span className="text-sm text-slate-700">{mat.name}</span>
+                                      <span className="text-sm text-foreground">{mat.name}</span>
                                       <span className="text-sm font-medium">{mat.quantity}</span>
                                     </div>
                                   ))}
@@ -519,11 +519,11 @@ export default function ReviewDetailPage() {
                             {/* Phase 2 Materials Used */}
                             {item.materialsUsed && item.materialsUsed.length > 0 && (
                               <div>
-                                <h4 className="text-sm font-medium text-slate-900 mb-2">Materials Logged</h4>
-                                <div className="bg-white border rounded-md overflow-hidden">
+                                <h4 className="text-sm font-medium text-foreground mb-2">Materials Logged</h4>
+                                <div className="bg-card border rounded-md overflow-hidden">
                                   {item.materialsUsed.map((mat, idx) => (
                                     <div key={idx} className={`flex justify-between p-2 px-3 ${idx !== 0 ? 'border-t' : ''}`}>
-                                      <span className="text-sm text-slate-700">{mat.stockItemName}</span>
+                                      <span className="text-sm text-foreground">{mat.stockItemName}</span>
                                       <span className="text-sm font-medium">Qty: {mat.quantity}{mat.unit ? ` ${mat.unit}` : ''}</span>
                                     </div>
                                   ))}
@@ -535,15 +535,15 @@ export default function ReviewDetailPage() {
 
                         {item.type === 'photo' && item.notes && (
                           <div className="mt-4">
-                            <h4 className="text-sm font-medium text-slate-900 mb-1">Notes</h4>
-                            <p className="text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-100">{item.notes}</p>
+                            <h4 className="text-sm font-medium text-foreground mb-1">Notes</h4>
+                            <p className="text-muted-foreground bg-muted p-3 rounded-md border border-border">{item.notes}</p>
                           </div>
                         )}
                       </div>
 
                       {/* Middle/Right - Photo if applicable */}
                       {item.type === 'photo' && item.url && (
-                        <div className="md:w-1/3 bg-slate-100 flex-shrink-0">
+                        <div className="md:w-1/3 bg-muted flex-shrink-0">
                           <img 
                             src={item.url} 
                             alt={item.title} 
@@ -553,7 +553,7 @@ export default function ReviewDetailPage() {
                       )}
 
                       {/* Right side - Actions */}
-                      <div className="bg-slate-50 p-6 border-t md:border-t-0 md:border-l border-slate-100 md:w-48 flex flex-row md:flex-col justify-center gap-3">
+                      <div className="bg-muted p-6 border-t md:border-t-0 md:border-l border-border md:w-48 flex flex-row md:flex-col justify-center gap-3">
                         <Button 
                           className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white w-full"
                           onClick={() => handleApprove(item.id)}

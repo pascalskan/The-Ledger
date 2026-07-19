@@ -69,7 +69,7 @@ function ProviderStatusBadge({ status }: { status: ProviderStatus }) {
     },
     disconnected: {
       label: "Disconnected",
-      className: "bg-slate-100 text-slate-700 border border-slate-200",
+      className: "bg-muted text-foreground border border-border",
       icon: <WifiOff className="h-3 w-3" />,
     },
     requires_reconnect: {
@@ -127,7 +127,7 @@ function ProviderCard({
   return (
     <div
       data-testid={`provider-card-${providerId}`}
-      className={`rounded-xl border bg-white p-5 space-y-4 transition-all ${
+      className={`rounded-xl border bg-card p-5 space-y-4 transition-all ${
         status === "disabled" ? "opacity-60" : ""
       } ${isDefault ? "ring-2 ring-primary/30" : ""}`}
     >
@@ -164,7 +164,7 @@ function ProviderCard({
         <div>
           <div className="text-muted-foreground mb-0.5">Last Sync</div>
           <div
-            className="font-medium text-slate-700"
+            className="font-medium text-foreground"
             data-testid={`provider-last-sync-${providerId}`}
           >
             {lastSync ? new Date(lastSync).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" }) : "—"}
@@ -173,7 +173,7 @@ function ProviderCard({
         <div>
           <div className="text-muted-foreground mb-0.5">Entity Support</div>
           <div
-            className="font-medium text-slate-700"
+            className="font-medium text-foreground"
             data-testid={`provider-entities-${providerId}`}
           >
             {supportedEntities.map((e) => ENTITY_TYPE_LABELS[e]).join(", ")}
@@ -306,7 +306,7 @@ export function AccountingSettingsContent() {
         {/* Summary bar */}
         <div
           data-testid="accounting-settings-summary"
-          className="flex flex-wrap gap-4 rounded-xl border bg-slate-50 px-5 py-4 text-sm"
+          className="flex flex-wrap gap-4 rounded-xl border bg-muted px-5 py-4 text-sm"
         >
           <div>
             <span className="text-muted-foreground">Active providers: </span>
@@ -367,7 +367,7 @@ export function AccountingSettingsContent() {
                 <div className="flex items-center gap-2">
                   <span
                     data-testid="policy-sync-mode-manual"
-                    className={`text-xs ${settings.syncPolicy.mode === "manual" ? "font-semibold text-slate-800" : "text-muted-foreground"}`}
+                    className={`text-xs ${settings.syncPolicy.mode === "manual" ? "font-semibold text-foreground" : "text-muted-foreground"}`}
                   >
                     Manual
                   </span>
@@ -380,7 +380,7 @@ export function AccountingSettingsContent() {
                   />
                   <span
                     data-testid="policy-sync-mode-auto"
-                    className={`text-xs ${settings.syncPolicy.mode === "automatic" ? "font-semibold text-slate-800" : "text-muted-foreground"}`}
+                    className={`text-xs ${settings.syncPolicy.mode === "automatic" ? "font-semibold text-foreground" : "text-muted-foreground"}`}
                   >
                     Automatic
                   </span>
@@ -472,7 +472,7 @@ export function AccountingSettingsContent() {
                 {settings.entityMappings.map((mapping) => {
                   const mappingStatusColors: Record<string, string> = {
                     mapped: "text-green-700 bg-green-50 border-green-200",
-                    unmapped: "text-slate-600 bg-slate-50 border-slate-200",
+                    unmapped: "text-muted-foreground bg-muted border-border",
                     partial: "text-amber-700 bg-amber-50 border-amber-200",
                   };
                   return (

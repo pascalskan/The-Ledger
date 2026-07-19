@@ -89,7 +89,7 @@ export default function ClientsPage() {
         </div>
 
         {filteredClients.length === 0 ? (
-           <div className="text-center py-12 border-2 border-dashed rounded-lg bg-slate-50 dark:bg-slate-900/50">
+           <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted dark:bg-slate-900/50">
              <div className="mx-auto w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center mb-4">
                <Search className="h-6 w-6 text-muted-foreground" />
              </div>

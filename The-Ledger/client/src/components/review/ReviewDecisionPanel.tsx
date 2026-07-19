@@ -86,11 +86,11 @@ export function ReviewDecisionPanel({ jobId }: { jobId: string }) {
         {/* Job + client impact */}
         <div className="grid gap-4 md:grid-cols-2">
           <div
-            className="rounded-md border border-slate-100 p-4"
+            className="rounded-md border border-border p-4"
             data-testid="decision-job-impact"
           >
-            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-900">
-              <Briefcase className="h-4 w-4 text-slate-400" /> Job Impact
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+              <Briefcase className="h-4 w-4 text-muted-foreground" /> Job Impact
             </p>
             <SummaryLine label="Job profitability" value={formatGbp(job.profitability)} />
             <SummaryLine label="Job margin" value={`${job.marginPercent}%`} />
@@ -106,11 +106,11 @@ export function ReviewDecisionPanel({ jobId }: { jobId: string }) {
           </div>
 
           <div
-            className="rounded-md border border-slate-100 p-4"
+            className="rounded-md border border-border p-4"
             data-testid="decision-client-impact"
           >
-            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-900">
-              <Building2 className="h-4 w-4 text-slate-400" /> Client Impact
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+              <Building2 className="h-4 w-4 text-muted-foreground" /> Client Impact
             </p>
             <SummaryLine
               label="Client billing impact"
@@ -129,7 +129,7 @@ export function ReviewDecisionPanel({ jobId }: { jobId: string }) {
 
         {/* Decision comparison view */}
         <div data-testid="decision-comparison">
-          <p className="mb-2 text-sm font-medium text-slate-900">
+          <p className="mb-2 text-sm font-medium text-foreground">
             Compare outcomes (informational only)
           </p>
           <div className="grid gap-4 md:grid-cols-3">
@@ -141,14 +141,14 @@ export function ReviewDecisionPanel({ jobId }: { jobId: string }) {
 
         {/* Executive impact insights */}
         <div data-testid="decision-insights">
-          <p className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-900">
+          <p className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
             <Lightbulb className="h-4 w-4 text-amber-500" /> Impact Insights
           </p>
           <ul className="space-y-2">
             {insights.map((insight, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2 text-sm text-slate-700"
+                className="flex items-start gap-2 text-sm text-foreground"
                 data-testid="decision-insight"
               >
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -172,8 +172,8 @@ function ImpactColumn({
   rows: [string, number][];
 }) {
   return (
-    <div className="rounded-md border border-slate-100 p-4">
-      <p className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-900">
+    <div className="rounded-md border border-border p-4">
+      <p className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
         {icon} {title}
       </p>
       {rows.map(([label, value]) => (
@@ -186,8 +186,8 @@ function ImpactColumn({
 function SummaryLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-0.5 text-sm">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-medium text-slate-900">{value}</span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium text-foreground">{value}</span>
     </div>
   );
 }
@@ -219,12 +219,12 @@ function OutcomeCard({ outcome }: { outcome: DecisionOutcome }) {
     >
       <div className="mb-1 flex items-center gap-2">
         {meta.icon}
-        <span className="font-semibold text-slate-900">{outcome.decision}</span>
+        <span className="font-semibold text-foreground">{outcome.decision}</span>
       </div>
-      <p className="mb-2 text-sm font-medium text-slate-700">{outcome.headline}</p>
+      <p className="mb-2 text-sm font-medium text-foreground">{outcome.headline}</p>
       <ul className="space-y-1">
         {outcome.consequences.map((c, i) => (
-          <li key={i} className="text-xs text-slate-600">
+          <li key={i} className="text-xs text-muted-foreground">
             {c}
           </li>
         ))}

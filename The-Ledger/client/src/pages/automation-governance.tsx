@@ -888,7 +888,7 @@ export default function AutomationGovernanceCentrePage() {
                                 variant="outline"
                                 className={`text-xs ${
                                   entry.riskImpact === "None"
-                                    ? "text-slate-500 border-slate-200 bg-slate-50"
+                                    ? "text-muted-foreground border-border bg-muted"
                                     : RISK_LEVEL_COLORS[entry.riskImpact as AutomationRiskLevel] ?? ""
                                 }`}
                               >

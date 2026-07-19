@@ -129,7 +129,7 @@ export default function WorkersPage() {
           <div data-testid="pm-workforce-crew-list">
             <h3 className="text-base font-semibold mb-3">Assigned Crew</h3>
             {pmWorkers.length === 0 ? (
-              <div className="text-center py-8 border-2 border-dashed rounded-lg bg-slate-50">
+              <div className="text-center py-8 border-2 border-dashed rounded-lg bg-muted">
                 <Users className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">No crew assigned to your active or planned jobs.</p>
               </div>

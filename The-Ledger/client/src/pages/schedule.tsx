@@ -370,7 +370,7 @@ export default function SchedulePage() {
           <div data-testid="pm-schedule-my-jobs">
             <h3 className="text-lg font-semibold mb-3">My Scheduled Jobs</h3>
             {scheduledDisplay.length === 0 ? (
-              <div className="text-center py-8 border-2 border-dashed rounded-lg bg-slate-50">
+              <div className="text-center py-8 border-2 border-dashed rounded-lg bg-muted">
                 <p className="text-muted-foreground text-sm">No active or planned jobs.</p>
               </div>
             ) : (
@@ -531,10 +531,10 @@ export default function SchedulePage() {
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 shrink-0">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">
                 Operational Schedule
               </h2>
-              <p className="text-sm text-slate-500 mt-0.5">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 Profit-aware planning & resource control.
               </p>
             </div>
@@ -545,7 +545,7 @@ export default function SchedulePage() {
                 setFilters={setFilters}
               />
 
-              <div className="flex items-center bg-white border border-slate-200 rounded-md shadow-sm p-1">
+              <div className="flex items-center bg-card border border-border rounded-md shadow-sm p-1">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -555,7 +555,7 @@ export default function SchedulePage() {
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
 
-                <span className="w-32 text-center text-sm font-medium text-slate-700">
+                <span className="w-32 text-center text-sm font-medium text-foreground">
                   {format(weekStart, "MMM d")} -{" "}
                   {format(addDays(weekStart, 6), "MMM d")}
                 </span>
@@ -573,7 +573,7 @@ export default function SchedulePage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-white border-slate-200 text-slate-600 shadow-sm"
+                className="bg-card border-border text-muted-foreground shadow-sm"
                 onClick={today}
               >
                 Today
@@ -585,16 +585,16 @@ export default function SchedulePage() {
           <WeeklyIntelligenceStrip metrics={weeklyMetrics} />
 
           {/* Calendar Grid */}
-          <div className="flex-1 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col overflow-hidden">
+          <div className="flex-1 bg-card border border-border rounded-lg shadow-sm flex flex-col overflow-hidden">
             {/* Grid Header */}
-            <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 shrink-0">
+            <div className="grid grid-cols-7 border-b border-border bg-muted/80 shrink-0">
               {weekDays.map((d, i) => (
                 <div
                   key={i}
                   onClick={() => handleDayClick(d, getJobsForDay(d))}
-                  className="p-3 text-center border-r border-slate-200 last:border-r-0 cursor-pointer hover:bg-slate-100 transition-colors group"
+                  className="p-3 text-center border-r border-border last:border-r-0 cursor-pointer hover:bg-muted transition-colors group"
                 >
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">
                     {format(d, "EEE")}
                   </div>
 
@@ -602,7 +602,7 @@ export default function SchedulePage() {
                     className={`text-lg font-bold leading-none ${
                       isSameDay(d, new Date())
                         ? "text-blue-600"
-                        : "text-slate-800"
+                        : "text-foreground"
                     }`}
                   >
                     {format(d, "d")}
@@ -620,7 +620,7 @@ export default function SchedulePage() {
                 return (
                   <div
                     key={i}
-                    className={`border-r border-slate-100 last:border-r-0 p-2 space-y-2 min-h-[300px] ${
+                    className={`border-r border-border last:border-r-0 p-2 space-y-2 min-h-[300px] ${
                       isToday ? "bg-blue-50/20" : ""
                     }`}
                   >

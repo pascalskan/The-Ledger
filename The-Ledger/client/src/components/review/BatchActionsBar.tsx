@@ -140,7 +140,7 @@ export function BatchActionsBar({
     <>
       {/* Toolbar */}
       <div
-        className="sticky bottom-4 z-20 flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-lg sm:flex-row sm:items-center sm:justify-between"
+        className="sticky bottom-4 z-20 flex flex-col gap-3 rounded-lg border border-border bg-card p-3 shadow-lg sm:flex-row sm:items-center sm:justify-between"
         data-testid="batch-actions-bar"
       >
         <div className="flex flex-wrap items-center gap-3">
@@ -151,9 +151,9 @@ export function BatchActionsBar({
           >
             {summary.count} selected
           </Badge>
-          <span className="text-sm text-slate-600" data-testid="batch-financial-impact">
+          <span className="text-sm text-muted-foreground" data-testid="batch-financial-impact">
             Est. impact:{" "}
-            <span className="font-semibold text-slate-900">
+            <span className="font-semibold text-foreground">
               {formatGbp(summary.total)}
             </span>
           </span>
@@ -234,7 +234,7 @@ export function BatchActionsBar({
 
           {/* Financial impact summary (informational) */}
           <div
-            className="rounded-md border border-slate-100 bg-slate-50 p-3 text-sm"
+            className="rounded-md border border-border bg-muted p-3 text-sm"
             data-testid="batch-summary"
           >
             <div className="grid grid-cols-2 gap-2">
@@ -251,7 +251,7 @@ export function BatchActionsBar({
             </div>
             {/* UX-7.4 — aggregated profitability impact (informational) */}
             <div
-              className="mt-2 border-t border-slate-200 pt-2"
+              className="mt-2 border-t border-border pt-2"
               data-testid="batch-profitability-impact"
             >
               <SummaryRow
@@ -380,10 +380,10 @@ function SummaryRow({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-slate-500">{label}</span>
+      <span className="text-muted-foreground">{label}</span>
       <span
         className={`${bold ? "font-bold" : "font-medium"} ${
-          danger ? "text-rose-600" : "text-slate-900"
+          danger ? "text-rose-600" : "text-foreground"
         }`}
       >
         {value}

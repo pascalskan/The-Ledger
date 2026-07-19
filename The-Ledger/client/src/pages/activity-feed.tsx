@@ -179,7 +179,7 @@ export default function ActivityFeedPage() {
         {/* KPI STRIP */}
         <div className="grid gap-4 md:grid-cols-5" data-testid="af-kpi-strip">
           {kpiCards.map((kpi) => (
-            <Card key={kpi.testId} className="border-slate-200/60 shadow-sm overflow-hidden group">
+            <Card key={kpi.testId} className="border-border/60 shadow-sm overflow-hidden group">
               <div className={`h-1 w-full ${kpi.color.replace('text-', 'bg-')}`} />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-xs font-medium">{kpi.label}</CardTitle>
@@ -247,7 +247,7 @@ export default function ActivityFeedPage() {
         </div>
 
         {/* EVENT TABLE */}
-        <Card className="border-slate-200/60 shadow-sm">
+        <Card className="border-border/60 shadow-sm">
           <CardContent className="p-0">
             <div data-testid="af-event-table" className="divide-y">
               {displayed.length === 0 && (
@@ -259,12 +259,12 @@ export default function ActivityFeedPage() {
                 <div
                   key={event.id}
                   data-testid={`af-event-row-${event.id}`}
-                  className="flex items-start gap-4 px-6 py-4 hover:bg-slate-50 transition-colors"
+                  className="flex items-start gap-4 px-6 py-4 hover:bg-muted transition-colors"
                 >
                   {/* Icon */}
                   <div className="flex-shrink-0 mt-1">
-                    <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
-                      <EventTypeIcon type={event.type} className="h-4 w-4 text-slate-600" />
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                      <EventTypeIcon type={event.type} className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
 

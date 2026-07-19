@@ -624,7 +624,7 @@ function ScheduleDetailDialog({
               <Button
                 size="sm"
                 variant="outline"
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className="text-muted-foreground border-slate-300 hover:bg-muted"
                 onClick={() => onDisable(schedule)}
                 data-testid="sched-btn-disable"
               >
@@ -1243,7 +1243,7 @@ export default function AutomationsPage() {
 
   // KPI cards (rules)
   const kpiCards = [
-    { label: "Total Automations", value: summary.total, icon: Zap, color: "text-slate-600", testId: "aut-kpi-total" },
+    { label: "Total Automations", value: summary.total, icon: Zap, color: "text-muted-foreground", testId: "aut-kpi-total" },
     { label: "Active", value: summary.active, icon: CheckCircle2, color: "text-emerald-600", testId: "aut-kpi-active" },
     { label: "Disabled", value: summary.disabled, icon: XCircle, color: "text-amber-600", testId: "aut-kpi-disabled" },
     { label: "Executions Today", value: allExecutions.filter((e) => new Date(e.timestamp).toDateString() === new Date().toDateString()).length, icon: Activity, color: "text-blue-600", testId: "aut-kpi-executions-today" },
@@ -1254,7 +1254,7 @@ export default function AutomationsPage() {
   const schedKpiCards = [
     { label: "Active Schedules", value: schedKPIs.active, icon: CalendarClock, color: "text-emerald-600", testId: "sched-kpi-active" },
     { label: "Paused", value: schedKPIs.paused, icon: PauseCircle, color: "text-amber-600", testId: "sched-kpi-paused" },
-    { label: "Disabled", value: schedKPIs.disabled, icon: Ban, color: "text-slate-500", testId: "sched-kpi-disabled" },
+    { label: "Disabled", value: schedKPIs.disabled, icon: Ban, color: "text-muted-foreground", testId: "sched-kpi-disabled" },
     { label: "Runs Today", value: schedKPIs.runsToday, icon: Activity, color: "text-blue-600", testId: "sched-kpi-runs-today" },
     { label: "Upcoming Executions", value: schedKPIs.upcomingExecutions, icon: CalendarCheck, color: "text-violet-600", testId: "sched-kpi-upcoming" },
   ];
@@ -1519,7 +1519,7 @@ export default function AutomationsPage() {
           {/* Tab: Automation Audit */}
           <TabsContent value="audit">
             <div className="mt-4 space-y-4" data-testid="aut-audit-panel">
-              <div className="rounded-md bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-600 flex items-center gap-2">
+              <div className="rounded-md bg-muted border border-border px-3 py-2.5 text-xs text-muted-foreground flex items-center gap-2">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                 Immutable read-only audit trail. Entries cannot be edited or deleted.
               </div>

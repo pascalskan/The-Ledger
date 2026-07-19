@@ -24,19 +24,19 @@ export function PortalLogin({ branding, signIn }: PortalLoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4" data-testid="portal-login">
+    <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4" data-testid="portal-login">
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center mb-8 gap-2 text-2xl font-bold tracking-tight text-slate-900">
+        <div className="flex items-center justify-center mb-8 gap-2 text-2xl font-bold tracking-tight text-foreground">
           {branding.logo ? (
             <img src={branding.logo} alt={branding.companyName} className="h-8 w-auto" />
           ) : (
-            <ShieldCheck className="h-8 w-8 text-slate-800" />
+            <ShieldCheck className="h-8 w-8 text-foreground" />
           )}
           <span>{branding.companyName}</span>
         </div>
         <Card className="shadow-lg border-0">
           <CardHeader className="space-y-1 pb-6 text-center">
-            <CardTitle className="text-2xl font-semibold text-slate-900">Client Sign In</CardTitle>
+            <CardTitle className="text-2xl font-semibold text-foreground">Client Sign In</CardTitle>
             <CardDescription>
               Welcome to your client portal. Access your projects, sites, and documents.
             </CardDescription>
@@ -82,11 +82,11 @@ export function PortalLogin({ branding, signIn }: PortalLoginProps) {
             >
               Sign In
             </Button>
-            <div className="rounded-md bg-slate-50 border border-slate-100 p-3 text-xs text-slate-500">
-              <span className="font-medium text-slate-600">Demo:</span> sign in with{" "}
+            <div className="rounded-md bg-muted border border-border p-3 text-xs text-muted-foreground">
+              <span className="font-medium text-muted-foreground">Demo:</span> sign in with{" "}
               <button
                 type="button"
-                className="font-mono text-slate-700 underline hover:text-slate-900"
+                className="font-mono text-foreground underline hover:text-foreground"
                 onClick={() => setEmail("portal@hsslimited.co.uk")}
                 data-testid="portal-login-demo-fill"
               >
@@ -96,7 +96,7 @@ export function PortalLogin({ branding, signIn }: PortalLoginProps) {
             </div>
           </CardContent>
         </Card>
-        <div className="text-center mt-6 text-xs text-slate-500">
+        <div className="text-center mt-6 text-xs text-muted-foreground">
           Protected by The Ledger Operations Platform
         </div>
       </div>

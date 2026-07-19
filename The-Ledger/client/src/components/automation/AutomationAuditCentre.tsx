@@ -270,7 +270,7 @@ const CATEGORY_COLOR: Record<AuditEventCategory, string> = {
   Automation: "text-violet-600 border-violet-200 bg-violet-50",
   Scheduler: "text-blue-600 border-blue-200 bg-blue-50",
   Governance: "text-amber-700 border-amber-200 bg-amber-50",
-  Execution: "text-slate-600 border-slate-200 bg-slate-50",
+  Execution: "text-muted-foreground border-border bg-muted",
   Exception: "text-red-600 border-red-200 bg-red-50",
 };
 
@@ -285,7 +285,7 @@ function AuditDetailDialog({ event, onClose }: { event: UnifiedAuditEvent; onClo
           <DialogDescription>{event.automationName}{event.automationNumber ? ` · ${event.automationNumber}` : ""}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="flex items-start gap-2 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-600" data-testid="aut-audc-detail-immutable">
+          <div className="flex items-start gap-2 rounded-md bg-muted border border-border px-3 py-2 text-xs text-muted-foreground" data-testid="aut-audc-detail-immutable">
             <ShieldCheck className="h-3.5 w-3.5 shrink-0 mt-0.5" /> Immutable audit record — read-only. Cannot be edited or deleted.
           </div>
           <div><span className="text-xs text-muted-foreground">Event Summary</span><p className="mt-1 text-sm rounded border p-2 bg-muted/20">{event.summary}</p></div>
@@ -401,11 +401,11 @@ export function AutomationAuditCentre() {
   }, [feed, kpis.ruleChanges]);
 
   const kpiCards = [
-    { label: "Total Events", value: kpis.total, icon: FileSearch, color: "text-slate-600", testId: "aut-audc-kpi-total" },
+    { label: "Total Events", value: kpis.total, icon: FileSearch, color: "text-muted-foreground", testId: "aut-audc-kpi-total" },
     { label: "Rule Changes", value: kpis.ruleChanges, icon: ListChecks, color: "text-violet-600", testId: "aut-audc-kpi-rules" },
     { label: "Schedule Changes", value: kpis.scheduleChanges, icon: CalendarClock, color: "text-blue-600", testId: "aut-audc-kpi-schedules" },
     { label: "Governance Actions", value: kpis.governanceActions, icon: Gavel, color: "text-amber-700", testId: "aut-audc-kpi-governance" },
-    { label: "Execution Events", value: kpis.executionEvents, icon: Activity, color: "text-slate-600", testId: "aut-audc-kpi-executions" },
+    { label: "Execution Events", value: kpis.executionEvents, icon: Activity, color: "text-muted-foreground", testId: "aut-audc-kpi-executions" },
     { label: "Approval-Blocked", value: kpis.approvalBlocked, icon: ShieldCheck, color: "text-violet-600", testId: "aut-audc-kpi-blocked" },
     { label: "Fin. Sensitive", value: kpis.financiallySensitive, icon: ShieldAlert, color: "text-red-600", testId: "aut-audc-kpi-sensitive" },
     { label: "Exceptions", value: kpis.exceptions, icon: FileWarning, color: "text-red-600", testId: "aut-audc-kpi-exceptions" },
@@ -426,7 +426,7 @@ export function AutomationAuditCentre() {
 
   return (
     <div className="space-y-4" data-testid="aut-audit-centre">
-      <div className="rounded-md bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-600 flex items-center gap-2">
+      <div className="rounded-md bg-muted border border-border px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
         <ShieldCheck className="h-4 w-4 shrink-0" />
         <span><span className="font-semibold">Immutable Audit: </span>A unified, read-only record of all automation activity. Entries cannot be edited, deleted, or suppressed.</span>
       </div>

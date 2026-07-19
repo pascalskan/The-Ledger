@@ -16,13 +16,13 @@ export function WeeklyIntelligenceStrip({ metrics }: WeeklyIntelligenceStripProp
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-      <Card className="shadow-sm border-slate-200">
+      <Card className="shadow-sm border-border">
         <CardContent className="p-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
             <Users className="h-3.5 w-3.5" /> Workforce Util.
           </div>
           <div className="flex items-end justify-between">
-            <div className="text-xl font-bold text-slate-900">{metrics.workforceUtil}%</div>
+            <div className="text-xl font-bold text-foreground">{metrics.workforceUtil}%</div>
             {metrics.overtimeRisk && (
               <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded border border-amber-200 font-medium flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" /> Risk
@@ -32,25 +32,25 @@ export function WeeklyIntelligenceStrip({ metrics }: WeeklyIntelligenceStripProp
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm border-slate-200 bg-slate-50/50">
+      <Card className="shadow-sm border-border bg-muted/50">
         <CardContent className="p-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
             <PoundSterling className="h-3.5 w-3.5" /> Scheduled Rev.
           </div>
-          <div className="text-xl font-bold text-slate-900">{formatCur(metrics.scheduledRevenue)}</div>
+          <div className="text-xl font-bold text-foreground">{formatCur(metrics.scheduledRevenue)}</div>
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm border-slate-200 bg-slate-50/50">
+      <Card className="shadow-sm border-border bg-muted/50">
         <CardContent className="p-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
             <Clock className="h-3.5 w-3.5" /> Est. Labor
           </div>
-          <div className="text-xl font-bold text-slate-700">{formatCur(metrics.forecastedLaborCost)}</div>
+          <div className="text-xl font-bold text-foreground">{formatCur(metrics.forecastedLaborCost)}</div>
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm border-slate-200 bg-blue-50/50 border-blue-100">
+      <Card className="shadow-sm border-border bg-blue-50/50 border-blue-100">
         <CardContent className="p-3 flex justify-between items-center h-full">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold text-blue-700 uppercase tracking-wider mb-1">

@@ -24,7 +24,7 @@ export function PendingExposurePanel({ jobId }: { jobId: string }) {
 
   if (exposure.pendingItemCount === 0) {
     return (
-      <Card className="border-slate-200">
+      <Card className="border-border">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4" /> Pending Exposure

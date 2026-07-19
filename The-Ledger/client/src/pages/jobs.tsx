@@ -221,7 +221,7 @@ export default function JobsPage() {
               <span>{new Date(job.startAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
             </div>
           </div>
-          <div className="flex items-center gap-3 pt-1 border-t border-slate-100">
+          <div className="flex items-center gap-3 pt-1 border-t border-border">
             <div className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`pm-job-crew-count-${job.id}`}>
               <Users className="h-3.5 w-3.5" />
               <span>{job.assignedWorkerIds.length} crew</span>
@@ -260,7 +260,7 @@ export default function JobsPage() {
           />
 
           {pmJobs.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-slate-50 dark:bg-slate-900/50" data-testid="pm-jobs-empty">
+            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted dark:bg-slate-900/50" data-testid="pm-jobs-empty">
               <div className="mx-auto w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center mb-4">
                 <FileText className="h-6 w-6 text-muted-foreground" />
               </div>
@@ -294,7 +294,7 @@ export default function JobsPage() {
         />
 
         {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4 items-end md:items-center bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="flex flex-col md:flex-row gap-4 items-end md:items-center bg-muted dark:bg-slate-900/50 p-4 rounded-lg border border-border dark:border-slate-800">
             <div className="flex-1 w-full relative">
                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                  <Input placeholder="Search jobs..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-background" />
@@ -329,7 +329,7 @@ export default function JobsPage() {
         </div>
 
         {filteredJobs.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-slate-50 dark:bg-slate-900/50">
+            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted dark:bg-slate-900/50">
                 <div className="mx-auto w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center mb-4">
                 <FileText className="h-6 w-6 text-muted-foreground" />
                 </div>

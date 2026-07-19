@@ -132,7 +132,7 @@ function PMKpiCard({
   testId: string;
 }) {
   return (
-    <Card className="border-slate-200/60 shadow-sm" data-testid={testId}>
+    <Card className="border-border/60 shadow-sm" data-testid={testId}>
       <CardHeader className="pb-2 pt-4 px-5">
         <CardTitle className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
@@ -316,7 +316,7 @@ function PMDashboard() {
       <div className="grid gap-4 lg:grid-cols-12">
         {/* My Jobs */}
         <Card
-          className="lg:col-span-7 border-slate-200/60 shadow-sm"
+          className="lg:col-span-7 border-border/60 shadow-sm"
           data-testid="pm-dashboard-my-jobs"
         >
           <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -344,7 +344,7 @@ function PMDashboard() {
                     <div
                       key={job.id}
                       data-testid={`pm-job-row-${job.id}`}
-                      className="flex items-center gap-3 p-2.5 rounded-lg border border-transparent hover:border-slate-100 hover:bg-slate-50 transition-all cursor-pointer"
+                      className="flex items-center gap-3 p-2.5 rounded-lg border border-transparent hover:border-border hover:bg-muted transition-all cursor-pointer"
                       onClick={() => setLocation(`/jobs/${job.id}`)}
                     >
                       <div className={cn(
@@ -381,7 +381,7 @@ function PMDashboard() {
 
         {/* Reviews */}
         <Card
-          className="lg:col-span-5 border-slate-200/60 shadow-sm"
+          className="lg:col-span-5 border-border/60 shadow-sm"
           data-testid="pm-dashboard-reviews"
         >
           <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -494,7 +494,7 @@ function PMDashboard() {
       <div className="grid gap-4 lg:grid-cols-12">
         {/* Schedule */}
         <Card
-          className="lg:col-span-5 border-slate-200/60 shadow-sm"
+          className="lg:col-span-5 border-border/60 shadow-sm"
           data-testid="pm-dashboard-schedule"
         >
           <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -559,7 +559,7 @@ function PMDashboard() {
 
         {/* Attention Required */}
         <Card
-          className="lg:col-span-7 border-slate-200/60 shadow-sm"
+          className="lg:col-span-7 border-border/60 shadow-sm"
           data-testid="pm-dashboard-attention"
         >
           <CardHeader className="pb-3">
@@ -579,7 +579,7 @@ function PMDashboard() {
                 {attentionItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-start gap-3 p-2.5 rounded-lg border border-transparent hover:border-slate-100 hover:bg-slate-50 transition-all cursor-pointer"
+                    className="flex items-start gap-3 p-2.5 rounded-lg border border-transparent hover:border-border hover:bg-muted transition-all cursor-pointer"
                     onClick={item.action}
                   >
                     <TriangleAlert className={cn(
@@ -797,7 +797,7 @@ function CEODashboard() {
       <div data-testid="dashboard-zone-b" className="grid gap-4 lg:grid-cols-12">
 
         {/* Active Jobs Feed */}
-        <Card className="lg:col-span-7 border-slate-200/60 shadow-sm" data-testid="dashboard-zone-b-jobs">
+        <Card className="lg:col-span-7 border-border/60 shadow-sm" data-testid="dashboard-zone-b-jobs">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-sm font-semibold">Active Jobs</CardTitle>
             <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setLocation('/jobs')}>
@@ -819,7 +819,7 @@ function CEODashboard() {
                   return (
                     <div
                       key={job.id}
-                      className="flex items-center gap-3 p-2.5 rounded-lg border border-transparent hover:border-slate-100 hover:bg-slate-50 transition-all cursor-pointer"
+                      className="flex items-center gap-3 p-2.5 rounded-lg border border-transparent hover:border-border hover:bg-muted transition-all cursor-pointer"
                       onClick={() => setLocation(`/jobs/${job.id}`)}
                     >
                       <div className={cn(
@@ -862,7 +862,7 @@ function CEODashboard() {
         </Card>
 
         {/* Today's Picture */}
-        <Card className="lg:col-span-5 border-slate-200/60 shadow-sm" data-testid="dashboard-zone-b-today">
+        <Card className="lg:col-span-5 border-border/60 shadow-sm" data-testid="dashboard-zone-b-today">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold">
               Today — {new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date())}
@@ -925,7 +925,7 @@ function CEODashboard() {
       {/* ZONE C — FINANCIAL PULSE (CEO only) */}
       <div data-testid="dashboard-zone-c">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-slate-200/60 shadow-sm" data-testid="dashboard-zone-c-revenue">
+          <Card className="border-border/60 shadow-sm" data-testid="dashboard-zone-c-revenue">
             <CardHeader className="pb-2 pt-4 px-5">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Revenue This Week</CardTitle>
             </CardHeader>
@@ -937,7 +937,7 @@ function CEODashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200/60 shadow-sm" data-testid="dashboard-zone-c-costs">
+          <Card className="border-border/60 shadow-sm" data-testid="dashboard-zone-c-costs">
             <CardHeader className="pb-2 pt-4 px-5">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Costs This Week</CardTitle>
             </CardHeader>
@@ -949,7 +949,7 @@ function CEODashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200/60 shadow-sm" data-testid="dashboard-zone-c-margin">
+          <Card className="border-border/60 shadow-sm" data-testid="dashboard-zone-c-margin">
             <CardHeader className="pb-2 pt-4 px-5">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Margin This Week</CardTitle>
             </CardHeader>
@@ -963,7 +963,7 @@ function CEODashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200/60 shadow-sm" data-testid="dashboard-zone-c-outstanding">
+          <Card className="border-border/60 shadow-sm" data-testid="dashboard-zone-c-outstanding">
             <CardHeader className="pb-2 pt-4 px-5">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Outstanding Invoices</CardTitle>
             </CardHeader>

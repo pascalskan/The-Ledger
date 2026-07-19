@@ -68,14 +68,14 @@ export function MarginIntelligenceTable({ targetMargin = TARGET_MARGIN }: { targ
       {active.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: 'Total Revenue', value: fmt(totalRevenue), sub: `${active.length} jobs`, color: 'text-slate-900' },
-            { label: 'Total Cost', value: fmt(totalCost), sub: 'Approved spend', color: 'text-slate-700' },
+            { label: 'Total Revenue', value: fmt(totalRevenue), sub: `${active.length} jobs`, color: 'text-foreground' },
+            { label: 'Total Cost', value: fmt(totalCost), sub: 'Approved spend', color: 'text-foreground' },
             { label: 'Total Profit', value: fmt(totalProfit), sub: '', color: totalProfit >= 0 ? 'text-emerald-700' : 'text-rose-700' },
             { label: 'Avg Margin', value: `${avgMargin.toFixed(1)}%`, sub: `Target ${targetMargin}%`, color: avgMargin >= targetMargin ? 'text-emerald-700' : 'text-amber-700' },
             { label: 'Best Job', value: highest?.job.title ?? '—', sub: highest ? `${highest.summary.marginPercent.toFixed(1)}%` : '', color: 'text-emerald-700', small: true },
             { label: 'Below Target', value: `${belowCount}`, sub: `< ${targetMargin}% margin`, color: belowCount > 0 ? 'text-rose-700' : 'text-emerald-700' },
           ].map(({ label, value, sub, color, small }) => (
-            <Card key={label} className="shadow-none border-slate-200">
+            <Card key={label} className="shadow-none border-border">
               <CardHeader className="pb-1 pt-4 px-4">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
               </CardHeader>
@@ -91,9 +91,9 @@ export function MarginIntelligenceTable({ targetMargin = TARGET_MARGIN }: { targ
       )}
 
       {/* Per-job table */}
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader className="border-b border-slate-100 bg-slate-50/50">
-          <CardTitle className="text-base text-slate-900">
+      <Card className="shadow-sm border-border">
+        <CardHeader className="border-b border-border bg-muted/50">
+          <CardTitle className="text-base text-foreground">
             Job Margin Ranking
             <span className="text-xs font-normal text-muted-foreground ml-2">
               — source: approved financial records via getJobFinancialSummary()
@@ -108,7 +108,7 @@ export function MarginIntelligenceTable({ targetMargin = TARGET_MARGIN }: { targ
             </div>
           ) : (
             <Table>
-              <TableHeader className="bg-slate-50/50">
+              <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead className="w-8">#</TableHead>
                   <TableHead>Job</TableHead>
@@ -131,7 +131,7 @@ export function MarginIntelligenceTable({ targetMargin = TARGET_MARGIN }: { targ
                   let signalClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
                   if (!hasActivity) {
                     signal = 'No Data';
-                    signalClass = 'bg-slate-50 text-slate-500 border-slate-200';
+                    signalClass = 'bg-muted text-muted-foreground border-border';
                   } else if (summary.grossProfit < 0) {
                     signal = 'Loss';
                     signalClass = 'bg-rose-50 text-rose-700 border-rose-200';
@@ -143,23 +143,23 @@ export function MarginIntelligenceTable({ targetMargin = TARGET_MARGIN }: { targ
                   return (
                     <TableRow
                       key={job.id}
-                      className="hover:bg-slate-50 cursor-pointer"
+                      className="hover:bg-muted cursor-pointer"
                       onClick={() => setLocation(`/jobs/${job.id}`)}
                     >
                       <TableCell className="text-muted-foreground text-xs font-mono">
                         {hasActivity ? rank : '—'}
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium text-slate-800 max-w-[200px] truncate">{job.title}</div>
+                        <div className="font-medium text-foreground max-w-[200px] truncate">{job.title}</div>
                         <div className="text-xs text-muted-foreground font-mono">{job.jobId}</div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs font-normal">{job.status}</Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium text-slate-700">
+                      <TableCell className="text-right font-medium text-foreground">
                         {hasActivity ? fmt(summary.totalRevenue) : <span className="text-muted-foreground text-xs">—</span>}
                       </TableCell>
-                      <TableCell className="text-right text-slate-600">
+                      <TableCell className="text-right text-muted-foreground">
                         {hasActivity ? fmt(summary.totalCost) : <span className="text-muted-foreground text-xs">—</span>}
                       </TableCell>
                       <TableCell className={cn('text-right', hasActivity ? profitColor : 'text-muted-foreground text-xs')}>

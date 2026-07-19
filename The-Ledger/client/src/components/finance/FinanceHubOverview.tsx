@@ -321,7 +321,7 @@ export function FinanceHubOverview() {
                         ? "text-emerald-600"
                         : margin < 15
                         ? "text-red-600"
-                        : "text-slate-500";
+                        : "text-muted-foreground";
                     return (
                       <tr key={r.job.id} className="border-b last:border-0">
                         <td className="py-2 font-medium truncate max-w-[140px]">
@@ -364,7 +364,7 @@ export function FinanceHubOverview() {
             <div className="space-y-2">
               {(
                 [
-                  { key: "Draft", testId: "invoice-status-row-draft", cls: "text-slate-600" },
+                  { key: "Draft", testId: "invoice-status-row-draft", cls: "text-muted-foreground" },
                   { key: "Sent", testId: "invoice-status-row-sent", cls: "text-blue-600" },
                   { key: "Overdue", testId: "invoice-status-row-overdue", cls: "text-red-600 font-medium" },
                   { key: "Paid", testId: "invoice-status-row-paid", cls: "text-emerald-600" },

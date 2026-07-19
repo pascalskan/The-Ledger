@@ -674,7 +674,7 @@ export default function ClientDetailPage() {
                 {clientInvoices.slice(0, 3).map((inv) => (
                   <div
                     key={inv.id}
-                    className="flex justify-between items-center border rounded px-3 py-2 bg-slate-50 dark:bg-slate-900 cursor-pointer hover:bg-muted/50"
+                    className="flex justify-between items-center border rounded px-3 py-2 bg-muted dark:bg-slate-900 cursor-pointer hover:bg-muted/50"
                     data-testid={`row-client-invoice-${inv.id}`}
                     onClick={() => setLocation(`/invoices/${inv.id}`)}
                   >
@@ -983,7 +983,7 @@ export default function ClientDetailPage() {
                 {clientJobs.slice(0, 4).map((job) => (
                   <div
                     key={job.id}
-                    className="grid gap-2 rounded-lg border bg-slate-50 px-3 py-2.5 transition hover:bg-muted/50 dark:bg-slate-900 cursor-pointer"
+                    className="grid gap-2 rounded-lg border bg-muted px-3 py-2.5 transition hover:bg-muted/50 dark:bg-slate-900 cursor-pointer"
                     data-testid={`row-client-job-${job.id}`}
                     onClick={() => setLocation(`/jobs/${job.id}`)}
                   >
@@ -1131,7 +1131,7 @@ export default function ClientDetailPage() {
                   .map((d: any, idx: number) => (
                     <div
                       key={d.id || idx}
-                      className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 bg-slate-50 dark:bg-slate-900"
+                      className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 bg-muted dark:bg-slate-900"
                       data-testid={`row-client-doc-${d.id || idx}`}
                     >
                       <div className="min-w-0">

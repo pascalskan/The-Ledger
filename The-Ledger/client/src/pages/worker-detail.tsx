@@ -190,7 +190,7 @@ export default function WorkerDetailPage() {
                     <CardContent className="space-y-2 text-sm">
                         {worker.documents && worker.documents.length > 0 ? (
                             worker.documents.map((doc, i) => (
-                                <div key={i} className="flex justify-between items-center border rounded p-2 text-sm bg-slate-50 dark:bg-slate-900">
+                                <div key={i} className="flex justify-between items-center border rounded p-2 text-sm bg-muted dark:bg-slate-900">
                                     <span className="truncate max-w-[120px]" title={doc.name}>{doc.name}</span>
                                     <Button variant="ghost" size="sm" onClick={() => setViewDoc(doc)} className="h-6 px-2">
                                         <Eye className="h-3 w-3" />
@@ -230,9 +230,9 @@ export default function WorkerDetailPage() {
                     <DialogTitle>{viewDoc?.name}</DialogTitle>
                     <DialogDescription>Document Preview</DialogDescription>
                 </DialogHeader>
-                <div className="flex-1 w-full h-full bg-slate-100 rounded-md flex items-center justify-center border">
+                <div className="flex-1 w-full h-full bg-muted rounded-md flex items-center justify-center border">
                     <div className="text-center p-8">
-                        <FileText className="h-16 w-16 mx-auto text-slate-400 mb-4" />
+                        <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">Preview not available in demo mode.</p>
                         <p className="text-xs text-muted-foreground mt-2">In a real app, this would render PDF or Image content.</p>
                     </div>

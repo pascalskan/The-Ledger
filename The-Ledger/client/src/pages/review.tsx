@@ -140,7 +140,7 @@ export default function ReviewPage() {
     const PriorityChip = ({ priority }: { priority: "critical" | "attention" | "normal" }) => {
       if (priority === "critical") return <Badge variant="outline" className="border-rose-300 text-rose-700 text-[10px]">Critical</Badge>;
       if (priority === "attention") return <Badge variant="outline" className="border-amber-300 text-amber-700 text-[10px]">Attention</Badge>;
-      return <Badge variant="outline" className="border-slate-200 text-slate-500 text-[10px]">Normal</Badge>;
+      return <Badge variant="outline" className="border-border text-muted-foreground text-[10px]">Normal</Badge>;
     };
 
     const PendingItemCard = ({ item }: { item: typeof pmReviewItems[0] }) => {
@@ -169,7 +169,7 @@ export default function ReviewPage() {
                   {getJobTitle(item.jobId)} · {getWorkerName(item)}
                 </p>
                 {(item as any).content && (
-                  <p className="text-xs text-slate-600 mt-1.5 line-clamp-2">{(item as any).content}</p>
+                  <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{(item as any).content}</p>
                 )}
               </div>
               <div className="flex flex-row sm:flex-col gap-2 shrink-0">
@@ -193,7 +193,7 @@ export default function ReviewPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-slate-200 text-slate-600 hover:bg-slate-50 h-8 text-xs"
+                  className="border-border text-muted-foreground hover:bg-muted h-8 text-xs"
                   data-testid={`pm-review-escalate-${item.id}`}
                   onClick={() => handleEscalate(item.id)}
                 >
@@ -212,7 +212,7 @@ export default function ReviewPage() {
             </div>
             {isRequiringCorrection && (
               <div className="mt-3 pt-3 border-t space-y-2" data-testid={`pm-review-correction-form-${item.id}`}>
-                <label className="text-xs font-medium text-slate-700">Correction note for worker</label>
+                <label className="text-xs font-medium text-foreground">Correction note for worker</label>
                 <Input
                   placeholder="Explain what needs to be corrected..."
                   value={correctionNote}
@@ -410,7 +410,7 @@ export default function ReviewPage() {
                             <p className="font-medium text-sm">{(item as any).title ?? item.type}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">{getJobTitle(item.jobId)} · {getWorkerName(item)}</p>
                             {(item as any).content && (
-                              <p className="text-xs text-slate-600 mt-1.5 line-clamp-2">{(item as any).content}</p>
+                              <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{(item as any).content}</p>
                             )}
                             {(item as any).escalatedAt && (
                               <p className="text-[11px] text-muted-foreground mt-1.5">
@@ -492,8 +492,8 @@ export default function ReviewPage() {
         {/* Operational queue header (the action surface, always visible) */}
         {isCEO && (
           <div className="flex items-center gap-2 pt-2">
-            <Inbox className="h-5 w-5 text-slate-400" />
-            <h3 className="text-lg font-semibold text-slate-900">Review Queue</h3>
+            <Inbox className="h-5 w-5 text-muted-foreground" />
+            <h3 className="text-lg font-semibold text-foreground">Review Queue</h3>
           </div>
         )}
 
@@ -514,12 +514,12 @@ export default function ReviewPage() {
           
           <Card>
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center">
                 <FileText className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Reports</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-muted-foreground">Reports</p>
+                <p className="text-2xl font-bold text-foreground">
                   {jobsWithReviews.reduce((sum, j) => sum + j.pendingReports, 0)}
                 </p>
               </div>
@@ -528,12 +528,12 @@ export default function ReviewPage() {
 
           <Card>
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center">
                 <ImageIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Photos</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-muted-foreground">Photos</p>
+                <p className="text-2xl font-bold text-foreground">
                   {jobsWithReviews.reduce((sum, j) => sum + j.pendingPhotos, 0)}
                 </p>
               </div>
@@ -542,7 +542,7 @@ export default function ReviewPage() {
         </div>
 
         <Card>
-          <CardHeader className="pb-3 border-b border-slate-100">
+          <CardHeader className="pb-3 border-b border-border">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <CardTitle>Jobs Requiring Review</CardTitle>
@@ -552,7 +552,7 @@ export default function ReviewPage() {
                 {/* UX-7.2 — Standard / Priority order toggle (visibility only) */}
                 {isCEO && (
                   <div
-                    className="inline-flex rounded-md border border-slate-200 p-0.5"
+                    className="inline-flex rounded-md border border-border p-0.5"
                     data-testid="review-order-toggle"
                   >
                     <Button
@@ -580,10 +580,10 @@ export default function ReviewPage() {
                   </div>
                 )}
                 <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search jobs..."
-                    className="pl-9 bg-slate-50"
+                    className="pl-9 bg-muted"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
@@ -593,7 +593,7 @@ export default function ReviewPage() {
           </CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-slate-50/50">
+              <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead>Job ID</TableHead>
                   <TableHead>Title</TableHead>
@@ -608,10 +608,10 @@ export default function ReviewPage() {
                     <TableCell colSpan={5} className="py-10" data-testid="review-queue-empty">
                       <div className="flex flex-col items-center justify-center text-center">
                         <CheckCircle2 className="mb-3 h-10 w-10 text-emerald-500" />
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium text-foreground">
                           {search ? "No jobs match your search" : "Queue is clear"}
                         </p>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-muted-foreground">
                           {search
                             ? "Try a different job title or ID."
                             : "No jobs currently require review — every submission has been actioned."}
@@ -622,10 +622,10 @@ export default function ReviewPage() {
                 ) : (
                   filteredJobs.map((job) => (
                     <TableRow key={job.id}>
-                      <TableCell className="font-medium text-slate-700">{job.jobId}</TableCell>
+                      <TableCell className="font-medium text-foreground">{job.jobId}</TableCell>
                       <TableCell>
                         <div className="font-medium">{job.title}</div>
-                        <div className="text-xs text-slate-500">{job.locationAddress}</div>
+                        <div className="text-xs text-muted-foreground">{job.locationAddress}</div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
