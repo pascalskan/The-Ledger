@@ -294,7 +294,10 @@ export function buildExecutionAudit(
     id: `exec-audit-${first.ruleId}-${Date.now()}`,
     ruleId: first.ruleId,
     ruleName: first.ruleName,
-    timestamp: first.timestamp,
+    // AutomationExecution exposes `executedAt`, not `timestamp`. Reading the
+    // wrong name wrote `undefined` into the audit entry's timestamp — Audit
+    // Doctrine requires "When" on every financially relevant action.
+    timestamp: first.executedAt,
     jobId: first.jobId,
     jobName: first.jobName,
     initiatedBy: first.initiatedBy,
