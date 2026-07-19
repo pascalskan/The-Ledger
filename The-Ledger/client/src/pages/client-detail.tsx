@@ -9,6 +9,13 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Phone, Building2, Save, X, FileText, Upload, Link2, Trash2, Tag, BadgeCheck, CircleSlash, HandCoins, MessageSquareText, PhoneCall, Send, StickyNote, ShieldCheck, Users, Eye, KeyRound, Clock, BadgeDollarSign } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/mockData";
+import {
+  getPortalAccountsByClient,
+  createPortalAccount,
+  disablePortalAccount,
+  reactivatePortalAccount,
+} from "@/lib/portalAuth";
 
 const DOC_LABEL: Record<string, string> = {
   contract: "Contract",
@@ -173,27 +180,11 @@ export default function ClientDetailPage() {
   const [activityFilter, setActivityFilter] = useState<"all" | "note" | "call" | "email">("all");
   const [activityPriorityOnly, setActivityPriorityOnly] = useState(false);
 
-  const [portal, setPortal] = useState<{
-    enabled: boolean;
-    access: "link" | "email";
-    visibility: {
-      invoices: boolean;
-      documents: boolean;
-      jobUpdates: boolean;
-      activity: boolean;
-    };
-    lastInviteAt?: string;
-    lastAccessAt?: string;
-  }>(() => ({
-    enabled: false,
-    access: "link",
-    visibility: {
-      invoices: true,
-      documents: true,
-      jobUpdates: true,
-      activity: false,
-    },
-  }));
+  // CL-2 — Portal account provisioning (CEO-only). Backed by portalAuth store.
+  const { user } = useAuth();
+  const isCEO = !!user?.roleIds?.[0]?.includes("ceo");
+  const [portalRefresh, setPortalRefresh] = useState(0);
+  const [newPortalEmail, setNewPortalEmail] = useState("");
 
   const totalBilled = clientInvoices.reduce(
     (sum, inv) => sum + inv.lineItems.reduce((s, i) => s + i.qty * i.unitPrice, 0),
@@ -361,162 +352,147 @@ export default function ClientDetailPage() {
                 )}
 
                 <div className="rounded-lg border bg-muted/30 p-3" data-testid="card-client-portal">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                        <div className="text-sm font-semibold" data-testid="text-client-portal-title">Client Portal</div>
-                        <Badge variant={portal.enabled ? "default" : "secondary"} className="text-xs" data-testid="badge-client-portal-status">
-                          {portal.enabled ? "Enabled" : "Disabled"}
-                        </Badge>
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground" data-testid="text-client-portal-subtitle">
-                        Share invoices, documents and job updates in one place.
-                      </div>
-                    </div>
+                  {(() => {
+                    const portalAccounts = getPortalAccountsByClient(client.id);
+                    // portalRefresh is read to re-derive after a mutation.
+                    void portalRefresh;
 
-                    <button
-                      type="button"
-                      className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs transition bg-background hover:bg-muted/60`}
-                      onClick={() => setPortal((p) => ({ ...p, enabled: !p.enabled }))}
-                      data-testid="toggle-client-portal-enabled"
-                    >
-                      <span className={`h-2.5 w-2.5 rounded-full ${portal.enabled ? "bg-emerald-500" : "bg-muted-foreground/40"}`} aria-hidden />
-                      {portal.enabled ? "Disable" : "Enable"}
-                    </button>
-                  </div>
+                    const statusBadge = (status: string) =>
+                      status === "Active" ? "default" : status === "Pending" ? "secondary" : "outline";
 
-                  <div className="mt-3 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-md border bg-background p-2.5" data-testid="card-client-portal-access">
-                      <div className="flex items-center gap-2 text-xs font-medium" data-testid="text-client-portal-access-title">
-                        <KeyRound className="h-4 w-4 text-muted-foreground" /> Access
-                      </div>
-                      <div className="mt-2 flex gap-2">
-                        <button
-                          type="button"
-                          className={`flex-1 rounded-md border px-2 py-1.5 text-xs transition ${portal.access === "link" ? "bg-muted" : "hover:bg-muted/60"}`}
-                          onClick={() => setPortal((p) => ({ ...p, access: "link" }))}
-                          data-testid="button-client-portal-access-link"
-                        >
-                          Share link
-                        </button>
-                        <button
-                          type="button"
-                          className={`flex-1 rounded-md border px-2 py-1.5 text-xs transition ${portal.access === "email" ? "bg-muted" : "hover:bg-muted/60"}`}
-                          onClick={() => setPortal((p) => ({ ...p, access: "email" }))}
-                          data-testid="button-client-portal-access-email"
-                        >
-                          Email invite
-                        </button>
-                      </div>
+                    const handleCreate = () => {
+                      const trimmed = newPortalEmail.trim();
+                      if (!trimmed) {
+                        toast({ title: "Email required", description: "Enter the client user's email.", variant: "destructive" });
+                        return;
+                      }
+                      createPortalAccount({
+                        clientId: client.id,
+                        email: trimmed,
+                        provisionedBy: user?.email || "ceo",
+                        status: "Pending",
+                      });
+                      setNewPortalEmail("");
+                      setPortalRefresh((n) => n + 1);
+                      toast({ title: "Portal account created", description: `${trimmed} provisioned (Pending).` });
+                    };
 
-                      <div className="mt-2 flex items-center gap-2">
-                        <Input
-                          value={`https://portal.theledger.app/${client.id}`}
-                          readOnly
-                          className="h-8 text-xs font-mono"
-                          data-testid="input-client-portal-link"
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 px-2"
-                          onClick={async () => {
-                            try {
-                              await navigator.clipboard.writeText(`https://portal.theledger.app/${client.id}`);
-                              toast({ title: "Link copied", description: "Portal link copied to clipboard." });
-                            } catch {
-                              toast({ title: "Copy failed", description: "Clipboard not available in this environment." });
-                            }
-                          }}
-                          disabled={!portal.enabled}
-                          data-testid="button-client-portal-copy-link"
-                        >
-                          <Link2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                    return (
+                      <>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                              <div className="text-sm font-semibold" data-testid="text-client-portal-title">Portal Accounts</div>
+                              <Badge variant="secondary" className="text-xs" data-testid="badge-client-portal-count">
+                                {portalAccounts.length} user{portalAccounts.length === 1 ? "" : "s"}
+                              </Badge>
+                            </div>
+                            <div className="mt-1 text-xs text-muted-foreground" data-testid="text-client-portal-subtitle">
+                              Provision read-only portal access for this client. CEO-only.
+                            </div>
+                          </div>
+                        </div>
 
-                      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground" data-testid="row-client-portal-last">
-                        <span className="inline-flex items-center gap-1" data-testid="text-client-portal-last-invite">
-                          <Clock className="h-3.5 w-3.5" /> Last invite: {portal.lastInviteAt ? new Date(portal.lastInviteAt).toLocaleDateString() : "—"}
-                        </span>
-                        <span className="inline-flex items-center gap-1" data-testid="text-client-portal-last-access">
-                          <Eye className="h-3.5 w-3.5" /> Last access: {portal.lastAccessAt ? new Date(portal.lastAccessAt).toLocaleDateString() : "—"}
-                        </span>
-                      </div>
-
-                      <div className="mt-2 flex gap-2">
-                        <Button
-                          size="sm"
-                          className="h-8"
-                          onClick={() => {
-                            setPortal((p) => ({ ...p, lastInviteAt: new Date().toISOString() }));
-                            toast({ title: "Invite sent", description: `Mock invite recorded for ${client.email}.` });
-                          }}
-                          disabled={!portal.enabled}
-                          data-testid="button-client-portal-send-invite"
-                        >
-                          <Send className="h-4 w-4 mr-2" /> Send invite
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8"
-                          onClick={() => {
-                            setPortal((p) => ({ ...p, lastAccessAt: new Date().toISOString() }));
-                            toast({ title: "Portal viewed", description: "Mock last-access updated." });
-                          }}
-                          disabled={!portal.enabled}
-                          data-testid="button-client-portal-mark-access"
-                        >
-                          Mark access
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="rounded-md border bg-background p-2.5" data-testid="card-client-portal-visibility">
-                      <div className="flex items-center gap-2 text-xs font-medium" data-testid="text-client-portal-visibility-title">
-                        <Users className="h-4 w-4 text-muted-foreground" /> Client can see
-                      </div>
-
-                      <div className="mt-2 grid gap-2">
-                        {([
-                          { key: "invoices", label: "Invoices & payment status", icon: <BadgeDollarSign className="h-4 w-4 text-muted-foreground" /> },
-                          { key: "documents", label: "Shared documents", icon: <FileText className="h-4 w-4 text-muted-foreground" /> },
-                          { key: "jobUpdates", label: "Job updates", icon: <MessageSquareText className="h-4 w-4 text-muted-foreground" /> },
-                          { key: "activity", label: "Activity timeline (selected items)", icon: <StickyNote className="h-4 w-4 text-muted-foreground" /> },
-                        ] as const).map((row) => (
-                          <label
-                            key={row.key}
-                            className={`flex items-center justify-between gap-3 rounded-md border px-2.5 py-2 text-xs ${!portal.enabled ? "opacity-60" : ""}`}
-                            data-testid={`row-client-portal-visibility-${row.key}`}
+                        {!isCEO && (
+                          <div
+                            className="mt-3 rounded-md border bg-background px-3 py-2 text-xs text-muted-foreground"
+                            data-testid="text-client-portal-ceo-only"
                           >
-                            <span className="inline-flex items-center gap-2">
-                              {row.icon}
-                              {row.label}
-                            </span>
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4"
-                              checked={portal.visibility[row.key]}
-                              onChange={(e) =>
-                                setPortal((p) => ({
-                                  ...p,
-                                  visibility: { ...p.visibility, [row.key]: e.target.checked },
-                                }))
-                              }
-                              disabled={!portal.enabled}
-                              data-testid={`toggle-client-portal-visibility-${row.key}`}
-                            />
-                          </label>
-                        ))}
-                      </div>
+                            Only the CEO can provision or change portal access. You have read-only visibility of portal users.
+                          </div>
+                        )}
 
-                      <div className="mt-2 text-[11px] text-muted-foreground" data-testid="text-client-portal-note">
-                        This is a mockup concept: settings are session-only and do not create real external access.
-                      </div>
-                    </div>
-                  </div>
+                        <div className="mt-3 space-y-2" data-testid="list-client-portal-accounts">
+                          {portalAccounts.length === 0 && (
+                            <div className="text-xs text-muted-foreground" data-testid="text-client-portal-no-accounts">
+                              No portal accounts yet.
+                            </div>
+                          )}
+                          {portalAccounts.map((acc) => (
+                            <div
+                              key={acc.id}
+                              className="flex items-center justify-between gap-3 rounded-md border bg-background px-3 py-2"
+                              data-testid={`row-client-portal-account-${acc.id}`}
+                            >
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <KeyRound className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                  <span className="text-sm font-medium truncate" data-testid={`text-portal-account-email-${acc.id}`}>
+                                    {acc.email}
+                                  </span>
+                                  <Badge variant={statusBadge(acc.status) as any} className="text-xs" data-testid={`badge-portal-account-status-${acc.id}`}>
+                                    {acc.status}
+                                  </Badge>
+                                </div>
+                                <div className="mt-0.5 text-[11px] text-muted-foreground" data-testid={`text-portal-account-last-login-${acc.id}`}>
+                                  <Clock className="inline h-3 w-3 mr-1" />
+                                  {acc.lastLoginAt ? `Last login ${new Date(acc.lastLoginAt).toLocaleDateString()}` : "Never signed in"}
+                                </div>
+                              </div>
+
+                              {isCEO && (
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {acc.status === "Disabled" ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-8"
+                                      onClick={() => {
+                                        reactivatePortalAccount(acc.id);
+                                        setPortalRefresh((n) => n + 1);
+                                        toast({ title: "Account reactivated", description: `${acc.email} can sign in again.` });
+                                      }}
+                                      data-testid={`button-portal-account-reactivate-${acc.id}`}
+                                    >
+                                      Reactivate
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-8 text-destructive"
+                                      onClick={() => {
+                                        disablePortalAccount(acc.id);
+                                        setPortalRefresh((n) => n + 1);
+                                        toast({ title: "Account disabled", description: `${acc.email} can no longer sign in.` });
+                                      }}
+                                      data-testid={`button-portal-account-disable-${acc.id}`}
+                                    >
+                                      <CircleSlash className="h-4 w-4 mr-1" /> Disable
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        {isCEO && (
+                          <div className="mt-3 flex items-end gap-2" data-testid="form-client-portal-create">
+                            <div className="flex-1">
+                              <Label className="text-xs">New portal user email</Label>
+                              <Input
+                                className="mt-1 h-9"
+                                type="email"
+                                value={newPortalEmail}
+                                onChange={(e) => setNewPortalEmail(e.target.value)}
+                                placeholder="name@client.com"
+                                data-testid="input-client-portal-new-email"
+                              />
+                            </div>
+                            <Button size="sm" className="h-9" onClick={handleCreate} data-testid="button-client-portal-create">
+                              <Send className="h-4 w-4 mr-2" /> Create account
+                            </Button>
+                          </div>
+                        )}
+
+                        <div className="mt-2 text-[11px] text-muted-foreground" data-testid="text-client-portal-note">
+                          Mock provisioning: accounts are created in a frontend-only store. New accounts start as Pending until activated.
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">

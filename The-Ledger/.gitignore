@@ -4,3 +4,9 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Playwright test artefacts — regenerated on every run, never source of truth.
+# Previously tracked, which made every local test run appear as a large diff.
+playwright-report/
+test-results/
+.playwright-mcp/

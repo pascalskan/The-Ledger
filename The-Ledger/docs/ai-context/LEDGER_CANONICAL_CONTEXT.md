@@ -718,6 +718,47 @@ Clients can:
 
 Client access is provisioned from the main Ledger platform.
 
+### Implementation Status — Workstream D (CL-1 → CL-7)
+
+Status: COMPLETE — awaiting review and merge
+Branch: `feature/client-portal-workstream`
+Handoff: `docs/handoffs/client-portal-workstream-handoff.md`
+
+The Client Portal is implemented as a self-authenticating surface at `/portal` with its own
+account model, session, projection layer and audit trail.
+
+### Client Portal Projection Doctrine
+
+Established by Workstream D. **The Client Portal must NEVER consume raw internal entities.**
+
+All portal data flows through `client/src/lib/portalProjections.ts`, which constructs fresh
+objects containing an explicit whitelist of client-safe fields. This makes the following
+structurally unreachable from the portal rather than merely un-rendered:
+
+- Labour, material and equipment costs
+- Margin, gross profit, net profit, profitability
+- Payroll data and worker pay rates
+- Internal notes, internal estimates and internal forecasts
+- Review Centre data
+- Financial Controls, Reconciliation, Exception Resolution
+- Accounting Sync status (including the internal `Exported` invoice state)
+- Governance and automation data
+- Internal audit records
+- Worker surnames and personal contact details
+
+Any future Client Portal work MUST consume projection models only. Adding a field to a portal
+component cannot expose internal data, because that data never enters the projected object.
+
+Client Portal audit events (15): `client_portal_provisioned`, `client_portal_login`,
+`client_portal_logout`, `client_viewed_dashboard`, `client_viewed_job`,
+`client_viewed_document`, `client_viewed_invoice`, `client_created_request`,
+`document_shared_with_client`, `document_access_revoked`, `client_created_thread`,
+`client_viewed_thread`, `client_viewed_quote`, `client_viewed_payment`,
+`client_downloaded_invoice`.
+
+Not yet implemented: the frozen Client Request Domain (8 request types, routing, escalation,
+resolution/decline). The portal Requests section is a placeholder.
+
 ---
 
 # CURRENT DEVELOPMENT MODEL

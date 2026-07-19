@@ -20,6 +20,23 @@ import { JobSyncPanel } from "@/components/finance/JobSyncPanel";
 import { JobReconciliationPanel } from "@/components/finance/JobReconciliationPanel";
 import { JobExceptionPanel } from "@/components/finance/JobExceptionPanel";
 import { INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS } from "@/lib/invoiceBuilder";
+import {
+  getAllDocumentsForProject,
+  shareDocumentWithClient,
+  revokeDocumentAccess,
+  restoreDocumentAccess,
+  DOCUMENT_CATEGORY_LABELS,
+  type ClientDocumentCategory,
+} from "@/lib/portalDocuments";
+
+// Map an internal job-document category onto a client-facing category.
+const CLIENT_DOC_CATEGORY: Record<string, ClientDocumentCategory> = {
+  report: "report",
+  compliance: "certificate",
+  site: "other",
+  client: "other",
+  other: "other",
+};
 
 export default function JobDetailPage() {
   const { jobs, clients, workers, equipment, invoices, addInvoice, roles, updateJob, users, invoiceDrafts, reviewItems, jobNotes, jobCommunications, addJobNote, updateJobNote, addJobCommunication } = useStore();
@@ -33,6 +50,8 @@ export default function JobDetailPage() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editNoteContent, setEditNoteContent] = useState("");
   const [newCommContent, setNewCommContent] = useState("");
+  // CL-5 — client document sharing (re-derives the shared list after a mutation)
+  const [docShareVersion, setDocShareVersion] = useState(0);
 
   const userIsPM = isProjectManager(user, roles);
   const userIsCEO = isCEO(user, roles);
@@ -531,9 +550,33 @@ export default function JobDetailPage() {
                                 )}
                               </div>
                             </div>
-                            <Button variant="ghost" size="sm" onClick={() => setViewDoc(doc)} data-testid={`button-job-doc-view-${doc.id || i}`}>
-                              <Eye className="h-4 w-4 mr-1" /> View
-                            </Button>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Button variant="ghost" size="sm" onClick={() => setViewDoc(doc)} data-testid={`button-job-doc-view-${doc.id || i}`}>
+                                <Eye className="h-4 w-4 mr-1" /> View
+                              </Button>
+                              {(userIsPM || userIsCEO) && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    shareDocumentWithClient({
+                                      projectId: job.id,
+                                      title: doc.name,
+                                      description: `Shared from job ${job.jobId}.`,
+                                      category: CLIENT_DOC_CATEGORY[doc.category ?? "other"] ?? "other",
+                                      sharedBy: user?.name || "Project Manager",
+                                      clientId: job.clientId,
+                                      uploadedAt: doc.uploadedAt,
+                                    });
+                                    setDocShareVersion(v => v + 1);
+                                    toast({ title: "Shared with client", description: `${doc.name} is now visible in the client portal.` });
+                                  }}
+                                  data-testid={`button-job-doc-share-${doc.id || i}`}
+                                >
+                                  <Send className="h-4 w-4 mr-1" /> Share
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -543,6 +586,88 @@ export default function JobDetailPage() {
               ) : (
                 <p className="text-sm text-muted-foreground italic" data-testid="pm-documents-empty">No documents attached.</p>
               )}
+
+              {/* CL-5 — Client portal sharing. Only documents listed here are
+                  visible to the client; revoking is non-destructive and audited. */}
+              {(userIsPM || userIsCEO) && (() => {
+                void docShareVersion;
+                const clientDocs = getAllDocumentsForProject(job.id);
+                return (
+                  <div className="mt-4 pt-4 border-t" data-testid="pm-client-shared-documents">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Shared with client
+                      </p>
+                    </div>
+
+                    {clientDocs.length === 0 ? (
+                      <p className="text-sm text-muted-foreground italic" data-testid="pm-client-shared-empty">
+                        Nothing shared with the client yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {clientDocs.map((cd) => (
+                          <div
+                            key={cd.id}
+                            className="flex justify-between items-center border rounded p-2 text-sm"
+                            data-testid={`pm-client-doc-${cd.id}`}
+                          >
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <p className="truncate font-medium">{cd.title}</p>
+                                <Badge variant="outline" className="text-[10px]">
+                                  {DOCUMENT_CATEGORY_LABELS[cd.category]}
+                                </Badge>
+                                <Badge
+                                  variant={cd.visibilityStatus === "Shared" ? "default" : "secondary"}
+                                  className="text-[10px]"
+                                  data-testid={`pm-client-doc-status-${cd.id}`}
+                                >
+                                  {cd.visibilityStatus}
+                                </Badge>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground">
+                                by {cd.sharedBy} · {new Date(cd.sharedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                              </p>
+                            </div>
+
+                            {cd.visibilityStatus === "Shared" ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive shrink-0"
+                                onClick={() => {
+                                  revokeDocumentAccess(cd.id, user?.name || "Project Manager", job.clientId);
+                                  setDocShareVersion(v => v + 1);
+                                  toast({ title: "Access revoked", description: `${cd.title} is no longer visible to the client.` });
+                                }}
+                                data-testid={`button-client-doc-revoke-${cd.id}`}
+                              >
+                                Revoke
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="shrink-0"
+                                onClick={() => {
+                                  restoreDocumentAccess(cd.id, user?.name || "Project Manager", job.clientId);
+                                  setDocShareVersion(v => v + 1);
+                                  toast({ title: "Access restored", description: `${cd.title} is visible to the client again.` });
+                                }}
+                                data-testid={`button-client-doc-restore-${cd.id}`}
+                              >
+                                Re-share
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
 
@@ -1256,15 +1381,118 @@ export default function JobDetailPage() {
                                     <FileText className="h-4 w-4 text-blue-500" />
                                     <span>{doc.name}</span>
                                 </div>
-                                <Button variant="ghost" size="sm" onClick={() => setViewDoc(doc)} data-testid={`button-job-doc-view-${i}`}>
-                                    <Eye className="h-4 w-4 mr-1" /> View
-                                </Button>
+                                <div className="flex items-center gap-1 shrink-0">
+                                    <Button variant="ghost" size="sm" onClick={() => setViewDoc(doc)} data-testid={`button-job-doc-view-${i}`}>
+                                        <Eye className="h-4 w-4 mr-1" /> View
+                                    </Button>
+                                    {userIsCEO && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                shareDocumentWithClient({
+                                                    projectId: job.id,
+                                                    title: doc.name,
+                                                    description: `Shared from job ${job.jobId}.`,
+                                                    category: CLIENT_DOC_CATEGORY[doc.category ?? "other"] ?? "other",
+                                                    sharedBy: user?.name || "CEO",
+                                                    clientId: job.clientId,
+                                                    uploadedAt: doc.uploadedAt,
+                                                });
+                                                setDocShareVersion(v => v + 1);
+                                                toast({ title: "Shared with client", description: `${doc.name} is now visible in the client portal.` });
+                                            }}
+                                            data-testid={`button-job-doc-share-${doc.id || i}`}
+                                        >
+                                            <Send className="h-4 w-4 mr-1" /> Share
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
                 ) : (
                     <p className="text-sm text-muted-foreground italic">No documents attached.</p>
                 )}
+
+                {/* CL-5 — Client portal sharing (CEO view). */}
+                {userIsCEO && (() => {
+                    void docShareVersion;
+                    const clientDocs = getAllDocumentsForProject(job.id);
+                    return (
+                        <div className="mt-4 pt-4 border-t" data-testid="pm-client-shared-documents">
+                            <div className="flex items-center gap-2 mb-2">
+                                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Shared with client
+                                </p>
+                            </div>
+                            {clientDocs.length === 0 ? (
+                                <p className="text-sm text-muted-foreground italic" data-testid="pm-client-shared-empty">
+                                    Nothing shared with the client yet.
+                                </p>
+                            ) : (
+                                <div className="space-y-1.5">
+                                    {clientDocs.map((cd) => (
+                                        <div
+                                            key={cd.id}
+                                            className="flex justify-between items-center border rounded p-2 text-sm"
+                                            data-testid={`pm-client-doc-${cd.id}`}
+                                        >
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <p className="truncate font-medium">{cd.title}</p>
+                                                    <Badge variant="outline" className="text-[10px]">
+                                                        {DOCUMENT_CATEGORY_LABELS[cd.category]}
+                                                    </Badge>
+                                                    <Badge
+                                                        variant={cd.visibilityStatus === "Shared" ? "default" : "secondary"}
+                                                        className="text-[10px]"
+                                                        data-testid={`pm-client-doc-status-${cd.id}`}
+                                                    >
+                                                        {cd.visibilityStatus}
+                                                    </Badge>
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground">
+                                                    by {cd.sharedBy} · {new Date(cd.sharedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                                </p>
+                                            </div>
+                                            {cd.visibilityStatus === "Shared" ? (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-destructive shrink-0"
+                                                    onClick={() => {
+                                                        revokeDocumentAccess(cd.id, user?.name || "CEO", job.clientId);
+                                                        setDocShareVersion(v => v + 1);
+                                                        toast({ title: "Access revoked", description: `${cd.title} is no longer visible to the client.` });
+                                                    }}
+                                                    data-testid={`button-client-doc-revoke-${cd.id}`}
+                                                >
+                                                    Revoke
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="shrink-0"
+                                                    onClick={() => {
+                                                        restoreDocumentAccess(cd.id, user?.name || "CEO", job.clientId);
+                                                        setDocShareVersion(v => v + 1);
+                                                        toast({ title: "Access restored", description: `${cd.title} is visible to the client again.` });
+                                                    }}
+                                                    data-testid={`button-client-doc-restore-${cd.id}`}
+                                                >
+                                                    Re-share
+                                                </Button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
             </CardContent>
         </Card>
 
