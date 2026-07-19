@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, ReceiptText, MessageSquare } from "lucide-react";
+import { FileText, MessageSquare } from "lucide-react";
 
 function Placeholder({
   testid,
@@ -32,18 +32,6 @@ function Placeholder({
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-export function PortalInvoices() {
-  return (
-    <Placeholder
-      testid="portal-invoices"
-      title="Invoices"
-      subtitle="Your invoices and payment status."
-      body="Invoices and payment status will be available here shortly."
-      icon={ReceiptText}
-    />
   );
 }
 

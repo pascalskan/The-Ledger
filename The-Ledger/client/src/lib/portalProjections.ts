@@ -50,6 +50,18 @@ import {
   type ClientThreadTopic,
   type ClientMessageSenderType,
 } from "@/lib/portalCommunication";
+import {
+  getQuotesForProjects,
+  getVariationsForProjects,
+  getPaymentsForProjects,
+  getCreditNotesForProjects,
+  getPaymentsForInvoice,
+  getCreditNotesForInvoice,
+  CLIENT_VISIBLE_QUOTE_STATUSES,
+  CLIENT_VISIBLE_VARIATION_STATUSES,
+  type ClientQuoteStatus,
+  type ClientVariationStatus,
+} from "@/lib/portalFinancialModels";
 
 // ── Projection models ──────────────────────────────────────────────────────
 
@@ -116,14 +128,25 @@ export interface PortalInvoiceLine {
   unitPrice: number;
 }
 
+/**
+ * Client-facing invoice status. Deliberately NOT the internal status union —
+ * the internal "Exported" state is an accounting-sync artefact and must never
+ * be visible to a client, and "Draft" invoices are never projected at all.
+ */
+export type PortalInvoiceStatus = "Issued" | "Part Paid" | "Paid" | "Overdue" | "Cancelled";
+
 export interface PortalInvoice {
   id: string;
   invoiceId: string;
+  projectId?: string;
+  projectTitle?: string;
   issueDate: string;
   dueDate: string;
-  status: Invoice["status"];
+  status: PortalInvoiceStatus;
   lineItems: PortalInvoiceLine[];
   total: number;
+  amountPaid: number;
+  amountOutstanding: number;
 }
 
 // ── Job statuses that are visible to clients ───────────────────────────────
@@ -205,6 +228,27 @@ export function toPortalJob(job: Job, workers: Worker[], roles: Role[]): PortalJ
   };
 }
 
+/**
+ * Map an internal invoice status onto the client-facing status, factoring in
+ * payments received. Internal-only states are neutralised here:
+ *   - "Exported" (accounting sync) → "Issued"
+ *   - "Void" → "Cancelled"
+ *   - "Draft" never reaches this function (filtered before projection)
+ */
+function deriveInvoiceStatus(
+  internalStatus: Invoice["status"],
+  total: number,
+  amountPaid: number
+): PortalInvoiceStatus {
+  if (internalStatus === "Void") return "Cancelled";
+  if (amountPaid >= total && total > 0) return "Paid";
+  if (internalStatus === "Paid") return "Paid";
+  if (amountPaid > 0) return "Part Paid";
+  if (internalStatus === "Overdue") return "Overdue";
+  // "Sent" and "Exported" both present to the client as simply issued.
+  return "Issued";
+}
+
 export function toPortalInvoice(invoice: Invoice): PortalInvoice {
   const lineItems: PortalInvoiceLine[] = (invoice.lineItems || []).map((li) => ({
     description: li.description,
@@ -212,15 +256,25 @@ export function toPortalInvoice(invoice: Invoice): PortalInvoice {
     unitPrice: li.unitPrice,
   }));
   const total = lineItems.reduce((sum, li) => sum + li.qty * li.unitPrice, 0);
+  const amountPaid = getPaymentsForInvoice(invoice.id).reduce((s, p) => s + p.amount, 0);
+  const credited = getCreditNotesForInvoice(invoice.id).reduce((s, c) => s + c.amount, 0);
+  const status = deriveInvoiceStatus(invoice.status, total, amountPaid);
+  const amountOutstanding =
+    status === "Cancelled" ? 0 : Math.max(0, total - amountPaid - credited);
 
+  // NOTE: invoice.notes, invoice.companyId and invoice.quickbooksInvoiceId
+  // (accounting-sync reference) are deliberately never copied.
   return {
     id: invoice.id,
     invoiceId: invoice.invoiceId,
+    projectId: invoice.jobId,
     issueDate: invoice.issueDate,
     dueDate: invoice.dueDate,
-    status: invoice.status,
+    status,
     lineItems,
     total,
+    amountPaid,
+    amountOutstanding,
   };
 }
 
@@ -243,8 +297,24 @@ export function projectClientJobs(
     .map((j) => toPortalJob(j, workers, roles));
 }
 
-export function projectClientInvoices(clientId: string, invoices: Invoice[]): PortalInvoice[] {
-  return invoices.filter((i) => i.clientId === clientId).map(toPortalInvoice);
+/**
+ * Project the client's invoices. Draft invoices are internal working state and
+ * are never projected.
+ */
+export function projectClientInvoices(
+  clientId: string,
+  invoices: Invoice[],
+  projectTitleById: Record<string, string> = {}
+): PortalInvoice[] {
+  return invoices
+    .filter((i) => i.clientId === clientId)
+    .filter((i) => i.status !== "Draft")
+    .map(toPortalInvoice)
+    .map((pi) => ({
+      ...pi,
+      projectTitle: pi.projectId ? projectTitleById[pi.projectId] : undefined,
+    }))
+    .sort((a, b) => (a.issueDate < b.issueDate ? 1 : -1));
 }
 
 // ── Milestones / Deliverables / Timeline projections (CL-4) ─────────────────
@@ -320,6 +390,210 @@ export function projectTimeline(job: PortalJob): PortalTimelineEvent[] {
     description: e.description,
     date: e.date,
   }));
+}
+
+// ── Financial projections (CL-6) ────────────────────────────────────────────
+//
+// Doctrine boundary. Every value below is a commercial artefact the client is
+// a party to. No cost, margin, profit, payroll, estimate, forecast, review,
+// control, reconciliation, exception or accounting-sync value is ever read
+// into these projections.
+
+export interface PortalQuote {
+  id: string;
+  quoteNumber: string;
+  projectId: string;
+  projectTitle: string;
+  description: string;
+  issueDate: string;
+  expiryDate: string;
+  status: Exclude<ClientQuoteStatus, "Draft">;
+  totalValue: number;
+}
+
+export interface PortalVariation {
+  id: string;
+  variationNumber: string;
+  projectId: string;
+  projectTitle: string;
+  description: string;
+  value: number;
+  status: Exclude<ClientVariationStatus, "Pending Approval">;
+  approvalDate?: string;
+}
+
+export interface PortalPayment {
+  id: string;
+  paymentDate: string;
+  amount: number;
+  reference: string;
+  method: string;
+  invoiceId: string;
+  invoiceNumber: string;
+}
+
+export interface PortalCreditNote {
+  id: string;
+  creditNoteNumber: string;
+  issueDate: string;
+  amount: number;
+  reason: string;
+  invoiceNumber: string;
+}
+
+export type PortalBalanceHealth = "Healthy" | "Due Soon" | "Overdue";
+
+/**
+ * The aggregate client-facing financial position — the client's commercial
+ * statement. Derived entirely from projected commercial artefacts.
+ */
+export interface ClientFinancialProjection {
+  totalQuoted: number;
+  totalApproved: number;
+  totalInvoiced: number;
+  totalPaid: number;
+  totalCredited: number;
+  outstandingBalance: number;
+  overdueAmount: number;
+  nextDueInvoice?: PortalInvoice;
+  health: PortalBalanceHealth;
+  quotes: PortalQuote[];
+  variations: PortalVariation[];
+  invoices: PortalInvoice[];
+  payments: PortalPayment[];
+  creditNotes: PortalCreditNote[];
+}
+
+/** Project the client's quotes. Draft quotes are never projected. */
+export function projectClientQuotes(
+  visibleProjectIds: string[],
+  projectTitleById: Record<string, string> = {}
+): PortalQuote[] {
+  return getQuotesForProjects(visibleProjectIds)
+    .filter((q) => CLIENT_VISIBLE_QUOTE_STATUSES.includes(q.status) && q.status !== "Draft")
+    .map((q) => ({
+      id: q.id,
+      quoteNumber: q.quoteNumber,
+      projectId: q.projectId,
+      projectTitle: projectTitleById[q.projectId] ?? "Project",
+      description: q.description,
+      issueDate: q.issueDate,
+      expiryDate: q.expiryDate,
+      status: q.status as Exclude<ClientQuoteStatus, "Draft">,
+      totalValue: q.totalValue,
+    }))
+    .sort((a, b) => (a.issueDate < b.issueDate ? 1 : -1));
+}
+
+/** Project the client's variations. Pending Approval is never projected. */
+export function projectClientVariations(
+  visibleProjectIds: string[],
+  projectTitleById: Record<string, string> = {}
+): PortalVariation[] {
+  return getVariationsForProjects(visibleProjectIds)
+    .filter(
+      (v) => CLIENT_VISIBLE_VARIATION_STATUSES.includes(v.status) && v.status !== "Pending Approval"
+    )
+    .map((v) => ({
+      id: v.id,
+      variationNumber: v.variationNumber,
+      projectId: v.projectId,
+      projectTitle: projectTitleById[v.projectId] ?? "Project",
+      description: v.description,
+      value: v.value,
+      status: v.status as Exclude<ClientVariationStatus, "Pending Approval">,
+      approvalDate: v.approvalDate,
+    }));
+}
+
+export function projectClientPayments(
+  visibleProjectIds: string[],
+  invoiceNumberById: Record<string, string> = {}
+): PortalPayment[] {
+  return getPaymentsForProjects(visibleProjectIds)
+    .map((p) => ({
+      id: p.id,
+      paymentDate: p.paymentDate,
+      amount: p.amount,
+      reference: p.reference,
+      method: p.method,
+      invoiceId: p.invoiceId,
+      invoiceNumber: invoiceNumberById[p.invoiceId] ?? p.invoiceId,
+    }))
+    .sort((a, b) => (a.paymentDate < b.paymentDate ? 1 : -1));
+}
+
+export function projectClientCreditNotes(
+  visibleProjectIds: string[],
+  invoiceNumberById: Record<string, string> = {}
+): PortalCreditNote[] {
+  return getCreditNotesForProjects(visibleProjectIds)
+    .map((c) => ({
+      id: c.id,
+      creditNoteNumber: c.creditNoteNumber,
+      issueDate: c.issueDate,
+      amount: c.amount,
+      reason: c.reason,
+      invoiceNumber: invoiceNumberById[c.invoiceId] ?? c.invoiceId,
+    }))
+    .sort((a, b) => (a.issueDate < b.issueDate ? 1 : -1));
+}
+
+/**
+ * Build the aggregate client financial projection. All KPI values are derived
+ * from the projected commercial artefacts — never hardcoded, and never sourced
+ * from internal cost or margin data.
+ */
+export function buildClientFinancialProjection(
+  quotes: PortalQuote[],
+  variations: PortalVariation[],
+  invoices: PortalInvoice[],
+  payments: PortalPayment[],
+  creditNotes: PortalCreditNote[]
+): ClientFinancialProjection {
+  const totalQuoted = quotes.reduce((s, q) => s + q.totalValue, 0);
+  const totalApproved =
+    quotes.filter((q) => q.status === "Accepted").reduce((s, q) => s + q.totalValue, 0) +
+    variations.filter((v) => v.status === "Approved").reduce((s, v) => s + v.value, 0);
+
+  const billable = invoices.filter((i) => i.status !== "Cancelled");
+  const totalInvoiced = billable.reduce((s, i) => s + i.total, 0);
+  const totalPaid = payments.reduce((s, p) => s + p.amount, 0);
+  const totalCredited = creditNotes.reduce((s, c) => s + c.amount, 0);
+  const outstandingBalance = Math.max(0, totalInvoiced - totalPaid - totalCredited);
+
+  const overdueAmount = billable
+    .filter((i) => i.status === "Overdue")
+    .reduce((s, i) => s + i.amountOutstanding, 0);
+
+  const now = Date.now();
+  const nextDueInvoice = billable
+    .filter((i) => i.amountOutstanding > 0 && new Date(i.dueDate).getTime() >= now)
+    .sort((a, b) => (a.dueDate < b.dueDate ? -1 : 1))[0];
+
+  const dueSoon =
+    !!nextDueInvoice &&
+    new Date(nextDueInvoice.dueDate).getTime() - now <= 14 * 86400000;
+
+  const health: PortalBalanceHealth =
+    overdueAmount > 0 ? "Overdue" : dueSoon ? "Due Soon" : "Healthy";
+
+  return {
+    totalQuoted,
+    totalApproved,
+    totalInvoiced,
+    totalPaid,
+    totalCredited,
+    outstandingBalance,
+    overdueAmount,
+    nextDueInvoice,
+    health,
+    quotes,
+    variations,
+    invoices,
+    payments,
+    creditNotes,
+  };
 }
 
 // ── Documents & Communication projections (CL-5) ────────────────────────────

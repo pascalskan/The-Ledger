@@ -12,6 +12,10 @@ export interface PortalBrandingConfig {
   logo?: string;
   supportEmail: string;
   supportPhone: string;
+  // CL-6 — financial pages surface a dedicated accounts/payments contact.
+  accountsEmail: string;
+  paymentsPhone: string;
+  paymentContactName: string;
 }
 
 const DEFAULT_BRANDING: PortalBrandingConfig = {
@@ -19,6 +23,9 @@ const DEFAULT_BRANDING: PortalBrandingConfig = {
   logo: undefined,
   supportEmail: "support@theledger.app",
   supportPhone: "0800 123 4567",
+  accountsEmail: "accounts@theledger.app",
+  paymentsPhone: "0800 123 4568",
+  paymentContactName: "Accounts Team",
 };
 
 /**

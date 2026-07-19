@@ -12,9 +12,16 @@ import {
   projectSharedDocuments,
   projectThreads,
   projectMessages,
+  projectClientQuotes,
+  projectClientVariations,
+  projectClientPayments,
+  projectClientCreditNotes,
+  buildClientFinancialProjection,
   type PortalJob,
   type PortalDocument,
   type PortalThread,
+  type PortalInvoice,
+  type PortalQuote,
 } from "@/lib/portalProjections";
 import { buildPortalActivity, type ActivityMilestone, type ActivityDeliverable } from "@/lib/portalActivity";
 import { getPortalBranding } from "@/lib/portalBranding";
@@ -28,7 +35,8 @@ import { PortalJobs } from "@/pages/portal/jobs";
 import { PortalDocumentsPage } from "@/pages/portal/documents";
 import { PortalMessages } from "@/pages/portal/messages";
 import { PortalNotifications } from "@/pages/portal/notifications";
-import { PortalInvoices, PortalRequests } from "@/pages/portal/placeholders";
+import { PortalFinance } from "@/pages/portal/finance";
+import { PortalRequests } from "@/pages/portal/placeholders";
 import { useToast } from "@/hooks/use-toast";
 
 const VALID_SECTIONS = PORTAL_NAV.map((n) => n.key);
@@ -53,6 +61,7 @@ export default function PortalPage() {
     : "dashboard";
   const jobId = section === "jobs" ? segs[1] : undefined;
   const threadId = section === "messages" ? segs[1] : undefined;
+  const invoiceId = section === "invoices" ? segs[1] : undefined;
 
   // ── Client-safe projections (scoped to account.clientId) ───────────────────
   const portalClient = useMemo(
@@ -73,9 +82,20 @@ export default function PortalPage() {
     [account, jobs, workers, roles]
   );
   const portalInvoices = useMemo(
-    () => (account ? projectClientInvoices(account.clientId, invoices) : []),
-    [account, invoices]
+    () => (account ? projectClientInvoices(account.clientId, invoices, projectTitleById) : []),
+    [account, invoices, projectTitleById]
   );
+  // ── Financial projections (CL-6) ────────────────────────────────────────────
+  const financials = useMemo(() => {
+    const invoiceNumberById = Object.fromEntries(
+      portalInvoices.map((i) => [i.id, i.invoiceId])
+    ) as Record<string, string>;
+    const quotes = projectClientQuotes(visibleProjectIds, projectTitleById);
+    const variations = projectClientVariations(visibleProjectIds, projectTitleById);
+    const payments = projectClientPayments(visibleProjectIds, invoiceNumberById);
+    const credits = projectClientCreditNotes(visibleProjectIds, invoiceNumberById);
+    return buildClientFinancialProjection(quotes, variations, portalInvoices, payments, credits);
+  }, [visibleProjectIds, projectTitleById, portalInvoices]);
   const portalDocuments = useMemo(
     () => (account ? projectSharedDocuments(visibleProjectIds) : []),
     [account, visibleProjectIds]
@@ -93,12 +113,24 @@ export default function PortalPage() {
       for (const m of projectMilestones(job.id)) milestones.push({ jobTitle: job.title, milestone: m });
       for (const d of projectDeliverables(job.id)) deliverables.push({ jobTitle: job.title, deliverable: d });
     }
-    return buildPortalActivity(portalJobs, portalInvoices, milestones, deliverables, portalDocuments, portalThreads);
-  }, [portalJobs, portalInvoices, portalDocuments, portalThreads]);
+    return buildPortalActivity(
+      portalJobs,
+      portalInvoices,
+      milestones,
+      deliverables,
+      portalDocuments,
+      portalThreads,
+      financials.quotes,
+      financials.payments
+    );
+  }, [portalJobs, portalInvoices, portalDocuments, portalThreads, financials]);
 
   const selectedJob: PortalJob | null = jobId ? portalJobs.find((j) => j.id === jobId) ?? null : null;
   const selectedThread: PortalThread | null = threadId
     ? portalThreads.find((t) => t.id === threadId) ?? null
+    : null;
+  const selectedInvoice: PortalInvoice | null = invoiceId
+    ? portalInvoices.find((i) => i.id === invoiceId) ?? null
     : null;
   const threadMessages = useMemo(
     () => (selectedThread ? projectMessages(selectedThread.id) : []),
@@ -135,6 +167,21 @@ export default function PortalPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account?.id, selectedJob?.id]);
 
+  // ── Audit: invoice view ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (account && selectedInvoice) {
+      recordPortalAudit({
+        type: "client_viewed_invoice",
+        who: account.email,
+        what: `Viewed invoice ${selectedInvoice.invoiceId}`,
+        clientId: account.clientId,
+        sourceObjectId: selectedInvoice.id,
+        externalReference: account.clientId,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account?.id, selectedInvoice?.id]);
+
   // ── Audit: thread view ──────────────────────────────────────────────────────
   useEffect(() => {
     if (account && selectedThread) {
@@ -165,6 +212,44 @@ export default function PortalPage() {
       externalReference: doc.projectId,
     });
     toast({ title: "Opening document", description: `${doc.title} (${doc.fileType})` });
+  };
+
+  // ── Financial handlers (CL-6) ──────────────────────────────────────────────
+  const handleOpenInvoice = (inv: PortalInvoice) => setLocation(`/portal/invoices/${inv.id}`);
+  const handleBackToFinance = () => setLocation("/portal/invoices");
+
+  const handleDownloadInvoice = (inv: PortalInvoice) => {
+    recordPortalAudit({
+      type: "client_downloaded_invoice",
+      who: account.email,
+      what: `Downloaded invoice ${inv.invoiceId}`,
+      clientId: account.clientId,
+      sourceObjectId: inv.id,
+      externalReference: account.clientId,
+    });
+    toast({ title: "Preparing download", description: `Invoice ${inv.invoiceId}` });
+  };
+
+  const handleViewQuote = (quote: PortalQuote) => {
+    recordPortalAudit({
+      type: "client_viewed_quote",
+      who: account.email,
+      what: `Viewed quote ${quote.quoteNumber}`,
+      clientId: account.clientId,
+      sourceObjectId: quote.id,
+      externalReference: quote.projectId,
+    });
+    toast({ title: quote.quoteNumber, description: quote.description });
+  };
+
+  const handleViewPayments = () => {
+    recordPortalAudit({
+      type: "client_viewed_payment",
+      who: account.email,
+      what: "Viewed payment history",
+      clientId: account.clientId,
+      externalReference: account.clientId,
+    });
   };
 
   const handleOpenThread = (thread: PortalThread) => setLocation(`/portal/messages/${thread.id}`);
@@ -240,7 +325,18 @@ export default function PortalPage() {
           onReply={handleReply}
         />
       )}
-      {section === "invoices" && <PortalInvoices />}
+      {section === "invoices" && (
+        <PortalFinance
+          financials={financials}
+          branding={branding}
+          selectedInvoice={selectedInvoice}
+          onOpenInvoice={handleOpenInvoice}
+          onBack={handleBackToFinance}
+          onDownloadInvoice={handleDownloadInvoice}
+          onViewQuote={handleViewQuote}
+          onViewPayments={handleViewPayments}
+        />
+      )}
       {section === "requests" && <PortalRequests />}
       {section === "notifications" && <PortalNotifications activity={portalActivity} />}
     </PortalShell>

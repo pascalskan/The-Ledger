@@ -24,7 +24,8 @@ export function PortalDashboard({ client, jobs, sites, invoices, activity, onOpe
   const activeProjects = jobs.filter((j) => j.status !== "Completed").length;
   const completedProjects = jobs.filter((j) => j.status === "Completed").length;
   const openRequests = 0; // Client Requests arrive in CL-7 — genuinely zero for now.
-  const outstandingInvoices = invoices.filter((i) => i.status === "Sent" || i.status === "Overdue").length;
+  // Invoices with an outstanding balance (Draft invoices are never projected).
+  const outstandingInvoices = invoices.filter((i) => i.amountOutstanding > 0).length;
 
   const kpis = [
     { key: "active", label: "Active Projects", value: activeProjects, icon: Briefcase },

@@ -26,7 +26,11 @@ export type PortalAuditEventType =
   | "document_shared_with_client"
   | "document_access_revoked"
   | "client_created_thread"
-  | "client_viewed_thread";
+  | "client_viewed_thread"
+  // CL-6 — financial transparency
+  | "client_viewed_quote"
+  | "client_viewed_payment"
+  | "client_downloaded_invoice";
 
 export interface PortalAuditEntry {
   id: string;

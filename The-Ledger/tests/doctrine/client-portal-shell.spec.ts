@@ -29,7 +29,8 @@ test.describe('Client Portal Shell — Navigation (CL-3)', () => {
       ['sites', 'portal-sites'],
       ['jobs', 'portal-jobs'],
       ['documents', 'portal-documents'],
-      ['invoices', 'portal-invoices'],
+      // CL-6: the Invoices section now renders the Financial Centre.
+      ['invoices', 'portal-finance'],
       ['requests', 'portal-requests'],
       ['notifications', 'portal-notifications'],
       ['dashboard', 'portal-dashboard'],
@@ -139,8 +140,10 @@ test.describe('Client Portal Shell — Dashboard metrics (CL-3)', () => {
     // dc1 visible jobs: 1 Completed + 3 non-completed (Active/Active/Planned); cancelled excluded.
     await expect(page.getByTestId('portal-kpi-value-active')).toHaveText('3');
     await expect(page.getByTestId('portal-kpi-value-completed')).toHaveText('1');
-    // dc1 has one outstanding (Sent) invoice.
-    await expect(page.getByTestId('portal-kpi-value-invoices')).toHaveText('1');
+    // CL-6: dc1 has two invoices with an outstanding balance
+    // (dinv-kex-1 Part Paid, dinv-pma-1 Overdue). dinv-kex-2 is fully paid and
+    // dinv-brm-1 is Draft (never projected).
+    await expect(page.getByTestId('portal-kpi-value-invoices')).toHaveText('2');
   });
 
   // CPS-12 — Recent activity renders client-safe items

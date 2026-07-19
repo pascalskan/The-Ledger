@@ -21,6 +21,8 @@ import type {
   PortalDeliverable,
   PortalDocument,
   PortalThread,
+  PortalQuote,
+  PortalPayment,
 } from "@/lib/portalProjections";
 
 /** A milestone/deliverable paired with its parent project title for the feed. */
@@ -66,7 +68,9 @@ export function buildPortalActivity(
   milestones: ActivityMilestone[] = [],
   deliverables: ActivityDeliverable[] = [],
   documents: PortalDocument[] = [],
-  threads: PortalThread[] = []
+  threads: PortalThread[] = [],
+  quotes: PortalQuote[] = [],
+  payments: PortalPayment[] = []
 ): PortalActivityItem[] {
   const items: PortalActivityItem[] = [];
 
@@ -130,15 +134,42 @@ export function buildPortalActivity(
     });
   }
 
+  const gbp = (v: number) =>
+    new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(v);
+
+  // Quote issued / accepted (client-facing commercial events only).
+  for (const q of quotes) {
+    const verb = q.status === "Accepted" ? "accepted" : q.status === "Declined" ? "declined" : "issued";
+    items.push({
+      id: `act-quote-${q.id}`,
+      category: "invoice",
+      title: `Quote ${q.quoteNumber} ${verb}`,
+      description: `${q.projectTitle} — ${gbp(q.totalValue)}.`,
+      date: q.issueDate,
+    });
+  }
+
+  // Payment received.
+  for (const p of payments) {
+    items.push({
+      id: `act-pay-${p.id}`,
+      category: "invoice",
+      title: `Payment received — ${gbp(p.amount)}`,
+      description: `Payment ${p.reference} applied to invoice ${p.invoiceNumber}.`,
+      date: p.paymentDate,
+    });
+  }
+
   for (const inv of invoices) {
-    const statusLabel = inv.status === "Paid" ? "marked paid" : inv.status === "Overdue" ? "overdue" : "issued";
-    // Only surface client-meaningful invoice states (skip internal Draft/Void).
-    if (inv.status === "Draft" || inv.status === "Void") continue;
+    // Cancelled invoices are not surfaced as activity.
+    if (inv.status === "Cancelled") continue;
+    const statusLabel =
+      inv.status === "Paid" ? "marked paid" : inv.status === "Overdue" ? "overdue" : "issued";
     items.push({
       id: `act-inv-${inv.id}`,
       category: "invoice",
       title: `Invoice ${inv.invoiceId} ${statusLabel}`,
-      description: `Invoice ${inv.invoiceId} (${new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(inv.total)}) ${statusLabel}.`,
+      description: `Invoice ${inv.invoiceId} (${gbp(inv.total)}) ${statusLabel}.`,
       date: inv.issueDate,
     });
   }

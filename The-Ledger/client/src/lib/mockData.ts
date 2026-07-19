@@ -1165,6 +1165,51 @@ const DEMO_INVOICES: Invoice[] = [
     notes: "Draft awaiting scheduling confirmation.",
     companyId: DEMO_COMPANY_ID,
   },
+  // CL-6 — additional dc1 invoices so the Client Financial Centre exercises
+  // real Paid / Overdue / hidden-Draft states and payment history.
+  {
+    id: "dinv-kex-2",
+    invoiceId: "EXB-2026-0005",
+    clientId: "dc1",
+    jobId: "dj-kitchen-extract-1",
+    issueDate: new Date(Date.now() - 30 * 86400000).toISOString(),
+    dueDate: new Date(Date.now() - 16 * 86400000).toISOString(),
+    status: "Paid",
+    lineItems: [
+      { description: "Labour: Initial strip-out & preparation", qty: 1, unitPrice: 2400 },
+      { description: "Materials: Ducting brackets & fixings", qty: 1, unitPrice: 600 },
+    ],
+    notes: "Stage 1 works.",
+    companyId: DEMO_COMPANY_ID,
+  },
+  {
+    id: "dinv-pma-1",
+    invoiceId: "EXB-2026-0009",
+    clientId: "dc1",
+    jobId: "dj-pm-active-1",
+    issueDate: new Date(Date.now() - 20 * 86400000).toISOString(),
+    dueDate: new Date(Date.now() - 6 * 86400000).toISOString(),
+    status: "Overdue",
+    lineItems: [
+      { description: "Labour: Plant room attendance", qty: 1, unitPrice: 1800 },
+      { description: "Materials: Replacement valves & seals", qty: 1, unitPrice: 600 },
+    ],
+    notes: "Payment overdue — please contact accounts.",
+    companyId: DEMO_COMPANY_ID,
+  },
+  {
+    // Draft fixture — must NEVER be visible in the portal.
+    id: "dinv-brm-1",
+    invoiceId: "EXB-2026-0010",
+    clientId: "dc1",
+    jobId: "dj-boiler-room-2",
+    issueDate: new Date(Date.now() - 1 * 86400000).toISOString(),
+    dueDate: new Date(Date.now() + 13 * 86400000).toISOString(),
+    status: "Draft",
+    lineItems: [{ description: "Labour: Pre-start survey", qty: 1, unitPrice: 1000 }],
+    notes: "Internal draft — not issued.",
+    companyId: DEMO_COMPANY_ID,
+  },
 ];
 
 
