@@ -20,6 +20,7 @@
 
 import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -214,12 +215,10 @@ export function ReconciliationContent() {
   return (
       <div className="space-y-6" data-testid="reconciliation-center-page">
         {/* Header */}
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Reconciliation Centre</h2>
-          <p className="text-muted-foreground mt-1">
-            Operational control and reconciliation for accounting synchronization.
-          </p>
-        </div>
+        <PageHeader
+          title="Reconciliation Centre"
+          description="Operational control and reconciliation for accounting synchronisation."
+        />
 
         {/* Doctrine Notice */}
         <div className="rounded-md bg-violet-50 border border-violet-200 px-4 py-3 text-sm text-violet-700">

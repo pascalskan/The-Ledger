@@ -268,10 +268,10 @@ export default function SchedulePage() {
     return (
       <Layout>
         <div className="space-y-6 max-w-5xl mx-auto" data-testid="pm-schedule-page">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Schedule</h2>
-            <p className="text-muted-foreground mt-1">Your assigned jobs, crew allocation, and upcoming work.</p>
-          </div>
+          <PageHeader
+            title="Schedule"
+            description="Your assigned jobs, crew allocation, and upcoming work."
+          />
 
           {/* Workforce Snapshot KPI Strip */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="pm-schedule-workforce-snapshot">

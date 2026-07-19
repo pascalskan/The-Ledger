@@ -21,6 +21,7 @@
 
 import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { AutomationExecutiveDashboard } from "@/components/automation/AutomationExecutiveDashboard";
 import { AutomationCatalogue, buildCatalogueRows } from "@/components/automation/AutomationCatalogue";
 import { AutomationExecutionMonitor } from "@/components/automation/AutomationExecutionMonitor";
@@ -1262,15 +1263,15 @@ export default function AutomationsPage() {
     <Layout>
       <div className="space-y-6" data-testid="automation-centre-page">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Automation Centre</h2>
-            <p className="text-muted-foreground mt-1">Your executive Automation Operations Centre — health, catalogue, approvals, scheduling, governance, audit and intelligence in one place.</p>
-          </div>
-          <Button onClick={openCreateBuilder} data-testid="aut-btn-create-automation">
-            <Plus className="h-4 w-4 mr-2" /> Create Automation
-          </Button>
-        </div>
+        <PageHeader
+          title="Automation Centre"
+          description="Your executive Automation Operations Centre — health, catalogue, approvals, scheduling, governance, audit and intelligence in one place."
+          actions={
+            <Button onClick={openCreateBuilder} data-testid="aut-btn-create-automation">
+              <Plus className="h-4 w-4 mr-2" /> Create Automation
+            </Button>
+          }
+        />
 
         {/* Doctrine Notice */}
         <div className="rounded-md bg-violet-50 border border-violet-200 px-4 py-3 text-sm text-violet-700">

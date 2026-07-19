@@ -19,6 +19,7 @@
 
 import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -241,12 +242,10 @@ export function ExceptionResolutionContent() {
     <>
       <div className="space-y-6" data-testid="exception-resolution-center-page">
         {/* Header */}
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Exception Resolution Centre</h2>
-          <p className="text-muted-foreground mt-1">
-            Manage financial exceptions, investigate discrepancies, and control approved overrides.
-          </p>
-        </div>
+        <PageHeader
+          title="Exception Resolution Centre"
+          description="Manage financial exceptions, investigate discrepancies, and control approved overrides."
+        />
 
         {/* Doctrine Notice */}
         <div className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700">

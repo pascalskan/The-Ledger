@@ -193,14 +193,11 @@ export default function FinanceHubPage() {
   return (
     <Layout>
       <div className="space-y-6 p-6" data-testid="finance-hub-page">
-        <div>
-          <h1 className="text-2xl font-bold" data-testid="finance-hub-heading">
-            Finance{activeTab !== "overview" && tabLabels[activeTab] ? ` — ${tabLabels[activeTab]}` : ""}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Revenue, costs, payroll, invoicing and accounting — in one place.
-          </p>
-        </div>
+        <PageHeader
+          testId="finance-hub-heading"
+          title={`Finance${activeTab !== "overview" && tabLabels[activeTab] ? ` — ${tabLabels[activeTab]}` : ""}`}
+          description="Revenue, costs, payroll, invoicing and accounting — in one place."
+        />
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="flex flex-wrap h-auto gap-1">

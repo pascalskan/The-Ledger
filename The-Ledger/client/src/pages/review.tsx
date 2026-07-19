@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore, useAuth } from "@/lib/mockData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -242,12 +243,10 @@ export default function ReviewPage() {
     return (
       <Layout>
         <div className="space-y-6" data-testid="pm-review-page">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Review Queue</h2>
-            <p className="text-muted-foreground mt-1">
-              Review and action worker submissions for your assigned jobs.
-            </p>
-          </div>
+          <PageHeader
+            title="Review Queue"
+            description="Review and action worker submissions for your assigned jobs."
+          />
 
           {/* Metrics strip */}
           <div className="grid gap-3 grid-cols-2 md:grid-cols-4" data-testid="pm-review-metrics">
@@ -436,18 +435,14 @@ export default function ReviewPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-              {isCEO ? "Review Operations Centre" : "Review Centre"}
-            </h2>
-            <p className="text-slate-500 mt-1">
-              {isCEO
-                ? "The decision engine of the business — attention, prioritisation, impact, recommendations and operations in one place. Every approval still happens in the queue below."
-                : "Review and approve worker submissions, photos, and reports."}
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title={isCEO ? "Review Operations Centre" : "Review Centre"}
+          description={
+            isCEO
+              ? "The decision engine of the business — attention, prioritisation, impact, recommendations and operations in one place. Every approval still happens in the queue below."
+              : "Review and approve worker submissions, photos, and reports."
+          }
+        />
 
         {/* UX-7.8 — Review Operations Centre: the UX-7.1–7.7 intelligence layers
             unified into one executive, read-only tabbed experience (CEO-only).

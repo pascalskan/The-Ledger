@@ -298,12 +298,10 @@ export function AccountingSettingsContent() {
   return (
       <div data-testid="accounting-settings-page" className="space-y-8 max-w-5xl mx-auto">
         {/* Page header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Accounting Settings</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage provider connections, synchronisation policies, and entity mapping.
-          </p>
-        </div>
+        <PageHeader
+          title="Accounting Settings"
+          description="Manage provider connections, synchronisation policies, and entity mapping."
+        />
 
         {/* Summary bar */}
         <div
