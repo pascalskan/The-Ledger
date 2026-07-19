@@ -32,7 +32,7 @@ The portal now provides:
 - A structured Communication Centre
 - A Financial Centre exposing the client's full commercial position while making internal
   financial intelligence structurally unreachable
-- 62 doctrine tests across 5 specification files
+- 93 doctrine tests across 6 specification files
 - A complete audit trail of 15 client-portal audit event types
 
 **No internal CEO / PM / Worker behaviour was changed** other than two additive, role-gated
@@ -245,7 +245,7 @@ state. No mutator is exposed. This should be removed when a real backend audit s
 
 ## TESTING SUMMARY
 
-62 doctrine tests across 5 specification files.
+93 doctrine tests across 6 specification files.
 
 | Spec | Tests | Coverage |
 |---|---|---|
@@ -337,10 +337,29 @@ are restated here for an explicit decision before merge.
 - **Build:** PASS (`npm run build`)
 - **TypeScript:** 76 total errors, **all pre-existing** and unrelated to this workstream
   (`ReviewItem` / `ApprovalStatus` type drift in `mockData.ts`, `job-detail.tsx`,
-  `finance-hub.tsx` and other pre-existing files). Verified by `git stash -u` baseline
-  comparison: identical count before and after the workstream. **All portal files are clean.**
-- **Playwright:** to be executed by the repository owner — see commands in the workstream
-  completion report.
+  `finance-hub.tsx` and other pre-existing files). Verified by checking out the pre-workstream
+  merge-base (`0ff43e3`) and re-running `tsc`: **identical 76 errors before and after the
+  workstream — zero type regressions.** All portal files are clean.
+
+  Note: `npm run check` cannot serve as a merge gate for this repository, because `main`
+  itself does not pass it. The `ReviewItem` / `ApprovalStatus` drift warrants its own
+  remediation ticket.
+- **Playwright: FULL SUITE GREEN — 892 / 892 passed** (run by the repository owner,
+  July 19, 2026, `npx playwright test --workers=3`, ~1.0h). This includes all 93 client-portal
+  doctrine tests and the entire pre-existing suite — **no regressions in any other workstream.**
+
+  Two non-test errors were reported at teardown:
+  `worker-N process did not exit within 300000ms after stop, force-killed it`. These are
+  browser-process cleanup failures, not test failures, and are consistent with the config's
+  `headless: false` setting leaving headed Chromium processes alive. They added roughly ten
+  minutes of wall-clock to the run and would cause a non-zero exit in CI. Setting
+  `headless: true` for non-interactive runs is the recommended fix.
+
+- **Parallel execution:** the config sets `workers: 1` with the comment *"Parallel execution
+  causes tests to corrupt each other's mock state."* The full green run at `--workers=3`
+  demonstrates this is no longer true — Playwright isolates each worker in its own browser
+  context, and the mock store is client-side module state, so it does not leak between
+  workers. Raising the default worker count is a safe, significant speed win.
 - **Dead code:** three orphaned components removed in CL-7 (`FinancialOverview.tsx`,
   `ProjectDocuments.tsx`, `ActivityTimeline.tsx`)
 - **Debug code:** none — no `console.*`, `debugger`, `TODO` or `FIXME` in portal code

@@ -37,7 +37,7 @@ Delivered:
 - **Communication Centre** — structured threads replacing the free-text comment box.
 - **Financial Centre** — quotes, variations, invoices, payments, credit notes, derived KPIs.
 - **Audit** — 15 client-portal audit event types.
-- **Doctrine tests** — 62 across 6 client-portal specification files.
+- **Doctrine tests** — 93 across 6 client-portal specification files.
 
 Resolved from the CL-1 audit: the cosmetic hardcoded login, the absent projection layer, the
 missing audit trail, hardcoded financial figures, and an active doctrine violation (crew
