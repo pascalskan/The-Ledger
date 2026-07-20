@@ -32,7 +32,7 @@ import {
   getPendingExposure,
   groupTimesheetsForPayroll,
 } from "@/lib/profitabilityEngine";
-import { getDefaultProvider } from "@/lib/accountingSettingsEngine";
+import { getDefaultProvider, DEFAULT_ACCOUNTING_SETTINGS } from "@/lib/accountingSettingsEngine";
 import {
   computeSyncKPIs,
   SEED_SYNC_RECORDS,
@@ -79,7 +79,7 @@ export function FinanceHubOverview() {
   );
 
   const store = useStore();
-  const { jobs, invoices, timesheets, reviewItems, companySettings } = store;
+  const { jobs, invoices, timesheets, reviewItems } = store;
 
   // ── KPI: Revenue / Costs / Margin ─────────────────────────────────────────
   // G-005: Gross Margin derived from getAllJobMargins() engine output — not recomputed inline.
@@ -130,7 +130,11 @@ export function FinanceHubOverview() {
   const MOCK_NEXT_RUN = "20 Jun 2026";
 
   // ── Accounting ─────────────────────────────────────────────────────────────
-  const provider = getDefaultProvider(companySettings);
+  // Was getDefaultProvider(companySettings) — company settings is the legal
+  // entity/bank record and has no `providers` array, so `settings.providers.find`
+  // threw and the Finance Hub white-screened before rendering. The accounting
+  // provider lives in accountingSettingsEngine, as this file's own header states.
+  const provider = getDefaultProvider(DEFAULT_ACCOUNTING_SETTINGS);
   const syncKPIs = computeSyncKPIs(SEED_SYNC_RECORDS);
   const failedCount = syncKPIs.failed;
   const exceptionSummary = computeExceptionSummary(SEED_EXCEPTIONS);

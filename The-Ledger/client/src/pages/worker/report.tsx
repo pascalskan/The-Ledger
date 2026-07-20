@@ -225,11 +225,16 @@ export default function WorkerReportPage() {
 
         quantity: item.quantity,
 
-        unit: stock?.unit,
-
-        // informational only until approval
-        unitCost: stock?.costPrice,
-        markupPrice: stock?.sellPrice,
+        // informational only until approval.
+        // StockItem exposes `unitCost` only — it has no `unit`, `costPrice` or
+        // `sellPrice` field. Reading those undefined names meant every material
+        // submission carried unitCost: undefined, which the normalisation path
+        // coerces to 0 (mockData.ts `unitCost ?? 0`), so approved materials
+        // contributed zero cost AND zero revenue to the job mini-ledger.
+        // markupPrice is intentionally omitted: there is no sell price on
+        // StockItem, and the consumer already falls back to `markupPrice ?? unitCost`,
+        // i.e. cost recovery with no markup.
+        unitCost: stock?.unitCost,
       };
     });
 
