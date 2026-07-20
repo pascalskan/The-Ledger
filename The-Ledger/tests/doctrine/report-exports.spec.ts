@@ -17,6 +17,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { waitForRouteReady } from '../helpers/navigation';
 import { loginAsCEO, loginAsPM, loginAsWorker } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 
@@ -255,6 +256,7 @@ test('RX-25: Generate Board Pack button is visible on Exports tab', async ({ pag
 test('RX-26: Clicking Generate Board Pack adds a new board_pack export to the table', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=exports');
+  await waitForRouteReady(page);
   const initialCount = await page.locator('[data-testid^="export-row-"]').count();
   await page.locator('[data-testid="generate-board-pack-btn"]').click();
   await expect(page.locator('[data-testid^="export-row-"]')).toHaveCount(initialCount + 1, { timeout: 8000 });

@@ -16,6 +16,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { waitForRouteReady } from '../helpers/navigation';
 import { loginAsCEO, loginAsPM } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 
@@ -271,6 +272,7 @@ test('RC-29: Report Builder shows period selection', async ({ page }) => {
 test('RC-30: Generating a report from builder adds it to the table', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=reports');
+  await waitForRouteReady(page);
   const initialCount = await page.locator('[data-testid^="report-row-"]').count();
   await page.locator('[data-testid="reporting-centre-build-btn"]').click();
   await page.locator('[data-testid="builder-type-governance_report"]').click();

@@ -15,6 +15,7 @@
  * - Doctrine compliance (informational / evaluative only)
  */
 import { test, expect } from '@playwright/test';
+import { waitForRouteReady } from '../helpers/navigation';
 import { loginAsCEO, loginAsPM, loginAsWorker } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 
@@ -119,6 +120,7 @@ test('EB-10: Action Required indicator shown for action-required events', async 
 test('EB-11: Events sorted newest first', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/event-monitor');
+  await waitForRouteReady(page);
   const rows = page.getByTestId('em-event-stream').locator('[data-testid^="em-event-row-"]');
   const count = await rows.count();
   expect(count).toBeGreaterThan(0);

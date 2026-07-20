@@ -19,6 +19,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { waitForRouteReady } from '../helpers/navigation';
 import { loginAsCEO, loginAsPM, loginAsWorker } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 
@@ -114,6 +115,7 @@ test('ECC-10: Critical Items panel renders with item count badge', async ({ page
 test('ECC-11: Critical Items panel renders rows from seed data', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=overview');
+  await waitForRouteReady(page);
   const rows = page.locator('[data-testid="intel-critical-item-row"]');
   expect(await rows.count()).toBeGreaterThan(0);
 });
@@ -121,6 +123,7 @@ test('ECC-11: Critical Items panel renders rows from seed data', async ({ page }
 test('ECC-12: Severity rendering maps critical→Critical and high→Warning', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=overview');
+  await waitForRouteReady(page);
   const rows = page.locator('[data-testid="intel-critical-item-row"]');
   expect(await rows.count()).toBeGreaterThan(0);
   const criticalRows = page.locator('[data-testid="intel-critical-item-row"][data-priority="critical"]');

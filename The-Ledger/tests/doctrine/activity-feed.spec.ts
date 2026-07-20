@@ -17,6 +17,7 @@
  * type/priority filters, detail expansion, deep linking, doctrine.
  */
 import { test, expect } from '@playwright/test';
+import { waitForRouteReady } from '../helpers/navigation';
 import { loginAsCEO, loginAsWorker } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 
@@ -68,6 +69,7 @@ test('AF-03 (RBAC): Worker is denied access to the Activity tab', async ({ page 
 test('AF-09: Combined list renders activity rows from seed data', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=activity');
+  await waitForRouteReady(page);
   const rows = page.getByTestId('activity-row');
   expect(await rows.count()).toBeGreaterThan(0);
   // act-001 is the newest seed record — must be present on the first page

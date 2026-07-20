@@ -4,6 +4,18 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { LoadingState } from "@/components/page-shell";
+// Eager, side-effect import. portalAudit owns an app-wide audit log and exposes
+// a read-only window.__portalAudit seam for the doctrine suite. It is NOT
+// portal-only state: internal CEO/PM actions write to it too
+// (document_shared_with_client, client_request_resolved, ...), so a PM can
+// share a document without the portal ever being visited.
+//
+// Before E-7 it was reachable from the single bundle at boot. Once routes went
+// lazy it shipped only in the portal chunk, so those internal flows recorded
+// into — and asserted against — a log that did not exist yet. It has no imports
+// of its own (136 lines, zero deps), so loading it eagerly costs essentially
+// nothing and restores the invariant.
+import "@/lib/portalAudit";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 const FinanceHubPage = lazy(() => import("@/pages/finance-hub"));

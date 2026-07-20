@@ -13,6 +13,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { waitForRouteReady } from '../helpers/navigation';
 import { loginAsCEO, loginAsPM, loginAsWorker } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 
@@ -118,6 +119,7 @@ test('AC-11: Trend Analysis panel renders', async ({ page }) => {
 test('AC-12: Trend panel renders trend items', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=analytics');
+  await waitForRouteReady(page);
   const items = page.locator('[data-testid^="analytics-trend-item-"]');
   const count = await items.count();
   expect(count).toBeGreaterThan(0);
@@ -157,6 +159,7 @@ test('AC-16: Forecast panel shows Projections — Advisory Only badge', async ({
 test('AC-17: Forecast panel renders forecast items', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=analytics');
+  await waitForRouteReady(page);
   const items = page.locator('[data-testid^="analytics-forecast-item-"]');
   const count = await items.count();
   expect(count).toBeGreaterThan(0);
@@ -188,6 +191,7 @@ test('AC-20: Risk Intelligence panel renders', async ({ page }) => {
 test('AC-21: Risk panel renders risk items from seed data', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=analytics');
+  await waitForRouteReady(page);
   const items = page.locator('[data-testid^="analytics-risk-item-"]');
   const count = await items.count();
   expect(count).toBeGreaterThan(0);
@@ -203,6 +207,7 @@ test('AC-22: Risk items show severity badges (CRITICAL/HIGH/MEDIUM)', async ({ p
 test('AC-23: Risk items have deep link buttons to source modules', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=analytics');
+  await waitForRouteReady(page);
   const links = page.locator('[data-testid^="analytics-risk-link-"]');
   const count = await links.count();
   expect(count).toBeGreaterThan(0);
@@ -229,6 +234,7 @@ test('AC-25: Bottleneck Analysis panel renders', async ({ page }) => {
 test('AC-26: Bottleneck panel renders bottleneck items or empty state', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=analytics');
+  await waitForRouteReady(page);
   const panel = page.locator('[data-testid="analytics-bottleneck-panel"]');
   const items = page.locator('[data-testid^="analytics-bottleneck-item-"]');
   const count = await items.count();

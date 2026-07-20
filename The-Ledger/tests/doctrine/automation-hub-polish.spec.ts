@@ -7,6 +7,7 @@
  * "Audit Log". This is a navigation-cohesion / no-regression pass.
  */
 import { test, expect } from '@playwright/test';
+import { waitForRouteReady } from '../helpers/navigation';
 import { loginAsCEO } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 
@@ -28,6 +29,9 @@ test.beforeEach(async ({ page }) => {
   await clearBrowserState(page);
   await loginAsCEO(page);
   await page.goto('/automations');
+  // /automations is lazily loaded since E-7; POLISH-02 uses evaluateAll(),
+  // which does not auto-wait, so the chunk must have mounted first.
+  await waitForRouteReady(page);
 });
 
 test('POLISH-01: All eleven Automation Hub tabs are present', async ({ page }) => {
