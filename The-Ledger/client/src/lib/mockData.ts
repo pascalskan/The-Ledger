@@ -6,12 +6,19 @@ import {
 } from "@/types/auth";
 
 import { Job } from "@/types/job";
+import type { PriorityLevel } from "@/types/common";
 
 import { Client } from "@/types/client";
 
 import { Worker } from "@/types/worker";
 
-import { ReviewItem } from "@/types/review";
+// NOTE: ReviewItem is declared and exported below in this file, and that
+// declaration is the real runtime shape. This module previously ALSO imported
+// a `ReviewItem` from "@/types/review" — a stale, narrower type that conflicted
+// with the local one (TS2440). The stale import won, and its wrong shape
+// propagated to every consumer: it declared type as "report"|"photo"|"log" and
+// a status union without "needs-correction" or "escalated", so TypeScript
+// believed the Review Centre's own lifecycle states were impossible.
 
 // Types
 export type WorkerRoleTag = "Owner" | "Admin" | "Manager" | "Supervisor" | "Crew Lead" | "Worker" | "Contractor" | "Driver";
@@ -301,10 +308,39 @@ requiresManualReview?: boolean;
 
 }
 
+/** A line item on a submitted report — informational, pre-approval. */
+export interface ReviewMaterialItem {
+  name: string;
+  quantity: number;
+}
+
+/**
+ * The Review Centre submission — the single authoritative shape.
+ *
+ * This is the union of two previously competing definitions, each of which was
+ * only half right, which is why the mismatch survived unnoticed:
+ *
+ *   - types/review.ts (now deleted) had title/submittedBy/content/url/items and
+ *     companyId, but declared `type` as "report"|"photo"|"log" and a status
+ *     union with no "needs-correction" or "escalated" — so the compiler
+ *     insisted the Review Centre's own lifecycle states were unreachable.
+ *   - This interface had the correct status lifecycle and the payload arrays,
+ *     but was missing title, submittedBy, content, url, items and companyId.
+ *
+ * Neither matched the seed data or the runtime objects. Fields below are typed
+ * against what the 13 seed submissions and the store actually produce.
+ */
 export interface ReviewItem {
   id: string;
 
+  /** Assigned by the store on insert — see addReviewItem/addReviewItemDirect. */
+  companyId: string;
+
   type: string;
+
+  title?: string;
+
+  priority?: PriorityLevel;
 
   status:
     | "pending"
@@ -317,11 +353,27 @@ export interface ReviewItem {
   escalatedBy?: string;
   correctionNotes?: string;
 
-  workerId: string;
+  /**
+   * Optional: only 8 of the 13 seed submissions carry a workerId. Attribution
+   * is always present via `submittedBy`. Previously declared required, which
+   * did not match the data.
+   */
+  workerId?: string;
+
+  submittedBy?: string;
 
   jobId: string;
 
   notes?: string;
+
+  /** Free-text body of a report submission. */
+  content?: string;
+
+  /** Attachment URL for photo/upload submissions. */
+  url?: string;
+
+  /** Informational line items on a report, pre-approval. */
+  items?: ReviewMaterialItem[];
 
   materialsUsed?: MaterialUsagePayload[];
 
@@ -338,8 +390,6 @@ export interface ReviewItem {
   reviewedAt?: string;
 
   reviewedBy?: string;
-
-  correctionNotes?: string;
 
   resubmissionCount?: number;
 }

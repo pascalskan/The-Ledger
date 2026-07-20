@@ -222,6 +222,12 @@ test('NC-21: Informational doctrine notice visible in detail dialog', async ({ p
 test('NC-22: Mark Read action removes unread highlight and shows toast', async ({ page }) => {
   await loginAsPM(page);
   await page.goto('/notifications');
+  // Wait for the page to finish rendering before clicking. Playwright waits for
+  // the button to be visible and stable, but cannot detect that React has
+  // attached its onClick handler — so a click straight after goto() can land on
+  // a not-yet-live button, fire no handler, and produce no toast. That race is
+  // invisible on an idle machine and shows up under full-suite parallel load.
+  await expect(page.getByTestId('notif-kpi-strip')).toBeVisible();
   await page.getByTestId('notif-btn-mark-read-notif-001').click();
   await expect(
     page.locator('[role="status"]').filter({ hasText: /marked as read/i })
@@ -231,6 +237,9 @@ test('NC-22: Mark Read action removes unread highlight and shows toast', async (
 test('NC-23: Dismiss action shows toast and audit confirmation', async ({ page }) => {
   await loginAsPM(page);
   await page.goto('/notifications');
+  // See NC-22: gate on the rendered page before clicking, so the click cannot
+  // land before React has attached its handler.
+  await expect(page.getByTestId('notif-kpi-strip')).toBeVisible();
   await page.getByTestId('notif-btn-dismiss-notif-004').click();
   await expect(
     page.locator('[role="status"]').filter({ hasText: /notification dismissed/i })
@@ -240,6 +249,9 @@ test('NC-23: Dismiss action shows toast and audit confirmation', async ({ page }
 test('NC-24: Dismiss from detail dialog closes dialog and shows toast', async ({ page }) => {
   await loginAsPM(page);
   await page.goto('/notifications');
+  // See NC-22: same race on the first click here — it would surface as the
+  // dialog assertion failing rather than the toast.
+  await expect(page.getByTestId('notif-kpi-strip')).toBeVisible();
   await page.getByTestId('notif-btn-view-notif-015').click();
   await expect(page.getByTestId('notif-detail-dialog')).toBeVisible();
   await page.getByTestId('notif-detail-btn-dismiss').click();

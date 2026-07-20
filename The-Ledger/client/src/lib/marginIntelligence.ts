@@ -32,7 +32,7 @@ import {
 } from "@/lib/profitabilityEngine";
 
 import type { Job } from "@/types/job";
-import type { ReviewItem } from "@/types/review";
+import type { ReviewItem } from "@/lib/mockData";
 
 // ──────────────────────────────────────────────────────
 // RISK ALERT TYPES
