@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { LayoutDashboard, BarChart3, BookOpen, FileDown, Activity, ShieldAlert, Download, Send } from "lucide-react";
@@ -76,19 +77,16 @@ export default function IntelligenceHubPage() {
   return (
     <Layout>
       <div className="space-y-6 p-6" data-testid="intelligence-hub-page">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold" data-testid="intelligence-hub-heading">
-              Intelligence{activeTab !== "overview" && tabLabels[activeTab] ? ` — ${tabLabels[activeTab]}` : ""}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Health, analytics, reports and activity — your business intelligence in one place.
-            </p>
-          </div>
-          <Badge variant="outline" className="text-xs" data-testid="intelligence-hub-ceo-badge">
-            CEO Only
-          </Badge>
-        </div>
+        <PageHeader
+          testId="intelligence-hub-heading"
+          title={`Intelligence${activeTab !== "overview" && tabLabels[activeTab] ? ` — ${tabLabels[activeTab]}` : ""}`}
+          description="Health, analytics, reports and activity — your business intelligence in one place."
+          actions={
+            <Badge variant="outline" className="text-xs" data-testid="intelligence-hub-ceo-badge">
+              CEO Only
+            </Badge>
+          }
+        />
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="flex flex-wrap h-auto gap-1">

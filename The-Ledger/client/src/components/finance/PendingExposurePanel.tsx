@@ -24,7 +24,7 @@ export function PendingExposurePanel({ jobId }: { jobId: string }) {
 
   if (exposure.pendingItemCount === 0) {
     return (
-      <Card className="border-slate-200">
+      <Card className="border-border">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4" /> Pending Exposure
@@ -49,7 +49,7 @@ export function PendingExposurePanel({ jobId }: { jobId: string }) {
           </Badge>
         </div>
         <p className="text-xs text-amber-700/70 mt-1">
-          Estimate only — these figures are from unapproved submissions. They will become financial facts when a PM approves them via the Review Center.
+          Estimate only — these figures are from unapproved submissions. They will become financial facts when a PM approves them via the Review Centre.
         </p>
       </CardHeader>
       <CardContent className="pt-0">

@@ -50,7 +50,7 @@ function RiskBadge({ status }: { status: JobForecast["riskStatus"] }) {
     healthy: "bg-emerald-50 text-emerald-700 border-emerald-200",
     warning: "bg-amber-50 text-amber-700 border-amber-200",
     critical: "bg-rose-50 text-rose-700 border-rose-200",
-    "no-data": "bg-slate-50 text-slate-500 border-slate-200",
+    "no-data": "bg-muted text-muted-foreground border-border",
   };
   const labels: Record<string, string> = {
     healthy: "Healthy",
@@ -255,14 +255,14 @@ export function ForecastTab() {
       label: "Forecast Revenue",
       value: fmt(portfolio.totalForecastRevenue),
       sub: `Current: ${fmt(portfolio.totalCurrentRevenue)}`,
-      color: "text-slate-900",
+      color: "text-foreground",
       testId: "kpi-forecast-revenue",
     },
     {
       label: "Forecast Cost",
       value: fmt(portfolio.totalForecastCost),
       sub: `Current: ${fmt(portfolio.totalCurrentCost)}`,
-      color: "text-slate-700",
+      color: "text-foreground",
       testId: "kpi-forecast-cost",
     },
     {
@@ -291,7 +291,7 @@ export function ForecastTab() {
       label: "Total Exposure",
       value: fmt(portfolio.totalExposure),
       sub: `${portfolio.jobsWithExposure} job${portfolio.jobsWithExposure !== 1 ? "s" : ""} with pending items`,
-      color: portfolio.totalExposure > 0 ? "text-amber-700" : "text-slate-500",
+      color: portfolio.totalExposure > 0 ? "text-amber-700" : "text-muted-foreground",
       testId: "kpi-total-exposure",
     },
     {
@@ -313,7 +313,7 @@ export function ForecastTab() {
       {/* ── Portfolio KPIs ─────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {kpis.map(({ label, value, sub, color, testId }) => (
-          <Card key={label} className="shadow-none border-slate-200">
+          <Card key={label} className="shadow-none border-border">
             <CardHeader className="pb-1 pt-4 px-4">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 {label}
@@ -337,7 +337,7 @@ export function ForecastTab() {
       {/* ── Risk Alerts ────────────────────────────── */}
       {alerts.length > 0 && (
         <div className="space-y-2" data-testid="risk-alerts-panel">
-          <p className="text-sm font-semibold flex items-center gap-2 text-slate-700">
+          <p className="text-sm font-semibold flex items-center gap-2 text-foreground">
             <ShieldAlert className="h-4 w-4" /> Risk Alerts ({alerts.length})
           </p>
           {alerts.map((alert, i) => (
@@ -347,9 +347,9 @@ export function ForecastTab() {
       )}
 
       {/* ── Job Forecast Table ─────────────────────── */}
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader className="border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between gap-4">
-          <CardTitle className="text-base text-slate-900">
+      <Card className="shadow-sm border-border">
+        <CardHeader className="border-b border-border bg-muted/50 flex flex-row items-center justify-between gap-4">
+          <CardTitle className="text-base text-foreground">
             Job Forecast Table
             <span className="text-xs font-normal text-muted-foreground ml-2">
               — derived from approved records · exposure shown separately
@@ -374,7 +374,7 @@ export function ForecastTab() {
             </div>
           ) : (
             <Table>
-              <TableHeader className="bg-slate-50/50">
+              <TableHeader className="bg-muted/50">
                 <TableRow>
                   <SortTh label="Job" col="jobTitle" />
                   <SortTh
@@ -408,19 +408,19 @@ export function ForecastTab() {
                 {filtered.map((f) => (
                   <TableRow
                     key={f.jobId}
-                    className="hover:bg-slate-50 cursor-pointer"
+                    className="hover:bg-muted cursor-pointer"
                     onClick={() => setLocation(`/jobs/${f.jobId}`)}
                     data-testid={`forecast-row-${f.jobId}`}
                   >
                     <TableCell>
-                      <div className="font-medium text-slate-800 max-w-[220px] truncate">
+                      <div className="font-medium text-foreground max-w-[220px] truncate">
                         {f.jobTitle}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {f.jobStatus}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right font-medium text-slate-700">
+                    <TableCell className="text-right font-medium text-foreground">
                       {f.hasApprovedActivity ? (
                         fmtPct(f.currentMargin)
                       ) : (

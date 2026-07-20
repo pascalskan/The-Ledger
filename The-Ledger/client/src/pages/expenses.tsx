@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { FinancialSnapshot } from "@/components/finance/FinancialSnapshot";
 import { JobProfitabilityTable } from "@/components/finance/JobProfitabilityTable";
 import { ExpenseExposurePanel } from "@/components/finance/ExpenseExposurePanel";
@@ -62,10 +63,10 @@ export default function FinancialInsightsPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Financial Insights</h1>
-          <p className="text-slate-500 mt-1">Operational financial intelligence powered by {isConnected ? providerName : "internal records"} and spend data.</p>
-        </div>
+        <PageHeader
+          title="Financial Insights"
+          description={`Operational financial intelligence powered by ${isConnected ? providerName : "internal records"} and spend data.`}
+        />
 
         <FinancialSnapshot data={snapshotData} />
 

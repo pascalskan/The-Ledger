@@ -66,31 +66,31 @@ export function PortalShell({ active, branding, client, onSignOut, children }: P
       {branding.logo ? (
         <img src={branding.logo} alt={branding.companyName} className="h-7 w-auto" data-testid="portal-brand-logo" />
       ) : (
-        <ShieldCheck className="h-6 w-6 text-slate-800" />
+        <ShieldCheck className="h-6 w-6 text-foreground" />
       )}
-      <span className="font-bold text-base tracking-tight text-slate-900" data-testid="portal-brand-name">
+      <span className="font-bold text-base tracking-tight text-foreground" data-testid="portal-brand-name">
         {branding.companyName}
       </span>
     </div>
   );
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 text-slate-900 flex flex-col" data-testid="portal-shell">
+    <div className="min-h-[100dvh] bg-muted text-foreground flex flex-col" data-testid="portal-shell">
       {/* Top header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 sm:px-6 py-3 shadow-sm flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-card border-b border-border px-4 sm:px-6 py-3 shadow-sm flex items-center justify-between">
         <BrandMark />
         <div className="flex items-center gap-3">
           <div
-            className="hidden sm:flex items-center gap-2 text-sm font-medium bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full border border-slate-200"
+            className="hidden sm:flex items-center gap-2 text-sm font-medium bg-muted text-foreground px-3 py-1.5 rounded-full border border-border"
             data-testid="portal-client-name"
           >
-            <Building2 className="h-4 w-4 text-slate-500" />
+            <Building2 className="h-4 w-4 text-muted-foreground" />
             {client?.name}
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="text-slate-600 hover:text-slate-900"
+            className="text-muted-foreground hover:text-foreground"
             onClick={onSignOut}
             data-testid="portal-signout"
           >
@@ -103,7 +103,7 @@ export function PortalShell({ active, branding, client, onSignOut, children }: P
       <div className="flex-1 flex w-full max-w-7xl mx-auto">
         {/* Desktop / tablet sidebar */}
         <aside
-          className="hidden md:flex md:flex-col w-56 shrink-0 border-r border-slate-200 bg-white/60 py-6 px-3 gap-1"
+          className="hidden md:flex md:flex-col w-56 shrink-0 border-r border-border bg-white/60 py-6 px-3 gap-1"
           aria-label="Portal navigation"
           data-testid="portal-sidebar"
         >
@@ -119,7 +119,7 @@ export function PortalShell({ active, branding, client, onSignOut, children }: P
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-left",
                   isActive
                     ? "bg-slate-900 text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
                 <item.icon className="h-4 w-4 shrink-0" />
@@ -128,8 +128,8 @@ export function PortalShell({ active, branding, client, onSignOut, children }: P
             );
           })}
 
-          <div className="mt-auto pt-6 px-3 text-[11px] text-slate-500 leading-relaxed" data-testid="portal-support">
-            <div className="font-medium text-slate-500">Need help?</div>
+          <div className="mt-auto pt-6 px-3 text-[11px] text-muted-foreground leading-relaxed" data-testid="portal-support">
+            <div className="font-medium text-muted-foreground">Need help?</div>
             <div data-testid="portal-support-email">{branding.supportEmail}</div>
             <div data-testid="portal-support-phone">{branding.supportPhone}</div>
           </div>
@@ -142,7 +142,7 @@ export function PortalShell({ active, branding, client, onSignOut, children }: P
       {/* Mobile bottom navigation */}
       <nav
         aria-label="Portal navigation"
-        className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 flex justify-between px-1 py-1.5 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50"
+        className="md:hidden fixed bottom-0 inset-x-0 bg-card border-t border-border flex justify-between px-1 py-1.5 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50"
         data-testid="portal-bottom-nav"
       >
         {PORTAL_NAV.map((item) => {
@@ -156,7 +156,7 @@ export function PortalShell({ active, branding, client, onSignOut, children }: P
               data-testid={`portal-nav-mobile-${item.key}`}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 min-w-0 py-1.5 rounded-lg transition-colors",
-                isActive ? "text-slate-900" : "text-slate-500 hover:text-slate-700"
+                isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <item.icon className={cn("h-5 w-5 mb-0.5", isActive && "stroke-[2.5px]")} />

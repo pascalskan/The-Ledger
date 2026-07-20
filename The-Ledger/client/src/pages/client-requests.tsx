@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore, useAuth } from "@/lib/mockData";
 import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +30,7 @@ const STATUS_CLS: Record<ClientRequestStatus, string> = {
   acknowledged: "bg-indigo-50 text-indigo-700 border-indigo-200",
   in_progress: "bg-amber-50 text-amber-700 border-amber-200",
   resolved: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  closed: "bg-slate-100 text-slate-600 border-slate-200",
+  closed: "bg-muted text-muted-foreground border-border",
   declined: "bg-red-50 text-red-700 border-red-200",
 };
 
@@ -110,20 +111,18 @@ export default function ClientRequestsPage() {
   return (
     <Layout>
       <div className="space-y-6" data-testid="client-requests-page">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Client Requests</h2>
-            <p className="text-muted-foreground mt-1">
-              Requests submitted by clients through the portal.
-            </p>
-          </div>
-          {escalatedCount > 0 && (
-            <Badge variant="destructive" className="self-start" data-testid="client-requests-escalated-badge">
-              <TriangleAlert className="h-3.5 w-3.5 mr-1.5" />
-              {escalatedCount} escalated
-            </Badge>
-          )}
-        </div>
+        <PageHeader
+          title="Client Requests"
+          description="Requests submitted by clients through the portal."
+          actions={
+            escalatedCount > 0 ? (
+              <Badge variant="destructive" className="self-start" data-testid="client-requests-escalated-badge">
+                <TriangleAlert className="h-3.5 w-3.5 mr-1.5" />
+                {escalatedCount} escalated
+              </Badge>
+            ) : null
+          }
+        />
 
         {/* Doctrine notice */}
         <div
@@ -176,7 +175,7 @@ export default function ClientRequestsPage() {
 
         {/* Queue */}
         {filtered.length === 0 ? (
-          <div className="py-12 text-center border-2 border-dashed rounded-lg bg-slate-50 dark:bg-slate-900/50" data-testid="client-requests-empty">
+          <div className="py-12 text-center border-2 border-dashed rounded-lg bg-muted dark:bg-slate-900/50" data-testid="client-requests-empty">
             <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
             <h3 className="text-lg font-medium">No requests</h3>
             <p className="text-muted-foreground text-sm mt-1">Nothing matches the current filter.</p>

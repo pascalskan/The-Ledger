@@ -59,15 +59,15 @@ export function PortalJobs({ jobs, selectedJob, threads, onOpenJob, onBack, onOp
     <div className="space-y-6" data-testid="portal-jobs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Your Projects</h1>
-          <p className="text-slate-500 mt-1">Track progress and crew across your jobs.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Your Projects</h1>
+          <p className="text-muted-foreground mt-1">Track progress and crew across your jobs.</p>
         </div>
-        <div className="inline-flex rounded-md border border-slate-200 bg-white p-1" data-testid="portal-jobs-filter">
+        <div className="inline-flex rounded-md border border-border bg-card p-1" data-testid="portal-jobs-filter">
           {(["all", "active", "completed"] as StatusFilter[]).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 text-xs rounded-sm capitalize transition ${filter === f ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+              className={`px-3 py-1.5 text-xs rounded-sm capitalize transition ${filter === f ? "bg-slate-900 text-white" : "text-muted-foreground hover:bg-muted"}`}
               data-testid={`portal-jobs-filter-${f}`}
             >
               {f}
@@ -80,43 +80,43 @@ export function PortalJobs({ jobs, selectedJob, threads, onOpenJob, onBack, onOp
         {filtered.map((job) => (
           <Card
             key={job.id}
-            className="cursor-pointer border-slate-200 hover:border-slate-400 hover:shadow-md transition-all group"
+            className="cursor-pointer border-border hover:border-slate-400 hover:shadow-md transition-all group"
             onClick={() => onOpenJob(job)}
             data-testid={`portal-job-card-${job.id}`}
           >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <Badge variant="outline" className={`mb-2 font-normal ${job.status === "Completed" ? "bg-slate-100 text-slate-600" : "bg-blue-50 text-blue-700 border-blue-200"}`}>
+                  <Badge variant="outline" className={`mb-2 font-normal ${job.status === "Completed" ? "bg-muted text-muted-foreground" : "bg-blue-50 text-blue-700 border-blue-200"}`}>
                     {job.status}
                   </Badge>
-                  <CardTitle className="text-lg text-slate-800">{job.title}</CardTitle>
+                  <CardTitle className="text-lg text-foreground">{job.title}</CardTitle>
                 </div>
-                <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">{job.jobId}</span>
+                <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded border border-border">{job.jobId}</span>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <MapPin className="h-4 w-4 shrink-0 text-slate-500" />
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span className="truncate">{job.locationAddress}</span>
                 </div>
-                <div className="flex items-center gap-2 text-slate-600">
-                  <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span>{new Date(job.startAt).toLocaleDateString()}</span>
                 </div>
                 {job.managerName && (
-                  <div className="flex items-center gap-2 text-slate-600" data-testid={`portal-job-pm-${job.id}`}>
-                    <UserCog className="h-4 w-4 shrink-0 text-slate-500" />
+                  <div className="flex items-center gap-2 text-muted-foreground" data-testid={`portal-job-pm-${job.id}`}>
+                    <UserCog className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="truncate">PM: {job.managerName}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center pt-3 mt-1 border-t border-slate-100">
-                  <div className="flex items-center gap-1.5 text-slate-600">
-                    <Users className="h-4 w-4 text-slate-500" />
+                <div className="flex justify-between items-center pt-3 mt-1 border-t border-border">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Users className="h-4 w-4 text-muted-foreground" />
                     <span>{job.crewCount} Crew</span>
                   </div>
-                  <Button variant="ghost" size="sm" className="h-8 text-slate-700">View Details</Button>
+                  <Button variant="ghost" size="sm" className="h-8 text-foreground">View Details</Button>
                 </div>
               </div>
             </CardContent>
@@ -124,10 +124,10 @@ export function PortalJobs({ jobs, selectedJob, threads, onOpenJob, onBack, onOp
         ))}
 
         {filtered.length === 0 && (
-          <div className="col-span-full py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-white" data-testid="portal-jobs-empty">
-            <Briefcase className="h-8 w-8 mx-auto text-slate-500 mb-3" />
-            <h3 className="text-lg font-medium text-slate-800">No projects found</h3>
-            <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1">There are no projects matching this filter.</p>
+          <div className="col-span-full py-12 text-center border-2 border-dashed border-border rounded-lg bg-card" data-testid="portal-jobs-empty">
+            <Briefcase className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
+            <h3 className="text-lg font-medium text-foreground">No projects found</h3>
+            <p className="text-muted-foreground text-sm max-w-sm mx-auto mt-1">There are no projects matching this filter.</p>
           </div>
         )}
       </div>
@@ -162,31 +162,31 @@ function PortalJobDetail({
   return (
     <div className="space-y-6 pb-12" data-testid="portal-job-detail">
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={onBack} className="-ml-3 text-slate-500 hover:text-slate-900" data-testid="portal-back-to-projects">
+        <Button variant="ghost" size="sm" onClick={onBack} className="-ml-3 text-muted-foreground hover:text-foreground" data-testid="portal-back-to-projects">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Projects
         </Button>
       </div>
 
       <div>
         <div className="flex items-center gap-3 mb-2">
-          <Badge variant="outline" className={`font-normal ${job.status === "Completed" ? "bg-slate-100 text-slate-600" : "bg-blue-50 text-blue-700 border-blue-200"}`}>
+          <Badge variant="outline" className={`font-normal ${job.status === "Completed" ? "bg-muted text-muted-foreground" : "bg-blue-50 text-blue-700 border-blue-200"}`}>
             {job.status}
           </Badge>
-          <span className="text-sm font-mono text-slate-500">{job.jobId}</span>
+          <span className="text-sm font-mono text-muted-foreground">{job.jobId}</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">{job.title}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{job.title}</h1>
       </div>
 
       <ProjectProgress status={job.status} />
 
       {/* Project Summary */}
-      <Card className="shadow-sm border-slate-200" data-testid="portal-project-summary">
-        <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
+      <Card className="shadow-sm border-border" data-testid="portal-project-summary">
+        <CardHeader className="pb-3 border-b border-border bg-muted/50">
           <CardTitle className="text-lg">Project Summary</CardTitle>
         </CardHeader>
         <CardContent className="pt-5 space-y-4 text-sm">
-          <p className="text-slate-700 leading-relaxed text-base">{job.description}</p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-4 border-t border-slate-100">
+          <p className="text-foreground leading-relaxed text-base">{job.description}</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-4 border-t border-border">
             <SummaryField icon={Building2} label="Site" value={job.locationAddress} testid="portal-summary-site" />
             <SummaryField icon={Activity} label="Status" value={job.status} testid="portal-summary-status" />
             <SummaryField icon={UserCog} label="Assigned PM" value={job.managerName || "—"} testid="portal-detail-pm" />
@@ -208,16 +208,16 @@ function PortalJobDetail({
 
           {/* Project conversations — the Communication Centre is the primary
               workflow (CL-5). The former free-text comment box is retired. */}
-          <Card className="shadow-sm border-slate-200" data-testid="portal-project-conversations">
-            <CardHeader className="pb-3 border-b border-slate-100">
+          <Card className="shadow-sm border-border" data-testid="portal-project-conversations">
+            <CardHeader className="pb-3 border-b border-border">
               <CardTitle className="text-lg flex items-center gap-2">
-                <MessagesSquare className="h-5 w-5 text-slate-500" /> Conversations
+                <MessagesSquare className="h-5 w-5 text-muted-foreground" /> Conversations
               </CardTitle>
               <CardDescription>Project discussions with your delivery team.</CardDescription>
             </CardHeader>
             <CardContent className="pt-4 space-y-3">
               {threads.length === 0 ? (
-                <p className="text-sm text-slate-500 italic" data-testid="portal-project-conversations-empty">
+                <p className="text-sm text-muted-foreground italic" data-testid="portal-project-conversations-empty">
                   No conversations for this project yet.
                 </p>
               ) : (
@@ -225,12 +225,12 @@ function PortalJobDetail({
                   {threads.map((t) => (
                     <li key={t.id} className="py-2.5 flex items-start justify-between gap-3" data-testid={`portal-project-thread-${t.id}`}>
                       <div className="min-w-0">
-                        <div className="text-sm font-medium text-slate-800 truncate">{t.subject}</div>
-                        <div className="text-[11px] text-slate-500">
+                        <div className="text-sm font-medium text-foreground truncate">{t.subject}</div>
+                        <div className="text-[11px] text-muted-foreground">
                           {t.topic} · {t.messageCount} message{t.messageCount === 1 ? "" : "s"}
                         </div>
                       </div>
-                      <Badge variant="outline" className="shrink-0 bg-slate-50 text-slate-600 border-slate-200">
+                      <Badge variant="outline" className="shrink-0 bg-muted text-muted-foreground border-border">
                         {t.status}
                       </Badge>
                     </li>
@@ -277,10 +277,10 @@ function SummaryField({
 }) {
   return (
     <div className="space-y-1.5">
-      <span className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{label}</span>
+      <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">{label}</span>
       <div className="flex items-start gap-2">
-        <Icon className="h-4 w-4 mt-0.5 text-slate-500 shrink-0" />
-        <span className="text-slate-800 font-medium" data-testid={testid}>{value}</span>
+        <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+        <span className="text-foreground font-medium" data-testid={testid}>{value}</span>
       </div>
     </div>
   );

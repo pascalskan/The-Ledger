@@ -52,8 +52,8 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
   return (
     <div className="space-y-6" data-testid="portal-documents">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Documents</h1>
-        <p className="text-slate-500 mt-1">Reports, drawings and certificates shared with you.</p>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Documents</h1>
+        <p className="text-muted-foreground mt-1">Reports, drawings and certificates shared with you.</p>
       </div>
 
       {/* Controls */}
@@ -63,14 +63,14 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
             <label htmlFor="portal-documents-search-input" className="sr-only">
               Search documents
             </label>
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" aria-hidden="true" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <Input
               id="portal-documents-search-input"
               type="search"
               placeholder="Search documents..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-white"
+              className="pl-9 bg-card"
               data-testid="portal-documents-search"
             />
           </div>
@@ -80,7 +80,7 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
             </label>
             <select
               id="portal-documents-sort-select"
-              className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700"
+              className="h-10 rounded-md border border-border bg-card px-3 text-sm text-foreground"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
               data-testid="portal-documents-sort"
@@ -107,7 +107,7 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
               className={`px-3 py-1.5 text-xs rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 ${
                 filter === f.key
                   ? "bg-slate-900 text-white border-slate-900"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                  : "bg-card text-muted-foreground border-border hover:bg-muted"
               }`}
               data-testid={`portal-documents-filter-${f.key}`}
             >
@@ -119,34 +119,34 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
 
       {/* List */}
       {visible.length === 0 ? (
-        <div className="py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-white" data-testid="portal-documents-empty">
-          <FolderOpen className="h-8 w-8 mx-auto text-slate-500 mb-3" />
-          <h3 className="text-lg font-medium text-slate-800">No documents found</h3>
-          <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1">
+        <div className="py-12 text-center border-2 border-dashed border-border rounded-lg bg-card" data-testid="portal-documents-empty">
+          <FolderOpen className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
+          <h3 className="text-lg font-medium text-foreground">No documents found</h3>
+          <p className="text-muted-foreground text-sm max-w-sm mx-auto mt-1">
             Documents appear here once your project team shares them with you.
           </p>
         </div>
       ) : (
         <div className="space-y-3" data-testid="portal-documents-list">
           {visible.map((doc) => (
-            <Card key={doc.id} className="border-slate-200" data-testid={`portal-document-${doc.id}`}>
+            <Card key={doc.id} className="border-border" data-testid={`portal-document-${doc.id}`}>
               <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-                  <FileText className="h-5 w-5 text-slate-500" />
+                <div className="h-10 w-10 rounded-lg bg-muted border border-border flex items-center justify-center shrink-0">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-medium text-slate-800 truncate">{doc.title}</span>
-                    <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-[10px]" data-testid={`portal-document-category-${doc.id}`}>
+                    <span className="text-sm font-medium text-foreground truncate">{doc.title}</span>
+                    <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-[10px]" data-testid={`portal-document-category-${doc.id}`}>
                       {DOCUMENT_CATEGORY_LABELS[doc.category]}
                     </Badge>
-                    <Badge variant="outline" className="bg-white text-slate-500 border-slate-200 text-[10px] font-mono">
+                    <Badge variant="outline" className="bg-card text-muted-foreground border-border text-[10px] font-mono">
                       {doc.fileType}
                     </Badge>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5 truncate">{doc.description}</p>
-                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-500">
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{doc.description}</p>
+                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground">
                     <span data-testid={`portal-document-project-${doc.id}`}>
                       {projectTitleById[doc.projectId] ?? "Project"}
                     </span>

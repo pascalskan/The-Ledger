@@ -6,10 +6,10 @@ export function AlertsPanel({ lowStock, serviceAlerts }: { lowStock: any[], serv
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-900">
+        <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
           <AlertTriangle className="h-5 w-5 text-rose-500" /> Low Stock Alerts
         </h3>
-        <div className="border border-slate-200 rounded-md bg-white">
+        <div className="border border-border rounded-md bg-card">
           <Table>
             <TableHeader className="bg-rose-50/50">
               <TableRow>
@@ -22,10 +22,10 @@ export function AlertsPanel({ lowStock, serviceAlerts }: { lowStock: any[], serv
             <TableBody>
               {lowStock.map((item, idx) => (
                 <TableRow key={idx}>
-                  <TableCell className="font-medium text-slate-900">{item.name}</TableCell>
+                  <TableCell className="font-medium text-foreground">{item.name}</TableCell>
                   <TableCell className="text-right font-bold text-rose-600">{item.quantity}</TableCell>
-                  <TableCell className="text-right text-slate-600">{item.reorderLevel}</TableCell>
-                  <TableCell><Badge variant="outline" className="font-normal text-slate-600">{item.location}</Badge></TableCell>
+                  <TableCell className="text-right text-muted-foreground">{item.reorderLevel}</TableCell>
+                  <TableCell><Badge variant="outline" className="font-normal text-muted-foreground">{item.location}</Badge></TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -34,10 +34,10 @@ export function AlertsPanel({ lowStock, serviceAlerts }: { lowStock: any[], serv
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-900">
+        <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
           <Clock className="h-5 w-5 text-amber-500" /> Asset Service Alerts
         </h3>
-        <div className="border border-slate-200 rounded-md bg-white">
+        <div className="border border-border rounded-md bg-card">
           <Table>
             <TableHeader className="bg-amber-50/50">
               <TableRow>
@@ -54,8 +54,8 @@ export function AlertsPanel({ lowStock, serviceAlerts }: { lowStock: any[], serv
                 
                 return (
                   <TableRow key={idx}>
-                    <TableCell className="font-medium text-slate-900">{item.name}</TableCell>
-                    <TableCell className="text-slate-600">{new Date(item.nextService).toLocaleDateString()}</TableCell>
+                    <TableCell className="font-medium text-foreground">{item.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{new Date(item.nextService).toLocaleDateString()}</TableCell>
                     <TableCell className={`text-right font-bold ${isOverdue ? 'text-rose-600' : 'text-amber-600'}`}>
                       {isOverdue ? `${Math.abs(daysLeft)} days overdue` : `${daysLeft} days`}
                     </TableCell>

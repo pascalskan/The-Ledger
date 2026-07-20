@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,10 +32,10 @@ export default function QAPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">QA Center</h2>
-          <p className="text-muted-foreground mt-1">Verification of core application flows and enterprise hardening.</p>
-        </div>
+        <PageHeader
+          title="QA Centre"
+          description="Verification of core application flows and enterprise hardening."
+        />
 
         <Card>
             <CardHeader>

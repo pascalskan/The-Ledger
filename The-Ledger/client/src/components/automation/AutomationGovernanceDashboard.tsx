@@ -269,7 +269,7 @@ export function AutomationGovernanceDashboard() {
   const [selected, setSelected] = useState<AutomationGovernanceRecord | null>(null);
 
   const kpis = [
-    { label: "Governed", value: model.summary.totalAutomations, icon: ShieldCheck, color: "text-slate-600", testId: "aut-gov-kpi-total" },
+    { label: "Governed", value: model.summary.totalAutomations, icon: ShieldCheck, color: "text-muted-foreground", testId: "aut-gov-kpi-total" },
     { label: "Compliant", value: model.summary.compliant, icon: CheckCircle2, color: "text-emerald-600", testId: "aut-gov-kpi-compliant" },
     { label: "Requires Review", value: model.summary.requiresReview, icon: AlertTriangle, color: "text-amber-600", testId: "aut-gov-kpi-review" },
     { label: "Restricted", value: model.summary.restricted, icon: Ban, color: "text-amber-700", testId: "aut-gov-kpi-restricted" },

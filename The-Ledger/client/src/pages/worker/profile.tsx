@@ -35,34 +35,34 @@ export default function WorkerProfilePage() {
       <div className="p-4 space-y-4">
 
         {/* Identity Card */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
           <div className="flex items-center gap-4 mb-5">
             <div className="w-16 h-16 bg-slate-900 text-white rounded-full flex items-center justify-center text-2xl font-bold shrink-0">
               {user?.name.charAt(0) ?? "W"}
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold truncate">{user?.name}</h2>
-              <p className="text-slate-500 text-sm truncate">{user?.email}</p>
+              <p className="text-muted-foreground text-sm truncate">{user?.email}</p>
             </div>
           </div>
 
-          <div className="space-y-3 pt-1 border-t border-slate-100">
+          <div className="space-y-3 pt-1 border-t border-border">
             <div className="flex items-center gap-3 text-sm pt-3">
-              <Shield className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="text-slate-500">Role</span>
-              <span className="ml-auto font-semibold text-slate-800">{roleName}</span>
+              <Shield className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="text-muted-foreground">Role</span>
+              <span className="ml-auto font-semibold text-foreground">{roleName}</span>
             </div>
             <div className="flex items-center gap-3 text-sm">
-              <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="text-slate-500">Company</span>
-              <span className="ml-auto font-semibold text-slate-800 truncate max-w-[160px]">
+              <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="text-muted-foreground">Company</span>
+              <span className="ml-auto font-semibold text-foreground truncate max-w-[160px]">
                 {companyName}
               </span>
             </div>
             <div className="flex items-center gap-3 text-sm">
-              <Briefcase className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="text-slate-500">Jobs</span>
-              <span className="ml-auto font-semibold text-slate-800">
+              <Briefcase className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="text-muted-foreground">Jobs</span>
+              <span className="ml-auto font-semibold text-foreground">
                 {activeJobCount} active · {myJobs.length} total
               </span>
             </div>
@@ -72,16 +72,16 @@ export default function WorkerProfilePage() {
         {/* Activity Summary */}
         <div
           data-testid="worker-profile-activity-summary"
-          className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm"
+          className="bg-card rounded-2xl p-5 border border-border shadow-sm"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Activity Summary
             </h3>
             <button
               data-testid="worker-profile-view-activity"
               onClick={() => setLocation("/worker/history")}
-              className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1"
+              className="text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1"
             >
               <History className="w-3.5 h-3.5" /> View all
             </button>
@@ -93,13 +93,13 @@ export default function WorkerProfilePage() {
               { Icon: AlertTriangle, label: "Issues Logged", value: summary.issues },
               { Icon: UploadCloud, label: "Uploads Submitted", value: summary.uploads },
             ].map((m) => (
-              <div key={m.label} className="rounded-xl bg-slate-50 p-3 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-white text-slate-500 flex items-center justify-center shrink-0 border border-slate-100">
+              <div key={m.label} className="rounded-xl bg-muted p-3 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-card text-muted-foreground flex items-center justify-center shrink-0 border border-border">
                   <m.Icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-lg font-bold leading-none">{m.value}</div>
-                  <div className="text-[11px] text-slate-500 mt-1 leading-tight">{m.label}</div>
+                  <div className="text-[11px] text-muted-foreground mt-1 leading-tight">{m.label}</div>
                 </div>
               </div>
             ))}
@@ -111,24 +111,24 @@ export default function WorkerProfilePage() {
           data-testid="worker-profile-performance"
           className="bg-slate-900 text-white rounded-2xl p-5 shadow-md"
         >
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
             Performance Snapshot
           </h3>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
               <div className="text-2xl font-bold text-emerald-400">{summary.totalShifts}</div>
-              <div className="text-[11px] text-slate-400 mt-1">Total Shifts</div>
+              <div className="text-[11px] text-muted-foreground mt-1">Total Shifts</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-emerald-400 flex items-center justify-center gap-1">
                 <Clock className="w-4 h-4" />
                 {summary.totalHours}
               </div>
-              <div className="text-[11px] text-slate-400 mt-1">Total Hours</div>
+              <div className="text-[11px] text-muted-foreground mt-1">Total Hours</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-emerald-400">{summary.reportsThisMonth}</div>
-              <div className="text-[11px] text-slate-400 mt-1">Reports / Month</div>
+              <div className="text-[11px] text-muted-foreground mt-1">Reports / Month</div>
             </div>
           </div>
         </div>

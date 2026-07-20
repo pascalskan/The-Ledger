@@ -79,7 +79,7 @@ export default function WorkerUploadsPage() {
         {/* SYNC STATUS CARD */}
         {/* ============================================ */}
 
-        <div data-testid="worker-sync-status" className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <div data-testid="worker-sync-status" className="bg-card rounded-2xl p-6 border border-border shadow-sm">
 
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center shrink-0">
@@ -91,7 +91,7 @@ export default function WorkerUploadsPage() {
                 Sync Status
               </h2>
 
-              <p className="text-slate-500 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Manage your offline data
               </p>
             </div>
@@ -158,7 +158,7 @@ export default function WorkerUploadsPage() {
           {queue.length > 0 && (
             <button
               onClick={clearSyncedItems}
-              className="w-full mt-3 border border-slate-200 hover:bg-slate-50 rounded-xl py-3 font-semibold text-sm transition-colors"
+              className="w-full mt-3 border border-border hover:bg-muted rounded-xl py-3 font-semibold text-sm transition-colors"
             >
               Clear Synced Items
             </button>
@@ -176,7 +176,7 @@ export default function WorkerUploadsPage() {
             key={item.id}
             data-testid="worker-queue-item"
             data-sync-status={item.syncStatus}
-            className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-4"
+            className="bg-card rounded-2xl p-5 border border-border shadow-sm space-y-4"
           >
 
             {/* ============================================ */}
@@ -185,7 +185,7 @@ export default function WorkerUploadsPage() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-full bg-muted text-muted-foreground flex items-center justify-center shrink-0">
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
@@ -193,7 +193,7 @@ export default function WorkerUploadsPage() {
                     {label}
                   </p>
 
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {new Date(
                       item.createdAt
                     ).toLocaleString()}
@@ -293,7 +293,7 @@ export default function WorkerUploadsPage() {
                     Upload Attachments
                   </h3>
 
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Replay-safe operational evidence
                   </p>
                 </div>
@@ -306,14 +306,14 @@ export default function WorkerUploadsPage() {
                         upload.uploadId ||
                         upload.id
                       }
-                      className="border border-slate-100 rounded-2xl overflow-hidden"
+                      className="border border-border rounded-2xl overflow-hidden"
                     >
 
                       {/* ============================================ */}
                       {/* IMAGE PREVIEW */}
                       {/* ============================================ */}
 
-                      <div className="relative h-44 bg-slate-100 overflow-hidden">
+                      <div className="relative h-44 bg-muted overflow-hidden">
 
                         {upload.previewUrl ? (
                           <img
@@ -322,7 +322,7 @@ export default function WorkerUploadsPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
+                          <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-2">
                             <ImageIcon className="w-10 h-10" />
 
                             <span className="text-xs font-medium">
@@ -340,7 +340,7 @@ export default function WorkerUploadsPage() {
                               setPreviewUpload(upload)
                             }
                             aria-label={`Preview ${upload.fileName || "upload"}`}
-                            className="w-9 h-9 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-sm"
+                            className="w-9 h-9 rounded-full bg-white/90 hover:bg-card flex items-center justify-center shadow-sm"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -377,7 +377,7 @@ export default function WorkerUploadsPage() {
                                 "Upload"}
                             </p>
 
-                            <p className="text-xs text-slate-500 mt-1 capitalize">
+                            <p className="text-xs text-muted-foreground mt-1 capitalize">
                               {upload.category ||
                                 "general"}
                             </p>
@@ -415,7 +415,7 @@ export default function WorkerUploadsPage() {
                         <div className="space-y-2">
 
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-slate-500">
+                            <span className="text-muted-foreground">
                               Upload Progress
                             </span>
 
@@ -490,7 +490,7 @@ export default function WorkerUploadsPage() {
                                   upload,
                                 })
                               }
-                              className="flex-1 rounded-lg border border-yellow-300 bg-white hover:bg-yellow-50 text-yellow-700 text-xs font-semibold py-2 transition-colors"
+                              className="flex-1 rounded-lg border border-yellow-300 bg-card hover:bg-yellow-50 text-yellow-700 text-xs font-semibold py-2 transition-colors"
                             >
                               View Conflict
                             </button>
@@ -520,12 +520,12 @@ export default function WorkerUploadsPage() {
         })}
 
         {queue.length === 0 && (
-          <div data-testid="worker-queue-empty" className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm text-center">
+          <div data-testid="worker-queue-empty" className="bg-card rounded-2xl p-8 border border-border shadow-sm text-center">
             <div className="w-12 h-12 mx-auto bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-3">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            <p className="font-semibold text-slate-800">Everything is synced</p>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="font-semibold text-foreground">Everything is synced</p>
+            <p className="text-sm text-muted-foreground mt-1">
               No submissions are waiting. Anything you log offline will appear here until it syncs.
             </p>
           </div>
@@ -538,18 +538,18 @@ export default function WorkerUploadsPage() {
         {previewUpload && (
           <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
 
-            <div className="relative max-w-4xl w-full bg-white rounded-3xl overflow-hidden shadow-2xl">
+            <div className="relative max-w-4xl w-full bg-card rounded-3xl overflow-hidden shadow-2xl">
 
               <button
                 onClick={() =>
                   setPreviewUpload(null)
                 }
-                className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/90 hover:bg-white flex items-center justify-center"
+                className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/90 hover:bg-card flex items-center justify-center"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="bg-slate-100 max-h-[70vh] overflow-hidden">
+              <div className="bg-muted max-h-[70vh] overflow-hidden">
 
                 {previewUpload.previewUrl ? (
                   <img
@@ -558,7 +558,7 @@ export default function WorkerUploadsPage() {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <div className="h-[400px] flex items-center justify-center text-slate-400">
+                  <div className="h-[400px] flex items-center justify-center text-muted-foreground">
                     No preview available
                   </div>
                 )}
@@ -571,15 +571,15 @@ export default function WorkerUploadsPage() {
                     {previewUpload.fileName}
                   </h3>
 
-                  <p className="text-sm text-slate-500 mt-1 capitalize">
+                  <p className="text-sm text-muted-foreground mt-1 capitalize">
                     {previewUpload.category}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
 
-                  <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
-                    <p className="text-slate-500 mb-1">
+                  <div className="rounded-xl bg-muted border border-border p-4">
+                    <p className="text-muted-foreground mb-1">
                       Upload Status
                     </p>
 
@@ -588,8 +588,8 @@ export default function WorkerUploadsPage() {
                     </p>
                   </div>
 
-                  <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
-                    <p className="text-slate-500 mb-1">
+                  <div className="rounded-xl bg-muted border border-border p-4">
+                    <p className="text-muted-foreground mb-1">
                       Upload Progress
                     </p>
 
@@ -610,14 +610,14 @@ export default function WorkerUploadsPage() {
         {pendingDelete && (
           <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
 
-            <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl space-y-5">
+            <div className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-2xl space-y-5">
 
               <div>
                 <h3 className="text-lg font-bold">
                   Remove Upload?
                 </h3>
 
-                <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
                   This removes the upload from the replay queue.
                   The operational report itself will remain intact.
                 </p>
@@ -629,7 +629,7 @@ export default function WorkerUploadsPage() {
                   onClick={() =>
                     setPendingDelete(null)
                   }
-                  className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-semibold hover:bg-slate-50"
+                  className="flex-1 rounded-xl border border-border py-3 text-sm font-semibold hover:bg-muted"
                 >
                   Cancel
                 </button>
@@ -659,20 +659,20 @@ export default function WorkerUploadsPage() {
 {selectedConflict && (
   <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
 
-    <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl overflow-hidden">
+    <div className="w-full max-w-lg rounded-3xl bg-card shadow-2xl overflow-hidden">
 
       {/* HEADER */}
 
-      <div className="p-6 border-b border-slate-100">
+      <div className="p-6 border-b border-border">
 
         <div className="flex items-start justify-between gap-4">
 
           <div>
-            <h3 className="text-xl font-bold text-slate-900">
+            <h3 className="text-xl font-bold text-foreground">
               Operational Conflict Review
             </h3>
 
-            <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
               This upload requires manual operational review before replay synchronization can continue.
             </p>
           </div>
@@ -681,7 +681,7 @@ export default function WorkerUploadsPage() {
             onClick={() =>
               setSelectedConflict(null)
             }
-            className="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center shrink-0"
+            className="w-10 h-10 rounded-full hover:bg-muted flex items-center justify-center shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -709,7 +709,7 @@ export default function WorkerUploadsPage() {
 
         <div className="space-y-2">
 
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Worker Correction Notes
           </label>
 
@@ -721,22 +721,22 @@ export default function WorkerUploadsPage() {
               )
             }
             placeholder="Add operational clarification or correction notes..."
-            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-2xl border border-border px-4 py-3 text-sm min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
-        <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+        <div className="rounded-2xl bg-muted border border-border p-4">
 
           <div className="flex items-start gap-3">
 
             <div className="w-2 h-2 rounded-full bg-yellow-500 mt-2 shrink-0" />
 
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-slate-800">
+              <p className="text-sm font-semibold text-foreground">
                 Replay Governance Active
               </p>
 
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Operational evidence and uploads will remain preserved during replay correction and resubmission workflows.
               </p>
             </div>
@@ -746,13 +746,13 @@ export default function WorkerUploadsPage() {
 
       {/* FOOTER */}
 
-      <div className="p-6 border-t border-slate-100 flex gap-3">
+      <div className="p-6 border-t border-border flex gap-3">
 
         <button
           onClick={() =>
             setSelectedConflict(null)
           }
-          className="flex-1 rounded-2xl border border-slate-200 py-3 text-sm font-semibold hover:bg-slate-50 transition-colors"
+          className="flex-1 rounded-2xl border border-border py-3 text-sm font-semibold hover:bg-muted transition-colors"
         >
           Cancel
         </button>

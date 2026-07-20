@@ -98,7 +98,7 @@ function kpiStatusColor(status?: 'healthy' | 'warning' | 'critical'): string {
   if (status === 'healthy') return 'text-emerald-700';
   if (status === 'warning') return 'text-amber-700';
   if (status === 'critical') return 'text-red-700';
-  return 'text-slate-700';
+  return 'text-foreground';
 }
 
 function kpiStatusDot(status?: 'healthy' | 'warning' | 'critical'): string {
@@ -276,7 +276,7 @@ function ReportDetailDialog({ report, onClose, onArchive }: ReportDetailDialogPr
                 data-testid="report-detail-archive-btn"
                 variant="outline"
                 size="sm"
-                className="gap-1 text-slate-600"
+                className="gap-1 text-muted-foreground"
                 onClick={() => {
                   onArchive(report.id);
                   onClose();
@@ -410,7 +410,7 @@ function ExportDetailDialog({ exportRecord, onClose, onDownload, onArchive }: Ex
                   data-testid="export-detail-archive-btn"
                   variant="outline"
                   size="sm"
-                  className="gap-1 text-slate-600"
+                  className="gap-1 text-muted-foreground"
                   onClick={() => {
                     onArchive(exportRecord.id);
                     onClose();
@@ -694,7 +694,7 @@ export function ReportsContent({ embedded = false }: { embedded?: boolean }) {
               <Card data-testid="reporting-kpi-archived" className="border">
                 <CardContent className="pt-4 pb-4">
                   <p className="text-xs text-muted-foreground mb-1">Archived</p>
-                  <p className="text-2xl font-bold text-slate-600">{summary.archived}</p>
+                  <p className="text-2xl font-bold text-muted-foreground">{summary.archived}</p>
                 </CardContent>
               </Card>
               <Card data-testid="reporting-kpi-this-month" className="border">
@@ -781,7 +781,7 @@ export function ReportsContent({ embedded = false }: { embedded?: boolean }) {
                             data-testid={`report-archive-btn-${report.id}`}
                             variant="ghost"
                             size="sm"
-                            className="h-7 gap-1 text-xs text-slate-600 hover:text-slate-900"
+                            className="h-7 gap-1 text-xs text-muted-foreground hover:text-foreground"
                             onClick={() => handleArchive(report.id)}
                           >
                             <Archive className="h-3 w-3" />
@@ -896,7 +896,7 @@ export function ExportsContent() {
               <Card data-testid="exports-kpi-archived" className="border">
                 <CardContent className="pt-4 pb-4">
                   <p className="text-xs text-muted-foreground mb-1">Archived</p>
-                  <p className="text-2xl font-bold text-slate-600">{exportSummary.archived}</p>
+                  <p className="text-2xl font-bold text-muted-foreground">{exportSummary.archived}</p>
                 </CardContent>
               </Card>
             </div>
@@ -1002,7 +1002,7 @@ export function ExportsContent() {
                               data-testid={`export-archive-btn-${exp.id}`}
                               variant="ghost"
                               size="sm"
-                              className="h-7 gap-1 text-xs text-slate-600"
+                              className="h-7 gap-1 text-xs text-muted-foreground"
                               onClick={() => handleExportArchive(exp.id)}
                             >
                               <Archive className="h-3 w-3" />

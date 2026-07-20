@@ -217,10 +217,10 @@ export function AutomationExecutiveDashboard() {
 
   // Enhanced KPI tiles (executive layer — distinct testIds from the legacy strip).
   const kpiTiles = [
-    { label: "Total Automations", value: ruleSummary.total, icon: Zap, color: "text-slate-600", testId: "aut-exec-kpi-total" },
+    { label: "Total Automations", value: ruleSummary.total, icon: Zap, color: "text-muted-foreground", testId: "aut-exec-kpi-total" },
     { label: "Active", value: ruleSummary.active, icon: CheckCircle2, color: "text-emerald-600", testId: "aut-exec-kpi-active" },
     { label: "Paused", value: schedKPIs.paused, icon: PauseCircle, color: "text-amber-600", testId: "aut-exec-kpi-paused", sub: "schedules" },
-    { label: "Disabled", value: ruleSummary.disabled, icon: Ban, color: "text-slate-500", testId: "aut-exec-kpi-disabled" },
+    { label: "Disabled", value: ruleSummary.disabled, icon: Ban, color: "text-muted-foreground", testId: "aut-exec-kpi-disabled" },
     { label: "Success Rate", value: `${exec.successRate}%`, icon: TrendingUp, color: "text-emerald-600", testId: "aut-exec-kpi-success-rate", sub: `${exec.successful} successful` },
     { label: "Failed Executions", value: exec.failed, icon: XCircle, color: "text-red-600", testId: "aut-exec-kpi-failed" },
     { label: "Approval-Blocked", value: exec.blocked, icon: ShieldCheck, color: "text-violet-600", testId: "aut-exec-kpi-blocked", sub: "safeguard held" },

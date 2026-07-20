@@ -312,7 +312,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Map", href: "/map", icon: MapIcon, roles: [] },
     { label: "Stock & Assets", href: "/equipment", icon: Package, roles: [] },
     { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: [] },
-    { label: "Expenses", href: "/expenses", icon: ReceiptText, roles: [] },
+    { label: "Financial Insights", href: "/expenses", icon: ReceiptText, roles: [] },
     { label: "Finance", href: "/finance", icon: DollarSign, roles: [], testId: "nav-finance-hub" },
   ];
 
@@ -323,7 +323,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const CEO_AUTOMATION_ITEMS: NavItem[] = [
     { label: "Automations", href: "/automations", icon: Zap, roles: [] },
     { label: "Workflows", href: "/workflows", icon: GitBranch, roles: [], testId: "nav-workflow-centre" },
-    { label: "Automation Controls", href: "/automation-governance", icon: ShieldCheck, roles: [], testId: "nav-automation-governance" },
+    { label: "Automation Governance", href: "/automation-governance", icon: ShieldCheck, roles: [], testId: "nav-automation-governance" },
   ];
 
   const CEO_ADMIN_ITEMS: NavItem[] = [
@@ -348,7 +348,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Map", href: "/map", icon: MapIcon, roles: [], testId: "nav-pm-map" },
     { label: "Stock & Assets", href: "/equipment", icon: Package, roles: [], testId: "nav-pm-stock" },
     { label: "Notifications", href: "/notifications", icon: Bell, roles: [], testId: "nav-notifications" },
-    { label: "Expenses", href: "/expenses", icon: ReceiptText, roles: [], testId: "nav-pm-expenses" },
+    { label: "Financial Insights", href: "/expenses", icon: ReceiptText, roles: [], testId: "nav-pm-expenses" },
   ];
 
   // Legacy aliases kept so existing non-PM/CEO code paths still compile
@@ -407,7 +407,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {!collapsed && (
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 bg-primary rounded-sm flex items-center justify-center font-bold text-primary-foreground">L</div>
-            <h1 className="font-bold text-lg truncate">The Ledger</h1>
+            {/* Brand mark, not a document heading. The page's own PageHeader
+                owns the single <h1>; an app name as h1 on every route tells a
+                screen-reader user what the product is called, never what page
+                they are on. Matches the mobile header, which already uses a div. */}
+            <div className="font-bold text-lg truncate">The Ledger</div>
           </div>
         )}
         {collapsed && <div className="mx-auto h-8 w-8 bg-primary rounded-sm flex items-center justify-center font-bold text-primary-foreground">L</div>}

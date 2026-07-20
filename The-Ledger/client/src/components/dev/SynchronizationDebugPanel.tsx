@@ -47,7 +47,7 @@ export function SynchronizationDebugPanel() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-[400px] max-h-[80vh] bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden text-sm">
+    <div className="fixed bottom-4 right-4 z-50 w-[400px] max-h-[80vh] bg-card rounded-xl shadow-2xl border border-border flex flex-col overflow-hidden text-sm">
       {/* Header */}
       <div className="bg-slate-900 text-white p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -62,7 +62,7 @@ export function SynchronizationDebugPanel() {
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {/* Network & Environment */}
         <section className="space-y-3">
-          <h4 className="font-semibold text-slate-500 uppercase text-xs tracking-wider flex items-center gap-1"><Wifi className="w-3 h-3"/> Network State</h4>
+          <h4 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-1"><Wifi className="w-3 h-3"/> Network State</h4>
           <div className="grid grid-cols-2 gap-2">
             <Button 
                 variant={isOffline ? "default" : "outline"} 
@@ -85,10 +85,10 @@ export function SynchronizationDebugPanel() {
 
         {/* Diagnostics */}
         <section className="space-y-3">
-           <h4 className="font-semibold text-slate-500 uppercase text-xs tracking-wider flex items-center gap-1"><Zap className="w-3 h-3"/> Diagnostics</h4>
+           <h4 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-1"><Zap className="w-3 h-3"/> Diagnostics</h4>
            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2 bg-slate-50 rounded border">Queue Total: <b>{queueStats.total}</b></div>
-              <div className="p-2 bg-slate-50 rounded border">Pending: <b>{queueStats.pending}</b></div>
+              <div className="p-2 bg-muted rounded border">Queue Total: <b>{queueStats.total}</b></div>
+              <div className="p-2 bg-muted rounded border">Pending: <b>{queueStats.pending}</b></div>
               <div className="p-2 bg-red-50 text-red-700 rounded border border-red-100">Failed: <b>{queueStats.failed}</b></div>
               <div className="p-2 bg-yellow-50 text-yellow-700 rounded border border-yellow-100">Conflicts: <b>{queueStats.conflict}</b></div>
               <div className="p-2 bg-blue-50 text-blue-700 rounded border border-blue-100">Active Batches: <b>{activeBatchCount}</b></div>
@@ -98,7 +98,7 @@ export function SynchronizationDebugPanel() {
 
         {/* Sync Controls */}
         <section className="space-y-3">
-          <h4 className="font-semibold text-slate-500 uppercase text-xs tracking-wider flex items-center gap-1"><RefreshCw className="w-3 h-3"/> Replay Controls</h4>
+          <h4 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-1"><RefreshCw className="w-3 h-3"/> Replay Controls</h4>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="default" size="sm" onClick={forceSync} disabled={isOffline} className="bg-indigo-600 hover:bg-indigo-700">
                Force Replay
@@ -111,17 +111,17 @@ export function SynchronizationDebugPanel() {
 
         {/* Injection Testing */}
         <section className="space-y-3">
-          <h4 className="font-semibold text-slate-500 uppercase text-xs tracking-wider flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> Fault Injection</h4>
+          <h4 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> Fault Injection</h4>
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs cursor-pointer p-2 bg-slate-50 rounded border hover:bg-slate-100">
+            <label className="flex items-center gap-2 text-xs cursor-pointer p-2 bg-muted rounded border hover:bg-muted">
               <input type="checkbox" checked={injectFailure} onChange={(e) => setDebugFlags({ injectFailure: e.target.checked })} />
               Simulate Network Interruptions (Queue Replay)
             </label>
-            <label className="flex items-center gap-2 text-xs cursor-pointer p-2 bg-slate-50 rounded border hover:bg-slate-100">
+            <label className="flex items-center gap-2 text-xs cursor-pointer p-2 bg-muted rounded border hover:bg-muted">
               <input type="checkbox" checked={injectConflict} onChange={(e) => setDebugFlags({ injectConflict: e.target.checked })} />
               Inject Replay Conflicts
             </label>
-            <label className="flex items-center gap-2 text-xs cursor-pointer p-2 bg-slate-50 rounded border hover:bg-slate-100">
+            <label className="flex items-center gap-2 text-xs cursor-pointer p-2 bg-muted rounded border hover:bg-muted">
               <input type="checkbox" checked={injectUploadFailure} onChange={(e) => setDebugFlags({ injectUploadFailure: e.target.checked })} />
               Simulate Upload Failures/Corruption
             </label>
@@ -131,16 +131,16 @@ export function SynchronizationDebugPanel() {
         {/* Event Logs */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-             <h4 className="font-semibold text-slate-500 uppercase text-xs tracking-wider">Recent Events ({events.length})</h4>
-             <button onClick={clearEvents} className="text-xs text-slate-400 hover:text-slate-700">Clear</button>
+             <h4 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Recent Events ({events.length})</h4>
+             <button onClick={clearEvents} className="text-xs text-muted-foreground hover:text-foreground">Clear</button>
           </div>
           <div className="bg-slate-900 text-green-400 font-mono text-[10px] p-3 rounded-lg h-48 overflow-y-auto space-y-1">
              {events.length === 0 ? (
-                 <div className="text-slate-500 text-center mt-10">No events recorded</div>
+                 <div className="text-muted-foreground text-center mt-10">No events recorded</div>
              ) : (
                  events.slice(0, 50).map(evt => (
                      <div key={evt.id} className="border-b border-slate-800 pb-1">
-                         <span className="text-slate-500">[{new Date(evt.timestamp).toLocaleTimeString()}]</span>{" "}
+                         <span className="text-muted-foreground">[{new Date(evt.timestamp).toLocaleTimeString()}]</span>{" "}
                          <span className="text-blue-400">{evt.type}</span>{" "}
                          <span className="text-slate-300">{evt.entityId.slice(0,8)}...</span>
                      </div>

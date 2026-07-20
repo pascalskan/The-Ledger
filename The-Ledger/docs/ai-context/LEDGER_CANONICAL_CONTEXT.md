@@ -1447,6 +1447,45 @@ Programme document: docs/ux/UX_REDESIGN_PROGRAMME.md (authoritative tracker)
 | UX-7 | Review Centre Enhancement | COMPLETE — UX-7.1–7.8 (branch feature/ux7-review-centre-enhancement; unified Review Operations Centre; build green; awaiting owner merge to main) | June 20, 2026 |
 | UX-8 | Operations Hub & Final Polish | Not started | — |
 
+## Role Workstreams A–E
+
+| Workstream | Scope | Status |
+|---|---|---|
+| A — CEO Experience | Executive navigation, dashboard, finance, intelligence, review, automation, governance | COMPLETE |
+| B — PM Experience | Job workspace, scheduling, reviews, site operations, communication | COMPLETE (PM-1…PM-7) |
+| C — Worker Experience | Worker home, shifts, reporting, history, offline | COMPLETE (WK-1…WK-7) |
+| D — Client Experience | Portal, project visibility, communication, financial transparency, requests | COMPLETE (CL-1…CL-8) |
+| E — Platform IA | Navigation, naming, design consistency, cross-role coherence | COMPLETE (E-1…E-6) — awaiting Playwright verification and merge |
+
+---
+
+## PLATFORM LEXICON (Workstream E, frozen)
+
+Authoritative for all user-facing strings across CEO, PM, Worker and Client surfaces.
+Full definition: `docs/ux/WORKSTREAM_E_IA_AUDIT.md` §6.
+
+**British English throughout** — Centre, Programme, Normalisation, Labour, Prioritisation.
+
+**The lexicon governs strings a user can read. It does not govern identifiers** — file
+names (`reconciliation-center.tsx`), route paths, `data-testid` values, engine function
+names and the `openReviewCenter` test helper are deliberately unchanged.
+
+Doctrine note: **"Review Centre"** is the canonical name of the approval control
+mechanism in every doctrine document. Body copy referring to the approval gate must say
+*Review Centre* — never *Review Center*, *review queue*, or *approvals*. The doctrine and
+the interface must use the same word for the same thing.
+
+The one permitted cross-role divergence: a unit of work is a **Job** internally and a
+**Project** in the Client Portal, because `CLIENT_PORTAL_DOMAIN.md` names it Project. This
+is enforced by the projection layer, not by copy.
+
+### Shared presentation primitives
+
+`client/src/components/page-shell.tsx` — `PageHeader`, `SectionHeader`, `EmptyState`,
+`LoadingState`. All four role surfaces consume these. New pages MUST use `PageHeader`
+(exactly one per route, rendering the page's single `h1`) and the shared `EmptyState`.
+`PageHeader` forwards `testId` onto the heading and never generates one.
+
 ## UX-4 — Finance Hub (COMPLETE)
 
 Status: COMPLETE — merged to main, June 10, 2026

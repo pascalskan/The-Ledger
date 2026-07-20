@@ -455,7 +455,7 @@ export default function JobDetailPage() {
               {job.accessInstructions && (
                 <div className="space-y-1">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Access Instructions</p>
-                  <p className="text-slate-700 bg-slate-50 rounded p-2 border text-xs leading-relaxed" data-testid="pm-site-access-instructions">
+                  <p className="text-foreground bg-muted rounded p-2 border text-xs leading-relaxed" data-testid="pm-site-access-instructions">
                     {job.accessInstructions}
                   </p>
                 </div>
@@ -466,7 +466,7 @@ export default function JobDetailPage() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                     <ShieldCheck className="h-3 w-3" /> Special Requirements
                   </p>
-                  <p className="text-slate-700 bg-amber-50 rounded p-2 border border-amber-100 text-xs leading-relaxed" data-testid="pm-site-special-requirements">
+                  <p className="text-foreground bg-amber-50 rounded p-2 border border-amber-100 text-xs leading-relaxed" data-testid="pm-site-special-requirements">
                     {job.specialRequirements}
                   </p>
                 </div>
@@ -692,7 +692,7 @@ export default function JobDetailPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {showAddNote && (
-                    <div className="space-y-2 border rounded-md p-3 bg-slate-50" data-testid="pm-note-add-form">
+                    <div className="space-y-2 border rounded-md p-3 bg-muted" data-testid="pm-note-add-form">
                       <Textarea
                         placeholder="Write a note for this job..."
                         value={newNoteContent}
@@ -759,7 +759,7 @@ export default function JobDetailPage() {
                             </div>
                           ) : (
                             <>
-                              <p className="text-slate-700 leading-relaxed">{note.content}</p>
+                              <p className="text-foreground leading-relaxed">{note.content}</p>
                               <div className="flex items-center justify-between mt-2">
                                 <p className="text-[11px] text-muted-foreground">
                                   {note.authorName} · {new Date(note.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -822,20 +822,20 @@ export default function JobDetailPage() {
                     <div className="space-y-3" data-testid="pm-comm-list">
                       {thisJobComms.map(comm => (
                         <div key={comm.id} className="flex gap-3" data-testid={`pm-comm-item-${comm.id}`}>
-                          <div className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center text-[11px] font-bold text-slate-600 shrink-0">
+                          <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-[11px] font-bold text-muted-foreground shrink-0">
                             {comm.authorName.charAt(0)}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
                               <span className="text-sm font-medium">{comm.authorName}</span>
-                              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${commTypeColors[comm.type] ?? 'bg-slate-100 text-slate-600'}`}>
+                              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${commTypeColors[comm.type] ?? 'bg-muted text-muted-foreground'}`}>
                                 {commTypeLabels[comm.type] ?? comm.type}
                               </span>
                               <span className="text-[11px] text-muted-foreground">
                                 {new Date(comm.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
-                            <p className="text-sm text-slate-700 leading-relaxed">{comm.content}</p>
+                            <p className="text-sm text-foreground leading-relaxed">{comm.content}</p>
                           </div>
                         </div>
                       ))}
@@ -933,7 +933,7 @@ export default function JobDetailPage() {
               if (type === 'note') return <StickyNote className="h-3.5 w-3.5 text-amber-500" />;
               if (type === 'comm') return <MessageSquare className="h-3.5 w-3.5 text-green-500" />;
               if (type === 'doc') return <FileText className="h-3.5 w-3.5 text-purple-500" />;
-              return <Activity className="h-3.5 w-3.5 text-slate-400" />;
+              return <Activity className="h-3.5 w-3.5 text-muted-foreground" />;
             };
 
             return (
@@ -948,7 +948,7 @@ export default function JobDetailPage() {
                     <div className="space-y-1" data-testid="pm-timeline-list">
                       {events.map((evt, i) => (
                         <div key={evt.id} className="flex gap-3 py-2 border-b last:border-0" data-testid={`pm-timeline-event-${i}`}>
-                          <div className="h-6 w-6 rounded-full bg-slate-50 border flex items-center justify-center shrink-0 mt-0.5">
+                          <div className="h-6 w-6 rounded-full bg-muted border flex items-center justify-center shrink-0 mt-0.5">
                             {iconEl(evt.icon)}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -1011,9 +1011,9 @@ export default function JobDetailPage() {
                 <DialogTitle>{viewDoc?.name}</DialogTitle>
                 <DialogDescription>Document Preview</DialogDescription>
               </DialogHeader>
-              <div className="flex-1 w-full h-full bg-slate-100 rounded-md flex items-center justify-center border">
+              <div className="flex-1 w-full h-full bg-muted rounded-md flex items-center justify-center border">
                 <div className="text-center p-8">
-                  <FileText className="h-16 w-16 mx-auto text-slate-400 mb-4" />
+                  <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">Preview not available in demo mode.</p>
                 </div>
               </div>
@@ -1228,7 +1228,7 @@ export default function JobDetailPage() {
                     return (
                       <div
                         key={id}
-                        className="flex justify-between items-center border rounded px-3 py-2 bg-slate-50 dark:bg-slate-900 cursor-pointer hover:bg-muted/50"
+                        className="flex justify-between items-center border rounded px-3 py-2 bg-muted dark:bg-slate-900 cursor-pointer hover:bg-muted/50"
                         data-testid={`row-job-worker-${id}`}
                         onClick={() => setLocation(`/workers/${id}`)}
                       >
@@ -1307,7 +1307,7 @@ export default function JobDetailPage() {
                     return (
                       <div
                         key={id}
-                        className="flex justify-between items-center border rounded px-3 py-2 bg-slate-50 dark:bg-slate-900 cursor-pointer hover:bg-muted/50"
+                        className="flex justify-between items-center border rounded px-3 py-2 bg-muted dark:bg-slate-900 cursor-pointer hover:bg-muted/50"
                         data-testid={`row-job-equipment-${id}`}
                         onClick={() => setLocation(`/equipment/${id}`)}
                       >
@@ -1502,9 +1502,9 @@ export default function JobDetailPage() {
                     <DialogTitle>{viewDoc?.name}</DialogTitle>
                     <DialogDescription>Document Preview</DialogDescription>
                 </DialogHeader>
-                <div className="flex-1 w-full h-full bg-slate-100 rounded-md flex items-center justify-center border">
+                <div className="flex-1 w-full h-full bg-muted rounded-md flex items-center justify-center border">
                     <div className="text-center p-8">
-                        <FileText className="h-16 w-16 mx-auto text-slate-400 mb-4" />
+                        <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                         <p className="text-muted-foreground">Preview not available in demo mode.</p>
                         <p className="text-xs text-muted-foreground mt-2">In a real app, this would render PDF or Image content.</p>
                     </div>

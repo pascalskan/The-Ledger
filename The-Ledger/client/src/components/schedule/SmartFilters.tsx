@@ -14,8 +14,8 @@ interface SmartFiltersProps {
 
 export function SmartFilters({ filters, setFilters }: SmartFiltersProps) {
   return (
-    <div className="flex items-center gap-2 bg-white p-1 rounded-md border border-slate-200 shadow-sm">
-      <div className="flex items-center pl-2 pr-1 text-slate-400">
+    <div className="flex items-center gap-2 bg-card p-1 rounded-md border border-border shadow-sm">
+      <div className="flex items-center pl-2 pr-1 text-muted-foreground">
         <Filter className="h-4 w-4" />
       </div>
       

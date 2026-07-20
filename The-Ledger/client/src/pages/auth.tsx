@@ -36,8 +36,8 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-slate-100 dark:bg-slate-950 p-4">
-      <Card className="w-full max-w-md shadow-xl border-slate-200 dark:border-slate-800">
+    <div className="min-h-screen w-full flex items-center justify-center bg-muted dark:bg-slate-950 p-4">
+      <Card className="w-full max-w-md shadow-xl border-border dark:border-slate-800">
         <CardHeader className="space-y-1 text-center pb-8">
           <div className="mx-auto w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
             <span className="text-2xl font-bold text-primary-foreground">L</span>

@@ -34,7 +34,7 @@ export function InvoiceReadinessPanel({ jobId }: { jobId: string }) {
 
   if (!readiness.hasLines) {
     return (
-      <Card className="border-slate-200">
+      <Card className="border-border">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2 text-muted-foreground">
             <FileCheck className="h-4 w-4" /> Invoice Readiness
@@ -46,7 +46,7 @@ export function InvoiceReadinessPanel({ jobId }: { jobId: string }) {
             <div>
               <p className="italic">No approved invoice line items for this job yet.</p>
               <p className="text-xs mt-1">
-                Invoice lines are created when the PM approves a worker report in the Review Center.
+                Invoice lines are created when the PM approves a worker report in the Review Centre.
                 Legacy invoices created manually are shown on the Invoices page.
               </p>
             </div>
@@ -64,15 +64,15 @@ export function InvoiceReadinessPanel({ jobId }: { jobId: string }) {
   };
 
   return (
-    <Card className="border-slate-200">
-      <CardHeader className="pb-2 border-b border-slate-100">
+    <Card className="border-border">
+      <CardHeader className="pb-2 border-b border-border">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Invoice Readiness
           </CardTitle>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Total Billable</p>
-            <p className="text-base font-bold text-slate-900">{fmt(readiness.totalBillable)}</p>
+            <p className="text-base font-bold text-foreground">{fmt(readiness.totalBillable)}</p>
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
@@ -81,7 +81,7 @@ export function InvoiceReadinessPanel({ jobId }: { jobId: string }) {
       </CardHeader>
       <CardContent className="p-0">
         <Table>
-          <TableHeader className="bg-slate-50/50">
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead>Type</TableHead>
               <TableHead>Description</TableHead>
@@ -104,21 +104,21 @@ export function InvoiceReadinessPanel({ jobId }: { jobId: string }) {
                       {typeLabels[li.type] ?? li.type}
                     </Badge>
                   </TableCell>
-                  <TableCell className="max-w-[220px] truncate text-slate-700">
+                  <TableCell className="max-w-[220px] truncate text-foreground">
                     {li.description}
                   </TableCell>
-                  <TableCell className="text-right text-slate-600">{li.quantity}</TableCell>
-                  <TableCell className="text-right text-slate-600">{fmt(li.unitPrice)}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{li.quantity}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{fmt(li.unitPrice)}</TableCell>
                   <TableCell className="text-right font-semibold">{fmt(li.amount)}</TableCell>
                 </TableRow>
               ));
             })}
             {/* Totals row */}
-            <TableRow className="bg-slate-50/70 border-t-2">
-              <TableCell colSpan={4} className="font-bold text-slate-900 text-sm">
+            <TableRow className="bg-muted/70 border-t-2">
+              <TableCell colSpan={4} className="font-bold text-foreground text-sm">
                 Total Billable
               </TableCell>
-              <TableCell className="text-right font-bold text-slate-900 text-base">
+              <TableCell className="text-right font-bold text-foreground text-base">
                 {fmt(readiness.totalBillable)}
               </TableCell>
             </TableRow>

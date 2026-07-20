@@ -17,8 +17,8 @@ export function JobScheduleCard({ job, onClick, isSelected }: JobScheduleCardPro
   const formatCur = (val: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(val);
 
   // Status styling logic
-  let borderClass = "border-slate-200";
-  let bgClass = "bg-white";
+  let borderClass = "border-border";
+  let bgClass = "bg-card";
   let statusDotClass = "bg-slate-300";
   
   if (job.marginStatus === 'Green') {
@@ -49,14 +49,14 @@ export function JobScheduleCard({ job, onClick, isSelected }: JobScheduleCardPro
       </div>
 
       <div className="pr-6">
-        <h4 className="font-semibold text-xs text-slate-900 truncate leading-tight">{job.title}</h4>
+        <h4 className="font-semibold text-xs text-foreground truncate leading-tight">{job.title}</h4>
       </div>
 
       <div className="mt-2 flex items-center justify-between">
-        <Badge variant="outline" className="text-[9px] font-medium px-1.5 py-0 h-4 bg-slate-50 text-slate-600 border-slate-200">
+        <Badge variant="outline" className="text-[9px] font-medium px-1.5 py-0 h-4 bg-muted text-muted-foreground border-border">
           {job.scheduledHours} hrs
         </Badge>
-        <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium">
+        <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
           <Users className="h-3 w-3" /> {job.crewCount}
         </div>
       </div>

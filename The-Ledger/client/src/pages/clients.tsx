@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore, Client } from "@/lib/mockData";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -72,15 +73,15 @@ export default function ClientsPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Clients</h2>
-            <p className="text-muted-foreground mt-1">Manage customer profiles and history.</p>
-          </div>
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Add Client
-          </Button>
-        </div>
+        <PageHeader
+          title="Clients"
+          description="Manage customer profiles and history."
+          actions={
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Add Client
+            </Button>
+          }
+        />
 
         <div className="relative max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -88,7 +89,7 @@ export default function ClientsPage() {
         </div>
 
         {filteredClients.length === 0 ? (
-           <div className="text-center py-12 border-2 border-dashed rounded-lg bg-slate-50 dark:bg-slate-900/50">
+           <div className="text-center py-12 border-2 border-dashed rounded-lg bg-muted dark:bg-slate-900/50">
              <div className="mx-auto w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center mb-4">
                <Search className="h-6 w-6 text-muted-foreground" />
              </div>

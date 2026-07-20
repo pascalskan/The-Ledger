@@ -7,9 +7,9 @@ export function StockTable({ data }: { data: any[] }) {
   const formatCur = (val: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 2 }).format(val);
 
   return (
-    <div className="border border-slate-200 rounded-md bg-white overflow-x-auto">
+    <div className="border border-border rounded-md bg-card overflow-x-auto">
       <Table>
-        <TableHeader className="bg-slate-50">
+        <TableHeader className="bg-muted">
           <TableRow>
             <TableHead>Item Name</TableHead>
             <TableHead>SKU</TableHead>
@@ -27,19 +27,19 @@ export function StockTable({ data }: { data: any[] }) {
             const isLowStock = item.quantity <= item.reorderLevel;
             return (
               <TableRow key={idx}>
-                <TableCell className="font-medium text-slate-900 flex items-center gap-2">
+                <TableCell className="font-medium text-foreground flex items-center gap-2">
                   {item.name}
                   {isLowStock && <AlertTriangle className="h-3 w-3 text-rose-500" />}
                 </TableCell>
-                <TableCell className="text-slate-500 font-mono text-xs">{item.sku}</TableCell>
-                <TableCell className={`text-right font-medium ${isLowStock ? 'text-rose-600' : 'text-slate-900'}`}>{item.quantity}</TableCell>
-                <TableCell className="text-right text-slate-600">{formatCur(item.unitCost)}</TableCell>
-                <TableCell className="text-right font-medium text-slate-900">{formatCur(item.quantity * item.unitCost)}</TableCell>
-                <TableCell><Badge variant="outline" className="font-normal text-slate-600 bg-slate-50">{item.location}</Badge></TableCell>
-                <TableCell className="text-right text-slate-600">{item.pendingRequests}</TableCell>
-                <TableCell className="text-right text-slate-600">{item.reorderLevel}</TableCell>
+                <TableCell className="text-muted-foreground font-mono text-xs">{item.sku}</TableCell>
+                <TableCell className={`text-right font-medium ${isLowStock ? 'text-rose-600' : 'text-foreground'}`}>{item.quantity}</TableCell>
+                <TableCell className="text-right text-muted-foreground">{formatCur(item.unitCost)}</TableCell>
+                <TableCell className="text-right font-medium text-foreground">{formatCur(item.quantity * item.unitCost)}</TableCell>
+                <TableCell><Badge variant="outline" className="font-normal text-muted-foreground bg-muted">{item.location}</Badge></TableCell>
+                <TableCell className="text-right text-muted-foreground">{item.pendingRequests}</TableCell>
+                <TableCell className="text-right text-muted-foreground">{item.reorderLevel}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-800">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </TableCell>
