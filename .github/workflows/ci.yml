@@ -1,0 +1,66 @@
+name: CI
+
+# The Ledger — build and typecheck gate.
+#
+# WHY THIS EXISTS
+# `npm run build` uses Vite/esbuild, which does NOT typecheck. For a long time
+# that meant 76 TypeScript errors sat on main invisibly, and they were hiding
+# four genuine runtime bugs:
+#   - /finance white-screened before rendering
+#   - automation audit entries were written with undefined timestamps
+#   - worker material submissions carried zero cost and zero revenue into the
+#     job mini-ledger
+#   - a duplicate ReviewItem type told the compiler that "needs-correction" and
+#     "escalated" — real Review Centre lifecycle states — could never occur
+#
+# All four were invisible to a green build. `npm run check` is now clean, so
+# this workflow keeps it that way.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A newer push to the same branch supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-typecheck:
+    name: Build & typecheck
+    runs-on: ubuntu-latest
+
+    # The repository root is one level above the project. Every step that
+    # touches the app must run inside The-Ledger/, or it will silently operate
+    # on an empty directory and "pass".
+    defaults:
+      run:
+        working-directory: The-Ledger
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Vite 7 requires Node >=20.19 / >=22.12. Pinning to 22 (LTS) rather
+          # than 20 so the resolved patch version cannot drift under that floor.
+          node-version: 22
+          cache: npm
+          cache-dependency-path: The-Ledger/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The incremental build cache cannot be trusted across runs. It went
+      # stale during development and reported two phantom errors in
+      # eventBusEngine that did not exist in the source. Always start clean.
+      - name: Clear stale TypeScript build info
+        run: rm -f node_modules/typescript/tsbuildinfo
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Build
+        run: npm run build
