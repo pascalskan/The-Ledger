@@ -22,6 +22,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { waitForRouteReady } from '../helpers/navigation';
 import { loginAsCEO, loginAsPM, loginAsWorker } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 
@@ -154,6 +155,7 @@ test('IH-13: four health cards render score and status pill', async ({ page }) =
 test('IH-14: seeded critical rows show "Critical", seeded high rows show "Warning" (§6.2-B)', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=overview');
+  await waitForRouteReady(page);
   const rows = page.locator('[data-testid="intel-critical-item-row"]');
   expect(await rows.count()).toBeGreaterThan(0);
   const criticalRows = page.locator('[data-testid="intel-critical-item-row"][data-priority="critical"]');
@@ -189,6 +191,7 @@ test('IH-16: critical item deep link navigates to the source module', async ({ p
 test('IH-17: critical items panel shows rows or the healthy empty state', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=overview');
+  await waitForRouteReady(page);
   const rows = page.locator('[data-testid="intel-critical-item-row"]');
   if ((await rows.count()) === 0) {
     await expect(page.getByTestId('intel-critical-items-empty')).toBeVisible();
@@ -324,6 +327,7 @@ test('IH-27: Event Detail toggle reveals the §10.5 metadata contract', async ({
 test('IH-28: no KPI strip exists in the Activity tab (strict absence) and Load More paginates', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/intelligence?tab=activity');
+  await waitForRouteReady(page);
   await expect(page.getByTestId('af-kpi-strip')).toHaveCount(0);
   const initial = await page.getByTestId('activity-row').count();
   expect(initial).toBe(25);

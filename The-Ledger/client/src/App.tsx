@@ -1,63 +1,76 @@
+import { useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { LoadingState } from "@/components/page-shell";
+// Eager, side-effect import. portalAudit owns an app-wide audit log and exposes
+// a read-only window.__portalAudit seam for the doctrine suite. It is NOT
+// portal-only state: internal CEO/PM actions write to it too
+// (document_shared_with_client, client_request_resolved, ...), so a PM can
+// share a document without the portal ever being visited.
+//
+// Before E-7 it was reachable from the single bundle at boot. Once routes went
+// lazy it shipped only in the portal chunk, so those internal flows recorded
+// into — and asserted against — a log that did not exist yet. It has no imports
+// of its own (136 lines, zero deps), so loading it eagerly costs essentially
+// nothing and restores the invariant.
+import "@/lib/portalAudit";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import FinanceHubPage from "@/pages/finance-hub";
-import IntelligenceHubPage from "@/pages/intelligence-hub";
-import Dashboard from "@/pages/dashboard";
-import JobsPage from "@/pages/jobs";
-import JobDetailPage from "@/pages/job-detail";
-import ClientsPage from "@/pages/clients";
-import ClientDetailPage from "@/pages/client-detail";
-import ClientRequestsPage from "@/pages/client-requests";
-import InvoicesPage from "@/pages/invoices";
-import InvoiceDetailPage from "@/pages/invoice-detail";
-import FinancialsPage from "@/pages/expenses";
-import SchedulePage from "@/pages/schedule";
-import WorkersPage from "@/pages/workers";
-import WorkerDetailPage from "@/pages/worker-detail";
-import EquipmentPage from "@/pages/equipment";
-import EquipmentDetailPage from "@/pages/equipment-detail";
-import MapPage from "@/pages/map";
-import AuditPage from "@/pages/audit";
-import SettingsPage from "@/pages/settings";
-import AccountingSettingsPage from "@/pages/accounting-settings";
-import LegacyAccountingSettingsPage from "@/pages/settings/accounting";
-import IntegrationsPage from "@/pages/integrations";
+const FinanceHubPage = lazy(() => import("@/pages/finance-hub"));
+const IntelligenceHubPage = lazy(() => import("@/pages/intelligence-hub"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const JobsPage = lazy(() => import("@/pages/jobs"));
+const JobDetailPage = lazy(() => import("@/pages/job-detail"));
+const ClientsPage = lazy(() => import("@/pages/clients"));
+const ClientDetailPage = lazy(() => import("@/pages/client-detail"));
+const ClientRequestsPage = lazy(() => import("@/pages/client-requests"));
+const InvoicesPage = lazy(() => import("@/pages/invoices"));
+const InvoiceDetailPage = lazy(() => import("@/pages/invoice-detail"));
+const FinancialsPage = lazy(() => import("@/pages/expenses"));
+const SchedulePage = lazy(() => import("@/pages/schedule"));
+const WorkersPage = lazy(() => import("@/pages/workers"));
+const WorkerDetailPage = lazy(() => import("@/pages/worker-detail"));
+const EquipmentPage = lazy(() => import("@/pages/equipment"));
+const EquipmentDetailPage = lazy(() => import("@/pages/equipment-detail"));
+const MapPage = lazy(() => import("@/pages/map"));
+const AuditPage = lazy(() => import("@/pages/audit"));
+const SettingsPage = lazy(() => import("@/pages/settings"));
+const AccountingSettingsPage = lazy(() => import("@/pages/accounting-settings"));
+const LegacyAccountingSettingsPage = lazy(() => import("@/pages/settings/accounting"));
+const IntegrationsPage = lazy(() => import("@/pages/integrations"));
 import AuthPage from "@/pages/auth";
-import RolesPage from "@/pages/roles";
-import QAPage from "@/pages/qa";
-import PortalPage from "@/pages/portal";
-import ReviewPage from "@/pages/review";
-import ReviewDetailPage from "@/pages/review-detail";
-import StockDetailPage from "@/pages/stock-detail";
-import AssetDetailPage from "@/pages/asset-detail";
-import LocationDetailPage from "@/pages/location-detail";
-import WorkerHomePage from "@/pages/worker/home";
-import WorkerJobsPage from "@/pages/worker/jobs";
-import WorkerJobDetailPage from "@/pages/worker/job-detail";
-import WorkerReportPage from "@/pages/worker/report";
-import WorkerSchedulePage from "@/pages/worker/schedule";
-import WorkerUploadsPage from "@/pages/worker/uploads";
-import WorkerProfilePage from "@/pages/worker/profile";
-import WorkerHistoryPage from "@/pages/worker/history";
-import JobIntelligenceDashboard from "@/pages/job-intelligence";
-import AutomationsPage from "@/pages/automations";
-import AutomationGovernanceCentrePage from "@/pages/automation-governance";
-import FinancialExplorerPage from "@/pages/financial-explorer";
-import PayrollStagingPage from "@/pages/payroll";
-import InvoiceBuilderPage from "@/pages/invoice-builder";
-import PayrollExportPage from "@/pages/payroll-export";
-import ReconciliationCenterPage from "@/pages/reconciliation-center";
-import ExceptionResolutionCenterPage from "@/pages/exception-resolution-center";
-import NotificationCentrePage from "@/pages/notification-center";
-import EventMonitorPage from "@/pages/event-monitor";
-import WorkflowCentrePage from "@/pages/workflows";
+const RolesPage = lazy(() => import("@/pages/roles"));
+const QAPage = lazy(() => import("@/pages/qa"));
+const PortalPage = lazy(() => import("@/pages/portal"));
+const ReviewPage = lazy(() => import("@/pages/review"));
+const ReviewDetailPage = lazy(() => import("@/pages/review-detail"));
+const StockDetailPage = lazy(() => import("@/pages/stock-detail"));
+const AssetDetailPage = lazy(() => import("@/pages/asset-detail"));
+const LocationDetailPage = lazy(() => import("@/pages/location-detail"));
+const WorkerHomePage = lazy(() => import("@/pages/worker/home"));
+const WorkerJobsPage = lazy(() => import("@/pages/worker/jobs"));
+const WorkerJobDetailPage = lazy(() => import("@/pages/worker/job-detail"));
+const WorkerReportPage = lazy(() => import("@/pages/worker/report"));
+const WorkerSchedulePage = lazy(() => import("@/pages/worker/schedule"));
+const WorkerUploadsPage = lazy(() => import("@/pages/worker/uploads"));
+const WorkerProfilePage = lazy(() => import("@/pages/worker/profile"));
+const WorkerHistoryPage = lazy(() => import("@/pages/worker/history"));
+const JobIntelligenceDashboard = lazy(() => import("@/pages/job-intelligence"));
+const AutomationsPage = lazy(() => import("@/pages/automations"));
+const AutomationGovernanceCentrePage = lazy(() => import("@/pages/automation-governance"));
+const FinancialExplorerPage = lazy(() => import("@/pages/financial-explorer"));
+const PayrollStagingPage = lazy(() => import("@/pages/payroll"));
+const InvoiceBuilderPage = lazy(() => import("@/pages/invoice-builder"));
+const PayrollExportPage = lazy(() => import("@/pages/payroll-export"));
+const ReconciliationCenterPage = lazy(() => import("@/pages/reconciliation-center"));
+const ExceptionResolutionCenterPage = lazy(() => import("@/pages/exception-resolution-center"));
+const NotificationCentrePage = lazy(() => import("@/pages/notification-center"));
+const EventMonitorPage = lazy(() => import("@/pages/event-monitor"));
+const WorkflowCentrePage = lazy(() => import("@/pages/workflows"));
 import UnauthorizedPage from "@/pages/unauthorized";
 import { useAuth } from "@/lib/mockData";
-import { useEffect } from "react";
 import { SynchronizationDebugPanel } from "@/components/dev/SynchronizationDebugPanel";
 import { Phase2ValidationChecklist } from "@/components/dev/Phase2ValidationChecklist";
 
@@ -121,8 +134,34 @@ function NotificationsRouteSwitch() {
   return <NotificationCentrePage />;
 }
 
+/**
+ * Fallback shown while a route chunk loads.
+ *
+ * Deliberately minimal. 42 of 46 pages render their own <Layout>, so the shell
+ * lives INSIDE the page — which means this fallback replaces the entire screen,
+ * navigation included, not just a content area. A full skeleton here would
+ * flash structure that is about to be replaced wholesale, which reads worse
+ * than a quiet placeholder.
+ *
+ * It still announces itself to assistive technology via LoadingState's
+ * aria-busy / aria-live, so a screen-reader user is told content is loading
+ * rather than meeting an empty document.
+ *
+ * Only the FIRST visit to a route pays this; the chunk is cached thereafter.
+ */
+function RouteFallback() {
+  return (
+    <div className="min-h-screen bg-background p-6 md:p-8">
+      <div className="mx-auto max-w-6xl">
+        <LoadingState rows={4} label="Loading page" testId="route-loading" />
+      </div>
+    </div>
+  );
+}
+
 function Router() {
   return (
+    <Suspense fallback={<RouteFallback />}>
     <Switch>
       <Route path="/auth" component={AuthPage} />
       {/* Client Portal — self-authenticating surface. The single page controller
@@ -351,6 +390,7 @@ function Router() {
       </Route>
       <Route component={NotFound} />
     </Switch>
+    </Suspense>
   );
 }
 
