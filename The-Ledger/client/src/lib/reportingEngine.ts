@@ -369,7 +369,11 @@ function buildSeedReports(): ReportRecord[] {
         { label: 'Workflow Efficiency', value: `${analytics.workflowEfficiency.score}/100`, status: analytics.workflowEfficiency.level },
         { label: 'Automation Score', value: `${analytics.automationEffectiveness.score}/100`, status: analytics.automationEffectiveness.level },
       ],
-      riskSummary: `Operational risks: ${risks.filter(r => r.category === 'workflow' || r.category === 'automation').length} workflow/automation risks. Bottlenecks: ${getBottleneckAnalysis().length} identified.`,
+      // RiskItem.category is 'operational'|'financial'|'governance'|'workflow' —
+      // there is no 'automation'. The old `|| r.category === 'automation'`
+      // branch could never match, so the label promised a workflow/automation
+      // count while only ever counting workflow. Label now matches the filter.
+      riskSummary: `Operational risks: ${risks.filter(r => r.category === 'workflow').length} workflow risks. Bottlenecks: ${getBottleneckAnalysis().length} identified.`,
       forecastSummary: 'Operations forecast: workflow completion rate trending positive. Advisory only.',
       governanceSummary: `Workflow governance: ${workflowSummary.financiallySensitive} financially sensitive workflows under active oversight.`,
       sections: [
