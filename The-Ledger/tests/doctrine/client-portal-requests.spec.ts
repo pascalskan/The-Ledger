@@ -144,7 +144,8 @@ test.describe('Client Requests — portal submission surface (CL-8)', () => {
     await expect(page.getByTestId('portal-nav-messages')).toHaveCount(0);
     // Scoped to the desktop sidebar: the bare `^="portal-nav-"` prefix also
     // matched the seven `portal-nav-mobile-*` items, so this asserted 7 against
-    // a DOM that always contains 14. Pre-existing failure, unrelated to E.
+    // a DOM that always contains 14. Pre-existing failure — reproduces on
+    // main @ 42cf4d6, so the recorded 915/915 baseline was really 914/915.
     await expect(
       page.getByTestId('portal-sidebar').locator('[data-testid^="portal-nav-"]'),
     ).toHaveCount(7);
