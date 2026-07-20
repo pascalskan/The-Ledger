@@ -196,3 +196,33 @@ test('AR-16: CEO nav consolidates operations into a single entry', async ({ page
   await waitForRouteReady(page);
   await expect(page.getByTestId('nav-operations')).toBeVisible();
 });
+
+// ── A-2: Pending exposure on the CEO dashboard ────────────────────────────
+
+test('AR-17: CEO dashboard surfaces pending exposure', async ({ page }) => {
+  await clearBrowserState(page);
+  await loginAsCEO(page);
+  await page.goto('/');
+  await waitForRouteReady(page);
+  await expect(page.getByTestId('dashboard-zone-c-exposure')).toBeVisible();
+  await expect(page.getByTestId('dashboard-exposure-value')).toBeVisible();
+});
+
+test('AR-18: pending exposure is labelled pre-approval, not settled money', async ({ page }) => {
+  await clearBrowserState(page);
+  await loginAsCEO(page);
+  await page.goto('/');
+  await waitForRouteReady(page);
+  // Approval Doctrine: nothing is financially real until it clears the Review
+  // Centre, so an unapproved figure must never read as fact.
+  await expect(page.getByTestId('dashboard-exposure-label')).toContainText(/Pending Approval/i);
+});
+
+test('AR-19: PM dashboard does not expose pending financial data', async ({ page }) => {
+  await clearBrowserState(page);
+  await loginAsPM(page);
+  await page.goto('/');
+  await waitForRouteReady(page);
+  // Zone C is CEO-only; a PM must not gain financial visibility via exposure.
+  await expect(page.getByTestId('dashboard-zone-c-exposure')).toHaveCount(0);
+});
