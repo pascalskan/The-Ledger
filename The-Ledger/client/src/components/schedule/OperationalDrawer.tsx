@@ -1,8 +1,11 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, PoundSterling, Clock, Users, Truck, AlertTriangle, FileText, CheckCircle2, Activity } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface JobData {
+  /** Job id — used to deep-link into the Job Workspace crew editor. */
+  id: string;
   title: string;
   contractValue: number;
   costToDate: number;
@@ -30,6 +33,7 @@ type OperationalDrawerProps = {
 );
 
 export function OperationalDrawer(props: OperationalDrawerProps) {
+  const [, setLocation] = useLocation();
   if (!props.selectedItem) return null;
 
   const { onClose, type } = props;
@@ -112,6 +116,23 @@ export function OperationalDrawer(props: OperationalDrawerProps) {
                   <span className="font-medium text-foreground">{selectedItem.equipmentCount || 0} Units</span>
                 </div>
               </div>
+
+              {/* Crew assignment is chartered under Scheduling, but the editor
+                  itself lives on the Job Workspace (panel-job-workers-edit),
+                  which already handles conflict-safe toggling and persistence.
+                  Deep-linking there completes the PM's workflow without
+                  duplicating an editor — and without two places that can
+                  disagree about who is assigned. */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-1.5"
+                data-testid="sched-manage-crew"
+                onClick={() => setLocation(`/jobs/${selectedItem.id}`)}
+              >
+                <Users className="h-3.5 w-3.5" />
+                Manage crew &amp; equipment
+              </Button>
             </div>
 
             {/* Risk Flags */}

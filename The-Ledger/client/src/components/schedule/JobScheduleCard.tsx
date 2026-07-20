@@ -3,6 +3,7 @@ import { Users, AlertTriangle } from "lucide-react";
 
 interface JobScheduleCardProps {
   job: {
+    id: string;
     title: string;
     scheduledHours: number;
     crewCount: number;
@@ -11,9 +12,12 @@ interface JobScheduleCardProps {
   };
   onClick: () => void;
   isSelected: boolean;
+  /** Supplied by the CEO week grid to enable drag-to-reschedule. */
+  onDragStart?: (jobId: string) => void;
+  onDragEnd?: () => void;
 }
 
-export function JobScheduleCard({ job, onClick, isSelected }: JobScheduleCardProps) {
+export function JobScheduleCard({ job, onClick, isSelected, onDragStart, onDragEnd }: JobScheduleCardProps) {
   const formatCur = (val: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(val);
 
   // Status styling logic
@@ -39,9 +43,22 @@ export function JobScheduleCard({ job, onClick, isSelected }: JobScheduleCardPro
   }
 
   return (
-    <div 
+    <div
       onClick={onClick}
-      className={`p-2.5 rounded-md border shadow-sm cursor-pointer transition-all hover:shadow-md relative ${borderClass} ${bgClass}`}
+      // Drag-to-reschedule. Native HTML5 DnD rather than a library — this is a
+      // single interaction on one grid, and a drag-and-drop dependency would be
+      // a large addition to the bundle E-7 just cut by 80%.
+      draggable={Boolean(onDragStart)}
+      onDragStart={(e) => {
+        if (!onDragStart) return;
+        e.dataTransfer.effectAllowed = 'move';
+        // Some browsers require data to be set for a drag to begin at all.
+        e.dataTransfer.setData('text/plain', job.id);
+        onDragStart(job.id);
+      }}
+      onDragEnd={() => onDragEnd?.()}
+      data-testid={`sched-job-card-${job.id}`}
+      className={`p-2.5 rounded-md border shadow-sm cursor-pointer transition-all hover:shadow-md relative ${borderClass} ${bgClass} ${onDragStart ? 'active:cursor-grabbing' : ''}`}
     >
       <div className="absolute top-3 right-2.5 flex gap-1">
         {job.hasConflict && <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />}

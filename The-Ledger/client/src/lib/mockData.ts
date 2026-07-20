@@ -938,6 +938,15 @@ const DEMO_JOBS: Job[] = [
     locationAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
     latitude: 53.477,
     longitude: -2.244,
+    accessInstructions: "Deliveries via Gate 2 (Riverside Way). Barrier code 4471#. Report to the goods-in office for a visitor pass before entering the plant room.",
+    siteContacts: [
+      { name: "Dawn Fletcher", role: "Facilities Manager", phone: "07700 900 214", email: "d.fletcher@riverside-fm.co.uk" },
+      { name: "Marcus Reid", role: "Site Supervisor", phone: "07700 900 337" },
+    ],
+    emergencyContacts: [
+      { name: "Riverside Estate Security", role: "24hr Gatehouse", phone: "0161 555 0142" },
+      { name: "Dawn Fletcher", role: "Facilities Manager", phone: "07700 900 214" },
+    ],
     assignedWorkerIds: ["dw2", "dw3", "du3"],
     assignedEquipmentIds: ["de1", "de3", "de4", "de5", "de8", "de11", "de12"],
     equipmentUsage: [
@@ -1003,6 +1012,13 @@ const DEMO_JOBS: Job[] = [
     locationAddress: "45 Kingsway, London, WC2B 6SR",
     latitude: 51.515,
     longitude: -0.118,
+    accessInstructions: "Front-of-house access only outside trading hours (before 09:00 / after 18:00). Sign in at reception; keys for the riser cupboard held by the duty manager.",
+    siteContacts: [
+      { name: "Priya Anand", role: "Duty Manager", phone: "07700 900 508", email: "p.anand@showcaseretail.co.uk" },
+    ],
+    emergencyContacts: [
+      { name: "Showcase Retail Control Room", role: "Building Security", phone: "020 7555 0188" },
+    ],
     assignedWorkerIds: ["dw4", "du3"],
     assignedEquipmentIds: ["de11"],
     equipmentUsage: [
@@ -1145,6 +1161,14 @@ const DEMO_JOBS: Job[] = [
     locationAddress: "45 Kingsway, London, WC2B 6SR",
     latitude: 51.515,
     longitude: -0.118,
+    accessInstructions: "Goods lift only for materials — passenger lifts are not to be used. Loading bay must be booked 24hrs ahead with building management.",
+    siteContacts: [
+      { name: "Tom Bexley", role: "Building Manager", phone: "07700 900 663", email: "t.bexley@kingswaybm.co.uk" },
+      { name: "Helen Oduya", role: "Client Project Lead", phone: "07700 900 771" },
+    ],
+    emergencyContacts: [
+      { name: "Kingsway Building Control", role: "Reception / Fire Marshal", phone: "020 7555 0121" },
+    ],
     assignedWorkerIds: [],
     assignedEquipmentIds: [],
     documents: [],
@@ -1166,6 +1190,10 @@ const DEMO_JOBS: Job[] = [
     startAt: new Date(Date.now() - 4 * 86400000).toISOString(),
     endAt: new Date(Date.now() - 4 * 86400000).toISOString(),
     locationAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
+    accessInstructions: "Site access suspended — job cancelled. Contact the client before attending.",
+    siteContacts: [
+      { name: "Client Contact", role: "Primary Contact", phone: "07700 900 900" },
+    ],
     assignedWorkerIds: [],
     assignedEquipmentIds: [],
     documents: [],
