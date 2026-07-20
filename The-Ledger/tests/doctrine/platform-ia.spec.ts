@@ -140,13 +140,13 @@ test('IA-10 — the page h1 is non-empty', async ({ page }) => {
 // These are fixme rather than deleted so the gap stays visible. Un-fixme both
 // once the Finance Hub crash is fixed.
 
-test.fixme('IA-09b — CEO route /finance renders exactly one h1', async ({ page }) => {
+test('IA-09b — CEO route /finance renders exactly one h1', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/finance');
   await expect(page.locator('h1')).toHaveCount(1);
 });
 
-test.fixme('IA-11 — hub h1 carries its stable testid', async ({ page }) => {
+test('IA-11 — hub h1 carries its stable testid', async ({ page }) => {
   await loginAsCEO(page);
   await page.goto('/finance');
   // PageHeader must forward testId onto the heading element — the contract
