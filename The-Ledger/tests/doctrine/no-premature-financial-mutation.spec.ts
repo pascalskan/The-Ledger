@@ -26,7 +26,7 @@ import {
   softLoginAsWorker,
 } from '../helpers/login';
 import { signOut } from '../helpers/signOut';
-import { openReviewCenter } from '../helpers/navigation';
+import { openReviewCenter, openStockAndAssets } from '../helpers/navigation';
 import { clearBrowserState } from '../helpers/state';
 
 // ---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ test('Online submission creates a pending ReviewItem and does NOT deduct stock',
   // CEO: record baseline stock quantity for "1/2 Copper Elbow"
   await loginAsCEO(page);
 
-  await page.locator('a').filter({ hasText: 'Stock & Assets' }).first().click();
+  await openStockAndAssets(page);
   await expect(page.getByRole('heading', { name: /Stock & Assets/i })).toBeVisible();
   await page.getByRole('tab', { name: /^Stock$/i }).click();
   await expect(page.getByText('1/2 Copper Elbow')).toBeVisible();
@@ -136,7 +136,7 @@ test('Online submission creates a pending ReviewItem and does NOT deduct stock',
   // CEO: verify stock is UNCHANGED after submission (before approval)
   await softLoginAsCEO(page);
 
-  await page.locator('a').filter({ hasText: 'Stock & Assets' }).first().click();
+  await openStockAndAssets(page);
   await expect(page.getByRole('heading', { name: /Stock & Assets/i })).toBeVisible();
   await page.getByRole('tab', { name: /^Stock$/i }).click();
   await expect(page.getByText('1/2 Copper Elbow')).toBeVisible();

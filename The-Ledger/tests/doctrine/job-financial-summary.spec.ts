@@ -13,6 +13,7 @@
  * default job list filter. The test enables "Show Completed" before navigating.
  */
 import { test, expect } from '@playwright/test';
+import { openJobs } from '../helpers/navigation';
 import { loginAsCEO } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 
@@ -23,9 +24,9 @@ test.beforeEach(async ({ page }) => {
 test('Job financial summary displays revenue, cost, profit and margin for seeded job', async ({ page }) => {
   await loginAsCEO(page);
 
-  // Navigate to Jobs via sidebar
-  await page.getByRole('link', { name: /^Jobs$/i }).click();
-  await expect(page).toHaveURL(/jobs/i);
+  // Navigate to Jobs. UX-8 moved it behind the Operations Hub, so the helper
+  // walks Operations -> Jobs tab rather than clicking a top-level nav link.
+  await openJobs(page);
 
   // The kitchen job is "Completed" — reveal it via the show-completed toggle
   await page.locator('text=Show Completed').click();
@@ -47,8 +48,7 @@ test('Job financial summary section renders for active job without errors', asyn
   await loginAsCEO(page);
 
   // Navigate to the active job (DEMO-JOB-0202 / Preventative maintenance visit)
-  await page.getByRole('link', { name: /^Jobs$/i }).click();
-  await expect(page).toHaveURL(/jobs/i);
+  await openJobs(page);
 
   // DEMO-JOB-0202 is Active — visible in default filter
   await page.locator('text=Preventative maintenance').first().click();

@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout";
 import { PageHeader } from "@/components/page-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore, useAuth } from "@/lib/mockData";
+import { getPendingExposure } from "@/lib/profitabilityEngine";
 import {
   Briefcase,
   Users,
@@ -679,6 +680,14 @@ function CEODashboard() {
 
   // ── Zone C data ───────────────────────────────────────
 
+  // Pending exposure — chartered for the dashboard Financial Snapshot but only
+  // ever surfaced in the Finance Hub. This is PRE-APPROVAL: it is what the
+  // business is exposed to if everything currently in the Review Centre is
+  // approved. Approval Doctrine means it must never read as settled money, so
+  // it is labelled as an estimate and styled distinctly from the approved KPIs
+  // beside it.
+  const pendingExposure = getPendingExposure(reviewItems);
+
   function weekBounds(weeksAgo = 0) {
     const d = new Date();
     const dow = d.getDay();
@@ -924,7 +933,7 @@ function CEODashboard() {
 
       {/* ZONE C — FINANCIAL PULSE (CEO only) */}
       <div data-testid="dashboard-zone-c">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <Card className="border-border/60 shadow-sm" data-testid="dashboard-zone-c-revenue">
             <CardHeader className="pb-2 pt-4 px-5">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Revenue This Week</CardTitle>
@@ -971,6 +980,25 @@ function CEODashboard() {
               <p className="text-2xl font-bold">{formatCurrency(outstandingValue)}</p>
               <div className="mt-1">
                 <span className="text-xs text-muted-foreground">{outstandingInvoices.length} invoice{outstandingInvoices.length !== 1 ? 's' : ''}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pending exposure — amber, and labelled "Pending Approval" to match
+              the Finance Hub. Nothing here is financially real until it clears
+              the Review Centre. */}
+          <Card className="border-amber-200 bg-amber-50/40 shadow-sm" data-testid="dashboard-zone-c-exposure">
+            <CardHeader className="pb-2 pt-4 px-5">
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-amber-700">Pending Exposure</CardTitle>
+            </CardHeader>
+            <CardContent className="px-5 pb-4">
+              <p className="text-2xl font-bold text-amber-900" data-testid="dashboard-exposure-value">
+                {formatCurrency(pendingExposure.totalPendingCost)}
+              </p>
+              <div className="mt-1">
+                <span className="text-xs text-amber-600" data-testid="dashboard-exposure-label">
+                  Pending Approval · {pendingExposure.pendingItemCount} item{pendingExposure.pendingItemCount !== 1 ? 's' : ''}
+                </span>
               </div>
             </CardContent>
           </Card>

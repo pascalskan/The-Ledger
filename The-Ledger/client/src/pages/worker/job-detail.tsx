@@ -4,7 +4,7 @@ import { useShiftStore } from "@/lib/shiftStore";
 import { useOfflineQueueStore } from "@/lib/offlineQueueStore";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation, useRoute } from "wouter";
-import { MapPin, Users, Truck, Clock, FileText, Camera, Upload, CheckCircle2, AlertTriangle, ArrowLeft, ClipboardList, X } from "lucide-react";
+import { MapPin, Users, Truck, Clock, FileText, Camera, Upload, CheckCircle2, AlertTriangle, ArrowLeft, ClipboardList, X, Navigation, KeyRound, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -169,10 +169,43 @@ export default function WorkerJobDetailPage() {
             <p className="text-primary font-medium">{client?.name}</p>
           </div>
           
-          <div className="flex items-start gap-3 bg-muted p-3 rounded-xl text-sm">
+          {/* Site address — tappable, opens the device's map app for directions.
+              Uses lat/lng when the job carries them (more reliable than a text
+              lookup), otherwise falls back to the address string. A worker
+              standing outside a site needs one tap to navigate, not an address
+              to retype. */}
+          <a
+            href={
+              job.latitude != null && job.longitude != null
+                ? `https://www.google.com/maps/dir/?api=1&destination=${job.latitude},${job.longitude}`
+                : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.locationAddress)}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="worker-job-directions"
+            className="flex items-start gap-3 bg-muted p-3 rounded-xl text-sm active:bg-muted/70 transition-colors"
+          >
             <MapPin className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
-            <span className="leading-snug text-foreground">{job.locationAddress}</span>
-          </div>
+            <span className="flex-1 leading-snug text-foreground">{job.locationAddress}</span>
+            <span className="flex items-center gap-1 text-xs font-medium text-primary shrink-0 mt-0.5">
+              <Navigation className="w-3.5 h-3.5" /> Directions
+            </span>
+          </a>
+
+          {/* Access instructions — gate codes, parking, permit requirements.
+              Present in the data model and seed but never surfaced before. */}
+          {job.accessInstructions && (
+            <div
+              className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm"
+              data-testid="worker-job-access"
+            >
+              <KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+              <div>
+                <p className="font-semibold text-amber-900">Site access</p>
+                <p className="mt-0.5 leading-snug text-amber-800">{job.accessInstructions}</p>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3 pt-2">
             <div className="bg-muted p-3 rounded-xl">
@@ -187,6 +220,68 @@ export default function WorkerJobDetailPage() {
             </div>
           </div>
         </section>
+
+        {/* Site & emergency contacts.
+            Both lists exist in the Job model and in seed data but were never
+            rendered on the worker surface — a worker on site had no way to
+            reach anyone. Numbers are tel: links so one tap dials; emergency
+            contacts are visually separated because they are what someone
+            reaches for under pressure. */}
+        {((job.siteContacts?.length ?? 0) > 0 ||
+          (job.emergencyContacts?.length ?? 0) > 0) && (
+          <section
+            className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm"
+            data-testid="worker-job-contacts"
+          >
+            {(job.siteContacts?.length ?? 0) > 0 && (
+              <div>
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <Phone className="h-4 w-4" /> Site contacts
+                </h3>
+                <div className="space-y-2">
+                  {job.siteContacts!.map((c, i) => (
+                    <a
+                      key={`site-${i}`}
+                      href={`tel:${c.phone.replace(/\s/g, "")}`}
+                      data-testid={`worker-job-site-contact-${i}`}
+                      className="flex items-center gap-3 rounded-xl bg-muted p-3 active:bg-muted/70 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">{c.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">{c.role}</p>
+                      </div>
+                      <span className="shrink-0 text-sm font-medium text-primary">{c.phone}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(job.emergencyContacts?.length ?? 0) > 0 && (
+              <div>
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-red-600">
+                  <AlertTriangle className="h-4 w-4" /> Emergency
+                </h3>
+                <div className="space-y-2">
+                  {job.emergencyContacts!.map((c, i) => (
+                    <a
+                      key={`emg-${i}`}
+                      href={`tel:${c.phone.replace(/\s/g, "")}`}
+                      data-testid={`worker-job-emergency-contact-${i}`}
+                      className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-3 active:bg-red-100 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-red-900">{c.name}</p>
+                        <p className="truncate text-xs text-red-700">{c.role}</p>
+                      </div>
+                      <span className="shrink-0 text-sm font-medium text-red-700">{c.phone}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Time Logging Action */}
         <section className="bg-slate-900 rounded-2xl p-5 text-white shadow-md">

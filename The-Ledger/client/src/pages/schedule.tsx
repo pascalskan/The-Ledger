@@ -32,7 +32,7 @@ type OperationalJob = Job & {
 };
 
 export default function SchedulePage() {
-  const { jobs, clients, workers, roles, reviewItems } = useStore();
+  const { jobs, clients, workers, roles, reviewItems, updateJob } = useStore();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -152,13 +152,22 @@ export default function SchedulePage() {
 
   const getJobsForDay = (date: Date) => {
     return operationalJobs.filter((job) => {
-      const start = new Date(job.createdAt);
-      const end = new Date(job.updatedAt);
+      // Position by the job's SCHEDULED dates.
+      //
+      // This previously read createdAt/updatedAt — the record's creation and
+      // last-modified timestamps — so the week grid plotted jobs against when
+      // their row was written, not when the work happens. Every other date
+      // calculation in this file (PM view, conflict detection, upcoming jobs)
+      // already used startAt/endAt; only the CEO grid did not.
+      const start = new Date(job.startAt);
+      const end = new Date(job.endAt);
 
-      return (
-        isSameDay(start, date) ||
-        (start <= date && end >= date)
-      );
+      // Compare on calendar days so a job spanning midnight still lands on both.
+      const d0 = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const s0 = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const e0 = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+      return s0 <= d0 && e0 >= d0;
     });
   };
 
@@ -522,6 +531,45 @@ export default function SchedulePage() {
     );
   }
 
+  // ── Drag-to-reschedule (CEO week grid) ──────────────────────────
+  // Chartered under Workstream B "Owns Scheduling: Drag/drop scheduling".
+  // Moving a card to another day shifts the job's whole date range by the day
+  // delta, preserving its duration and time-of-day — a PM dragging a 3-day job
+  // to Wednesday expects a 3-day job starting Wednesday, not a 1-day job.
+  //
+  // Doctrine: rescheduling is an OPERATIONAL change. It moves dates only. It
+  // creates no financial record and touches no approval state.
+  const [draggingJobId, setDraggingJobId] = useState<string | null>(null);
+  const [dragOverDay, setDragOverDay] = useState<string | null>(null);
+
+  const handleDropOnDay = (targetDay: Date) => {
+    const id = draggingJobId;
+    setDraggingJobId(null);
+    setDragOverDay(null);
+    if (!id) return;
+
+    const job = jobs.find((j) => j.id === id);
+    if (!job) return;
+
+    const start = new Date(job.startAt);
+    const end = new Date(job.endAt);
+
+    // Whole days between the job's current start and the drop target.
+    const dayDelta = Math.round(
+      (new Date(targetDay.getFullYear(), targetDay.getMonth(), targetDay.getDate()).getTime() -
+        new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime()) /
+        86400000
+    );
+    if (dayDelta === 0) return;
+
+    const newStart = new Date(start);
+    newStart.setDate(newStart.getDate() + dayDelta);
+    const newEnd = new Date(end);
+    newEnd.setDate(newEnd.getDate() + dayDelta);
+
+    updateJob(id, { startAt: newStart.toISOString(), endAt: newEnd.toISOString() });
+  };
+
   // ── CEO SCHEDULE VIEW ──────────────────────────────────────────
   return (
     <Layout>
@@ -616,14 +664,28 @@ export default function SchedulePage() {
                 return (
                   <div
                     key={i}
-                    className={`border-r border-border last:border-r-0 p-2 space-y-2 min-h-[300px] ${
+                    data-testid={`sched-day-${format(day, 'yyyy-MM-dd')}`}
+                    onDragOver={(e) => {
+                      if (!draggingJobId) return;
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                      setDragOverDay(format(day, 'yyyy-MM-dd'));
+                    }}
+                    onDragLeave={() => setDragOverDay((d) => (d === format(day, 'yyyy-MM-dd') ? null : d))}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handleDropOnDay(day);
+                    }}
+                    className={`border-r border-border last:border-r-0 p-2 space-y-2 min-h-[300px] transition-colors ${
                       isToday ? "bg-blue-50/20" : ""
-                    }`}
+                    } ${dragOverDay === format(day, 'yyyy-MM-dd') ? "bg-primary/10 ring-1 ring-inset ring-primary/40" : ""}`}
                   >
                     {dayJobs.map((job) => (
                       <JobScheduleCard
                         key={job.id}
                         job={job}
+                        onDragStart={setDraggingJobId}
+                        onDragEnd={() => { setDraggingJobId(null); setDragOverDay(null); }}
                         onClick={() => handleJobClick(job)}
                         isSelected={
                           typeof selectedItem === "object" &&
@@ -658,19 +720,18 @@ export default function SchedulePage() {
           </div>
         )}
 
-        {drawerType === "day" && (
+        {/* Job Analysis drawer.
+            This block was previously a verbatim copy of the "day" block above —
+            same condition, same props, same type="day". Clicking a job card set
+            drawerType to "job", which nothing rendered, so the Job Analysis
+            panel (contract value, forecast margin, resource allocation,
+            conflict flags) was unreachable. */}
+        {drawerType === "job" && (
           <div className="shrink-0 h-full animate-in slide-in-from-right duration-300">
             <OperationalDrawer
-              selectedItem={selectedItem as {
-                dateStr: string;
-                totalScheduledRevenue: number;
-                totalEstimatedLaborCost: number;
-                netContribution: number;
-                crewAllocationPct: number;
-                equipmentAllocationPct: number;
-              }}
+              selectedItem={selectedItem as OperationalJob}
               onClose={() => setDrawerType(null)}
-              type="day"
+              type="job"
             />
           </div>
         )}

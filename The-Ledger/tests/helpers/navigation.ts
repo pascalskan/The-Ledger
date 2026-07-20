@@ -1,9 +1,17 @@
 import { Page, expect } from '@playwright/test';
 
+/**
+ * Navigate to Jobs the way a user now does.
+ *
+ * UX-8 consolidated Jobs, Schedule, Workers, Clients, Map and Stock & Assets
+ * behind the Operations Hub, so there is no longer a top-level "Jobs" nav
+ * link to click. This walks the real path — Operations, then the Jobs tab —
+ * rather than deep-linking, so the helper still exercises navigation.
+ */
 export async function openJobs(page: Page) {
-  await page.getByRole('link', {
-    name: /Jobs/i,
-  }).click();
+  await page.getByTestId('nav-operations').click();
+  await page.getByTestId('operations-tab-jobs').click();
+  await expect(page.getByTestId('operations-jobs-panel')).toBeVisible();
 }
 
 export async function openReviewCenter(page: Page) {
@@ -53,4 +61,16 @@ export async function openAuditLog(page: Page) {
  */
 export async function waitForRouteReady(page: Page) {
   await expect(page.locator('h1')).toHaveCount(1, { timeout: 15000 });
+}
+
+/**
+ * Navigate to Stock & Assets the way a user now does.
+ *
+ * UX-8 folded it into the Operations Hub, so there is no longer a top-level
+ * "Stock & Assets" nav link. Walks Operations → Stock & Assets tab.
+ */
+export async function openStockAndAssets(page: Page) {
+  await page.getByTestId('nav-operations').click();
+  await page.getByTestId('operations-tab-stock').click();
+  await expect(page.getByTestId('operations-stock-panel')).toBeVisible();
 }
