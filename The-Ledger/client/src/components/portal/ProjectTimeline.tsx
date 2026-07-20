@@ -14,29 +14,29 @@ const TYPE_ICON: Record<ClientTimelineEventType, typeof Flag> = {
 
 export function ProjectTimeline({ events }: { events: PortalTimelineEvent[] }) {
   return (
-    <Card className="border-slate-200" data-testid="portal-timeline">
-      <CardHeader className="pb-3 border-b border-slate-100">
+    <Card className="border-border" data-testid="portal-timeline">
+      <CardHeader className="pb-3 border-b border-border">
         <CardTitle className="text-lg flex items-center gap-2">
-          <GitCommitVertical className="h-5 w-5 text-slate-500" /> Project Timeline
+          <GitCommitVertical className="h-5 w-5 text-muted-foreground" /> Project Timeline
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-5">
         {events.length === 0 ? (
-          <p className="text-sm text-slate-500 italic" data-testid="portal-timeline-empty">No timeline events yet.</p>
+          <p className="text-sm text-muted-foreground italic" data-testid="portal-timeline-empty">No timeline events yet.</p>
         ) : (
-          <ol className="relative border-l border-slate-200 ml-3 space-y-6">
+          <ol className="relative border-l border-border ml-3 space-y-6">
             {events.map((e) => {
               const Icon = TYPE_ICON[e.type];
               return (
                 <li key={e.id} className="ml-6" data-testid={`portal-timeline-event-${e.id}`}>
-                  <span className="absolute -left-3 flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-200">
-                    <Icon className="h-3.5 w-3.5 text-slate-500" />
+                  <span className="absolute -left-3 flex h-6 w-6 items-center justify-center rounded-full bg-card border border-border">
+                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                   </span>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-slate-800">{e.title}</span>
-                    <span className="text-[11px] text-slate-500 shrink-0">{new Date(e.date).toLocaleDateString()}</span>
+                    <span className="text-sm font-medium text-foreground">{e.title}</span>
+                    <span className="text-[11px] text-muted-foreground shrink-0">{new Date(e.date).toLocaleDateString()}</span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">{e.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{e.description}</p>
                 </li>
               );
             })}

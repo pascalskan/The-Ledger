@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore } from "@/lib/mockData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +10,10 @@ export default function AuditPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Audit Log</h2>
-          <p className="text-muted-foreground mt-1">
-            Complete history of system actions for compliance and tracking.
-          </p>
-        </div>
+        <PageHeader
+          title="Audit Log"
+          description="Complete history of system actions for compliance and tracking."
+        />
 
         <div className="border rounded-md">
           <Table>

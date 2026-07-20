@@ -5,6 +5,56 @@ Last Updated: July 19, 2026
 
 ---
 
+## WORKSTREAM E — PLATFORM INFORMATION ARCHITECTURE (E-1 → E-6)
+
+Status: **COMPLETE — awaiting Playwright verification and merge**
+Branch: `feature/workstream-e-platform-ia`
+Audit: `docs/ux/WORKSTREAM_E_IA_AUDIT.md`
+Handoff: `docs/handoffs/workstream-e-platform-ia-handoff.md`
+
+E is the only cross-cutting workstream. A–D each own a role; E owns the seams between
+them. The E-1 audit found five defect classes; E-2 → E-5 resolved all five; E-6 added
+40 doctrine tests (IA-01 … IA-24) so they cannot silently regress.
+
+| Finding | Severity | Resolved by |
+|---|---|---|
+| F-1 Centre/Center split — `review.tsx` branched on role, so CEO and PM saw different names for the same destination | CRITICAL | E-2 |
+| F-2 No PageHeader primitive; ~30 of 48 pages rendered no `h1` at all | HIGH | E-3, E-4 |
+| F-3 ~1,700 raw palette literals across 40 files, blocking dark mode and white-labelling | HIGH | E-5 |
+| F-4 Client Portal more polished than the executive platform | MEDIUM | E-3, E-5 |
+| F-5 Nav labels mismatched destinations ("Expenses" opened "Financial Insights") | MEDIUM | E-2, E-4 |
+
+Delivered:
+
+- **Frozen platform lexicon** — British spelling; canonical destination names; role-invariant
+  terminology. Governs user-readable strings only, never identifiers, routes or testids.
+- **`client/src/components/page-shell.tsx`** — `PageHeader`, `SectionHeader`, `EmptyState`,
+  `LoadingState`. One presentation vocabulary for all four role surfaces.
+- **~25 pages migrated** to `PageHeader`; single `h1` per page at a consistent size.
+- **Token sweep** — semantic tokens replace raw slate/gray/white literals.
+- **`EmptyState` consolidated** from three competing definitions to one.
+
+**Doctrine impact: nil.** Presentation-layer only, same posture as UX-5. No engine,
+projection, RBAC, approval-path, audit or normalization change. IA-23/IA-24 assert the
+Approval Doctrine held.
+
+**Verification: build PASS; 0 `data-testid`s removed; suite lists 955 (= 915 + 40).
+Playwright NOT run — owner verification required before merge.** See handoff §6.1 for
+the specific new tests most likely to need a fix on first run.
+
+### Open items
+
+1. **E-7 — Accessibility & Commercial Polish: OWNER DECISION REQUIRED.** E's charter also
+   covers focus management, ARIA landmarks, WCAG AA contrast, skeleton states and tablet
+   responsiveness. Recommended to scope explicitly as E-7 rather than expand E-4 —
+   otherwise "finish Workstream E" has no completion criterion.
+2. Two dead page files (`activity-feed.tsx`, `executive-command-centre.tsx`) superseded by
+   the UX-5 Intelligence Hub; flagged for separate removal.
+3. **76 pre-existing `tsc --noEmit` errors on `main`** (unchanged by E). Vite does not
+   typecheck, so `npm run build` does not surface them. Worth addressing before backend work.
+
+---
+
 ## WORKSTREAM D — CLIENT PORTAL (CL-1 → CL-7)
 
 Status: **COMPLETE — awaiting review and merge**

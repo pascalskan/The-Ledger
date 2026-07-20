@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore } from "@/lib/mockData";
 import { groupTimesheetsForPayroll } from "@/lib/profitabilityEngine";
 import {
@@ -59,19 +60,17 @@ export function PayrollProcessingContent() {
   return (
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payroll Staging</h2>
-          <p className="text-muted-foreground mt-1">
-            Approved labour hours grouped by worker. Review before payroll export.
-          </p>
-        </div>
+        <PageHeader
+          title="Payroll Staging"
+          description="Approved labour hours grouped by worker. Review before payroll export."
+        />
 
         {/* Staging disclaimer */}
         <Alert className="border-amber-200 bg-amber-50 text-amber-800">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertDescription>
             <strong>Staging only — not a payment instruction.</strong> This page aggregates
-            approved timesheet records from the Review Center. Figures reflect approved
+            approved timesheet records from the Review Centre. Figures reflect approved
             operational data only. Final payroll must be verified and authorised separately.
           </AlertDescription>
         </Alert>
@@ -149,7 +148,7 @@ export function PayrollProcessingContent() {
             <Activity className="h-10 w-10 mb-3 opacity-20" />
             <p className="text-sm font-medium">No approved timesheet records for this period.</p>
             <p className="text-xs mt-1 opacity-70">
-              Approve worker reports in the Review Center to populate payroll staging.
+              Approve worker reports in the Review Centre to populate payroll staging.
             </p>
           </div>
         ) : (
@@ -230,7 +229,7 @@ export function PayrollProcessingContent() {
             <p className="text-xs text-muted-foreground">
               {records.reduce((s, r) => s + r.timesheetIds.length, 0)} approved timesheet
               record{records.reduce((s, r) => s + r.timesheetIds.length, 0) !== 1 ? "s" : ""} included.
-              All records sourced from Review Center approval engine.
+              All records sourced from Review Centre approval engine.
             </p>
           </div>
         )}

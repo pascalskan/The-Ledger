@@ -193,7 +193,7 @@ export function AutomationRecommendations({ onBuild }: { onBuild?: () => void })
   const dash = (opportunity.score / 100) * circumference;
   const ratingColor =
     opportunity.rating === "Significant Opportunity" ? "text-emerald-500"
-    : opportunity.rating === "Moderate Opportunity" ? "text-amber-500" : "text-slate-500";
+    : opportunity.rating === "Moderate Opportunity" ? "text-amber-500" : "text-muted-foreground";
 
   return (
     <div className="space-y-4" data-testid="aut-recommendations">

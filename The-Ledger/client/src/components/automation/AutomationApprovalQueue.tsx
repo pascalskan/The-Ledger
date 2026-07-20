@@ -222,7 +222,7 @@ export function AutomationApprovalQueue() {
   }, [allEntries, approverFilter, typeFilter, onlyHigh, onlySensitive, onlyRestricted, search]);
 
   const kpis = [
-    { label: "In Queue", value: summary.total, icon: Inbox, color: "text-slate-600", testId: "aut-aq-kpi-total" },
+    { label: "In Queue", value: summary.total, icon: Inbox, color: "text-muted-foreground", testId: "aut-aq-kpi-total" },
     { label: "CEO Approvals", value: summary.ceoApprovals, icon: ShieldCheck, color: "text-violet-600", testId: "aut-aq-kpi-ceo" },
     { label: "PM Approvals", value: summary.pmApprovals, icon: ShieldCheck, color: "text-blue-600", testId: "aut-aq-kpi-pm" },
     { label: "Financial Pending", value: summary.financialPending, icon: ShieldAlert, color: "text-red-600", testId: "aut-aq-kpi-financial" },

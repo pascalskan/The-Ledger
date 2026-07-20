@@ -320,8 +320,8 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
                 });
 
                 // ── Doctrine bridge ──────────────────────────────────────
-                // Hand the replayed payload to the Review Center store.
-                // This fulfils the Queue → Replay → Review Center chain.
+                // Hand the replayed payload to the Review Centre store.
+                // This fulfils the Queue → Replay → Review Centre chain.
                 // sourceQueueId is stamped on the payload so addReviewItemDirect
                 // can detect and reject duplicate replay attempts (idempotent).
                 if (item.type === "worker-report" && item.payload) {

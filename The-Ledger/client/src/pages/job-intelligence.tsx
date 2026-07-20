@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -39,7 +40,7 @@ function PortfolioProfitabilityStrip() {
 
   if (withActivity.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-200 p-4 text-center text-sm text-muted-foreground">
+      <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
         <BarChart3 className="h-5 w-5 mx-auto mb-1 opacity-30" />
         No approved financial activity across active jobs.
         Approve a worker report to see portfolio KPIs.
@@ -59,13 +60,13 @@ function PortfolioProfitabilityStrip() {
       label: "Portfolio Revenue",
       value: fmt(totalRevenue),
       sub: `${withActivity.length} job${withActivity.length !== 1 ? "s" : ""} with activity`,
-      color: "text-slate-900",
+      color: "text-foreground",
     },
     {
       label: "Portfolio Cost",
       value: fmt(totalCost),
       sub: "Approved cost",
-      color: "text-slate-700",
+      color: "text-foreground",
     },
     {
       label: "Gross Profit",
@@ -120,12 +121,10 @@ export default function JobIntelligenceDashboard() {
   return (
     <Layout>
       <div className="space-y-8 pb-12">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Job Intelligence</h2>
-          <p className="text-muted-foreground mt-1">
-            Financial analytics derived from approved operational activity.
-          </p>
-        </div>
+        <PageHeader
+          title="Job Intelligence"
+          description="Financial analytics derived from approved operational activity."
+        />
 
         {/* Portfolio Profitability Strip */}
         <PortfolioProfitabilityStrip />
@@ -155,7 +154,7 @@ export default function JobIntelligenceDashboard() {
                 key={job.id}
                 className="flex flex-col overflow-hidden transition-shadow hover:shadow-md"
               >
-                <CardHeader className="pb-4 border-b bg-slate-50/50">
+                <CardHeader className="pb-4 border-b bg-muted/50">
                   <div className="flex justify-between items-start mb-2">
                     <Badge variant={job.status === "Active" ? "default" : "secondary"}>
                       {job.status}
@@ -224,7 +223,7 @@ export default function JobIntelligenceDashboard() {
                       {/* Burn Progress */}
                       <div className="space-y-1.5 mt-auto">
                         <div className="flex justify-between text-xs">
-                          <span className="font-medium text-slate-700">Cost / Revenue</span>
+                          <span className="font-medium text-foreground">Cost / Revenue</span>
                           <span
                             className={cn(
                               "font-bold",
@@ -232,7 +231,7 @@ export default function JobIntelligenceDashboard() {
                                 ? "text-red-600"
                                 : burn > 85
                                 ? "text-yellow-600"
-                                : "text-slate-600"
+                                : "text-muted-foreground"
                             )}
                           >
                             {burn.toFixed(1)}%
@@ -252,13 +251,13 @@ export default function JobIntelligenceDashboard() {
                       </div>
 
                       {/* Collection Stats */}
-                      <div className="bg-slate-50 p-3 rounded-lg text-xs flex justify-between items-center border">
+                      <div className="bg-muted p-3 rounded-lg text-xs flex justify-between items-center border">
                         <div>
-                          <p className="text-slate-500 mb-0.5">Invoiced</p>
+                          <p className="text-muted-foreground mb-0.5">Invoiced</p>
                           <p className="font-medium">{fmt(invoicedAmount)}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-slate-500 mb-0.5">Paid</p>
+                          <p className="text-muted-foreground mb-0.5">Paid</p>
                           <p className="font-medium text-green-600">{fmt(paidAmount)}</p>
                         </div>
                       </div>
@@ -311,9 +310,9 @@ export default function JobIntelligenceDashboard() {
         </div>
 
         {activeMetrics.length === 0 && (
-          <div className="text-center py-12 border-2 border-dashed rounded-xl border-slate-200">
-            <h3 className="text-lg font-medium text-slate-900">No active jobs</h3>
-            <p className="text-sm text-slate-500 mt-1">
+          <div className="text-center py-12 border-2 border-dashed rounded-xl border-border">
+            <h3 className="text-lg font-medium text-foreground">No active jobs</h3>
+            <p className="text-sm text-muted-foreground mt-1">
               There are no active jobs to display intelligence for.
             </p>
           </div>

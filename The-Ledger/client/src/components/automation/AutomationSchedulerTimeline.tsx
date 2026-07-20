@@ -193,7 +193,7 @@ export function AutomationSchedulerTimeline({
   }, []);
 
   const todayKpis = [
-    { label: "Scheduled Today", value: model.totalToday, icon: CalendarClock, color: "text-slate-600", testId: "aut-tl-today-total" },
+    { label: "Scheduled Today", value: model.totalToday, icon: CalendarClock, color: "text-muted-foreground", testId: "aut-tl-today-total" },
     { label: "Completed", value: model.completedToday, icon: CheckCircle2, color: "text-emerald-600", testId: "aut-tl-today-completed" },
     { label: "Upcoming", value: model.upcomingToday, icon: Clock, color: "text-blue-600", testId: "aut-tl-today-upcoming" },
     { label: "Paused", value: model.paused, icon: PauseCircle, color: "text-amber-600", testId: "aut-tl-today-paused" },
@@ -214,7 +214,7 @@ export function AutomationSchedulerTimeline({
     red: "text-red-600 bg-red-50 border-red-200",
     amber: "text-amber-700 bg-amber-50 border-amber-200",
     violet: "text-violet-700 bg-violet-50 border-violet-200",
-    slate: "text-slate-600 bg-slate-50 border-slate-200",
+    slate: "text-muted-foreground bg-muted border-border",
   };
 
   return (

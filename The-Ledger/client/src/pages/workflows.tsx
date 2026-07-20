@@ -14,6 +14,7 @@
 
 import { useState, useMemo } from 'react';
 import { Layout } from '@/components/layout';
+import { PageHeader } from '@/components/page-shell';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -182,7 +183,7 @@ function WorkflowDetailDialog({
                   className="flex items-start gap-3 rounded-md border p-3 text-sm"
                 >
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 flex-shrink-0">
+                    <span className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground flex-shrink-0">
                       {i + 1}
                     </span>
                     <StepStatusPip status={step.status} />
@@ -316,7 +317,7 @@ function WorkflowDetailDialog({
                 </span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-600">
+              <div className="flex items-center gap-2 rounded-md bg-muted border border-border px-3 py-2 text-xs text-muted-foreground">
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                 <span>Standard operational workflow. No financial sensitivity flagged.</span>
               </div>
@@ -432,8 +433,8 @@ export default function WorkflowCentrePage() {
       label: 'Total Workflows',
       value: summary.total,
       icon: GitBranch,
-      color: 'text-slate-600',
-      bg: 'bg-slate-100',
+      color: 'text-muted-foreground',
+      bg: 'bg-muted',
     },
     {
       testId: 'wf-kpi-active',
@@ -483,13 +484,11 @@ export default function WorkflowCentrePage() {
         {/* Header */}
         <div className="flex justify-between items-end">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <GitBranch className="h-7 w-7 text-primary" />
-              Workflow Centre
-            </h2>
-            <p className="text-muted-foreground mt-1">
-              Cross-module workflow orchestration and execution visibility.
-            </p>
+            <PageHeader
+              title="Workflow Centre"
+              icon={GitBranch}
+              description="Cross-module workflow orchestration and execution visibility."
+            />
           </div>
           <Badge
             variant="outline"
@@ -518,7 +517,7 @@ export default function WorkflowCentrePage() {
         {/* KPI Strip */}
         <div data-testid="wf-kpi-strip" className="grid gap-4 md:grid-cols-5">
           {kpiCards.map((kpi) => (
-            <Card key={kpi.testId} data-testid={kpi.testId} className="border-slate-200/60 shadow-sm">
+            <Card key={kpi.testId} data-testid={kpi.testId} className="border-border/60 shadow-sm">
               <CardContent className="pt-4 pb-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -540,7 +539,7 @@ export default function WorkflowCentrePage() {
         </div>
 
         {/* Filters + Search */}
-        <Card className="border-slate-200/60 shadow-sm">
+        <Card className="border-border/60 shadow-sm">
           <CardContent className="pt-4 pb-3">
             <div className="flex flex-wrap gap-3">
               <div className="relative flex-1 min-w-48">
@@ -583,7 +582,7 @@ export default function WorkflowCentrePage() {
         </Card>
 
         {/* Workflow Table */}
-        <Card className="border-slate-200/60 shadow-sm">
+        <Card className="border-border/60 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Layers className="h-4 w-4 text-primary" />
@@ -721,7 +720,7 @@ export default function WorkflowCentrePage() {
         </Card>
 
         {/* Execution Visibility Panel */}
-        <Card className="border-slate-200/60 shadow-sm" data-testid="wf-execution-panel">
+        <Card className="border-border/60 shadow-sm" data-testid="wf-execution-panel">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Activity className="h-4 w-4 text-primary" />

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Layers, FileText, Wallet, Link2, Users, FileDown, RefreshCw, GitMerge, TriangleAlert, Calendar } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
@@ -69,7 +70,7 @@ function PayrollHub({ activeSub, onSubChange }: { activeSub: string; onSubChange
   return (
     <div className="space-y-4">
       <div
-        className="flex items-center gap-3 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm flex-wrap"
+        className="flex items-center gap-3 px-4 py-2.5 bg-muted border border-border rounded-lg text-sm flex-wrap"
         data-testid="payroll-status-banner"
       >
         <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -193,14 +194,11 @@ export default function FinanceHubPage() {
   return (
     <Layout>
       <div className="space-y-6 p-6" data-testid="finance-hub-page">
-        <div>
-          <h1 className="text-2xl font-bold" data-testid="finance-hub-heading">
-            Finance{activeTab !== "overview" && tabLabels[activeTab] ? ` — ${tabLabels[activeTab]}` : ""}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Revenue, costs, payroll, invoicing and accounting — in one place.
-          </p>
-        </div>
+        <PageHeader
+          testId="finance-hub-heading"
+          title={`Finance${activeTab !== "overview" && tabLabels[activeTab] ? ` — ${tabLabels[activeTab]}` : ""}`}
+          description="Revenue, costs, payroll, invoicing and accounting — in one place."
+        />
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="flex flex-wrap h-auto gap-1">

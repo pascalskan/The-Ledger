@@ -32,7 +32,7 @@ import {
   getPendingExposure,
   groupTimesheetsForPayroll,
 } from "@/lib/profitabilityEngine";
-import { getDefaultProvider } from "@/lib/accountingSettingsEngine";
+import { getDefaultProvider, DEFAULT_ACCOUNTING_SETTINGS } from "@/lib/accountingSettingsEngine";
 import {
   computeSyncKPIs,
   SEED_SYNC_RECORDS,
@@ -79,7 +79,7 @@ export function FinanceHubOverview() {
   );
 
   const store = useStore();
-  const { jobs, invoices, timesheets, reviewItems, companySettings } = store;
+  const { jobs, invoices, timesheets, reviewItems } = store;
 
   // ── KPI: Revenue / Costs / Margin ─────────────────────────────────────────
   // G-005: Gross Margin derived from getAllJobMargins() engine output — not recomputed inline.
@@ -130,7 +130,11 @@ export function FinanceHubOverview() {
   const MOCK_NEXT_RUN = "20 Jun 2026";
 
   // ── Accounting ─────────────────────────────────────────────────────────────
-  const provider = getDefaultProvider(companySettings);
+  // Was getDefaultProvider(companySettings) — company settings is the legal
+  // entity/bank record and has no `providers` array, so `settings.providers.find`
+  // threw and the Finance Hub white-screened before rendering. The accounting
+  // provider lives in accountingSettingsEngine, as this file's own header states.
+  const provider = getDefaultProvider(DEFAULT_ACCOUNTING_SETTINGS);
   const syncKPIs = computeSyncKPIs(SEED_SYNC_RECORDS);
   const failedCount = syncKPIs.failed;
   const exceptionSummary = computeExceptionSummary(SEED_EXCEPTIONS);
@@ -321,7 +325,7 @@ export function FinanceHubOverview() {
                         ? "text-emerald-600"
                         : margin < 15
                         ? "text-red-600"
-                        : "text-slate-500";
+                        : "text-muted-foreground";
                     return (
                       <tr key={r.job.id} className="border-b last:border-0">
                         <td className="py-2 font-medium truncate max-w-[140px]">
@@ -364,7 +368,7 @@ export function FinanceHubOverview() {
             <div className="space-y-2">
               {(
                 [
-                  { key: "Draft", testId: "invoice-status-row-draft", cls: "text-slate-600" },
+                  { key: "Draft", testId: "invoice-status-row-draft", cls: "text-muted-foreground" },
                   { key: "Sent", testId: "invoice-status-row-sent", cls: "text-blue-600" },
                   { key: "Overdue", testId: "invoice-status-row-overdue", cls: "text-red-600 font-medium" },
                   { key: "Paid", testId: "invoice-status-row-paid", cls: "text-emerald-600" },

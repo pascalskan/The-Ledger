@@ -27,7 +27,7 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
   ];
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-slate-50 text-slate-900 pb-[80px]">
+    <div className="flex flex-col min-h-[100dvh] bg-muted text-foreground pb-[80px]">
       {/* Offline/Sync Banner */}
       <div
         data-testid="worker-offline-banner"
@@ -50,7 +50,7 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white border-b px-4 py-4 shadow-sm flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-card border-b px-4 py-4 shadow-sm flex items-center justify-between">
         <h1 className="text-xl font-bold">{title}</h1>
         {user && <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">{user.name.charAt(0)}</div>}
       </header>
@@ -63,7 +63,7 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
       {/* Bottom Navigation */}
       <nav
         aria-label="Worker navigation"
-        className="fixed bottom-0 w-full bg-white border-t border-slate-200 flex justify-between px-1 py-2 pb-safe-area shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50"
+        className="fixed bottom-0 w-full bg-card border-t border-border flex justify-between px-1 py-2 pb-safe-area shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-50"
       >
         {navItems.map((item) => {
           const isActive = location.startsWith(item.path);
@@ -76,7 +76,7 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex flex-col items-center justify-center w-full py-2 rounded-xl transition-all min-w-0",
-                isActive ? "text-primary bg-primary/5" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                isActive ? "text-primary bg-primary/5" : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               <div className="relative">

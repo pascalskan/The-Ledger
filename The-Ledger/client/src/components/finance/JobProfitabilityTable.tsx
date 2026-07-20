@@ -6,13 +6,13 @@ export function JobProfitabilityTable({ jobs }: { jobs: any[] }) {
   const formatCur = (val: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(val);
 
   return (
-    <Card className="shadow-sm border-slate-200">
-      <CardHeader className="border-b border-slate-100 bg-slate-50/50">
-        <CardTitle className="text-lg text-slate-900">Job Profitability</CardTitle>
+    <Card className="shadow-sm border-border">
+      <CardHeader className="border-b border-border bg-muted/50">
+        <CardTitle className="text-lg text-foreground">Job Profitability</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
-          <TableHeader className="bg-slate-50/50">
+          <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead className="w-[250px]">Job Name</TableHead>
               <TableHead className="text-right">Revenue (QB)</TableHead>
@@ -39,13 +39,13 @@ export function JobProfitabilityTable({ jobs }: { jobs: any[] }) {
               }
 
               return (
-                <TableRow key={job.id} className="hover:bg-slate-50">
-                  <TableCell className="font-medium text-slate-800">{job.title}</TableCell>
-                  <TableCell className="text-right font-medium text-slate-700">{formatCur(job.revenue)}</TableCell>
-                  <TableCell className="text-right text-slate-600">{formatCur(job.approvedSpend)}</TableCell>
+                <TableRow key={job.id} className="hover:bg-muted">
+                  <TableCell className="font-medium text-foreground">{job.title}</TableCell>
+                  <TableCell className="text-right font-medium text-foreground">{formatCur(job.revenue)}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{formatCur(job.approvedSpend)}</TableCell>
                   <TableCell className="text-right text-amber-600 font-medium">{formatCur(job.pendingSpend)}</TableCell>
-                  <TableCell className="text-right font-semibold text-slate-900">{formatCur(gp)}</TableCell>
-                  <TableCell className="text-right text-slate-700 font-medium">{margin}%</TableCell>
+                  <TableCell className="text-right font-semibold text-foreground">{formatCur(gp)}</TableCell>
+                  <TableCell className="text-right text-foreground font-medium">{margin}%</TableCell>
                   <TableCell className="text-center">
                     <Badge variant={statusVariant as any} className={`
                       ${statusLabel === 'Healthy' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200 font-normal' : ''}

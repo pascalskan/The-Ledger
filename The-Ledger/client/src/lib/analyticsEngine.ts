@@ -296,7 +296,10 @@ export function getAutomationEffectiveness(): AnalyticsScore {
 
   const active = schedulerSummary.active;
   const total = schedulerSummary.total;
-  const automationFailures = notifSummary.byType?.['automation_failure'] ?? 0;
+  // 'automation_failure' is not a NotificationType — the canonical key is
+  // 'automation_alert'. The wrong key always resolved to 0, so Automation
+  // Effectiveness never reflected any failures.
+  const automationFailures = notifSummary.byType?.['automation_alert'] ?? 0;
 
   let score = total > 0 ? Math.round((active / total) * 100) : 80;
   score -= automationFailures * 8;

@@ -63,11 +63,11 @@ function Kpi({
       ? "text-amber-600"
       : tone === "good"
       ? "text-emerald-600"
-      : "text-slate-900";
+      : "text-foreground";
   return (
     <Card data-testid={testId}>
       <CardContent className="p-4">
-        <div className="flex items-center gap-2 text-slate-400">
+        <div className="flex items-center gap-2 text-muted-foreground">
           {icon}
           <span className="text-[11px] font-medium uppercase tracking-wide">
             {label}
@@ -110,10 +110,10 @@ export function ReviewAnalyticsDashboard() {
   return (
     <div className="space-y-6" data-testid="review-analytics-dashboard">
       <div>
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Activity className="h-5 w-5 text-blue-500" /> Review Operations Analytics
         </h3>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           How efficiently the business is making decisions. Measurement only —
           nothing here changes review behaviour.
         </p>
@@ -125,19 +125,19 @@ export function ReviewAnalyticsDashboard() {
           <div className="flex items-center gap-3">
             <HeartPulse className={`h-8 w-8 ${healthTone}`} />
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 Review Operations Health
               </p>
               <p className={`text-3xl font-bold ${healthTone}`}>
                 {health.score}
-                <span className="text-base font-medium text-slate-400">/100</span>{" "}
+                <span className="text-base font-medium text-muted-foreground">/100</span>{" "}
                 <Badge variant="outline" data-testid="health-status">
                   {health.status}
                 </Badge>
               </p>
             </div>
           </div>
-          <p className="max-w-md text-sm text-slate-500" data-testid="health-explanation">
+          <p className="max-w-md text-sm text-muted-foreground" data-testid="health-explanation">
             {health.explanation}
           </p>
         </CardContent>
@@ -162,7 +162,7 @@ export function ReviewAnalyticsDashboard() {
         <Card data-testid="review-approval-performance">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Timer className="h-4 w-4 text-slate-400" /> Approval Performance
+              <Timer className="h-4 w-4 text-muted-foreground" /> Approval Performance
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
@@ -171,8 +171,8 @@ export function ReviewAnalyticsDashboard() {
             <PerfRow label="Average correction time" value={hours(performance.avgCorrectionHours)} />
             <PerfRow label="Fastest approval" value={hours(performance.fastestApprovalHours)} />
             <PerfRow label="Slowest approval" value={hours(performance.slowestApprovalHours)} />
-            <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-              <span className="text-slate-600">SLA compliance</span>
+            <div className="flex items-center justify-between border-t border-border pt-2">
+              <span className="text-muted-foreground">SLA compliance</span>
               <Badge variant="outline" data-testid="sla-compliance">
                 {performance.slaCompliancePercent}%
               </Badge>
@@ -184,7 +184,7 @@ export function ReviewAnalyticsDashboard() {
         <Card data-testid="review-financial-throughput">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
-              <PoundSterling className="h-4 w-4 text-slate-400" /> Financial Throughput
+              <PoundSterling className="h-4 w-4 text-muted-foreground" /> Financial Throughput
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
@@ -234,13 +234,13 @@ export function ReviewAnalyticsDashboard() {
       <Card data-testid="review-reviewer-performance">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="h-4 w-4 text-slate-400" /> Reviewer Performance
+            <Users className="h-4 w-4 text-muted-foreground" /> Reviewer Performance
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-slate-50/50">
+              <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead>Reviewer</TableHead>
                   <TableHead className="text-right">Completed</TableHead>
@@ -254,7 +254,7 @@ export function ReviewAnalyticsDashboard() {
               <TableBody>
                 {reviewers.map((r) => (
                   <TableRow key={r.reviewer} data-testid={`reviewer-row-${r.reviewer.toLowerCase()}`}>
-                    <TableCell className="font-medium text-slate-700">{r.reviewer}</TableCell>
+                    <TableCell className="font-medium text-foreground">{r.reviewer}</TableCell>
                     <TableCell className="text-right">{r.completed}</TableCell>
                     <TableCell className="text-right">{r.approvalRate}%</TableCell>
                     <TableCell className="text-right hidden sm:table-cell">{r.rejectionRate}%</TableCell>
@@ -273,13 +273,13 @@ export function ReviewAnalyticsDashboard() {
       <Card data-testid="review-type-analytics">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Layers className="h-4 w-4 text-slate-400" /> Review Type Analytics
+            <Layers className="h-4 w-4 text-muted-foreground" /> Review Type Analytics
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-slate-50/50">
+              <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead>Type</TableHead>
                   <TableHead className="text-right">Volume</TableHead>
@@ -294,7 +294,7 @@ export function ReviewAnalyticsDashboard() {
                     key={t.type}
                     data-testid={`type-analytics-${t.type.toLowerCase().replace(/\s+/g, "-")}`}
                   >
-                    <TableCell className="font-medium text-slate-700">{t.type}</TableCell>
+                    <TableCell className="font-medium text-foreground">{t.type}</TableCell>
                     <TableCell className="text-right">{t.volume}</TableCell>
                     <TableCell className="text-right">{t.approvalRate}%</TableCell>
                     <TableCell className="text-right hidden sm:table-cell">{formatAge(t.avgReviewHours)}</TableCell>
@@ -326,7 +326,7 @@ export function ReviewAnalyticsDashboard() {
             {insights.map((insight, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2 text-sm text-slate-700"
+                className="flex items-start gap-2 text-sm text-foreground"
                 data-testid="analytics-insight"
               >
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
@@ -343,8 +343,8 @@ export function ReviewAnalyticsDashboard() {
 function PerfRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-0.5">
-      <span className="text-slate-600">{label}</span>
-      <span className="font-medium text-slate-900">{value}</span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium text-foreground">{value}</span>
     </div>
   );
 }
@@ -365,19 +365,19 @@ function BottleneckList({
   emptyLabel?: string;
 }) {
   return (
-    <div className="rounded-md border border-slate-100 p-3" data-testid={testId}>
-      <p className="mb-2 text-sm font-medium text-slate-900">{title}</p>
+    <div className="rounded-md border border-border p-3" data-testid={testId}>
+      <p className="mb-2 text-sm font-medium text-foreground">{title}</p>
       {items.length === 0 ? (
-        <p className="text-xs text-slate-400">{emptyLabel}</p>
+        <p className="text-xs text-muted-foreground">{emptyLabel}</p>
       ) : (
         <div className="space-y-1">
           {items.map((it) => (
             <div key={it.id} className="flex items-center justify-between gap-2 text-sm">
               <div className="min-w-0">
-                <span className="font-medium text-slate-700">{it.id}</span>
-                <span className="ml-2 text-xs text-slate-400">{it.reviewType}</span>
+                <span className="font-medium text-foreground">{it.id}</span>
+                <span className="ml-2 text-xs text-muted-foreground">{it.reviewType}</span>
               </div>
-              <span className="shrink-0 text-xs font-medium text-slate-600">
+              <span className="shrink-0 text-xs font-medium text-muted-foreground">
                 {showMoney ? formatGbp(it.financialImpact) : showAge ? it.ageLabel : it.jobCode}
               </span>
             </div>
@@ -396,13 +396,13 @@ function TrendCard({ trend }: { trend: TrendSeries }) {
     ) : trend.direction === "down" ? (
       <TrendingDown className="h-3.5 w-3.5 text-rose-500" />
     ) : (
-      <Minus className="h-3.5 w-3.5 text-slate-400" />
+      <Minus className="h-3.5 w-3.5 text-muted-foreground" />
     );
   return (
     <Card data-testid={`trend-${trend.label.toLowerCase()}`}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             {trend.label}
           </span>
           {dirIcon}
@@ -416,7 +416,7 @@ function TrendCard({ trend }: { trend: TrendSeries }) {
             />
           ))}
         </div>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-muted-foreground">
           {trend.changePercent >= 0 ? "+" : ""}
           {trend.changePercent}% wk
         </p>

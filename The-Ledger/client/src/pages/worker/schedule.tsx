@@ -53,20 +53,20 @@ export default function WorkerSchedulePage() {
         {dayKeys.length === 0 ? (
           <div
             data-testid="worker-schedule-empty"
-            className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm text-center"
+            className="bg-card rounded-2xl p-8 border border-border shadow-sm text-center"
           >
-            <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-muted text-muted-foreground rounded-full flex items-center justify-center mx-auto mb-4">
               <CalendarX className="w-8 h-8" />
             </div>
             <h2 className="text-lg font-bold mb-1">No upcoming shifts</h2>
-            <p className="text-slate-500 text-sm">
+            <p className="text-muted-foreground text-sm">
               You have no scheduled jobs right now. Check with your manager.
             </p>
           </div>
         ) : (
           dayKeys.map((key) => (
             <section key={key} data-testid="worker-schedule-day" aria-label={dayLabel(key)}>
-              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                 <CalendarDays className="w-3.5 h-3.5" />
                 {dayLabel(key)}
               </h2>
@@ -80,7 +80,7 @@ export default function WorkerSchedulePage() {
                       data-testid={`worker-schedule-job-${job.id}`}
                       onClick={() => setLocation(`/worker/jobs/${job.id}`)}
                       aria-label={`Open ${job.title}`}
-                      className="w-full text-left bg-white rounded-2xl p-4 shadow-sm border border-slate-100 active:scale-[0.98] transition-transform"
+                      className="w-full text-left bg-card rounded-2xl p-4 shadow-sm border border-border active:scale-[0.98] transition-transform"
                     >
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="min-w-0">
@@ -104,8 +104,8 @@ export default function WorkerSchedulePage() {
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 text-xs text-slate-600">
-                          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                           <span>
                             {new Date(job.startAt).toLocaleTimeString([], {
                               hour: "2-digit",
@@ -113,12 +113,12 @@ export default function WorkerSchedulePage() {
                             })}
                           </span>
                         </div>
-                        <div className="flex items-start gap-2 text-xs text-slate-500">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                        <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
                           <span className="line-clamp-1">{job.locationAddress}</span>
                         </div>
                       </div>
-                      <div className="mt-3 flex items-center justify-end text-xs font-semibold text-slate-600">
+                      <div className="mt-3 flex items-center justify-end text-xs font-semibold text-muted-foreground">
                         Open Job <ArrowRight className="w-3.5 h-3.5 ml-1" />
                       </div>
                     </button>

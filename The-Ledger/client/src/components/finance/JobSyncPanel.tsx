@@ -140,7 +140,7 @@ export function JobSyncPanel({ jobId }: JobSyncPanelProps) {
           <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
         );
       default:
-        return <Clock className="h-4 w-4 text-slate-500" />;
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   };
 

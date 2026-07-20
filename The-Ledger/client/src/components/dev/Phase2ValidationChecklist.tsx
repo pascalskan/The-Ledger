@@ -74,15 +74,15 @@ export function Phase2ValidationChecklist() {
   const overallProgress = (checks.filter(c => c.status === "pass").length / checks.length) * 100;
 
   return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm space-y-4">
+    <div className="bg-card rounded-2xl p-5 border border-border shadow-sm space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold">Phase 2 QA Checklist</h3>
-          <p className="text-sm text-slate-500">Enterprise Hardening & Validation</p>
+          <p className="text-sm text-muted-foreground">Enterprise Hardening & Validation</p>
         </div>
         <div className="text-right">
             <div className="font-bold text-lg">{Math.round(overallProgress)}%</div>
-            <div className="text-xs text-slate-500">Complete</div>
+            <div className="text-xs text-muted-foreground">Complete</div>
         </div>
       </div>
       
@@ -91,10 +91,10 @@ export function Phase2ValidationChecklist() {
       </div>
 
       {categories.map(category => (
-        <div key={category} className="rounded-xl border border-slate-200">
+        <div key={category} className="rounded-xl border border-border">
           <button
             onClick={() => toggleCategory(category)}
-            className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100"
+            className="w-full flex items-center justify-between p-3 bg-muted hover:bg-muted"
           >
             <h4 className="font-semibold text-sm">{category}</h4>
             {expandedCategories[category] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -109,7 +109,7 @@ export function Phase2ValidationChecklist() {
                   </button>
                   <div className="flex-1">
                     <p className="font-medium text-sm">{check.title}</p>
-                    <p className="text-xs text-slate-500">{check.description}</p>
+                    <p className="text-xs text-muted-foreground">{check.description}</p>
                   </div>
                 </div>
               ))}

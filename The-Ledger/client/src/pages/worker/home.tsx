@@ -104,7 +104,7 @@ export default function WorkerHomePage() {
               </div>
 
               {currentJob && (
-                <p className="text-slate-400 text-sm mb-4 truncate">{currentJob.title}</p>
+                <p className="text-muted-foreground text-sm mb-4 truncate">{currentJob.title}</p>
               )}
 
               <button
@@ -118,20 +118,20 @@ export default function WorkerHomePage() {
           ) : (
             <div
               data-testid="worker-not-on-shift-banner"
-              className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100"
+              className="bg-card rounded-2xl p-5 shadow-sm border border-border"
             >
               <div className="flex items-center gap-2 mb-3">
-                <Clock className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   Not On Shift
                 </span>
               </div>
 
               {firstJob ? (
                 <>
-                  <p className="text-slate-600 text-sm mb-4 leading-relaxed">
+                  <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
                     Your next job is{" "}
-                    <span className="font-semibold text-slate-900">{firstJob.title}</span>.
+                    <span className="font-semibold text-foreground">{firstJob.title}</span>.
                     Open the job to start your shift.
                   </p>
                   <button
@@ -144,7 +144,7 @@ export default function WorkerHomePage() {
                   </button>
                 </>
               ) : (
-                <p className="text-slate-500 text-sm">
+                <p className="text-muted-foreground text-sm">
                   No jobs assigned right now. Check with your manager.
                 </p>
               )}
@@ -154,14 +154,14 @@ export default function WorkerHomePage() {
 
         {/* ── Today & Upcoming Jobs ── */}
         <section data-testid="worker-home-jobs">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Today & Upcoming
           </h2>
 
           {myJobs.length === 0 ? (
             <div
               data-testid="worker-home-no-jobs"
-              className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm text-center text-slate-500 text-sm"
+              className="bg-card rounded-2xl p-6 border border-border shadow-sm text-center text-muted-foreground text-sm"
             >
               No jobs assigned.
             </div>
@@ -174,8 +174,8 @@ export default function WorkerHomePage() {
                     key={job.id}
                     data-testid={`worker-home-job-card-${job.id}`}
                     className={cn(
-                      "bg-white rounded-2xl p-4 shadow-sm border",
-                      isCurrentJob ? "border-emerald-200 bg-emerald-50/40" : "border-slate-100"
+                      "bg-card rounded-2xl p-4 shadow-sm border",
+                      isCurrentJob ? "border-emerald-200 bg-emerald-50/40" : "border-border"
                     )}
                   >
                     <div className="flex items-start justify-between gap-3 mb-3">
@@ -186,8 +186,8 @@ export default function WorkerHomePage() {
                           )}
                           <p className="font-semibold text-sm truncate">{job.title}</p>
                         </div>
-                        <p className="text-xs text-slate-500 truncate">{job.locationAddress}</p>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-muted-foreground truncate">{job.locationAddress}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
                           {new Date(job.startAt).toLocaleDateString()} ·{" "}
                           {new Date(job.startAt).toLocaleTimeString([], {
                             hour: "2-digit",
@@ -226,7 +226,7 @@ export default function WorkerHomePage() {
 
         {/* ── Quick Actions ── */}
         <section data-testid="worker-quick-actions">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Quick Actions
           </h2>
           <div className="grid grid-cols-2 gap-3">
@@ -235,7 +235,7 @@ export default function WorkerHomePage() {
                 <button
                   data-testid="worker-qa-submit-report"
                   onClick={() => setLocation(`/worker/jobs/${currentJob.id}/report`)}
-                  className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
+                  className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
                 >
                   <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
                     <FileText className="w-5 h-5" />
@@ -246,7 +246,7 @@ export default function WorkerHomePage() {
                 <button
                   data-testid="worker-qa-open-job"
                   onClick={() => setLocation(`/worker/jobs/${currentJob.id}`)}
-                  className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
+                  className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
                 >
                   <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                     <Briefcase className="w-5 h-5" />
@@ -259,7 +259,7 @@ export default function WorkerHomePage() {
                 <button
                   data-testid="worker-qa-my-jobs"
                   onClick={() => setLocation("/worker/jobs")}
-                  className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
+                  className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
                 >
                   <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                     <Briefcase className="w-5 h-5" />
@@ -270,7 +270,7 @@ export default function WorkerHomePage() {
                 <button
                   data-testid="worker-qa-schedule"
                   onClick={() => setLocation("/worker/schedule")}
-                  className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
+                  className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
                 >
                   <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                     <Calendar className="w-5 h-5" />
@@ -283,7 +283,7 @@ export default function WorkerHomePage() {
             <button
               data-testid="worker-qa-uploads"
               onClick={() => setLocation("/worker/uploads")}
-              className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
+              className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
             >
               <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
                 <UploadCloud className="w-5 h-5" />
@@ -301,9 +301,9 @@ export default function WorkerHomePage() {
             <button
               data-testid="worker-qa-profile"
               onClick={() => setLocation("/worker/profile")}
-              className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
+              className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-3 active:scale-[0.97] transition-transform"
             >
-              <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 font-bold text-sm">
+              <div className="w-10 h-10 rounded-full bg-muted text-foreground flex items-center justify-center shrink-0 font-bold text-sm">
                 {user?.name.charAt(0) ?? "W"}
               </div>
               <span className="font-semibold text-sm">Profile</span>
@@ -313,7 +313,7 @@ export default function WorkerHomePage() {
 
         {/* ── Attention Required (always rendered) ── */}
         <section data-testid="worker-attention-required">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Attention Required
           </h2>
 
@@ -414,16 +414,16 @@ export default function WorkerHomePage() {
         {/* ── Last Shift ── */}
         {lastShift && (
           <section data-testid="worker-last-shift">
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               Last Shift
             </h2>
-            <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+            <div className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center shrink-0">
                 <Clock className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{lastShift.jobTitle}</p>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(lastShift.dateISO).toLocaleDateString()} ·{" "}
                   {Math.floor(lastShift.hours ?? 0)}h{" "}
                   {Math.round((((lastShift.hours ?? 0) % 1) * 60))}m
@@ -436,14 +436,14 @@ export default function WorkerHomePage() {
         {/* ── Recent Activity ── */}
         <section data-testid="worker-recent-activity">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Recent Activity
             </h2>
             {activity.length > 0 && (
               <button
                 data-testid="worker-home-view-activity"
                 onClick={() => setLocation("/worker/history")}
-                className="text-xs font-semibold text-slate-600 hover:text-slate-900"
+                className="text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
                 View all
               </button>
@@ -451,7 +451,7 @@ export default function WorkerHomePage() {
           </div>
 
           {activity.length === 0 ? (
-            <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-3 text-slate-400">
+            <div className="bg-card rounded-2xl p-5 border border-border shadow-sm flex items-center gap-3 text-muted-foreground">
               <CheckCircle2 className="w-5 h-5 shrink-0" />
               <p className="text-sm">
                 No recent submissions. Start your shift to begin logging work.
@@ -462,7 +462,7 @@ export default function WorkerHomePage() {
               {activity.slice(0, 3).map((item) => (
                 <div
                   key={`${item.source}-${item.id}`}
-                  className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3"
+                  className="bg-card rounded-2xl p-4 border border-border shadow-sm flex items-center gap-3"
                 >
                   <CheckCircle2
                     className={cn(
@@ -471,18 +471,18 @@ export default function WorkerHomePage() {
                         ? "text-emerald-500"
                         : item.reviewStatus === "needs-correction"
                         ? "text-orange-500"
-                        : "text-slate-400"
+                        : "text-muted-foreground"
                     )}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">
                       {kindLabel(item.kind)} — {item.title}
                     </p>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {new Date(item.dateISO).toLocaleDateString()}
                     </p>
                   </div>
-                  <Badge className="bg-slate-100 text-slate-600 border-none text-[10px] shrink-0 capitalize">
+                  <Badge className="bg-muted text-muted-foreground border-none text-[10px] shrink-0 capitalize">
                     {item.source === "queue"
                       ? item.syncStatus === "failed"
                         ? "Failed"

@@ -41,7 +41,7 @@ function Row({
   return (
     <div className="grid grid-cols-3 items-center py-1.5 text-sm">
       <span className="text-muted-foreground col-span-1">{label}</span>
-      <span className="text-right font-medium text-slate-700">
+      <span className="text-right font-medium text-foreground">
         {fmtVal(current)}
       </span>
       <span
@@ -52,7 +52,7 @@ function Row({
             ? "text-emerald-600"
             : deteriorating
             ? "text-rose-600"
-            : "text-slate-700"
+            : "text-foreground"
         )}
       >
         {fmtVal(forecast)}
@@ -85,7 +85,7 @@ export function JobForecastPanel({ jobId }: { jobId: string }) {
     healthy: "bg-emerald-50 text-emerald-700 border-emerald-200",
     warning: "bg-amber-50 text-amber-700 border-amber-200",
     critical: "bg-rose-50 text-rose-700 border-rose-200",
-    "no-data": "bg-slate-50 text-slate-500 border-slate-200",
+    "no-data": "bg-muted text-muted-foreground border-border",
   };
   const riskLabels: Record<string, string> = {
     healthy: "Healthy",
@@ -110,7 +110,7 @@ export function JobForecastPanel({ jobId }: { jobId: string }) {
 
   if (!summary.hasActivity) {
     return (
-      <Card className="border-slate-200" data-testid={`job-forecast-panel-${jobId}`}>
+      <Card className="border-border" data-testid={`job-forecast-panel-${jobId}`}>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
             <BarChart3 className="h-4 w-4" /> Financial Forecast
@@ -128,7 +128,7 @@ export function JobForecastPanel({ jobId }: { jobId: string }) {
 
   return (
     <Card
-      className="border-slate-200"
+      className="border-border"
       data-testid={`job-forecast-panel-${jobId}`}
     >
       <CardHeader className="pb-2">
@@ -222,7 +222,7 @@ export function JobForecastPanel({ jobId }: { jobId: string }) {
         {forecast.hasPendingExposure && (
           <p className="text-xs text-muted-foreground italic border-t pt-2">
             Exposure is an estimate. Pending items must be approved via the
-            Review Center before they become financial facts. An 85%
+            Review Centre before they become financial facts. An 85%
             realisation factor is applied.
           </p>
         )}

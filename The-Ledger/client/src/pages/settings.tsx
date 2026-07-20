@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { PageHeader } from "@/components/page-shell";
 import { useStore } from "@/lib/mockData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,10 +23,10 @@ export default function SettingsPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Company Settings</h2>
-          <p className="text-muted-foreground mt-1">Manage legal entity and payment details.</p>
-        </div>
+        <PageHeader
+          title="Company Settings"
+          description="Manage legal entity and payment details."
+        />
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>

@@ -32,8 +32,9 @@ test('PM-JOBS-01: PM jobs page shows only assigned jobs', async ({ page }) => {
   // dj-showcase-maint-1 has no managerId — PM must NOT see it
   await expect(page.getByTestId('pm-job-card-dj-showcase-maint-1')).not.toBeVisible();
 
-  // Page heading is "My Jobs" not "Jobs"
-  await expect(page.locator('h2')).toContainText('My Jobs');
+  // Page heading is "My Jobs" not "Jobs".
+  // Workstream E: page titles moved from h2 to h1 via the shared PageHeader.
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('My Jobs');
 });
 
 // ────────────────────────────────────────────────────────────────
@@ -115,9 +116,10 @@ test('PM-JOBS-05: CEO jobs page shows all jobs and Create Job button', async ({ 
   // CEO has Create Job button
   await expect(page.locator('button', { hasText: 'Create Job' })).toBeVisible();
 
-  // CEO does NOT see "My Jobs" — heading is "Jobs"
-  await expect(page.locator('h2')).toContainText('Jobs');
-  await expect(page.locator('h2')).not.toContainText('My Jobs');
+  // CEO does NOT see "My Jobs" — heading is "Jobs".
+  // Workstream E: page titles moved from h2 to h1 via the shared PageHeader.
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Jobs');
+  await expect(page.getByRole('heading', { level: 1 })).not.toContainText('My Jobs');
 });
 
 // ────────────────────────────────────────────────────────────────

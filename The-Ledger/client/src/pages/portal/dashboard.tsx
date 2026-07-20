@@ -40,22 +40,22 @@ export function PortalDashboard({ client, jobs, sites, invoices, activity, onOpe
   return (
     <div className="space-y-6" data-testid="portal-dashboard">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
           Welcome{client?.name ? `, ${client.name}` : ""}
         </h1>
-        <p className="text-slate-500 mt-1">Here's an overview of work being performed at your sites.</p>
+        <p className="text-muted-foreground mt-1">Here's an overview of work being performed at your sites.</p>
       </div>
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3" data-testid="portal-kpi-strip">
         {kpis.map((kpi) => (
-          <Card key={kpi.key} className="border-slate-200" data-testid={`portal-kpi-${kpi.key}`}>
+          <Card key={kpi.key} className="border-border" data-testid={`portal-kpi-${kpi.key}`}>
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-muted-foreground text-xs font-medium uppercase tracking-wider">
                 <kpi.icon className="h-4 w-4" />
                 <span className="truncate">{kpi.label}</span>
               </div>
-              <div className="mt-2 text-3xl font-bold text-slate-900" data-testid={`portal-kpi-value-${kpi.key}`}>
+              <div className="mt-2 text-3xl font-bold text-foreground" data-testid={`portal-kpi-value-${kpi.key}`}>
                 {kpi.value}
               </div>
             </CardContent>
@@ -65,25 +65,25 @@ export function PortalDashboard({ client, jobs, sites, invoices, activity, onOpe
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent activity */}
-        <Card className="lg:col-span-2 border-slate-200" data-testid="portal-recent-activity">
-          <CardHeader className="pb-3 border-b border-slate-100">
+        <Card className="lg:col-span-2 border-border" data-testid="portal-recent-activity">
+          <CardHeader className="pb-3 border-b border-border">
             <CardTitle className="text-lg">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             {activity.length === 0 ? (
-              <p className="text-sm text-slate-500 italic" data-testid="portal-activity-empty">No recent activity.</p>
+              <p className="text-sm text-muted-foreground italic" data-testid="portal-activity-empty">No recent activity.</p>
             ) : (
               <ul className="space-y-3">
                 {activity.slice(0, 8).map((item) => {
                   const Icon = ACTIVITY_ICON[item.category];
                   return (
                     <li key={item.id} className="flex items-start gap-3" data-testid={`portal-activity-item-${item.id}`}>
-                      <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-                        <Icon className="h-4 w-4 text-slate-500" />
+                      <div className="h-8 w-8 rounded-full bg-muted border border-border flex items-center justify-center shrink-0">
+                        <Icon className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-sm font-medium text-slate-800">{item.title}</div>
-                        <div className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</div>
+                        <div className="text-sm font-medium text-foreground">{item.title}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(item.date).toLocaleDateString()}</div>
                       </div>
                     </li>
                   );
@@ -94,28 +94,28 @@ export function PortalDashboard({ client, jobs, sites, invoices, activity, onOpe
         </Card>
 
         {/* Recent projects shortcut */}
-        <Card className="border-slate-200" data-testid="portal-dashboard-projects">
-          <CardHeader className="pb-3 border-b border-slate-100">
+        <Card className="border-border" data-testid="portal-dashboard-projects">
+          <CardHeader className="pb-3 border-b border-border">
             <CardTitle className="text-lg">Your Projects</CardTitle>
           </CardHeader>
           <CardContent className="pt-4 space-y-3">
             {recentProjects.length === 0 ? (
-              <p className="text-sm text-slate-500 italic">No projects yet.</p>
+              <p className="text-sm text-muted-foreground italic">No projects yet.</p>
             ) : (
               recentProjects.map((job) => (
                 <button
                   key={job.id}
                   onClick={() => onOpenJob(job)}
-                  className="w-full text-left rounded-lg border border-slate-200 px-3 py-2.5 hover:border-slate-400 hover:bg-slate-50 transition-colors"
+                  className="w-full text-left rounded-lg border border-border px-3 py-2.5 hover:border-slate-400 hover:bg-muted transition-colors"
                   data-testid={`portal-dashboard-job-${job.id}`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-slate-800 truncate">{job.title}</span>
-                    <Badge variant="outline" className={job.status === "Completed" ? "bg-slate-100 text-slate-600" : "bg-blue-50 text-blue-700 border-blue-200"}>
+                    <span className="text-sm font-medium text-foreground truncate">{job.title}</span>
+                    <Badge variant="outline" className={job.status === "Completed" ? "bg-muted text-muted-foreground" : "bg-blue-50 text-blue-700 border-blue-200"}>
                       {job.status}
                     </Badge>
                   </div>
-                  <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+                  <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
                     {new Date(job.startAt).toLocaleDateString()}
                   </div>

@@ -22,10 +22,10 @@ export default function WorkerJobsPage() {
 
         {/* Active Jobs */}
         <section>
-          <h2 className="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Today / Upcoming</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Today / Upcoming</h2>
           <div className="space-y-4">
             {activeJobs.length === 0 && (
-              <p data-testid="worker-jobs-empty" className="text-slate-500 text-sm text-center py-8">No assigned jobs right now.</p>
+              <p data-testid="worker-jobs-empty" className="text-muted-foreground text-sm text-center py-8">No assigned jobs right now.</p>
             )}
             {activeJobs.map(job => {
               const client = clients.find(c => c.id === job.clientId);
@@ -33,26 +33,26 @@ export default function WorkerJobsPage() {
                 <div
                   key={job.id}
                   data-testid={`worker-job-card-${job.id}`}
-                  className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 active:scale-[0.98] transition-transform cursor-pointer"
+                  className="bg-card rounded-2xl p-5 shadow-sm border border-border active:scale-[0.98] transition-transform cursor-pointer"
                   onClick={() => setLocation(`/worker/jobs/${job.id}`)}
                 >
                   <div className="flex justify-between items-start mb-3">
                     <Badge variant={job.status === 'Active' ? 'default' : 'secondary'} className="text-xs">
                       {job.status}
                     </Badge>
-                    <span className="text-xs text-slate-400 font-mono">{job.jobId}</span>
+                    <span className="text-xs text-muted-foreground font-mono">{job.jobId}</span>
                   </div>
                   
                   <h3 className="text-lg font-bold leading-tight mb-1">{job.title}</h3>
                   <p className="text-sm text-primary font-medium mb-4">{client?.name || "Unknown Client"}</p>
                   
                   <div className="space-y-2 mb-5">
-                    <div className="flex items-start gap-2 text-sm text-slate-600">
-                      <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                       <span className="leading-snug line-clamp-2">{job.locationAddress}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
                       <span>{new Date(job.startAt).toLocaleDateString()} at {new Date(job.startAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
                   </div>
@@ -68,27 +68,27 @@ export default function WorkerJobsPage() {
 
         {/* Completed Jobs */}
         <section>
-          <h2 className="text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">Recent History</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Recent History</h2>
           <div className="space-y-3">
             {completedJobs.length === 0 && (
-              <p data-testid="worker-jobs-history-empty" className="text-slate-400 text-sm text-center py-6">
+              <p data-testid="worker-jobs-history-empty" className="text-muted-foreground text-sm text-center py-6">
                 No completed jobs yet.
               </p>
             )}
             {completedJobs.slice(0, 3).map(job => (
               <div
                 key={job.id}
-                className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex items-center justify-between cursor-pointer"
+                className="bg-card rounded-xl p-4 shadow-sm border border-border flex items-center justify-between cursor-pointer"
                 onClick={() => setLocation(`/worker/jobs/${job.id}`)}
               >
                 <div>
                   <h4 className="font-semibold text-sm truncate max-w-[200px]">{job.title}</h4>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                     <Calendar className="w-3 h-3" />
                     {new Date(job.startAt).toLocaleDateString()}
                   </div>
                 </div>
-                <Badge variant="outline" className="text-[10px] bg-slate-50 text-slate-500">Completed</Badge>
+                <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground">Completed</Badge>
               </div>
             ))}
           </div>
