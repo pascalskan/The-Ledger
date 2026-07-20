@@ -7,6 +7,10 @@
     "noEmit": true,
     "module": "ESNext",
     "strict": true,
+    // No target was set, so TypeScript defaulted to ES5 and rejected iteration
+    // over Set/Map (TS2802), despite `lib` already being esnext and Vite
+    // transpiling for modern browsers. ES2020 matches actual runtime.
+    "target": "ES2020",
     "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "preserve",
     "esModuleInterop": true,

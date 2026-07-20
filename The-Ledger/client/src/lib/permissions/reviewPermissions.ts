@@ -1,5 +1,5 @@
 import { User, Role } from "../../types/auth";
-import { ReviewItem } from "../../types/review";
+import type { ReviewItem } from "../mockData";
 import { Job } from "../../types/job";
 import { isAdmin, isCEO, isProjectManager, isClient } from "./roleGuards";
 import { canViewJob } from "./jobPermissions";

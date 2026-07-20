@@ -27,7 +27,7 @@ const initialChecks: CheckItem[] = [
   // Upload Lifecycle
   { id: "ul1", category: "Upload Lifecycle", title: "Preview Rendering", description: "Upload previews are correctly generated and displayed.", status: "pending" },
   { id: "ul2", category: "Upload Lifecycle", title: "Retry Flow", description: "Failed uploads can be manually retried by the worker.", status: "pending" },
-  { id_:"ul3", category: "Upload Lifecycle", title: "Deletion Flow", description: "Uploads can be removed from a queued report.", status: "pending" },
+  { id: "ul3", category: "Upload Lifecycle", title: "Deletion Flow", description: "Uploads can be removed from a queued report.", status: "pending" },
   { id: "ul4", category: "Upload Lifecycle", title: "Conflict Flow", description: "Upload conflicts are correctly flagged for manual review.", status: "pending" },
   { id: "ul5", category: "Upload Lifecycle", title: "Progress Rendering", description: "Upload progress is accurately reflected in the UI.", status: "pending" },
 
