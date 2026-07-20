@@ -142,3 +142,57 @@ test('AR-11: mobile tab bar is role-aware — PM gets their own surfaces', async
   // A PM has no Finance access, so it must not appear in their tab bar.
   await expect(page.getByTestId('mobile-tab-finance')).toHaveCount(0);
 });
+
+// ── A-1 / UX-8: Operations Hub ────────────────────────────────────────────
+
+const OPS_TABS = ['jobs', 'schedule', 'workers', 'clients', 'map', 'stock'];
+
+test('AR-12: Operations Hub renders all six tabs', async ({ page }) => {
+  await clearBrowserState(page);
+  await loginAsCEO(page);
+  await page.goto('/operations');
+  await expect(page.getByTestId('operations-hub-page')).toBeVisible();
+  for (const t of OPS_TABS) {
+    await expect(page.getByTestId(`operations-tab-${t}`)).toBeVisible();
+  }
+});
+
+for (const t of OPS_TABS) {
+  test(`AR-13: Operations "${t}" tab composes without duplicating the shell`, async ({ page }) => {
+    await clearBrowserState(page);
+    await loginAsCEO(page);
+    await page.goto(`/operations?tab=${t}`);
+    await expect(page.getByTestId(`operations-${t}-panel`)).toBeVisible();
+    // Each composed page renders its own <Layout>, which is idempotent — the
+    // nested one must render children only, leaving a single shell.
+    await expect(page.locator('#main-content')).toHaveCount(1);
+    await expect(page.locator('aside')).toHaveCount(1);
+    // /map is the documented no-header surface; every other page has one h1.
+    await expect(page.locator('h1')).toHaveCount(t === 'map' ? 0 : 1);
+  });
+}
+
+test('AR-14: standalone operational routes are retained, not redirected', async ({ page }) => {
+  await clearBrowserState(page);
+  await loginAsCEO(page);
+  // These remain deep-link targets from dashboards, reviews and notifications.
+  await page.goto('/jobs');
+  await waitForRouteReady(page);
+  await expect(page).toHaveURL(/\/jobs$/);
+  await expect(page.locator('#main-content')).toHaveCount(1);
+});
+
+test('AR-15: Operations Hub is denied to a Worker', async ({ page }) => {
+  await clearBrowserState(page);
+  await loginAsWorker(page);
+  await page.goto('/operations');
+  await expect(page.getByTestId('operations-hub-page')).toHaveCount(0);
+});
+
+test('AR-16: CEO nav consolidates operations into a single entry', async ({ page }) => {
+  await clearBrowserState(page);
+  await loginAsCEO(page);
+  await page.goto('/');
+  await waitForRouteReady(page);
+  await expect(page.getByTestId('nav-operations')).toBeVisible();
+});

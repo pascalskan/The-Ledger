@@ -22,6 +22,7 @@ const FinanceHubPage = lazy(() => import("@/pages/finance-hub"));
 const IntelligenceHubPage = lazy(() => import("@/pages/intelligence-hub"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const JobsPage = lazy(() => import("@/pages/jobs"));
+const OperationsHubPage = lazy(() => import("@/pages/operations-hub"));
 const JobDetailPage = lazy(() => import("@/pages/job-detail"));
 const ClientsPage = lazy(() => import("@/pages/clients"));
 const ClientDetailPage = lazy(() => import("@/pages/client-detail"));
@@ -285,6 +286,11 @@ function Router() {
         <ProtectedRoute component={() => <RedirectToFinance tab="accounting" sub="exceptions" />} roles={["CEO"]} />
       </Route>
 
+      {/* UX-8: Operations Hub. Standalone operational routes are retained
+          below as deep-link targets — the hub is an additional way in. */}
+      <Route path="/operations">
+        <ProtectedRoute component={OperationsHubPage} roles={["CEO", "Project Manager"]} />
+      </Route>
       <Route path="/jobs">
         <ProtectedRoute component={JobsPage} />
       </Route>

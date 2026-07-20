@@ -51,7 +51,7 @@ import {
 } from "lucide-react";
 import { useAuth, DEMO_COMPANY_ID, useStore } from "@/lib/mockData";
 import { isCEO, isProjectManager } from "@/lib/roleHelpers";
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -247,13 +247,42 @@ interface NavItem {
   roles: string[];
   testId?: string;
   badge?: number;
+  /**
+   * Extra route prefixes this item owns.
+   *
+   * UX-8 moved six destinations behind /operations, but their standalone
+   * routes are retained as deep-link targets. Without this, landing on /jobs
+   * from a dashboard card would highlight nothing in the nav — the user would
+   * have no idea where in the product they were.
+   */
+  activeFor?: string[];
 }
 
 // ──────────────────────────────────────────────────────
 // MAIN LAYOUT
 // ──────────────────────────────────────────────────────
 
+/**
+ * Marks that a Layout shell is already mounted above this point.
+ *
+ * The Operations Hub (UX-8) composes existing full pages as tabs, and each of
+ * those pages renders its own <Layout>. Rather than refactor six pages
+ * (~2,460 lines, several with role-branched dual Layout blocks) to split shell
+ * from content — a large change against a 966-test suite — Layout is made
+ * idempotent: a nested one renders its children and nothing else.
+ *
+ * The outermost Layout still owns the sidebar, header, mobile tab bar and the
+ * single <main> landmark, so there is exactly one of each on the page.
+ */
+const LayoutMountedContext = createContext(false);
+
 export function Layout({ children }: { children: React.ReactNode }) {
+  const alreadyInsideLayout = useContext(LayoutMountedContext);
+  if (alreadyInsideLayout) return <>{children}</>;
+  return <LayoutShell>{children}</LayoutShell>;
+}
+
+function LayoutShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { logout, user } = useAuth();
   const { roles, reviewItems } = useStore();
@@ -324,14 +353,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { label: "Review", href: "/review", icon: ClipboardCheck, roles: [], testId: "nav-review", badge: pendingReviewCount },
   ];
 
+  // UX-8: Operations consolidates Jobs, Schedule, Workers, Clients, Map and
+  // Stock & Assets into a single hub — the same treatment Finance (UX-4),
+  // Intelligence (UX-5), Automation (UX-6) and Review (UX-7) already had.
+  // Ten operational destinations become four.
+  //
+  // Client Requests stays separate: it is a distinct inbound workflow with its
+  // own lifecycle and RBAC scoping, not an operational record type.
   const CEO_OPERATIONAL_ITEMS: NavItem[] = [
-    { label: "Jobs", href: "/jobs", icon: Briefcase, roles: [] },
-    { label: "Schedule", href: "/schedule", icon: Calendar, roles: [] },
-    { label: "Workers", href: "/workers", icon: Users, roles: [] },
-    { label: "Clients", href: "/clients", icon: Building2, roles: [] },
+    { label: "Operations", href: "/operations", icon: Briefcase, roles: [], testId: "nav-operations",
+      activeFor: ["/jobs", "/schedule", "/workers", "/clients", "/map", "/equipment"] },
     { label: "Client Requests", href: "/client-requests", icon: MessageSquare, roles: [], testId: "nav-client-requests" },
-    { label: "Map", href: "/map", icon: MapIcon, roles: [] },
-    { label: "Stock & Assets", href: "/equipment", icon: Package, roles: [] },
     { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: [] },
     { label: "Financial Insights", href: "/expenses", icon: ReceiptText, roles: [] },
     { label: "Finance", href: "/finance", icon: DollarSign, roles: [], testId: "nav-finance-hub" },
@@ -380,9 +412,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const ADMIN_ITEMS = userIsCEO ? CEO_ADMIN_ITEMS : [];
 
   function NavLink({ item }: { item: NavItem }) {
-    const isActive = location === item.href
-      || location.startsWith(item.href + "?")
-      || location.startsWith(item.href + "/");
+    const matches = (href: string) =>
+      location === href || location.startsWith(href + "?") || location.startsWith(href + "/");
+    const isActive = matches(item.href) || (item.activeFor ?? []).some(matches);
     const content = (
       <Link href={item.href}>
         <a
@@ -559,6 +591,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 
   return (
+    <LayoutMountedContext.Provider value={true}>
     <div className="min-h-screen bg-background flex">
       {/* Skip link. The CEO sidebar carries ~20 items, so a keyboard or
           screen-reader user previously had to traverse all of them on every
@@ -663,5 +696,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </nav>
       )}
     </div>
+    </LayoutMountedContext.Provider>
   );
 }
