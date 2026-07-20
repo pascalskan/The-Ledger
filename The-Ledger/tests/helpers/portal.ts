@@ -26,6 +26,25 @@ export async function gotoPortalClean(page: Page) {
     sessionStorage.clear();
   });
   await page.goto('/portal');
+  await waitForPortalAudit(page);
+}
+
+/**
+ * Wait for the portal audit test bridge to exist on window.
+ *
+ * E-7 made routes lazy, so portalAudit.ts now ships in the portal chunk rather
+ * than the entry bundle. `page.goto` resolves on the load event, which can be
+ * BEFORE that chunk has finished fetching — so a test reading
+ * `window.__portalAudit` immediately afterwards saw undefined.
+ *
+ * This is not masking a defect. The tests always assumed the portal module had
+ * evaluated before they read its audit log; that assumption was simply free
+ * when everything lived in one bundle. Now it has to be stated.
+ */
+export async function waitForPortalAudit(page: Page) {
+  await page.waitForFunction(() => Boolean((window as any).__portalAudit), null, {
+    timeout: 15000,
+  });
 }
 
 /** Attempt portal sign-in with the given email. Does not assert outcome. */
