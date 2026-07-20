@@ -297,6 +297,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const pendingReviewCount = reviewItems.filter(r => r.status === 'pending').length;
 
+  // Mobile bottom tab bar destinations (UX-8).
+  // Five is the practical ceiling before labels truncate on a narrow phone, so
+  // these are the surfaces each role actually opens the app to reach — not a
+  // shortened copy of the sidebar. A PM has no Finance or Intelligence access,
+  // so theirs leads to their own operational work instead.
+  const MOBILE_TABS = userIsCEO
+    ? [
+        { key: "command", label: "Command", href: "/", icon: LayoutDashboard },
+        { key: "review", label: "Review", href: "/review", icon: ClipboardCheck },
+        { key: "jobs", label: "Jobs", href: "/jobs", icon: Briefcase },
+        { key: "finance", label: "Finance", href: "/finance", icon: DollarSign },
+        { key: "intelligence", label: "Insights", href: "/intelligence", icon: Brain },
+      ]
+    : [
+        { key: "overview", label: "Overview", href: "/", icon: LayoutDashboard },
+        { key: "jobs", label: "My Jobs", href: "/jobs", icon: Briefcase },
+        { key: "review", label: "Reviews", href: "/review", icon: ClipboardCheck },
+        { key: "schedule", label: "Schedule", href: "/schedule", icon: Calendar },
+        { key: "crew", label: "Crew", href: "/workers", icon: Users },
+      ];
+
   // ── CEO NAV ───────────────────────────────────────────
   const CEO_CORE_ITEMS: NavItem[] = [
     { label: "Command", href: "/", icon: LayoutDashboard, roles: [] },
@@ -365,6 +386,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
     const content = (
       <Link href={item.href}>
         <a
+          // aria-current tells a screen-reader user which item is the page they
+          // are on. The Client Portal and Worker shells already did this; the
+          // executive shell did not, so a CEO using a screen reader got no
+          // positional cue at all.
+          aria-current={isActive ? "page" : undefined}
           className={cn(
             "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
             isActive ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -534,6 +560,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Skip link. The CEO sidebar carries ~20 items, so a keyboard or
+          screen-reader user previously had to traverse all of them on every
+          page before reaching content. Visually hidden until focused. */}
+      <a
+        href="#main-content"
+        data-testid="skip-to-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:shadow-lg"
+      >
+        Skip to content
+      </a>
       <aside className="hidden md:block fixed inset-y-0 z-50">
         <SidebarContent />
       </aside>
@@ -575,7 +611,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
       </div>
 
-      <main className={cn("flex-1 p-6 md:p-8 pt-20 md:pt-24 transition-all duration-300 relative", collapsed ? "md:ml-16" : "md:ml-64")}>
+      <main id="main-content" tabIndex={-1} className={cn("flex-1 p-6 md:p-8 pt-20 md:pt-24 pb-24 md:pb-8 transition-all duration-300 relative", collapsed ? "md:ml-16" : "md:ml-64")}>
         {isDemo && (
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-6 flex items-center gap-3 text-blue-700 dark:text-blue-300">
             <Info className="h-5 w-5 flex-shrink-0" />
@@ -589,6 +625,43 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      {/* Mobile bottom tab bar (UX-8).
+          The Worker surface is mobile-first and the Client Portal has its own
+          bottom nav; the executive shell had neither — on a phone a CEO could
+          only navigate via the hamburger sheet. Five destinations matching the
+          UX-8 spec, role-aware so a PM sees their own primary surfaces.
+          Hidden on md+ where the sidebar takes over. */}
+      {isCEOorPM && (
+        <nav
+          aria-label="Primary"
+          data-testid="mobile-tab-bar"
+          className="md:hidden fixed bottom-0 inset-x-0 z-50 flex justify-around border-t border-sidebar-border bg-sidebar px-1 py-1.5 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]"
+        >
+          {MOBILE_TABS.map((t) => {
+            const active = location === t.href || location.startsWith(t.href + "?");
+            return (
+              <button
+                key={t.href}
+                type="button"
+                onClick={() => setLocation(t.href)}
+                aria-label={t.label}
+                aria-current={active ? "page" : undefined}
+                data-testid={`mobile-tab-${t.key}`}
+                className={cn(
+                  "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-md px-2 py-1.5 text-[10px] font-medium transition-colors",
+                  active
+                    ? "text-sidebar-primary-foreground bg-sidebar-primary"
+                    : "text-sidebar-foreground/70"
+                )}
+              >
+                <t.icon className="h-5 w-5" />
+                <span className="truncate">{t.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }

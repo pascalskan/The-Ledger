@@ -15,7 +15,7 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { loginAsCEO, loginAsWorker } from '../helpers/login';
+import { loginAsCEO, loginAsPM, loginAsWorker } from '../helpers/login';
 import { clearBrowserState } from '../helpers/state';
 import { waitForRouteReady } from '../helpers/navigation';
 
@@ -98,4 +98,47 @@ test('AR-07: clicking a job card opens the Job Analysis drawer', async ({ page }
   // The drawer's job branch — previously unreachable because both drawer
   // blocks were gated on drawerType === "day".
   await expect(page.getByText('Job Analysis')).toBeVisible();
+});
+
+// ── A-3 / E-backlog: executive shell accessibility + mobile ───────────────
+
+test('AR-08: executive nav marks the current item with aria-current', async ({ page }) => {
+  await clearBrowserState(page);
+  await loginAsCEO(page);
+  await page.goto('/jobs');
+  await waitForRouteReady(page);
+  // The portal and worker shells already did this; the executive shell did not.
+  await expect(page.locator('nav a[aria-current="page"]').first()).toBeVisible();
+});
+
+test('AR-09: skip-to-content link exists and targets main', async ({ page }) => {
+  await clearBrowserState(page);
+  await loginAsCEO(page);
+  await page.goto('/');
+  await waitForRouteReady(page);
+  const skip = page.getByTestId('skip-to-content');
+  await expect(skip).toHaveAttribute('href', '#main-content');
+  await expect(page.locator('#main-content')).toHaveCount(1);
+});
+
+test('AR-10: mobile bottom tab bar renders five destinations for CEO', async ({ page }) => {
+  await clearBrowserState(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await loginAsCEO(page);
+  await page.goto('/');
+  await waitForRouteReady(page);
+  const bar = page.getByTestId('mobile-tab-bar');
+  await expect(bar).toBeVisible();
+  await expect(bar.locator('button')).toHaveCount(5);
+});
+
+test('AR-11: mobile tab bar is role-aware — PM gets their own surfaces', async ({ page }) => {
+  await clearBrowserState(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await loginAsPM(page);
+  await page.goto('/');
+  await waitForRouteReady(page);
+  await expect(page.getByTestId('mobile-tab-schedule')).toBeVisible();
+  // A PM has no Finance access, so it must not appear in their tab bar.
+  await expect(page.getByTestId('mobile-tab-finance')).toHaveCount(0);
 });
