@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 import { loginAsCEO, softLoginAsWorker, softLoginAsCEO } from '../helpers/login';
 import { signOut } from '../helpers/signOut';
-import { openReviewCenter } from '../helpers/navigation';
+import { openReviewCenter, openStockAndAssets } from '../helpers/navigation';
 import { approveReviewForJob } from '../helpers/review';
 import { submitMaterialReport } from '../helpers/worker';
 
@@ -24,11 +24,7 @@ test('Inventory quantity decreases when approved material usage is processed', a
   //
   await loginAsCEO(page); // Only hard-goto — establishes baseline store state
 
-  await page
-    .locator('a')
-    .filter({ hasText: 'Stock & Assets' })
-    .first()
-    .click();
+  await openStockAndAssets(page);
 
   await expect(
     page.getByRole('heading', { name: /Stock & Assets/i })
@@ -81,11 +77,7 @@ test('Inventory quantity decreases when approved material usage is processed', a
   //
   // STEP 4: Verify stock quantity decreased
   //
-  await page
-    .locator('a')
-    .filter({ hasText: 'Stock & Assets' })
-    .first()
-    .click();
+  await openStockAndAssets(page);
 
   await expect(
     page.getByRole('heading', { name: /Stock & Assets/i })
