@@ -35,7 +35,16 @@ export default defineConfig({
     trace: 'retain-on-failure',
     // Per-action timeout — individual locator waits. Default is no limit (uses test timeout).
     // Set to 15s so a single stuck locator doesn't silently eat the whole test budget.
-    actionTimeout: 15000,
+    // Raised from 15s. /automations is the heaviest page in the app (11 tabs,
+    // many engines) and its tab bar legitimately takes 10-13s to become
+    // clickable on an IDLE machine — measured on AS-10. With a 15s budget the
+    // 69 `goto('/automations')` -> immediate tab-click sites across 12 spec
+    // files sat ~2s from failing, so any machine load tipped them over and they
+    // read as flakes. 30s restores headroom and is still well inside the 60s
+    // per-test timeout, so a genuinely hung test still fails the test, not the
+    // run. The 10-13s render itself is a real performance issue worth tracking
+    // separately — this only stops it corrupting the test signal.
+    actionTimeout: 30000,
   },
 
   reporter: [
