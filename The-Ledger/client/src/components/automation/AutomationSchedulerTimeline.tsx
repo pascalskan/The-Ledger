@@ -340,7 +340,7 @@ export function AutomationSchedulerTimeline({
                       <div className="text-sm font-semibold flex items-center gap-1.5">
                         <span>{item.count}</span><span>{item.label}</span>
                       </div>
-                      <p className="text-[11px] opacity-80 leading-tight mt-0.5">{item.desc}</p>
+                      <p className="text-[11px] opacity-100 leading-tight mt-0.5">{item.desc}</p>
                     </div>
                   ))}
                 </div>

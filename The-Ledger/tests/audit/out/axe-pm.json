@@ -12,26 +12,7 @@
  {
   "role": "PM",
   "url": "/review",
-  "violations": [
-   {
-    "id": "color-contrast",
-    "impact": "serious",
-    "help": "Elements must meet minimum color contrast ratio thresholds",
-    "nodes": 2,
-    "sample": [
-     {
-      "target": ".text-blue-500",
-      "html": "<p class=\"text-[11px] text-blue-500 mt-0.5\">awaiting review</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.52 (foreground color: #2b7fff, background color: #f4f8fe, font size: 8.3pt (11px), font weight: normal). Expected contrast rati"
-     },
-     {
-      "target": ".text-rose-600",
-      "html": "<p class=\"text-xs font-medium text-rose-600 uppercase tracking-wide\">Overdue</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.23 (foreground color: #ec003f, background color: #fcf6f7, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "PM",
@@ -44,8 +25,8 @@
     "nodes": 1,
     "sample": [
      {
-      "target": "div[data-testid=\"pm-schedule-my-jobs\"] > h3",
-      "html": "<h3 class=\"text-lg font-semibold mb-3\">My Scheduled Jobs</h3>",
+      "target": "div[data-testid=\"pm-sched-job-dj-pm-active-1\"] > .p-4 > .items-start.justify-between.gap-3 > .min-w-0.flex-1 > .flex-wrap.mb-0\\.5.gap-2 > h4",
+      "html": "<h4 class=\"font-semibold text-sm truncate\">HVAC system replacement — Block C</h4>",
       "summary": "Fix any of the following:   Heading order invalid"
      }
     ]
@@ -55,21 +36,7 @@
  {
   "role": "PM",
   "url": "/workers",
-  "violations": [
-   {
-    "id": "heading-order",
-    "impact": "moderate",
-    "help": "Heading levels should only increase by one",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": "div[data-testid=\"pm-workforce-my-jobs\"] > h3",
-      "html": "<h3 class=\"text-base font-semibold mb-3\">Active &amp; Planned Jobs</h3>",
-      "summary": "Fix any of the following:   Heading order invalid"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "PM",
@@ -100,6 +67,29 @@
   "url": "/map",
   "violations": [
    {
+    "id": "aria-command-name",
+    "impact": "serious",
+    "help": "ARIA commands must have an accessible name",
+    "nodes": 5,
+    "sample": [
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(1)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Element does not have text that is visible to screen readers"
+     },
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(2)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Element does not have text that is visible to screen readers"
+     },
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(3)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Element does not have text that is visible to screen readers"
+     }
+    ]
+   },
+   {
     "id": "page-has-heading-one",
     "impact": "moderate",
     "help": "Page should contain a level-one heading",
@@ -109,6 +99,29 @@
       "target": "html",
       "html": "<html lang=\"en\">",
       "summary": "Fix all of the following:   Page must have a level-one heading"
+     }
+    ]
+   },
+   {
+    "id": "target-size",
+    "impact": "serious",
+    "help": "All touch targets must be 24px large, or leave sufficient space",
+    "nodes": 4,
+    "sample": [
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(2)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Target has insufficient size (18px by 18px, should be at least 24px by 24px)"
+     },
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(3)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Target has insufficient size (18px by 18px, should be at least 24px by 24px)"
+     },
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(4)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Target has insufficient size (18px by 18px, should be at least 24px by 24px)"
      }
     ]
    }

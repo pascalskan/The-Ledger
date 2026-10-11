@@ -110,9 +110,9 @@ export function ReviewAnalyticsDashboard() {
   return (
     <div className="space-y-6" data-testid="review-analytics-dashboard">
       <div>
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Activity className="h-5 w-5 text-blue-500" /> Review Operations Analytics
-        </h3>
+        </h2>
         <p className="text-sm text-muted-foreground">
           How efficiently the business is making decisions. Measurement only —
           nothing here changes review behaviour.

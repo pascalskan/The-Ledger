@@ -68,7 +68,7 @@ export function JobScheduleCard({ job, onClick, isSelected, onDragStart, onDragE
       </div>
 
       <div className="pr-6">
-        <h4 className="font-semibold text-xs text-foreground truncate leading-tight">{job.title}</h4>
+        <h2 className="font-semibold text-xs text-foreground truncate leading-tight">{job.title}</h2>
       </div>
 
       <div className="mt-2 flex items-center justify-between">

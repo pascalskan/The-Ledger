@@ -798,6 +798,7 @@ export default function WorkflowCentrePage() {
                           className="h-7 w-7 p-0"
                           onClick={() => setSelectedWorkflow(wf)}
                           data-testid={`wf-exec-panel-view-${wf.id}`}
+                          aria-label={`View ${wf.name ?? wf.id}`}
                         >
                           <ChevronRight className="h-4 w-4" />
                         </Button>

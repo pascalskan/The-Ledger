@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, MapPin, Calendar, Users, Truck, FileText, Trash2, ReceiptText, Save, Pencil, Filter, ClipboardCheck, TriangleAlert, CheckCircle2, ArrowRight } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { activatable } from "@/lib/a11y";
@@ -27,6 +27,7 @@ export default function JobsPage() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const createBtnRef = useRef<HTMLButtonElement>(null);
   const [isCreateClientOpen, setIsCreateClientOpen] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -288,7 +289,7 @@ export default function JobsPage() {
           title="Jobs"
           description="Manage scheduled work, assignments, and status."
           actions={
-            <Button onClick={() => setIsCreateOpen(true)}>
+            <Button ref={createBtnRef} onClick={() => setIsCreateOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Create Job
             </Button>
           }
@@ -374,7 +375,7 @@ export default function JobsPage() {
 
         {/* Create Job Dialog */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" onCloseAutoFocus={(e) => { if (createBtnRef.current) { e.preventDefault(); createBtnRef.current.focus(); } }}>
                 <DialogHeader>
                     <DialogTitle>Create New Job</DialogTitle>
                 </DialogHeader>

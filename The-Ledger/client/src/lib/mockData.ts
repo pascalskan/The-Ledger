@@ -1621,6 +1621,7 @@ export const useAuth = () => {
   const logout = () => {
     currentUser = null;
     try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch { /* ignore */ }
+    try { sessionStorage.removeItem("ledger-return-to"); sessionStorage.setItem("ledger-skip-return", "1"); } catch { /* ignore */ }
     setUser(null);
   };
 

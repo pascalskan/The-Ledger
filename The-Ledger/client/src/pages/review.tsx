@@ -258,12 +258,12 @@ export default function ReviewPage() {
               <CardContent className="p-4">
                 <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Pending</p>
                 <p className="text-3xl font-bold text-blue-900 mt-1" data-testid="pm-review-metric-pending">{pendingItems.length}</p>
-                <p className="text-[11px] text-blue-500 mt-0.5">awaiting review</p>
+                <p className="text-[11px] text-blue-700 mt-0.5">awaiting review</p>
               </CardContent>
             </Card>
             <Card className={overdueItems.length > 0 ? "bg-rose-50/50 border-rose-100" : ""}>
               <CardContent className="p-4">
-                <p className="text-xs font-medium text-rose-600 uppercase tracking-wide">Overdue</p>
+                <p className="text-xs font-medium text-rose-700 uppercase tracking-wide">Overdue</p>
                 <p className="text-3xl font-bold text-rose-900 mt-1" data-testid="pm-review-metric-overdue">{overdueItems.length}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">&gt; 24 hours pending</p>
               </CardContent>
@@ -497,7 +497,7 @@ export default function ReviewPage() {
         {isCEO && (
           <div className="flex items-center gap-2 pt-2">
             <Inbox className="h-5 w-5 text-muted-foreground" />
-            <h3 className="text-lg font-semibold text-foreground">Review Queue</h3>
+            <h2 className="text-lg font-semibold text-foreground">Review Queue</h2>
           </div>
         )}
 

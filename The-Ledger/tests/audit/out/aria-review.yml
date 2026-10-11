@@ -115,7 +115,7 @@
       - listitem: Review backlog has decreased compared to last week.
       - listitem: Approval throughput is below target.
       - listitem: 1 high-value job is awaiting review completion.
-  - heading "Review Queue" [level=3]
+  - heading "Review Queue" [level=2]
   - paragraph: Total Pending
   - paragraph: "7"
   - paragraph: Reports

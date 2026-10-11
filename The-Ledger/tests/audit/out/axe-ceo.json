@@ -15,7 +15,7 @@
     "nodes": 1,
     "sample": [
      {
-      "target": "div:nth-child(1) > h3",
+      "target": "h3",
       "html": "<h3 class=\"flex items-center gap-2 text-lg font-semibold text-foreground\">",
       "summary": "Fix any of the following:   Heading order invalid"
      }
@@ -49,19 +49,6 @@
       "summary": "Fix any of the following:   Element has insufficient color contrast of 4.13 (foreground color: #ec003f, background color: #f1f5f9, font size: 10.5pt (14px), font weight: normal). Expected contrast rat"
      }
     ]
-   },
-   {
-    "id": "heading-order",
-    "impact": "moderate",
-    "help": "Heading levels should only increase by one",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": ".overflow-hidden.rounded-xl.bg-card:nth-child(1) > .md\\:flex-row.flex-col.flex > .p-6.flex-1 > .mb-4.justify-between.items-start > div > h3",
-      "html": "<h3 class=\"text-xl font-semibold text-foreground\">End of Day Report — Day 5</h3>",
-      "summary": "Fix any of the following:   Heading order invalid"
-     }
-    ]
    }
   ]
  },
@@ -73,21 +60,7 @@
  {
   "role": "CEO",
   "url": "/operations?tab=schedule",
-  "violations": [
-   {
-    "id": "heading-order",
-    "impact": "moderate",
-    "help": "Heading levels should only increase by one",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": "div[data-testid=\"sched-day-2026-10-06\"] > .p-2\\.5.hover\\:shadow-md[data-testid=\"sched-job-card-dj-pm-active-1\"] > .pr-6 > h4",
-      "html": "<h4 class=\"font-semibold text-xs text-foreground truncate leading-tight\">HVAC system replacement — Block C</h4>",
-      "summary": "Fix any of the following:   Heading order invalid"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "CEO",
@@ -104,6 +77,29 @@
   "url": "/operations?tab=map",
   "violations": [
    {
+    "id": "aria-command-name",
+    "impact": "serious",
+    "help": "ARIA commands must have an accessible name",
+    "nodes": 5,
+    "sample": [
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(1)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Element does not have text that is visible to screen readers"
+     },
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(2)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Element does not have text that is visible to screen readers"
+     },
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(3)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Element does not have text that is visible to screen readers"
+     }
+    ]
+   },
+   {
     "id": "page-has-heading-one",
     "impact": "moderate",
     "help": "Page should contain a level-one heading",
@@ -113,6 +109,29 @@
       "target": "html",
       "html": "<html lang=\"en\">",
       "summary": "Fix all of the following:   Page must have a level-one heading"
+     }
+    ]
+   },
+   {
+    "id": "target-size",
+    "impact": "serious",
+    "help": "All touch targets must be 24px large, or leave sufficient space",
+    "nodes": 4,
+    "sample": [
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(2)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Target has insufficient size (18px by 18px, should be at least 24px by 24px)"
+     },
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(3)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Target has insufficient size (18px by 18px, should be at least 24px by 24px)"
+     },
+     {
+      "target": ".leaflet-marker-icon.leaflet-interactive.leaflet-zoom-animated:nth-child(4)",
+      "html": "<div class=\"leaflet-marker-icon leaflet-zoom-animated leaflet-interactive\" tabindex=\"0\" role=\"button\" style=\"margin-left: -9px; margin-top: ",
+      "summary": "Fix any of the following:   Target has insufficient size (18px by 18px, should be at least 24px by 24px)"
      }
     ]
    }
@@ -126,26 +145,7 @@
  {
   "role": "CEO",
   "url": "/jobs/dj-pm-active-1",
-  "violations": [
-   {
-    "id": "color-contrast",
-    "impact": "serious",
-    "help": "Elements must meet minimum color contrast ratio thresholds",
-    "nodes": 2,
-    "sample": [
-     {
-      "target": ".text-amber-700\\/70.mt-1",
-      "html": "<p class=\"text-xs text-amber-700/70 mt-1\">Estimate only — these figures are from unapproved submissions. They will become financial facts wh",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 2.92 (foreground color: #ce814a, background color: #fafaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     },
-     {
-      "target": ".text-amber-700\\/70.italic",
-      "html": "<p class=\"text-xs text-amber-700/70 italic\">Pending items have no cost payload — may be reports or photos only.</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 2.92 (foreground color: #ce814a, background color: #fafaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "CEO",
@@ -247,50 +247,12 @@
  {
   "role": "CEO",
   "url": "/job-intelligence",
-  "violations": [
-   {
-    "id": "color-contrast",
-    "impact": "serious",
-    "help": "Elements must meet minimum color contrast ratio thresholds",
-    "nodes": 4,
-    "sample": [
-     {
-      "target": ".bg-card.text-card-foreground.shadow:nth-child(1) > .p-5.gap-5.flex-col > .py-4.text-center.text-muted-foreground > .opacity-70.mt-1",
-      "html": "<p class=\"text-xs mt-1 opacity-70\">Approve a worker report to see live data.</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.09 (foreground color: #8a93a2, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     },
-     {
-      "target": ".bg-card.text-card-foreground.shadow:nth-child(2) > .p-5.gap-5.flex-col > .py-4.text-center.text-muted-foreground > .opacity-70.mt-1",
-      "html": "<p class=\"text-xs mt-1 opacity-70\">Approve a worker report to see live data.</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.09 (foreground color: #8a93a2, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     },
-     {
-      "target": ".bg-card.text-card-foreground.shadow:nth-child(3) > .p-5.gap-5.flex-col > .py-4.text-center.text-muted-foreground > .opacity-70.mt-1",
-      "html": "<p class=\"text-xs mt-1 opacity-70\">Approve a worker report to see live data.</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.09 (foreground color: #8a93a2, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "CEO",
   "url": "/expenses",
-  "violations": [
-   {
-    "id": "heading-order",
-    "impact": "moderate",
-    "help": "Heading levels should only increase by one",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": "h4",
-      "html": "<h4 class=\"text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3\">Highest Pending Exposure</h4>",
-      "summary": "Fix any of the following:   Heading order invalid"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "CEO",
@@ -421,22 +383,22 @@
     "id": "color-contrast",
     "impact": "serious",
     "help": "Elements must meet minimum color contrast ratio thresholds",
-    "nodes": 18,
+    "nodes": 4,
     "sample": [
      {
-      "target": ".bg-red-50.border-red-200.text-red-700:nth-child(1) > .opacity-70.italic.mt-1",
-      "html": "<p class=\"text-xs mt-1 opacity-70 italic\">Investigate unmatched records in Reconciliation Centre immediately.</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.97 (foreground color: #d3494e, background color: #fef2f2, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     },
-     {
-      "target": ".bg-red-50.border-red-200.text-red-700:nth-child(2) > .opacity-70.italic.mt-1",
-      "html": "<p class=\"text-xs mt-1 opacity-70 italic\">Review and action critical notifications immediately.</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.97 (foreground color: #d3494e, background color: #fef2f2, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     },
-     {
-      "target": ".text-orange-700.bg-orange-50.border-orange-200:nth-child(3) > .opacity-80.mt-1.text-xs",
-      "html": "<p class=\"text-xs mt-1 opacity-80\">1 automation(s) have restricted operation scope.</p>",
+      "target": ".text-orange-700.bg-orange-50.border-orange-200:nth-child(1) > .min-w-0.flex-1 > .opacity-80.mt-0\\.5.text-xs",
+      "html": "<p class=\"text-xs mt-0.5 opacity-80\">3 workflow(s) stalled — downstream automation may be affected.</p>",
       "summary": "Fix any of the following:   Element has insufficient color contrast of 3.66 (foreground color: #d55c2f, background color: #fff7ed, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".text-orange-700.bg-orange-50.border-orange-200:nth-child(2) > .min-w-0.flex-1 > .opacity-80.mt-0\\.5.text-xs",
+      "html": "<p class=\"text-xs mt-0.5 opacity-80\">9 notifications awaiting action — potential approval delays.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.66 (foreground color: #d55c2f, background color: #fff7ed, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".bg-amber-50.text-amber-700.border-amber-200:nth-child(3) > .min-w-0.flex-1 > .opacity-80.mt-0\\.5.text-xs",
+      "html": "<p class=\"text-xs mt-0.5 opacity-80\">2 exception(s) unassigned — financial resolution delayed.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.48 (foreground color: #c8702f, background color: #fffbeb, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
      }
     ]
    }
@@ -470,7 +432,7 @@
     "id": "color-contrast",
     "impact": "serious",
     "help": "Elements must meet minimum color contrast ratio thresholds",
-    "nodes": 13,
+    "nodes": 11,
     "sample": [
      {
       "target": "div[data-testid=\"aut-attention-item-failed\"] > .min-w-0 > .gap-1\\.5.font-semibold.text-sm > span:nth-child(2)",
@@ -478,14 +440,14 @@
       "summary": "Fix any of the following:   Element has insufficient color contrast of 4.36 (foreground color: #e7000b, background color: #fef2f2, font size: 10.5pt (14px), font weight: normal). Expected contrast rat"
      },
      {
-      "target": "div[data-testid=\"aut-attention-item-failed\"] > .min-w-0 > .opacity-80",
-      "html": "<p class=\"text-[11px] opacity-80 leading-tight mt-0.5\">Executions that did not complete successfully — review for recurring faults.</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.8 (foreground color: #ec3039, background color: #fef2f2, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio"
+      "target": "div[data-testid=\"aut-attention-item-failed\"] > .min-w-0 > .opacity-100",
+      "html": "<p class=\"text-[11px] opacity-100 leading-tight mt-0.5\">Executions that did not complete successfully — review for recurring faults.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.36 (foreground color: #e7000b, background color: #fef2f2, font size: 8.3pt (11px), font weight: normal). Expected contrast rati"
      },
      {
-      "target": "div[data-testid=\"aut-attention-item-restricted\"] > .min-w-0 > .opacity-80",
-      "html": "<p class=\"text-[11px] opacity-80 leading-tight mt-0.5\">Automations halted by CEO governance and unable to execute while restricted.</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.48 (foreground color: #c8702f, background color: #fffbeb, font size: 8.3pt (11px), font weight: normal). Expected contrast rati"
+      "target": "div[data-testid=\"aut-attention-item-high-risk\"] > .min-w-0 > .gap-1\\.5.font-semibold.text-sm > span:nth-child(2)",
+      "html": "<span>High-risk rules awaiting review</span>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.36 (foreground color: #e7000b, background color: #fef2f2, font size: 10.5pt (14px), font weight: normal). Expected contrast rat"
      }
     ]
    }
@@ -494,31 +456,7 @@
  {
   "role": "CEO",
   "url": "/workflows",
-  "violations": [
-   {
-    "id": "button-name",
-    "impact": "critical",
-    "help": "Buttons must have discernible text",
-    "nodes": 5,
-    "sample": [
-     {
-      "target": "button[data-testid=\"wf-exec-panel-view-wf-001\"]",
-      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"wf-exec-panel-view-w...\">",
-      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
-     },
-     {
-      "target": "button[data-testid=\"wf-exec-panel-view-wf-002\"]",
-      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"wf-exec-panel-view-w...\">",
-      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
-     },
-     {
-      "target": "button[data-testid=\"wf-exec-panel-view-wf-003\"]",
-      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"wf-exec-panel-view-w...\">",
-      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "CEO",
@@ -562,20 +500,6 @@
  {
   "role": "CEO",
   "url": "/settings",
-  "violations": [
-   {
-    "id": "heading-order",
-    "impact": "moderate",
-    "help": "Heading levels should only increase by one",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": "h4",
-      "html": "<h4 class=\"text-sm font-medium\">Accounting Integration</h4>",
-      "summary": "Fix any of the following:   Heading order invalid"
-     }
-    ]
-   }
-  ]
+  "violations": []
  }
 ]

@@ -4,8 +4,8 @@
   "tabsLandingOutsideDialog_of_40": 0,
   "escapeCloses": true,
   "focusAfterClose": {
-   "tag": "BODY",
-   "txt": "Skip to content\nL\nTh"
+   "tag": "BUTTON",
+   "txt": "Create Job"
   }
  },
  "add-worker": {
@@ -22,8 +22,8 @@
   "tabsLandingOutsideDialog_of_40": 0,
   "escapeCloses": true,
   "focusAfterClose": {
-   "tag": "BODY",
-   "txt": "Skip to content\nL\nTh"
+   "tag": "BUTTON",
+   "txt": "Build Report"
   }
  },
  "sidebarToggleHasName": "Collapse sidebar"

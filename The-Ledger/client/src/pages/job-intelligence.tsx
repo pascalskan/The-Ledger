@@ -269,7 +269,7 @@ export default function JobIntelligenceDashboard() {
                       <p className="text-xs">
                         No approved financial activity yet.
                       </p>
-                      <p className="text-xs mt-1 opacity-70">
+                      <p className="text-xs mt-1">
                         Approve a worker report to see live data.
                       </p>
                     </div>

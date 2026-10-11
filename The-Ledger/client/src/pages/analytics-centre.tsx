@@ -316,8 +316,8 @@ export function AnalyticsCentreContent({ embedded = false }: { embedded?: boolea
                       </Button>
                     </div>
                   </div>
-                  <p className="text-xs mt-1 opacity-80">{risk.description}</p>
-                  <p className="text-xs mt-1 opacity-70 italic">{risk.recommendation}</p>
+                  <p className="text-xs mt-1">{risk.description}</p>
+                  <p className="text-xs mt-1 italic">{risk.recommendation}</p>
                 </div>
               ))}
             </CardContent>

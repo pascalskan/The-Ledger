@@ -111,6 +111,7 @@ import {
   TRIGGER_CATALOGUE_V1,
   ACTION_CATALOGUE_V1,
 } from "@/lib/automationEngine";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   type AutomationAuditEntry,
   AUTOMATION_EXECUTION_RESULT_LABELS,
@@ -1153,6 +1154,22 @@ export default function AutomationsPage() {
 
   // Builder
   const [builderOpen, setBuilderOpen] = useState(false);
+  const [pendingAutoAction, setPendingAutoAction] = useState<
+    | { kind: "disableRule" | "archiveRule"; rule: AutomationRule }
+    | { kind: "disableSchedule"; schedule: AutomationSchedule }
+    | null
+  >(null);
+  const requestToggleRule = (rule: AutomationRule) => { if (rule.status === "active") setPendingAutoAction({ kind: "disableRule", rule }); else handleToggleRule(rule); };
+  const requestArchive = (rule: AutomationRule) => setPendingAutoAction({ kind: "archiveRule", rule });
+  const requestDisableSchedule = (schedule: AutomationSchedule) => setPendingAutoAction({ kind: "disableSchedule", schedule });
+  const confirmAutoAction = () => {
+    const p = pendingAutoAction;
+    setPendingAutoAction(null);
+    if (!p) return;
+    if ("schedule" in p) handleDisableSchedule(p.schedule);
+    else if (p.kind === "disableRule") handleToggleRule(p.rule);
+    else handleArchive(p.rule);
+  };
   const [editRule, setEditRule] = useState<AutomationRule | null>(null);
 
   // Execution history
@@ -1565,7 +1582,7 @@ export default function AutomationsPage() {
       </div>
 
       {selectedRule && (
-        <RuleDetailDialog rule={selectedRule} onClose={() => setSelectedRule(null)} onToggle={handleToggleRule} onEdit={openEditBuilder} onDuplicate={handleDuplicate} onArchive={handleArchive} />
+        <RuleDetailDialog rule={selectedRule} onClose={() => setSelectedRule(null)} onToggle={requestToggleRule} onEdit={openEditBuilder} onDuplicate={handleDuplicate} onArchive={requestArchive} />
       )}
       {builderOpen && (
         <AutomationBuilderDialog editRule={editRule} onClose={() => { setBuilderOpen(false); setEditRule(null); }} onSaved={handleBuilderSaved} />
@@ -1579,9 +1596,29 @@ export default function AutomationsPage() {
           onClose={() => setSelectedSchedule(null)}
           onPause={handlePauseSchedule}
           onResume={handleResumeSchedule}
-          onDisable={handleDisableSchedule}
+          onDisable={requestDisableSchedule}
         />
       )}
+      <ConfirmDialog
+        open={!!pendingAutoAction}
+        title={
+          !pendingAutoAction ? "" :
+          "schedule" in pendingAutoAction ? "Disable this schedule?" :
+          pendingAutoAction.kind === "archiveRule" ? "Archive this automation?" : "Disable this automation?"
+        }
+        description={
+          !pendingAutoAction ? undefined :
+          "schedule" in pendingAutoAction
+            ? `'${pendingAutoAction.schedule.name}' will stop running until it is re-enabled.`
+            : pendingAutoAction.kind === "archiveRule"
+              ? `'${pendingAutoAction.rule.name}' will stop running and move to the archive. It is not deleted.`
+              : `'${pendingAutoAction.rule.name}' will stop running until it is re-enabled.`
+        }
+        confirmLabel={pendingAutoAction && !("schedule" in pendingAutoAction) && pendingAutoAction.kind === "archiveRule" ? "Archive" : "Disable"}
+        destructive
+        onCancel={() => setPendingAutoAction(null)}
+        onConfirm={confirmAutoAction}
+      />
     </Layout>
   );
 }

@@ -77,9 +77,9 @@ export function ReviewPriorityPanel() {
   return (
     <div className="space-y-6" data-testid="review-priority-panel">
       <div>
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <ListChecks className="h-5 w-5 text-blue-500" /> Recommended Work Queue
-        </h3>
+        </h2>
         <p className="text-sm text-muted-foreground">
           Intelligent prioritisation — what to review first. Guidance only; every
           decision still happens in the queue below.

@@ -582,9 +582,9 @@ return (
       <div className="space-y-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
 
         <div>
-          <h3 className="text-lg font-semibold text-foreground">
+          <h2 className="text-lg font-semibold text-foreground">
             Uploads & QA
-          </h3>
+          </h2>
 
           <p className="text-sm text-muted-foreground">
             Attach receipts, QA photos, safety reports,

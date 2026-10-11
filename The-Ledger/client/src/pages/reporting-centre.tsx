@@ -7,7 +7,7 @@
  * Route: /reporting-centre
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { Layout } from '@/components/layout';
@@ -446,9 +446,10 @@ interface ReportBuilderDialogProps {
   onClose: () => void;
   onGenerated: (report: ReportRecord) => void;
   generatedBy: string;
+  returnFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
-function ReportBuilderDialog({ open, onClose, onGenerated, generatedBy }: ReportBuilderDialogProps) {
+function ReportBuilderDialog({ open, onClose, onGenerated, generatedBy, returnFocusRef }: ReportBuilderDialogProps) {
   const [selectedType, setSelectedType] = useState<ReportType>('executive_summary');
   const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriod>('this_month');
   const [selectedSections, setSelectedSections] = useState<string[]>(
@@ -488,7 +489,7 @@ function ReportBuilderDialog({ open, onClose, onGenerated, generatedBy }: Report
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent data-testid="report-builder-dialog" className="max-w-lg">
+      <DialogContent data-testid="report-builder-dialog" className="max-w-lg" onCloseAutoFocus={(e) => { if (returnFocusRef?.current) { e.preventDefault(); returnFocusRef.current.focus(); } }}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5 text-purple-600" />
@@ -609,6 +610,7 @@ export function ReportsContent({ embedded = false }: { embedded?: boolean }) {
   const [statusFilter, setStatusFilter] = useState<ReportStatus | 'all'>('all');
   const [selectedReport, setSelectedReport] = useState<ReportRecord | null>(null);
   const [builderOpen, setBuilderOpen] = useState(false);
+  const buildBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setReports(getAllReports());
@@ -663,6 +665,7 @@ export function ReportsContent({ embedded = false }: { embedded?: boolean }) {
       <div className="flex items-center gap-2 justify-end">
         <Button
           data-testid="reporting-centre-build-btn"
+          ref={buildBtnRef}
           size="sm"
           className="gap-1 bg-purple-600 hover:bg-purple-700 text-white"
           onClick={() => setBuilderOpen(true)}
@@ -807,6 +810,7 @@ export function ReportsContent({ embedded = false }: { embedded?: boolean }) {
         onClose={() => setBuilderOpen(false)}
         onGenerated={handleBuilderGenerated}
         generatedBy={user?.name ?? 'Demo CEO'}
+        returnFocusRef={buildBtnRef}
       />
     </div>
   );

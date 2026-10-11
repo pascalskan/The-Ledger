@@ -75,9 +75,9 @@ export function RecommendationDistributionPanel() {
   return (
     <div className="space-y-6" data-testid="review-recommendation-panel">
       <div>
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Sparkles className="h-5 w-5 text-violet-500" /> Review Recommendations
-        </h3>
+        </h2>
         <p className="text-sm text-muted-foreground">
           Historical intelligence — "what you'd normally do here". Guidance only;
           every decision remains yours.

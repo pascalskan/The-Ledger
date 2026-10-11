@@ -325,6 +325,7 @@ test('AB-19: Archive sets rule status to Archived (no hard delete)', async ({ pa
   await page.goto('/automations');
   await page.getByTestId('aut-btn-view-rule-006').click();
   await page.getByTestId('aut-btn-archive-rule').click();
+  await page.getByTestId('confirm-dialog-confirm').click();
   // Dialog closes; filter for archived to confirm
   await expect(page.getByTestId('aut-rule-detail-dialog')).not.toBeVisible();
   // Rule still visible in table with archived status when filter includes archived

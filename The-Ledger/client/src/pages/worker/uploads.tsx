@@ -106,7 +106,7 @@ export default function WorkerUploadsPage() {
                   Online & Synced
                 </p>
 
-                <p className="text-xs mt-1 opacity-80">
+                <p className="text-xs mt-1">
                   All operational data is backed up.
                 </p>
               </div>
@@ -120,7 +120,7 @@ export default function WorkerUploadsPage() {
                   Offline Mode Active
                 </p>
 
-                <p className="text-xs mt-1 opacity-80">
+                <p className="text-xs mt-1">
                   {queue.length} item(s) waiting to upload.
                   They will sync automatically when you reconnect.
                 </p>

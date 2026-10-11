@@ -251,7 +251,7 @@ export function PayrollExportContent() {
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground border-2 border-dashed rounded-xl">
             <Activity className="h-10 w-10 mb-3 opacity-20" />
             <p className="text-sm font-medium">No approved timesheet records for this period.</p>
-            <p className="text-xs mt-1 opacity-70">
+            <p className="text-xs mt-1">
               Approve worker reports in the Review Centre to populate payroll data.
             </p>
           </div>

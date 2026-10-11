@@ -1,0 +1,337 @@
+
+Running 333 tests using 3 workers
+
+[1A[2K[1/333] tests\doctrine\accounting-settings.spec.ts:145:1 › 13. Entity mapping section renders all four entity rows
+[1A[2K[2/333] tests\doctrine\accounting-sync.spec.ts:155:1 › 13. Job Detail page shows Accounting Synchronization panel for seeded job
+[1A[2K[3/333] tests\doctrine\activity-feed.spec.ts:125:1 › AF-14: Type filter — Operational shows review/job rows and hides automation rows
+[1A[2K[4/333] tests\doctrine\accounting-settings.spec.ts:156:1 › 14. Customer entity mapping status shows Mapped
+[1A[2K[5/333] tests\doctrine\audit-log.spec.ts:8:1 › Review creation generates audit entry
+[1A[2K[6/333] tests\doctrine\audit-remediation.spec.ts:24:1 › AR-01: worker job view offers tap-to-navigate directions
+[1A[2K[7/333] tests\doctrine\accounting-settings.spec.ts:163:1 › 15. Job entity mapping status shows Not Mapped
+[1A[2K[8/333] tests\doctrine\audit-remediation.spec.ts:34:1 › AR-02: worker job view surfaces site access instructions
+[1A[2K[9/333] tests\doctrine\automation-approval-queue.spec.ts:68:1 › AQ-07: Search by job/client filters dynamically
+[1A[2K[10/333] tests\doctrine\audit-remediation.spec.ts:41:1 › AR-03: worker job view lists site and emergency contacts as tel: links
+[1A[2K[11/333] tests\doctrine\audit-remediation.spec.ts:52:1 › AR-04: CEO can drag a job card onto another day to reschedule it
+[1A[2K[12/333] tests\doctrine\automation-approval-queue.spec.ts:124:1 › AQ-16: Detail dialog surfaces Review Centre reference link
+[1A[2K[13/333] tests\doctrine\automation-builder.spec.ts:253:1 › AB-14: Review step renders rule name, trigger, actions summary
+[1A[2K[14/333] tests\doctrine\audit-remediation.spec.ts:69:1 › AR-05: schedule drawer deep-links to the job crew editor
+[1A[2K[15/333] tests\doctrine\automation-core.spec.ts:281:1 › Automation Audit Engine: recordAutomationExecution appends an immutable entry with job attribution
+[1A[2K[16/333] tests\doctrine\automation-governance-dashboard.spec.ts:81:1 › GOV-07: Trend insights render with a Requires Review line
+[1A[2K[17/333] tests\doctrine\audit-remediation.spec.ts:82:1 › AR-06: week grid positions jobs by scheduled dates, not record timestamps
+[1A[2K[18/333] tests\doctrine\automation-governance.spec.ts:64:1 › AG-04: KPI values match seed data (6 total, 3 compliant, 2 requires review)
+[1A[2K[19/333] tests\doctrine\automation-scheduler-timeline.spec.ts:28:1 › TL-01: Timeline panel and today strip render
+[1A[2K[20/333] tests\doctrine\audit-remediation.spec.ts:92:1 › AR-07: clicking a job card opens the Job Analysis drawer
+[1A[2K[21/333] tests\doctrine\automation-governance.spec.ts:198:1 › AG-16: Mark Compliant action works for Requires Review record
+[1A[2K[22/333] tests\doctrine\automation-scheduler-timeline.spec.ts:34:1 › TL-02: Today overview KPIs match the deterministic projection
+[1A[2K[23/333] tests\doctrine\audit-remediation.spec.ts:161:3 › AR-13: Operations "jobs" tab composes without duplicating the shell
+[1A[2K[24/333] tests\doctrine\automation-scheduler.spec.ts:32:1 › AS-01: automationSchedulerEngine exports required types and functions
+[1A[2K[25/333] tests\doctrine\automation-scheduler-timeline.spec.ts:49:1 › TL-03: Executive planning insights render
+[1A[2K[26/333] tests\doctrine\audit-remediation.spec.ts:161:3 › AR-13: Operations "schedule" tab composes without duplicating the shell
+[1A[2K[27/333] tests\doctrine\automation-scheduler.spec.ts:51:1 › AS-02: Scheduler tab is present in Automation Centre
+[1A[2K[28/333] tests\doctrine\audit-remediation.spec.ts:161:3 › AR-13: Operations "map" tab composes without duplicating the shell
+[1A[2K[29/333] tests\doctrine\automation-scheduler-timeline.spec.ts:56:1 › TL-04: All five agenda buckets render
+[1A[2K[30/333] tests\doctrine\automation-scheduler.spec.ts:57:1 › AS-03: CEO can click Scheduler tab and panel loads
+[1A[2K[31/333] tests\doctrine\client-portal-communication.spec.ts:22:3 › Portal Communication — thread visibility (CL-5) › CPC-01: communication centre lists the client threads
+[1A[2K[32/333] tests\doctrine\automation-scheduler-timeline.spec.ts:62:1 › TL-05: Agenda projects upcoming executions across the buckets
+[1A[2K[33/333] tests\doctrine\client-portal-communication.spec.ts:31:3 › Portal Communication — thread visibility (CL-5) › CPC-02: threads are scoped to the signed-in client
+[1A[2K[34/333] tests\doctrine\automation-scheduler.spec.ts:68:1 › AS-04: Scheduler KPI strip renders all 5 cards
+[1A[2K[35/333] tests\doctrine\client-portal-communication.spec.ts:39:3 › Portal Communication — thread visibility (CL-5) › CPC-03: client B sees only its own threads
+[1A[2K[36/333] tests\doctrine\automation-scheduler-timeline.spec.ts:69:1 › TL-06: Buckets with no activity show an empty state
+[1A[2K[37/333] tests\doctrine\automation-scheduler.spec.ts:80:1 › AS-05: Scheduler KPI values match seed data (4 active, 1 paused, 1 disabled)
+[1A[2K[38/333] tests\doctrine\client-portal-communication.spec.ts:48:3 › Portal Communication — thread visibility (CL-5) › CPC-04: thread statuses render in the list
+[1A[2K[39/333] tests\doctrine\client-portal-communication.spec.ts:62:3 › Portal Communication — thread detail (CL-5) › CPC-05: thread detail renders chronological message history
+[1A[2K[40/333] tests\doctrine\automation-scheduler-timeline.spec.ts:77:1 › TL-07: Schedule health surfaces paused and disabled indicators
+[1A[2K[41/333] tests\doctrine\automation-scheduler.spec.ts:96:1 › AS-06: Scheduler table renders with all 6 seed schedules
+[1A[2K[42/333] tests\doctrine\client-portal-communication.spec.ts:77:3 › Portal Communication — thread detail (CL-5) › CPC-06: messages are scoped to their thread
+[1A[2K[43/333] tests\doctrine\automation-scheduler-timeline.spec.ts:83:1 › TL-08: Health shows the no-missed-executions reassurance
+[1A[2K[44/333] tests\doctrine\client-portal-communication.spec.ts:88:3 › Portal Communication — thread detail (CL-5) › CPC-07: message sender attribution renders
+[1A[2K[45/333] tests\doctrine\automation-scheduler.spec.ts:109:1 › AS-07: Scheduler table shows schedule type badges
+[1A[2K[46/333] tests\doctrine\client-portal-communication.spec.ts:97:3 › Portal Communication — thread detail (CL-5) › CPC-08: closed threads expose no reply control
+[1A[2K[47/333] tests\doctrine\automation-scheduler-timeline.spec.ts:89:1 › TL-09: Clicking a timeline event opens the enhanced schedule dialog
+[1A[2K[48/333] tests\doctrine\automation-scheduler.spec.ts:119:1 › AS-08: Scheduler table shows status badges for all statuses
+[1A[2K[49/333] tests\doctrine\client-portal-communication.spec.ts:112:3 › Portal Communication — thread creation & audit (CL-5) › CPC-09: client can create a new conversation
+[1A[2K[50/333] tests\doctrine\client-portal-communication.spec.ts:124:3 › Portal Communication — thread creation & audit (CL-5) › CPC-10: new conversation requires subject and message
+[1A[2K[51/333] tests\doctrine\automation-scheduler-timeline.spec.ts:98:1 › TL-10: Existing Scheduler table tab remains intact
+[1A[2K[52/333] tests\doctrine\automation-scheduler.spec.ts:128:1 › AS-09: Approval Protected badge visible for FinanciallySensitive schedules
+[1A[2K[53/333] tests\doctrine\client-portal-communication.spec.ts:133:3 › Portal Communication — thread creation & audit (CL-5) › CPC-11: creating a thread records a client_created_thread audit event
+[1A[2K[54/333] tests\doctrine\client-portal-documents.spec.ts:22:3 › Portal Documents — client visibility (CL-5) › CPD-01: documents shared with the client are visible
+[1A[2K[55/333] tests\doctrine\automation-scheduler.spec.ts:140:1 › AS-10: Scheduler search filters by schedule name
+[1A[2K[56/333] tests\doctrine\client-portal-communication.spec.ts:146:3 › Portal Communication — thread creation & audit (CL-5) › CPC-12: viewing a thread records a client_viewed_thread audit event
+[1A[2K[57/333] tests\doctrine\client-portal-documents.spec.ts:30:3 › Portal Documents — client visibility (CL-5) › CPD-02: revoked documents are never visible
+[1A[2K[58/333] tests\doctrine\client-portal-communication.spec.ts:157:3 › Portal Communication — thread creation & audit (CL-5) › CPC-13: replying to an open thread updates its status
+[1A[2K[59/333] tests\doctrine\automation-scheduler.spec.ts:150:1 › AS-11: Status filter shows only Active schedules
+[1A[2K[60/333] tests\doctrine\client-portal-documents.spec.ts:39:3 › Portal Documents — client visibility (CL-5) › CPD-03: internal job documents are never exposed
+[1A[2K[61/333] tests\doctrine\client-portal-financials.spec.ts:33:3 › Portal Financials — KPIs & balance (CL-6) › CPF-01: financial centre renders all KPI cards
+[1A[2K[62/333] tests\doctrine\client-portal-documents.spec.ts:50:3 › Portal Documents — client visibility (CL-5) › CPD-04: documents are scoped to the signed-in client
+[1A[2K[63/333] tests\doctrine\client-portal-financials.spec.ts:42:3 › Portal Financials — KPIs & balance (CL-6) › CPF-02: KPI values are derived from client financial data
+[1A[2K[64/333] tests\doctrine\automation-scheduler.spec.ts:162:1 › AS-12: Type filter shows only Weekly schedules
+[1A[2K[65/333] tests\doctrine\client-portal-documents.spec.ts:57:3 › Portal Documents — client visibility (CL-5) › CPD-05: client B sees only its own documents
+[1A[2K[66/333] tests\doctrine\client-portal-financials.spec.ts:58:3 › Portal Financials — KPIs & balance (CL-6) › CPF-03: outstanding balance panel shows overdue amount and health
+[1A[2K[67/333] tests\doctrine\client-portal-documents.spec.ts:65:3 › Portal Documents — client visibility (CL-5) › CPD-06: document metadata (category, shared date, shared by) renders
+[1A[2K[68/333] tests\doctrine\client-portal-financials.spec.ts:68:3 › Portal Financials — KPIs & balance (CL-6) › CPF-04: next due invoice is surfaced
+[1A[2K[69/333] tests\doctrine\client-portal-documents.spec.ts:74:3 › Portal Documents — client visibility (CL-5) › CPD-07: category filter narrows the document list
+[1A[2K[70/333] tests\doctrine\automation-scheduler.spec.ts:178:1 › AS-13: Schedule detail dialog opens on View
+[1A[2K[71/333] tests\doctrine\client-portal-financials.spec.ts:81:3 › Portal Financials — Quotes (CL-6) › CPF-05: draft quotes are never visible
+[1A[2K[72/333] tests\doctrine\client-portal-documents.spec.ts:83:3 › Portal Documents — client visibility (CL-5) › CPD-08: search narrows the document list
+[1A[2K[73/333] tests\doctrine\client-portal-financials.spec.ts:90:3 › Portal Financials — Quotes (CL-6) › CPF-06: sent/accepted/declined quotes are visible with statuses
+[1A[2K[74/333] tests\doctrine\automation-scheduler.spec.ts:186:1 › AS-14: Detail dialog shows linked rule section
+[1A[2K[75/333] tests\doctrine\client-portal-documents.spec.ts:92:3 › Portal Documents — client visibility (CL-5) › CPD-09: viewing a document creates a client_viewed_document audit event
+[1A[2K[76/333] tests\doctrine\client-portal-financials.spec.ts:101:3 › Portal Financials — Quotes (CL-6) › CPF-07: quotes are isolated per client
+[1A[2K[77/333] tests\doctrine\client-portal-documents.spec.ts:108:3 › Portal Documents — internal sharing controls (CL-5) › CPD-10: PM can share a job document with the client
+[1A[2K[78/333] tests\doctrine\client-portal-financials.spec.ts:109:3 › Portal Financials — Quotes (CL-6) › CPF-08: client B sees only its own quotes
+[1A[2K[79/333] tests\doctrine\automation-scheduler.spec.ts:194:1 › AS-15: Detail dialog shows next run timestamp
+[1A[2K[80/333] tests\doctrine\client-portal-financials.spec.ts:117:3 › Portal Financials — Quotes (CL-6) › CPF-09: viewing a quote creates a client_viewed_quote audit event
+[1A[2K[81/333] tests\doctrine\client-portal-documents.spec.ts:118:3 › Portal Documents — internal sharing controls (CL-5) › CPD-11: CEO can share a job document with the client
+[1A[2K[82/333] tests\doctrine\client-portal-financials.spec.ts:133:3 › Portal Financials — Variations (CL-6) › CPF-10: pending approval variations are never visible
+[1A[2K[83/333] tests\doctrine\automation-scheduler.spec.ts:202:1 › AS-16: Detail dialog shows upcoming runs for active schedule
+[1A[2K[84/333] tests\doctrine\client-portal-financials.spec.ts:142:3 › Portal Financials — Variations (CL-6) › CPF-11: approved and rejected variations are visible
+[1A[2K[85/333] tests\doctrine\client-portal-documents.spec.ts:127:3 › Portal Documents — internal sharing controls (CL-5) › CPD-12: revoking client access updates the document status
+[1A[2K[86/333] tests\doctrine\client-portal-financials.spec.ts:157:3 › Portal Financials — Invoices (CL-6) › CPF-12: draft invoices are never visible
+[1A[2K[87/333] tests\doctrine\automation-scheduler.spec.ts:210:1 › AS-17: Detail dialog shows governance section
+[1A[2K[88/333] tests\doctrine\client-portal-financials.spec.ts:166:3 › Portal Financials — Invoices (CL-6) › CPF-13: invoice statuses are derived from payments
+[1A[2K[89/333] tests\doctrine\client-portal-documents.spec.ts:136:3 › Portal Documents — internal sharing controls (CL-5) › CPD-13: sharing a document creates a document_shared_with_client audit event
+[1A[2K[90/333] tests\doctrine\client-portal-financials.spec.ts:178:3 › Portal Financials — Invoices (CL-6) › CPF-14: invoice detail renders summary, line items and payments
+[1A[2K[91/333] tests\doctrine\automation-scheduler.spec.ts:218:1 › AS-18: Approval Protected indicator visible in detail for FinanciallySensitive schedule
+[1A[2K[92/333] tests\doctrine\client-portal-financials.spec.ts:192:3 › Portal Financials — Invoices (CL-6) › CPF-15: downloading an invoice creates a client_downloaded_invoice audit event
+[1A[2K[93/333] tests\doctrine\client-portal-documents.spec.ts:147:3 › Portal Documents — internal sharing controls (CL-5) › CPD-14: revoking access creates a document_access_revoked audit event
+[1A[2K[94/333] tests\doctrine\client-portal-financials.spec.ts:204:3 › Portal Financials — Invoices (CL-6) › CPF-16: viewing an invoice creates a client_viewed_invoice audit event
+[1A[2K[95/333] tests\doctrine\automation-scheduler.spec.ts:226:1 › AS-19: Governance Review Recommended visible for FinanciallySensitive schedule
+[1A[2K[96/333] tests\doctrine\client-portal-financials.spec.ts:221:3 › Portal Financials — Payments (CL-6) › CPF-17: payment history renders date, amount, reference and invoice
+[1A[2K[97/333] tests\doctrine\client-portal-projects.spec.ts:25:3 › Portal Projects — Visibility & status filtering (CL-4) › CPP-01: client sees only their own projects
+[1A[2K[98/333] tests\doctrine\client-portal-projects.spec.ts:33:3 › Portal Projects — Visibility & status filtering (CL-4) › CPP-02: cancelled projects are not rendered
+[1A[2K[99/333] tests\doctrine\client-portal-financials.spec.ts:231:3 › Portal Financials — Payments (CL-6) › CPF-18: payments are isolated per client
+[1A[2K[100/333] tests\doctrine\automation-scheduler.spec.ts:238:1 › AS-20: Pause button visible for Active schedule and pauses it
+[1A[2K[101/333] tests\doctrine\client-portal-projects.spec.ts:40:3 › Portal Projects — Visibility & status filtering (CL-4) › CPP-03: project summary shows site, status, PM and dates
+[1A[2K[102/333] tests\doctrine\client-portal-financials.spec.ts:245:3 › Portal Financials — Projection layer doctrine (CL-6) › CPF-19: internal cost, margin and payroll data is never exposed
+[1A[2K[103/333] tests\doctrine\client-portal-projects.spec.ts:57:3 › Portal Projects — Milestones (CL-4) › CPP-04: milestones render on a project
+[1A[2K[104/333] tests\doctrine\client-portal-financials.spec.ts:258:3 › Portal Financials — Projection layer doctrine (CL-6) › CPF-20: accounting sync and internal controls are never exposed
+[1A[2K[105/333] tests\doctrine\automation-scheduler.spec.ts:252:1 › AS-21: Resume button visible for Paused schedule and resumes it
+[1A[2K[106/333] tests\doctrine\client-portal-projects.spec.ts:65:3 › Portal Projects — Milestones (CL-4) › CPP-05: delayed milestones are visible
+[1A[2K[107/333] tests\doctrine\client-portal-financials.spec.ts:273:3 › Portal Financials — Projection layer doctrine (CL-6) › CPF-21: financial pages display branded payment contact details
+[1A[2K[108/333] tests\doctrine\client-portal-projects.spec.ts:73:3 › Portal Projects — Milestones (CL-4) › CPP-06: milestone statuses render (completed/in-progress/upcoming)
+[1A[2K[109/333] tests\doctrine\client-portal-requests.spec.ts:29:3 › Client Requests — portal submission surface (CL-8) › CR-01: client sees their own requests
+[1A[2K[110/333] tests\doctrine\automation-scheduler.spec.ts:264:1 › AS-22: Disable button visible for Active schedule and disables it
+[1A[2K[111/333] tests\doctrine\client-portal-requests.spec.ts:38:3 › Client Requests — portal submission surface (CL-8) › CR-02: requests are isolated per client
+[1A[2K[112/333] tests\doctrine\client-portal-projects.spec.ts:88:3 › Portal Projects — Progress (CL-4) › CPP-07: completed project shows 100% derived progress
+[1A[2K[113/333] tests\doctrine\client-portal-requests.spec.ts:46:3 › Client Requests — portal submission surface (CL-8) › CR-03: client B sees only its own requests
+[1A[2K[114/333] tests\doctrine\client-portal-projects.spec.ts:97:3 › Portal Projects — Progress (CL-4) › CPP-08: active project shows partial derived progress
+[1A[2K[115/333] tests\doctrine\automation-scheduler.spec.ts:280:1 › AS-23: Scheduled Execution trigger option is visible in Builder Step 2
+[1A[2K[116/333] tests\doctrine\client-portal-requests.spec.ts:55:3 › Client Requests — portal submission surface (CL-8) › CR-04: request statuses and types render
+[1A[2K[117/333] tests\doctrine\client-portal-projects.spec.ts:112:3 › Portal Projects — Deliverables (CL-4) › CPP-09: deliverables render with statuses
+[1A[2K[118/333] tests\doctrine\client-portal-requests.spec.ts:65:3 › Client Requests — portal submission surface (CL-8) › CR-05: resolution note is visible to the client
+[1A[2K[119/333] tests\doctrine\automation-scheduler.spec.ts:294:1 › AS-24: Selecting Scheduled Execution trigger shows schedule config form
+[1A[2K[120/333] tests\doctrine\client-portal-projects.spec.ts:122:3 › Portal Projects — Deliverables (CL-4) › CPP-10: deliverables expose no approval controls
+[1A[2K[121/333] tests\doctrine\client-portal-requests.spec.ts:75:3 › Client Requests — portal submission surface (CL-8) › CR-06: decline reason is visible to the client
+[1A[2K[122/333] tests\doctrine\client-portal-projects.spec.ts:129:3 › Portal Projects — Deliverables (CL-4) › CPP-11: deliverables are scoped per client
+[1A[2K[123/333] tests\doctrine\client-portal-requests.spec.ts:85:3 › Client Requests — portal submission surface (CL-8) › CR-07: internal routing and escalation are never exposed
+[1A[2K[124/333] tests\doctrine\automation-scheduler.spec.ts:308:1 › AS-25: Schedule config form shows next-run preview
+[1A[2K[125/333] tests\doctrine\client-portal-projects.spec.ts:144:3 › Portal Projects — Team visibility (CL-4) › CPP-12: crew first names are visible
+[1A[2K[126/333] tests\doctrine\client-portal-requests.spec.ts:96:3 › Client Requests — portal submission surface (CL-8) › CR-08: client can submit a new request
+[1A[2K[127/333] tests\doctrine\client-portal-projects.spec.ts:151:3 › Portal Projects — Team visibility (CL-4) › CPP-13: crew surnames remain hidden
+[1A[2K[128/333] tests\doctrine\automation-scheduler.spec.ts:321:1 › AS-26: Builder schedule type selector changes config fields (Weekly shows day + time)
+[1A[2K[129/333] tests\doctrine\client-portal-requests.spec.ts:108:3 › Client Requests — portal submission surface (CL-8) › CR-09: all eight request types are available
+[1A[2K[130/333] tests\doctrine\client-portal-projects.spec.ts:166:3 › Portal Projects — Timeline (CL-4) › CPP-14: project timeline renders events
+[1A[2K[131/333] tests\doctrine\client-portal-requests.spec.ts:116:3 › Client Requests — portal submission surface (CL-8) › CR-10: submission requires subject and details
+[1A[2K[132/333] tests\doctrine\automation-scheduler.spec.ts:338:1 › AS-27: PM cannot access Scheduler — /automations page access denied
+[1A[2K[133/333] tests\doctrine\client-portal-projects.spec.ts:174:3 › Portal Projects — Timeline (CL-4) › CPP-15: project detail excludes internal operational data
+[1A[2K[134/333] tests\doctrine\client-portal-requests.spec.ts:125:3 › Client Requests — portal submission surface (CL-8) › CR-11: submitting a request records an audit event
+[1A[2K[135/333] tests\doctrine\client-portal-projects.spec.ts:185:3 › Portal Projects — Timeline (CL-4) › CPP-16: project deliverables and milestones are isolated per client
+[1A[2K[136/333] tests\doctrine\client-portal-requests.spec.ts:138:3 › Client Requests — portal submission surface (CL-8) › CR-12: requests hosts conversations and nav has seven sections
+[1A[2K[137/333] tests\doctrine\client-portal-shell.spec.ts:18:3 › Client Portal Shell — Navigation (CL-3) › CPS-01: portal shell shows all navigation items
+[1A[2K[138/333] tests\doctrine\client-portal.spec.ts:18:3 › Client Portal — Authentication (CL-2) › CP-01: active portal account signs in successfully
+[1A[2K[139/333] tests\doctrine\client-portal-shell.spec.ts:26:3 › Client Portal Shell — Navigation (CL-3) › CPS-02: each portal section renders when navigated
+[1A[2K[140/333] tests\doctrine\client-portal-requests.spec.ts:164:3 › Client Requests — management surface RBAC (CL-8) › CR-13: CEO sees all client requests
+[1A[2K[141/333] tests\doctrine\client-portal.spec.ts:25:3 › Client Portal — Authentication (CL-2) › CP-02: disabled portal account is blocked from signing in
+[1A[2K[142/333] tests\doctrine\client-portal-shell.spec.ts:45:3 › Client Portal Shell — Navigation (CL-3) › CPS-03: protected — direct URL to /portal/jobs requires authentication
+[1A[2K[143/333] tests\doctrine\client-portal.spec.ts:33:3 › Client Portal — Authentication (CL-2) › CP-03: pending portal account is blocked from signing in
+[1A[2K[144/333] tests\doctrine\client-portal-requests.spec.ts:175:3 › Client Requests — management surface RBAC (CL-8) › CR-14: PM sees only requests for their assigned jobs
+[1A[2K[145/333] tests\doctrine\client-portal.spec.ts:41:3 › Client Portal — Authentication (CL-2) › CP-04: unknown email is rejected
+[1A[2K[146/333] tests\doctrine\client-portal-requests.spec.ts:188:3 › Client Requests — management surface RBAC (CL-8) › CR-15: management surface states requests do not enter the Review Centre
+[1A[2K[147/333] tests\doctrine\client-portal-shell.spec.ts:54:3 › Client Portal Shell — Navigation (CL-3) › CPS-04: protected — direct URL to /portal/invoices requires authentication
+[1A[2K[148/333] tests\doctrine\client-portal.spec.ts:48:3 › Client Portal — Authentication (CL-2) › CP-05: sign out clears the session and returns to login
+[1A[2K[149/333] tests\doctrine\client-portal-requests.spec.ts:198:3 › Client Requests — management surface RBAC (CL-8) › CR-16: unacknowledged requests past threshold are flagged as escalated
+[1A[2K[150/333] tests\doctrine\client-portal-shell.spec.ts:68:3 › Client Portal Shell — Jobs visibility (CL-3) › CPS-05: cancelled jobs are hidden from the portal
+[1A[2K[151/333] tests\doctrine\client-portal.spec.ts:61:3 › Client Portal — Isolation / RBAC (CL-2) › CP-06: client A (HSS) sees only its own jobs
+[1A[2K[152/333] tests\doctrine\client-portal.spec.ts:71:3 › Client Portal — Isolation / RBAC (CL-2) › CP-07: client B (Showcase) cannot see client A jobs
+[1A[2K[153/333] tests\doctrine\client-portal-shell.spec.ts:79:3 › Client Portal Shell — Jobs visibility (CL-3) › CPS-06: jobs completed filter narrows the list
+[1A[2K[154/333] tests\doctrine\client-portal-requests.spec.ts:213:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-17: acknowledging an open request updates its status
+[1A[2K[155/333] tests\doctrine\client-portal-shell.spec.ts:95:3 › Client Portal Shell — Sites (CL-3) › CPS-07: client sees only their own sites
+[1A[2K[156/333] tests\doctrine\client-portal.spec.ts:81:3 › Client Portal — Isolation / RBAC (CL-2) › CP-08: signed-in client identity matches the account
+[1A[2K[157/333] tests\doctrine\client-portal-requests.spec.ts:222:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-18: resolving requires a resolution note
+[1A[2K[158/333] tests\doctrine\client-portal-shell.spec.ts:105:3 › Client Portal Shell — Sites (CL-3) › CPS-08: sites never expose access notes or security info
+[1A[2K[159/333] tests\doctrine\client-portal.spec.ts:94:3 › Client Portal — Crew Visibility Doctrine (CL-2) › CP-09: crew first name is visible on a job
+[1A[2K[160/333] tests\doctrine\client-portal-shell.spec.ts:115:3 › Client Portal Shell — Sites (CL-3) › CPS-09: client B sites are isolated from client A
+[1A[2K[161/333] tests\doctrine\client-portal.spec.ts:105:3 › Client Portal — Crew Visibility Doctrine (CL-2) › CP-10: crew surnames are never exposed
+[1A[2K[162/333] tests\doctrine\client-portal-requests.spec.ts:233:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-19: declining requires a reason
+[1A[2K[163/333] tests\doctrine\client-portal-shell.spec.ts:130:3 › Client Portal Shell — Dashboard metrics (CL-3) › CPS-10: dashboard renders all KPI cards
+[1A[2K[164/333] tests\doctrine\client-portal.spec.ts:117:3 › Client Portal — Crew Visibility Doctrine (CL-2) › CP-11: crew names render as first name only (single token)
+[1A[2K[165/333] tests\doctrine\client-portal-requests.spec.ts:242:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-20: resolving with a note succeeds and is audited
+[1A[2K[166/333] tests\doctrine\client-portal.spec.ts:137:3 › Client Portal — Audit Infrastructure (CL-2) › CP-12: sign-in creates a client_portal_login audit event
+[1A[2K[167/333] tests\doctrine\client-portal-shell.spec.ts:138:3 › Client Portal Shell — Dashboard metrics (CL-3) › CPS-11: dashboard KPI values are derived correctly
+[1A[2K[168/333] tests\doctrine\client-portal.spec.ts:145:3 › Client Portal — Audit Infrastructure (CL-2) › CP-13: sign-out creates a client_portal_logout audit event
+[1A[2K[169/333] tests\doctrine\client-portal-shell.spec.ts:150:3 › Client Portal Shell — Dashboard metrics (CL-3) › CPS-12: dashboard recent activity renders items
+[1A[2K[170/333] tests\doctrine\client-portal-requests.spec.ts:257:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-21: declining with a reason succeeds and is audited
+[1A[2K[171/333] tests\doctrine\client-portal.spec.ts:155:3 › Client Portal — Audit Infrastructure (CL-2) › CP-14: opening a job creates a client_viewed_job audit event
+[1A[2K[172/333] tests\doctrine\client-portal-shell.spec.ts:163:3 › Client Portal Shell — Branding (CL-3) › CPS-13: portal branding is displayed in the shell
+[1A[2K[173/333] tests\doctrine\client-portal.spec.ts:166:3 › Client Portal — Audit Infrastructure (CL-2) › CP-15: signing in records a client_viewed_dashboard audit event
+[1A[2K[174/333] tests\doctrine\client-portal-shell.spec.ts:172:3 › Client Portal Shell — Branding (CL-3) › CPS-14: opening a job through the shell records an audit event
+[1A[2K[175/333] tests\doctrine\client-portal-requests.spec.ts:271:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-22: a declined request exposes no lifecycle actions
+[1A[2K[176/333] tests\doctrine\event-bus.spec.ts:196:1 › EB-18: Search by job ID filters results
+[1A[2K[177/333] tests\doctrine\exception-resolution.spec.ts:178:1 › Job Detail: JobExceptionPanel renders on first seed job
+[1A[2K[178/333] tests\doctrine\client-portal-requests.spec.ts:283:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-23: decision-required request types are marked
+[1A[2K[179/333] tests\doctrine\executive-command-centre.spec.ts:123:1 › ECC-12: Severity rendering maps critical→Critical and high→Warning
+[1A[2K[180/333] tests\doctrine\intelligence-hub.spec.ts:242:1 › IH-21: notification type mapping is total — sync_failure appears under Sync
+[1A[2K[181/333] tests\doctrine\invoice-pipeline.spec.ts:145:1 › Job Detail shows invoice draft panel for seeded job
+[1A[2K[182/333] tests\doctrine\executive-command-centre.spec.ts:180:1 › ECC-16: Active Jobs and Active Workflows tiles show numeric values
+[1A[2K[183/333] tests\doctrine\intelligence-hub.spec.ts:250:1 › IH-22: priority mapping — seeded high notification renders Warning and matches the Warning filter (P0-A)
+[1A[2K[184/333] tests\doctrine\job-financial-summary.spec.ts:24:1 › Job financial summary displays revenue, cost, profit and margin for seeded job
+[1A[2K[185/333] tests\doctrine\executive-command-centre.spec.ts:240:1 › ECC-30: Zone A shows Pending Reviews card
+[1A[2K[186/333] tests\doctrine\intelligence-hub.spec.ts:267:1 › IH-23: priority mapping — medium/low notifications match the Info filter; critical matches Critical (P0-A)
+[1A[2K[187/333] tests\doctrine\margin-intelligence.spec.ts:75:1 › Forecast table contains the seeded kitchen extraction job
+[1A[2K[188/333] tests\doctrine\job-financial-summary.spec.ts:47:1 › Job financial summary section renders for active job without errors
+[1A[2K[189/333] tests\doctrine\no-premature-financial-mutation.spec.ts:86:1 › Online submission creates a pending ReviewItem and does NOT deduct stock
+[1A[2K[190/333] tests\doctrine\margin-intelligence.spec.ts:87:1 › Forecast table search filters job rows
+[1A[2K[191/333] tests\doctrine\notification-centre.spec.ts:155:1 › NC-15: Search by job ID filters notifications
+[1A[2K[192/333] tests\doctrine\margin-intelligence.spec.ts:104:1 › Job Forecast Panel renders on job detail
+[1A[2K[193/333] tests\doctrine\notification-centre.spec.ts:278:1 › NC-26: Bell dropdown opens and shows preview notifications
+[1A[2K[194/333] tests\doctrine\no-premature-financial-mutation.spec.ts:177:1 › Offline submission appears in Review Center after sync completes
+[1A[2K[195/333] tests\doctrine\margin-intelligence.spec.ts:118:1 › Job Forecast Panel shows Current and Forecast column headers
+[1A[2K[196/333] tests\doctrine\payroll-export.spec.ts:57:1 › Payroll Export page shows seeded worker records in preview
+[1A[2K[197/333] tests\doctrine\margin-intelligence.spec.ts:130:1 › Job Forecast Panel shows margin variance
+[1A[2K[198/333] tests\doctrine\platform-ia.spec.ts:60:1 › IA-01 — CEO Review page uses Centre spelling
+[1A[2K[199/333] tests\doctrine\margin-intelligence.spec.ts:142:1 › Job Forecast Panel shows a risk status badge
+[1A[2K[200/333] tests\doctrine\platform-ia.spec.ts:66:1 › IA-02 — PM Review surface never renders the American spelling
+[1A[2K[201/333] tests\doctrine\platform-ia.spec.ts:74:1 › IA-03 — CEO Review surface never renders the American spelling
+[1A[2K[202/333] tests\doctrine\margin-intelligence.spec.ts:155:1 › Seeded kitchen extraction job is classified Healthy
+[1A[2K[203/333] tests\doctrine\platform-ia.spec.ts:80:1 › IA-04 — Financial Records copy references the Review Centre
+[1A[2K[204/333] tests\doctrine\pm-doc.spec.ts:25:1 › PM-DOC-01: PM Job Workspace shows Site Information section with contacts
+[1A[2K[205/333] tests\doctrine\no-premature-financial-mutation.spec.ts:250:1 › Worker identity is preserved on submitted ReviewItem
+[1A[2K[206/333] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /review renders exactly one h1
+[1A[2K[207/333] tests\doctrine\pm-doc.spec.ts:61:1 › PM-DOC-02: PM Job Workspace documents section shows categorised documents
+[1A[2K[208/333] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /jobs renders exactly one h1
+[1A[2K[209/333] tests\doctrine\pm-doc.spec.ts:87:1 › PM-DOC-03: PM can add a note to a job and it renders in the notes list
+[1A[2K[210/333] tests\doctrine\pm-jobs.spec.ts:24:1 › PM-JOBS-01: PM jobs page shows only assigned jobs
+[1A[2K[211/333] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /schedule renders exactly one h1
+[1A[2K[212/333] tests\doctrine\pm-doc.spec.ts:191:1 › PM-DOC-07: PM Dashboard Recent Activity card renders and is scoped to PM jobs
+[1A[2K[213/333] tests\doctrine\pm-jobs.spec.ts:44:1 › PM-JOBS-02: PM is denied access to a job they do not manage
+[1A[2K[214/333] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /job-intelligence renders exactly one h1
+[1A[2K[215/333] tests\doctrine\pm-rbac.spec.ts:80:1 › PM-RBAC-06: PM dashboard renders My Jobs section
+[1A[2K[216/333] tests\doctrine\pm-jobs.spec.ts:58:1 › PM-JOBS-03: PM job cards show crew count and pending review count
+[1A[2K[217/333] tests\doctrine\platform-ia.spec.ts:163:1 › IA-13 — job detail renders exactly one h1
+[1A[2K[218/333] tests\doctrine\pm-rbac.spec.ts:89:1 › PM-RBAC-07: PM dashboard renders Reviews section
+[1A[2K[219/333] tests\doctrine\pm-jobs.spec.ts:78:1 › PM-JOBS-04: PM job workspace renders operational sections without financial data
+[1A[2K[220/333] tests\doctrine\platform-ia.spec.ts:172:1 › IA-14 — /map is the documented single-h1 exemption
+[1A[2K[221/333] tests\doctrine\pm-jobs.spec.ts:106:1 › PM-JOBS-05: CEO jobs page shows all jobs and Create Job button
+[1A[2K[222/333] tests\doctrine\pm-rbac.spec.ts:98:1 › PM-RBAC-08: PM dashboard renders Schedule section
+[1A[2K[223/333] tests\doctrine\platform-ia.spec.ts:254:1 › IA-23 — Workstream E introduced no approval control outside the Review Centre
+[1A[2K[224/333] tests\doctrine\pm-jobs.spec.ts:129:1 › PM-JOBS-06: CEO job detail shows financial intelligence panels
+[1A[2K[225/333] tests\doctrine\pm-rbac.spec.ts:153:1 › PM-RBAC-13: PM nav primary label is "My Jobs" not "Jobs"
+[1A[2K[226/333] tests\doctrine\platform-ia.spec.ts:263:1 › IA-24 — the Review Centre remains the approval surface
+[1A[2K[227/333] tests\doctrine\pm-rev.spec.ts:25:1 › PM-REV-01: PM review page scoped to assigned jobs only
+[1A[2K[228/333] tests\doctrine\pm-rbac.spec.ts:208:1 › PM-RBAC-18: PM dashboard My Jobs card shows only assigned jobs
+[1A[2K[229/333] tests\doctrine\pm-sched.spec.ts:24:1 › PM-SCHED-01: PM schedule page shows only assigned jobs
+[1A[2K[230/333] tests\doctrine\pm-sched.spec.ts:47:1 › PM-SCHED-02: CEO schedule page shows all jobs (no PM scoping)
+[1A[2K[231/333] tests\doctrine\pm-rbac.spec.ts:228:1 › PM-RBAC-19: PM Attention Required section does not expose unassigned job titles
+[1A[2K[232/333] tests\doctrine\pm-rev.spec.ts:140:1 › PM-REV-05: PM review detail page contains no financial data
+[1A[2K[233/333] tests\doctrine\pm-sched.spec.ts:61:1 › PM-SCHED-03: PM schedule page does not expose financial data
+[1A[2K[234/333] tests\doctrine\pm-rev.spec.ts:173:1 › PM-REV-06: CEO sees full Review Operations Centre with all intelligence tabs
+[1A[2K[235/333] tests\doctrine\pm-rbac.spec.ts:243:1 › PM-RBAC-20: CEO review page renders intelligence tabs; PM gets PM Centre — verifies canonical role resolution
+[1A[2K[236/333] tests\doctrine\pm-sched.spec.ts:112:1 › PM-SCHED-06: PM workforce page shows only workers on assigned jobs
+[1A[2K[237/333] tests\doctrine\pm-rev.spec.ts:201:1 › PM-REV-07: PM review detail renders operational workspace sections
+[1A[2K[238/333] tests\doctrine\pm-scope-enforcement.spec.ts:12:1 › PM visibility is restricted to assigned jobs, while CEO sees all
+[1A[2K[239/333] tests\doctrine\reconciliation-center.spec.ts:162:1 › RC-16: Job Detail page renders JobReconciliationPanel
+[1A[2K[240/333] tests\doctrine\review-approval.spec.ts:13:1 › Worker report can be approved by CEO
+[1A[2K[241/333] tests\doctrine\review-batch-decisions.spec.ts:26:1 › REV-BAT-01 Individual selection reveals the batch actions bar
+[1A[2K[242/333] tests\doctrine\review-batch-decisions.spec.ts:34:1 › REV-BAT-02 Select all visible and clear selection
+[1A[2K[243/333] tests\doctrine\review-decision-intelligence.spec.ts:26:1 › REV-DI-01 Decision panel renders for a job with pending reviews
+[1A[2K[244/333] tests\doctrine\review-executive-briefing.spec.ts:19:1 › REV-BR-01 CEO review page shows the executive briefing first
+[1A[2K[245/333] tests\doctrine\review-decision-intelligence.spec.ts:31:1 › REV-DI-02 Financial impact panel shows revenue, cost and payroll
+[1A[2K[246/333] tests\doctrine\review-batch-decisions.spec.ts:43:1 › REV-BAT-03 Batch bar shows estimated financial impact
+[1A[2K[247/333] tests\doctrine\review-executive-briefing.spec.ts:25:1 › REV-BR-02 Readiness indicators cover all four areas
+[1A[2K[248/333] tests\doctrine\review-decision-intelligence.spec.ts:43:1 › REV-DI-03 Job impact summary renders profitability and margin
+[1A[2K[249/333] tests\doctrine\review-batch-decisions.spec.ts:49:1 › REV-BAT-04 Batch approval requires confirmation and shows a summary
+[1A[2K[250/333] tests\doctrine\review-executive-briefing.spec.ts:39:1 › REV-BR-03 Daily review briefing card renders dynamic lines
+[1A[2K[251/333] tests\doctrine\review-decision-intelligence.spec.ts:52:1 › REV-DI-04 Client impact summary renders billing and timing
+[1A[2K[252/333] tests\doctrine\review-executive-briefing.spec.ts:48:1 › REV-BR-04 Approval / financial / operational health strips render
+[1A[2K[253/333] tests\doctrine\review-batch-decisions.spec.ts:68:1 › REV-BAT-05 Batch rejection requires a reason before confirming
+[1A[2K[254/333] tests\doctrine\review-executive-briefing.spec.ts:58:1 › REV-BR-05 Executive attention feed renders ranked items
+[1A[2K[255/333] tests\doctrine\review-decision-intelligence.spec.ts:61:1 › REV-DI-05 Comparison view shows Approve / Reject / Correct side by side
+[1A[2K[256/333] tests\doctrine\review-batch-decisions.spec.ts:77:1 › REV-BAT-06 Batch correction requires reason and reviewer note
+[1A[2K[257/333] tests\doctrine\review-executive-briefing.spec.ts:66:1 › REV-BR-06 Financial exposure + decision roll-up render
+[1A[2K[258/333] tests\doctrine\review-decision-intelligence.spec.ts:69:1 › REV-DI-06 Comparison view takes no action (informational only)
+[1A[2K[259/333] tests\doctrine\review-executive-briefing.spec.ts:73:1 › REV-BR-07 Bottleneck + recommendation roll-ups render
+[1A[2K[260/333] tests\doctrine\review-batch-decisions.spec.ts:86:1 › REV-BAT-07 Batch reviewer assignment offers CEO / PM / Reviewer
+[1A[2K[261/333] tests\doctrine\review-decision-intelligence.spec.ts:76:1 › REV-DI-07 Executive impact insights are generated
+[1A[2K[262/333] tests\doctrine\review-executive-briefing.spec.ts:80:1 › REV-BR-08 Weekly review summary renders
+[1A[2K[263/333] tests\doctrine\review-batch-decisions.spec.ts:93:1 › REV-BAT-08 Safeguards must be acknowledged before confirming
+[1A[2K[264/333] tests\doctrine\review-executive-briefing.spec.ts:89:1 › REV-BR-09 Strategic insights render
+[1A[2K[265/333] tests\doctrine\review-decision-intelligence.spec.ts:83:1 › REV-DI-08 Batch confirmation shows aggregated profitability impact
+[1A[2K[266/333] tests\doctrine\review-executive-briefing.spec.ts:97:1 › REV-BR-10 Briefing is read-only and PM-excluded; workflows intact
+[1A[2K[267/333] tests\doctrine\review-batch-decisions.spec.ts:110:1 › REV-BAT-09 Existing single-item approval workflow still works
+[1A[2K[268/333] tests\doctrine\review-decision-intelligence.spec.ts:94:1 › REV-DI-09 Approval controls remain unchanged
+[1A[2K[269/333] tests\doctrine\review-batch-decisions.spec.ts:117:1 › REV-BAT-10 Nothing is actioned until confirmation (cancel leaves items pending)
+[1A[2K[270/333] tests\doctrine\review-executive-dashboard.spec.ts:24:1 › REV-EXE-01 CEO sees the executive dashboard and the queue below
+[1A[2K[271/333] tests\doctrine\review-decision-intelligence.spec.ts:101:1 › REV-DI-10 Decision panel exposes no approval controls
+[1A[2K[272/333] tests\doctrine\review-executive-dashboard.spec.ts:31:1 › REV-EXE-02 KPI strip renders all eight executive metrics
+[1A[2K[273/333] tests\doctrine\review-operations-analytics.spec.ts:23:1 › REV-AN-01 Analytics tab shows the analytics dashboard
+[1A[2K[274/333] tests\doctrine\review-operations-centre.spec.ts:17:1 › ROC-01 CEO sees the Review Operations Centre with all five tabs
+[1A[2K[275/333] tests\doctrine\review-executive-dashboard.spec.ts:48:1 › REV-EXE-03 Financial exposure panel shows revenue, cost and payroll
+[1A[2K[276/333] tests\doctrine\review-operations-analytics.spec.ts:28:1 › REV-AN-02 Volume + throughput KPI cards render
+[1A[2K[277/333] tests\doctrine\review-operations-centre.spec.ts:26:1 › ROC-02 Briefing is the default (executive-first) tab
+[1A[2K[278/333] tests\doctrine\review-executive-dashboard.spec.ts:58:1 › REV-EXE-04 Requires-attention queue renders prioritised rows
+[1A[2K[279/333] tests\doctrine\review-operations-analytics.spec.ts:46:1 › REV-AN-03 Approval performance metrics render incl. SLA compliance
+[1A[2K[280/333] tests\doctrine\review-operations-centre.spec.ts:32:1 › ROC-03 Tabs switch between the intelligence layers
+[1A[2K[281/333] tests\doctrine\review-executive-dashboard.spec.ts:65:1 › REV-EXE-05 Reviews-by-type breakdown lists all canonical categories
+[1A[2K[282/333] tests\doctrine\review-operations-analytics.spec.ts:54:1 › REV-AN-04 Bottleneck analysis renders with warnings/lists
+[1A[2K[283/333] tests\doctrine\review-operations-centre.spec.ts:49:1 › ROC-04 The live review queue is always visible below the hub
+[1A[2K[284/333] tests\doctrine\review-executive-dashboard.spec.ts:82:1 › REV-EXE-06 Workload summary and throughput trend render
+[1A[2K[285/333] tests\doctrine\review-operations-analytics.spec.ts:63:1 › REV-AN-05 Reviewer performance covers CEO / PM / Reviewer
+[1A[2K[286/333] tests\doctrine\review-operations-centre.spec.ts:59:1 › ROC-05 PMs get the scoped queue but not the executive hub
+[1A[2K[287/333] tests\doctrine\review-executive-dashboard.spec.ts:91:1 › REV-EXE-07 Executive insights are generated
+[1A[2K[288/333] tests\doctrine\review-operations-centre.spec.ts:66:1 › ROC-06 Approval workflow is reachable and unchanged from the queue
+[1A[2K[289/333] tests\doctrine\review-operations-analytics.spec.ts:71:1 › REV-AN-06 Review type analytics lists all seven categories
+[1A[2K[290/333] tests\doctrine\review-executive-dashboard.spec.ts:98:1 › REV-EXE-08 PMs do not see the CEO executive dashboard
+[1A[2K[291/333] tests\doctrine\review-operations-analytics.spec.ts:88:1 › REV-AN-07 Financial throughput analytics render
+[1A[2K[292/333] tests\doctrine\review-operations-centre.spec.ts:74:1 › ROC-07 Worker review pipeline still surfaces pending work to the CEO
+[1A[2K[293/333] tests\doctrine\review-executive-dashboard.spec.ts:108:1 › REV-EXE-09 Review detail surfaces read-only executive context
+[1A[2K[294/333] tests\doctrine\review-operations-analytics.spec.ts:96:1 › REV-AN-08 Trend analysis cards render
+[1A[2K[295/333] tests\doctrine\review-prioritisation.spec.ts:25:1 › REV-PRI-01 CEO sees the recommended work queue (priority panel)
+[1A[2K[296/333] tests\doctrine\review-executive-dashboard.spec.ts:122:1 › REV-EXE-10 Dashboard is visibility-only — no approve/reject controls in it
+[1A[2K[297/333] tests\doctrine\review-operations-analytics.spec.ts:104:1 › REV-AN-09 Operational health score and insights render
+[1A[2K[298/333] tests\doctrine\review-prioritisation.spec.ts:31:1 › REV-PRI-02 Priority distribution shows all four categories
+[1A[2K[299/333] tests\doctrine\review-recommendations.spec.ts:30:1 › REV-REC-01 Recommendations tab shows the distribution panel
+[1A[2K[300/333] tests\doctrine\review-operations-analytics.spec.ts:114:1 › REV-AN-10 Analytics is read-only and PMs do not see it; workflows intact
+[1A[2K[301/333] tests\doctrine\review-prioritisation.spec.ts:38:1 › REV-PRI-03 Priority queue rows render scores and categories in order
+[1A[2K[302/333] tests\doctrine\review-recommendations.spec.ts:36:1 › REV-REC-02 Distribution dashboard lists all four recommendation types
+[1A[2K[303/333] tests\doctrine\review-prioritisation.spec.ts:47:1 › REV-PRI-04 Priority insights are generated
+[1A[2K[304/333] tests\doctrine\worker-home.spec.ts:23:3 › Worker Home Screen (WK-2) › WK2-02: worker home shows assigned jobs only
+[1A[2K[305/333] tests\doctrine\review-recommendations.spec.ts:48:1 › REV-REC-03 Recommendation insights are generated
+[1A[2K[306/333] tests\doctrine\review-prioritisation.spec.ts:54:1 › REV-PRI-05 Executive attention buckets render
+[1A[2K[307/333] tests\doctrine\worker-jobs-submissions.spec.ts:68:3 › Worker Jobs & Submissions (WK-3) › WK3-01: log issue enters the queue
+[1A[2K[308/333] tests\doctrine\review-recommendations.spec.ts:55:1 › REV-REC-04 Executive guidance feed renders
+[1A[2K[309/333] tests\doctrine\worker-jobs-submissions.spec.ts:83:3 › Worker Jobs & Submissions (WK-3) › WK3-02: issue survives refresh
+[1A[2K[310/333] tests\doctrine\review-prioritisation.spec.ts:67:1 › REV-PRI-06 Standard / Priority order toggle reorders the job table
+[1A[2K[311/333] tests\doctrine\review-recommendations.spec.ts:62:1 › REV-REC-05 Priority queue surfaces recommendation badges
+[1A[2K[312/333] tests\doctrine\review-prioritisation.spec.ts:78:1 › REV-PRI-07 Job rows carry priority badges
+[1A[2K[313/333] tests\doctrine\worker-jobs-submissions.spec.ts:101:3 › Worker Jobs & Submissions (WK-3) › WK3-03: shift end creates a timesheet submission
+[1A[2K[314/333] tests\doctrine\review-recommendations.spec.ts:70:1 › REV-REC-06 Review detail shows recommendation, confidence and rationale
+[1A[2K[315/333] tests\doctrine\review-prioritisation.spec.ts:86:1 › REV-PRI-08 Review detail shows priority, score, queue position and factors
+[1A[2K[316/333] tests\doctrine\worker-jobs-submissions.spec.ts:114:3 › Worker Jobs & Submissions (WK-3) › WK3-04: report hours populate correctly
+[1A[2K[317/333] tests\doctrine\review-recommendations.spec.ts:79:1 › REV-REC-07 Review detail shows similar historical decisions
+[1A[2K[318/333] tests\doctrine\worker-jobs-submissions.spec.ts:133:3 › Worker Jobs & Submissions (WK-3) › WK3-05: expense enters the queue
+[1A[2K[319/333] tests\doctrine\review-prioritisation.spec.ts:95:1 › REV-PRI-09 PMs do not see the CEO priority panel or order toggle
+[1A[2K[320/333] tests\doctrine\worker-jobs-submissions.spec.ts:156:3 › Worker Jobs & Submissions (WK-3) › WK3-06: photo upload survives refresh
+[1A[2K[321/333] tests\doctrine\review-recommendations.spec.ts:87:1 › REV-REC-08 Recommendation panels expose no approval controls
+[1A[2K[322/333] tests\doctrine\review-prioritisation.spec.ts:103:1 › REV-PRI-10 Prioritisation is visibility-only — no approve/reject controls in the panel
+[1A[2K[323/333] tests\doctrine\worker-jobs-submissions.spec.ts:171:3 › Worker Jobs & Submissions (WK-3) › WK3-07: offline replay works
+[1A[2K[324/333] tests\doctrine\worker-mobile-polish.spec.ts:30:3 › Worker Mobile Polish (WK-6) › WK6-01: schedule view functional
+[1A[2K[325/333] tests\doctrine\review-recommendations.spec.ts:105:1 › REV-REC-09 Existing approval controls remain unchanged
+[1A[2K[326/333] tests\doctrine\worker-offline-sync.spec.ts:233:3 › Worker Offline & Sync (WK-4) › WK4-09: Review Centre path preserved
+[1A[2K[327/333] tests\doctrine\worker-jobs-submissions.spec.ts:200:3 › Worker Jobs & Submissions (WK-3) › WK3-08: submission enters the Review Centre path
+[1A[2K[328/333] tests\doctrine\review-recommendations.spec.ts:111:1 › REV-REC-10 Confidence badges render in the detail recommendations
+[1A[2K[329/333] tests\doctrine\worker-to-review.spec.ts:8:1 › Worker review pipeline basic flow
+[1A[2K[330/333] tests\doctrine\workflow-automation.spec.ts:219:1 › WF-23: Detail dialog shows governance flag for requires_review workflows
+[1A[2K[331/333] tests\doctrine\worker-jobs-submissions.spec.ts:219:3 › Worker Jobs & Submissions (WK-3) › WK3-09: no financial mutation before approval
+[1A[2K[332/333] tests\jobs.spec.ts:5:1 › CEO can access jobs page
+[1A[2K[333/333] tests\review.spec.ts:3:1 › PM can access review center
+[1A[2K  333 passed (10.7m)

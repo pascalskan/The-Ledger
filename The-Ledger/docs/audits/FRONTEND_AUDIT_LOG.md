@@ -372,3 +372,19 @@ R2-02 follow-ups beyond title/viewport (OG image text) · R6-09 heading-order (1
 - Regression suite: 979 tests; 978 pass on rerun. One failure (`audit-log.spec.ts`) asserted the old behaviour of submitting an empty report; the test now enters report notes. AR-12 timed out once under load and passed on rerun.
 - Overflow scan: 0 overflowing pages at 375, 768 and 955px.
 - axe scan: 1036 violating nodes before fixes, 96 after (colour contrast 79, heading-order 10, button-name 5, page-has-heading-one 2).
+
+## Fix log 3 — remaining items (branch `fix/frontend-audit-remaining`)
+
+- R6-09 heading-order — **fixed** on review panels, review detail, schedule cards, expenses, settings, workers, worker jobs/report, portal contacts (headings demoted to follow the page `<h1>`). 3 nodes remain.
+- button-name — **fixed** (workflow execution "View" buttons now labelled); 0 nodes remain.
+- R6-22 focus return — **fixed** for Create Job and Build Report (focus returns to the trigger on close).
+- R5-09 — **fixed** with `ConfirmDialog` for Disable rule, Archive rule and Disable schedule. Tests `automation-builder`, `automation-centre`, `automation-scheduler` click the confirm button.
+- R5-13 login return-URL — **fixed.** A protected page visited while signed out is remembered (sessionStorage) and opened after sign-in; an explicit sign-out clears it so the next user starts at `/`.
+- R2-10 job Edit — **fixed.** CEO job edit now covers title, start/end and site address, with validation (title required, end not before start).
+- R2-17 map — **fixed.** Markers use the legend colours by status, jobs on the same site are fanned out, and the map fits all jobs. Markers have accessible names and a 24px target.
+- R2-12 empty-state health score — **fixed.** Jobs with no approved activity show "Health Score: not yet available" instead of a score.
+- Contrast — darkened small text in amber, blue, orange, rose and `opacity-*` patterns. 53 nodes remain (mostly status badges and muted text).
+
+Still not done: OG image text, seed invoice cost-rate data, portal download file / separate invoice stores, "Command Centre" label, map page `<h1>` (an existing test requires none inside the Operations hub), residual contrast.
+
+Verification: `npm run check` passes; full suite 979/979 before the last heading/map tweaks, affected subset 333/333 after; overflow 0 at 375/768/955px.

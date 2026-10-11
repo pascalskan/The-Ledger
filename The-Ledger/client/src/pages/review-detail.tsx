@@ -496,7 +496,7 @@ export default function ReviewDetailPage() {
                                 <Clock className="h-3 w-3" /> {formatDateTime(item.submittedAt)}
                               </span>
                             </div>
-                            <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                            <h2 className="text-xl font-semibold text-foreground">{item.title}</h2>
                             <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                               <User className="h-4 w-4" /> Submitted by <span className="font-medium">{item.submittedBy}</span>
                             </div>
@@ -507,14 +507,14 @@ export default function ReviewDetailPage() {
                           <div className="mt-4 space-y-4">
                             {item.content && (
                               <div>
-                                <h4 className="text-sm font-medium text-foreground mb-1">Summary</h4>
+                                <h3 className="text-sm font-medium text-foreground mb-1">Summary</h3>
                                 <p className="text-muted-foreground bg-muted p-3 rounded-md border border-border">{item.content}</p>
                               </div>
                             )}
 
                             {item.notes && !item.content && (
                                <div>
-                                 <h4 className="text-sm font-medium text-foreground mb-1">Summary</h4>
+                                 <h3 className="text-sm font-medium text-foreground mb-1">Summary</h3>
                                  <p className="text-muted-foreground bg-muted p-3 rounded-md border border-border">{item.notes}</p>
                                </div>
                             )}
@@ -522,7 +522,7 @@ export default function ReviewDetailPage() {
                             {/* Legacy Items */}
                             {item.items && item.items.length > 0 && (
                               <div>
-                                <h4 className="text-sm font-medium text-foreground mb-2">Materials Logged</h4>
+                                <h3 className="text-sm font-medium text-foreground mb-2">Materials Logged</h3>
                                 <div className="bg-card border rounded-md overflow-hidden">
                                   {item.items.map((mat, idx) => (
                                     <div key={idx} className={`flex justify-between p-2 px-3 ${idx !== 0 ? 'border-t' : ''}`}>
@@ -537,7 +537,7 @@ export default function ReviewDetailPage() {
                             {/* Phase 2 Materials Used */}
                             {item.materialsUsed && item.materialsUsed.length > 0 && (
                               <div>
-                                <h4 className="text-sm font-medium text-foreground mb-2">Materials Logged</h4>
+                                <h3 className="text-sm font-medium text-foreground mb-2">Materials Logged</h3>
                                 <div className="bg-card border rounded-md overflow-hidden">
                                   {item.materialsUsed.map((mat, idx) => (
                                     <div key={idx} className={`flex justify-between p-2 px-3 ${idx !== 0 ? 'border-t' : ''}`}>
@@ -553,7 +553,7 @@ export default function ReviewDetailPage() {
 
                         {item.type === 'photo' && item.notes && (
                           <div className="mt-4">
-                            <h4 className="text-sm font-medium text-foreground mb-1">Notes</h4>
+                            <h3 className="text-sm font-medium text-foreground mb-1">Notes</h3>
                             <p className="text-muted-foreground bg-muted p-3 rounded-md border border-border">{item.notes}</p>
                           </div>
                         )}

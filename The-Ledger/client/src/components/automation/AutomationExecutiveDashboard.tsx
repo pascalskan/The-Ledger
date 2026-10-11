@@ -333,7 +333,7 @@ export function AutomationExecutiveDashboard() {
                           <span data-testid={`aut-attention-count-${item.key}`}>{item.count}</span>
                           <span>{item.label}</span>
                         </div>
-                        <p className="text-[11px] opacity-80 leading-tight mt-0.5">{item.desc}</p>
+                        <p className="text-[11px] opacity-100 leading-tight mt-0.5">{item.desc}</p>
                       </div>
                     </div>
                   );

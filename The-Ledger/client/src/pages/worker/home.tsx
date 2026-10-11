@@ -404,7 +404,7 @@ export default function WorkerHomePage() {
                     {summary.outstandingCorrections} submission
                     {summary.outstandingCorrections > 1 ? "s" : ""} need changes
                   </p>
-                  <p className="text-xs text-orange-600 mt-0.5">Tap to review reviewer notes</p>
+                  <p className="text-xs text-orange-800 mt-0.5">Tap to review reviewer notes</p>
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-orange-400 shrink-0" />
