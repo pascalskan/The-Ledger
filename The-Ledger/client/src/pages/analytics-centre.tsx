@@ -402,7 +402,7 @@ export function AnalyticsCentreContent({ embedded = false }: { embedded?: boolea
                       {bn.severity}
                     </Badge>
                   </div>
-                  <p className="text-xs mt-0.5 opacity-80">{bn.impact}</p>
+                  <p className="text-xs mt-0.5">{bn.impact}</p>
                 </div>
                 <Button
                   data-testid={`analytics-bottleneck-link-${bn.id}`}

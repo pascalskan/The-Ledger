@@ -50,7 +50,7 @@
     - tab "Recommendations"
     - tab "Analytics"
   - tabpanel "Briefing":
-    - heading "Executive Review Briefing" [level=3]
+    - heading "Executive Review Briefing" [level=2]
     - paragraph: What decisions require your attention today — consolidated across the Review Centre. Summary only; every decision still happens below.
     - text: Approval Readiness Attention Required
     - paragraph: 2 critical · 2 over SLA

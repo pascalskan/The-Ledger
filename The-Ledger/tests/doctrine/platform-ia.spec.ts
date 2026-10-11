@@ -174,7 +174,7 @@ test('IA-14 — /map is the documented single-h1 exemption', async ({ page }) =>
   await page.goto('/map');
   // Full-bleed map surface: no page header by design. If a header is ever
   // added it must be an h1, and this expectation should be updated to 1.
-  await expect(page.locator('h1')).toHaveCount(0);
+  await expect(page.locator('h1')).toHaveCount(1);
 });
 
 // ══════════════════════════════════════════════════════

@@ -388,3 +388,17 @@ R2-02 follow-ups beyond title/viewport (OG image text) · R6-09 heading-order (1
 Still not done: OG image text, seed invoice cost-rate data, portal download file / separate invoice stores, "Command Centre" label, map page `<h1>` (an existing test requires none inside the Operations hub), residual contrast.
 
 Verification: `npm run check` passes; full suite 979/979 before the last heading/map tweaks, affected subset 333/333 after; overflow 0 at 375/768/955px.
+
+## Fix log 4 — final remaining items (branch `fix/frontend-audit-remaining`)
+
+- R2-02 OG/Twitter text — **fixed.** Titles and descriptions now describe the platform; added a normal meta description.
+- R5-03 seed data — **fixed.** Seed invoice EXB-2026-0007 bills equipment at client day rates (total £6,715 → £7,340). `client-portal-financials` expectations updated (invoiced £12,740, outstanding £7,590, invoice £7,340 / £5,340 outstanding).
+- R5-11 portal invoice download — **fixed.** Download saves a printable HTML invoice built only from the client-facing projection (`lib/download.ts`), so no internal cost data can appear.
+- R2-33 separate invoice stores — **partly addressed, by design not merged.** Builder drafts and Finance invoices stay separate (merging changes the approval-to-invoice flow); the pipeline now says where issued invoices live. Stat tiles no longer clip. The invoice sheet could not scroll, so its buttons were unreachable on shorter screens; it now scrolls.
+- R4-27 — **fixed.** Report deep link reads "Intelligence Overview".
+- Map `<h1>` — **fixed on `/map`** (screen-reader-only); the Operations hub map tab keeps none. `platform-ia` IA-14 updated to expect one.
+- Contrast — destructive/red/rose/orange/blue theme shades darkened; worker pages' text on dark surfaces; disabled provider cards no longer dimmed; notification status colours.
+
+Verification: `npm run check` passes. Affected specs re-run (portal, financial, invoice, accounting, analytics, notifications, reporting, platform-IA, worker, jobs): all pass after the fixes above (two accounting specs timed out once under load and passed on rerun). Overflow: 0 at 375/768/955px. axe: 1036 → 9 violating nodes (3 contrast, 4 map marker target size, 1 heading-order, 1 page heading on the hub map tab).
+
+Not done: merging the two invoice stores (design decision), the last 9 axe nodes.

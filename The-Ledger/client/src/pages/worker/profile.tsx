@@ -111,20 +111,20 @@ export default function WorkerProfilePage() {
           data-testid="worker-profile-performance"
           className="bg-slate-900 text-white rounded-2xl p-5 shadow-md"
         >
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+          <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-4">
             Performance Snapshot
           </h3>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
               <div className="text-2xl font-bold text-emerald-400">{summary.totalShifts}</div>
-              <div className="text-[11px] text-muted-foreground mt-1">Total Shifts</div>
+              <div className="text-[11px] text-slate-300 mt-1">Total Shifts</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-emerald-400 flex items-center justify-center gap-1">
                 <Clock className="w-4 h-4" />
                 {summary.totalHours}
               </div>
-              <div className="text-[11px] text-muted-foreground mt-1">Total Hours</div>
+              <div className="text-[11px] text-slate-300 mt-1">Total Hours</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-emerald-400">{summary.reportsThisMonth}</div>

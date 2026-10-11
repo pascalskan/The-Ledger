@@ -105,8 +105,8 @@ export const NOTIFICATION_STATUS_LABELS: Record<NotificationStatus, string> = {
 
 export const NOTIFICATION_STATUS_COLORS: Record<NotificationStatus, string> = {
   unread: 'bg-blue-100 text-blue-800',
-  read: 'bg-gray-100 text-gray-600',
-  dismissed: 'bg-gray-50 text-gray-400',
+  read: 'bg-gray-100 text-gray-700',
+  dismissed: 'bg-gray-100 text-gray-600',
 };
 
 // Route map for deep linking

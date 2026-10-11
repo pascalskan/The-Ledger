@@ -41,6 +41,7 @@ import { PortalMessages } from "@/pages/portal/messages";
 import { PortalNotifications } from "@/pages/portal/notifications";
 import { PortalFinance } from "@/pages/portal/finance";
 import { useToast } from "@/hooks/use-toast";
+import { downloadFile, buildInvoiceHtml } from "@/lib/download";
 
 // `messages` is no longer a nav item (CL-8 folded it under Requests) but the
 // route remains valid so conversation deep links keep working.
@@ -241,7 +242,8 @@ export default function PortalPage() {
       sourceObjectId: inv.id,
       externalReference: account.clientId,
     });
-    toast({ title: "Preparing download", description: `Invoice ${inv.invoiceId}` });
+    downloadFile(`${inv.invoiceId}.html`, buildInvoiceHtml(inv, portalClient?.name));
+    toast({ title: "Invoice downloaded", description: `${inv.invoiceId} saved as a printable file.` });
   };
 
   const handleViewQuote = (quote: PortalQuote) => {

@@ -128,7 +128,7 @@ function ProviderCard({
     <div
       data-testid={`provider-card-${providerId}`}
       className={`rounded-xl border bg-card p-5 space-y-4 transition-all ${
-        status === "disabled" ? "opacity-60" : ""
+        status === "disabled" ? "bg-muted/40" : ""
       } ${isDefault ? "ring-2 ring-primary/30" : ""}`}
     >
       {/* Header */}

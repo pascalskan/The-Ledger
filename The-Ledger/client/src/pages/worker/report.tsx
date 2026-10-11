@@ -440,7 +440,7 @@ return (
             Submit Report
           </h1>
 
-          <p className="text-muted-foreground text-xs truncate max-w-[200px]">
+          <p className="text-slate-300 text-xs truncate max-w-[200px]">
             {job.title}
           </p>
         </div>

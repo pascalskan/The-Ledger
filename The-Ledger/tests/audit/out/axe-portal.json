@@ -36,21 +36,7 @@
  {
   "role": "Client",
   "url": "/portal/jobs/dj-pm-active-1",
-  "violations": [
-   {
-    "id": "heading-order",
-    "impact": "moderate",
-    "help": "Heading levels should only increase by one",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": ".border-border\\/60.space-y-2\\.5.border-t:nth-child(2) > h4",
-      "html": "<h4 class=\"text-xs font-semibold text-muted-foreground uppercase tracking-wider\">Operations Contact</h4>",
-      "summary": "Fix any of the following:   Heading order invalid"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "Client",

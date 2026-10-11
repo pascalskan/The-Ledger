@@ -46,19 +46,19 @@ test.describe('Portal Financials — KPIs & balance (CL-6)', () => {
     await expect(page.getByTestId('portal-fin-kpi-value-quoted')).toHaveText('£11,700.00');
     // Accepted quotes (8500) + approved variations (1200) = 9,700
     await expect(page.getByTestId('portal-fin-kpi-value-approved')).toHaveText('£9,700.00');
-    // Non-draft invoices: 6715 + 3000 + 2400 = 12,115
-    await expect(page.getByTestId('portal-fin-kpi-value-invoiced')).toHaveText('£12,115.00');
+    // Non-draft invoices: 7340 + 3000 + 2400 = 12,740
+    await expect(page.getByTestId('portal-fin-kpi-value-invoiced')).toHaveText('£12,740.00');
     // Payments: 3000 + 2000 = 5,000
     await expect(page.getByTestId('portal-fin-kpi-value-paid')).toHaveText('£5,000.00');
-    // Outstanding = 12,115 - 5,000 - 150 credit = 6,965
-    await expect(page.getByTestId('portal-fin-kpi-value-outstanding')).toHaveText('£6,965.00');
+    // Outstanding = 12,740 - 5,000 - 150 credit = 7,590
+    await expect(page.getByTestId('portal-fin-kpi-value-outstanding')).toHaveText('£7,590.00');
   });
 
   // CPF-03 — Outstanding balance panel shows overdue + health indicator
   test('CPF-03: outstanding balance panel shows overdue amount and health', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
     await openFinance(page);
-    await expect(page.getByTestId('portal-total-outstanding')).toHaveText('£6,965.00');
+    await expect(page.getByTestId('portal-total-outstanding')).toHaveText('£7,590.00');
     // dinv-pma-1 is overdue with no payments → 2,400
     await expect(page.getByTestId('portal-overdue-amount')).toHaveText('£2,400.00');
     await expect(page.getByTestId('portal-balance-health-label')).toHaveText('Overdue');
@@ -166,7 +166,7 @@ test.describe('Portal Financials — Invoices (CL-6)', () => {
   test('CPF-13: invoice statuses are derived from payments', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
     await openFinanceTab(page, 'invoices');
-    // dinv-kex-1: £6,715 total, £2,000 paid → Part Paid
+    // dinv-kex-1: £7,340 total, £2,000 paid → Part Paid
     await expect(page.getByTestId('portal-invoice-status-dinv-kex-1')).toHaveText('Part Paid');
     // dinv-kex-2: fully paid
     await expect(page.getByTestId('portal-invoice-status-dinv-kex-2')).toHaveText('Paid');
@@ -180,11 +180,11 @@ test.describe('Portal Financials — Invoices (CL-6)', () => {
     await openFinanceTab(page, 'invoices');
     await page.getByTestId('portal-invoice-view-dinv-kex-1').click();
     await expect(page.getByTestId('portal-invoice-detail')).toBeVisible();
-    await expect(page.getByTestId('portal-invoice-detail-total')).toHaveText('£6,715.00');
+    await expect(page.getByTestId('portal-invoice-detail-total')).toHaveText('£7,340.00');
     await expect(page.getByTestId('portal-invoice-lines')).toBeVisible();
     await expect(page.locator('[data-testid^="portal-invoice-line-"]').first()).toBeVisible();
-    // £6,715 - £2,000 paid = £4,715 outstanding
-    await expect(page.getByTestId('portal-invoice-detail-outstanding')).toHaveText('£4,715.00');
+    // £7,340 - £2,000 paid = £5,340 outstanding
+    await expect(page.getByTestId('portal-invoice-detail-outstanding')).toHaveText('£5,340.00');
     await expect(page.getByTestId('portal-invoice-payments')).toBeVisible();
   });
 

@@ -116,7 +116,7 @@ async function searchPlaces(query: string): Promise<PlaceResult[]> {
 
 export default function MapPage() {
   const { jobs, clients } = useStore();
-  const [, setLocation] = useLocation();
+  const [pathname, setLocation] = useLocation();
 
   // Filter jobs with coordinates
   const mapJobs = jobs.filter((j) => j.latitude && j.longitude);
@@ -233,6 +233,7 @@ export default function MapPage() {
 
   return (
     <Layout>
+      {pathname === "/map" && <h1 className="sr-only">Map</h1>}
       <div className="h-[calc(100vh-140px)] w-full rounded-xl overflow-hidden border border-border relative">
         {/* Search (collapsible) */}
         <div className="absolute top-4 left-[52px] z-[450] pointer-events-none">

@@ -24,3 +24,6 @@ No change to the Approval path. Disable/Archive now need confirmation; job edits
 
 ## Outstanding Work
 OG image text, seed invoice cost-rate data, portal download file and separate invoice stores, "Command Centre" label, map `<h1>`, residual contrast (53 nodes). Owner decisions from the previous handoff still stand (role permission enforcement, PM access to Financial Insights).
+
+## Update: final items
+OG text, seed invoice client rates, real portal invoice download (`lib/download.ts`), "Intelligence Overview" label, `/map` h1, scrollable invoice sheet, theme contrast. See "Fix log 4" in the audit log. Role permissions and PM visibility are deliberately untouched (roles are being redesigned). The two invoice stores remain separate by design. axe: 9 violating nodes left.
