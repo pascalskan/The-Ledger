@@ -1,3 +1,4 @@
+import { activatable } from "@/lib/a11y";
 import { Layout } from "@/components/layout";
 import { PageHeader } from "@/components/page-shell";
 import { useStore, useAuth } from "@/lib/mockData";
@@ -393,7 +394,7 @@ export default function SchedulePage() {
                     <Card
                       key={job.id}
                       className={`cursor-pointer hover:border-primary/50 transition-all ${isShortage || hasConflict ? 'border-amber-200 bg-amber-50/20' : ''}`}
-                      onClick={() => setLocation(`/jobs/${job.id}`)}
+                      {...activatable(() => setLocation(`/jobs/${job.id}`), `Open job ${job.title}`)}
                       data-testid={`pm-sched-job-${job.id}`}
                     >
                       <CardContent className="p-4">
@@ -461,7 +462,7 @@ export default function SchedulePage() {
                   <Card
                     key={j.id}
                     className="cursor-pointer hover:border-primary/50"
-                    onClick={() => setLocation(`/jobs/${j.id}`)}
+                    {...activatable(() => setLocation(`/jobs/${j.id}`), `Open job ${j.title}`)}
                     data-testid={`pm-upcoming-${j.id}`}
                   >
                     <CardContent className="p-4 text-sm">
@@ -595,6 +596,7 @@ export default function SchedulePage() {
                   size="icon"
                   className="h-7 w-7"
                   onClick={prev}
+                  aria-label="Previous week"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -609,6 +611,7 @@ export default function SchedulePage() {
                   size="icon"
                   className="h-7 w-7"
                   onClick={next}
+                  aria-label="Next week"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

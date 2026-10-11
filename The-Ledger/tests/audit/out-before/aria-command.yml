@@ -1,0 +1,94 @@
+- link "Skip to content":
+  - /url: "#main-content"
+- complementary:
+  - text: L The Ledger
+  - button
+  - navigation:
+    - paragraph: Core
+    - link "Command":
+      - /url: /
+    - link "Review 7":
+      - /url: /review
+    - paragraph: Operational
+    - link "Operations":
+      - /url: /operations
+    - link "Client Requests":
+      - /url: /client-requests
+    - link "Job Intelligence":
+      - /url: /job-intelligence
+    - link "Financial Insights":
+      - /url: /expenses
+    - link "Finance":
+      - /url: /finance
+    - paragraph: Intelligence
+    - link "Intelligence":
+      - /url: /intelligence
+    - paragraph: Automation
+    - link "Automations":
+      - /url: /automations
+    - link "Workflows":
+      - /url: /workflows
+    - link "Automation Governance":
+      - /url: /automation-governance
+    - paragraph: Administration
+    - button "Administration"
+  - text: D
+  - paragraph: Demo CEO
+  - paragraph: CEO
+  - button "Sign Out"
+- button "System alerts": "4"
+- button "Notifications": "9"
+- main:
+  - paragraph: Example Business — Demo Data
+  - paragraph: You are viewing a demonstration environment. Changes made here will not affect real business data.
+  - heading "Good evening, Demo." [level=1]
+  - paragraph: Saturday, 10 October 2026 — Here is what needs your attention today.
+  - text: Pending Reviews
+  - paragraph: "7"
+  - paragraph: 4 reports
+  - paragraph: 3 uploads
+  - button "Review Now"
+  - text: Revenue at Risk
+  - paragraph: £2k
+  - paragraph: 1 overdue invoice
+  - paragraph: "Oldest: 6 days ago"
+  - button "View Invoices"
+  - text: Critical Alerts
+  - paragraph: "4"
+  - paragraph: 1 sync failure
+  - paragraph: 3 governance flags
+  - button "View Alerts"
+  - text: Active Jobs
+  - button "View All"
+  - paragraph: HVAC system replacement — Block C
+  - paragraph: 2 workers
+  - text: 2 pending Active
+  - paragraph: Preventative maintenance visit
+  - paragraph: 2 workers
+  - text: Active
+  - paragraph: Office fit-out — 2nd floor partitioning
+  - paragraph: 0 workers
+  - text: Planned
+  - paragraph: Boiler room upgrade & pipework replacement
+  - paragraph: 1 worker
+  - text: 1 pending Planned Today — Sat 10 Oct
+  - paragraph: Workforce
+  - text: 4 scheduled today 4 active workers
+  - paragraph: Upcoming (Next 24h)
+  - paragraph: No shifts scheduled today
+  - button "Open Schedule"
+  - text: Revenue This Week
+  - paragraph: £2k
+  - text: "-77% vs last wk Costs This Week"
+  - paragraph: £1k
+  - text: Estimated from approved records Margin This Week
+  - paragraph: 35%
+  - text: Target range Outstanding Invoices
+  - paragraph: £11k
+  - text: 4 invoices Pending Exposure
+  - paragraph: £0
+  - text: Pending Approval · 7 items
+  - button "View Financial Detail"
+- region "Notifications (F8)":
+  - list
+- button "Enterprise Sync QA Panel"

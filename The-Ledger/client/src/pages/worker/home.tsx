@@ -1,3 +1,4 @@
+import { activatable } from "@/lib/a11y";
 import { WorkerMobileLayout } from "@/components/WorkerMobileLayout";
 import { useStore, useAuth } from "@/lib/mockData";
 import { useShiftStore } from "@/lib/shiftStore";
@@ -137,7 +138,7 @@ export default function WorkerHomePage() {
                   <button
                     data-testid="worker-home-start-job-btn"
                     onClick={() => setLocation(`/worker/jobs/${firstJob.id}`)}
-                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl py-3.5 font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl py-3.5 font-bold text-sm flex items-center justify-center gap-2 transition-colors"
                   >
                     <Play className="w-4 h-4 fill-white" />
                     Go to Job & Start Shift
@@ -188,7 +189,7 @@ export default function WorkerHomePage() {
                         </div>
                         <p className="text-xs text-muted-foreground truncate">{job.locationAddress}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(job.startAt).toLocaleDateString()} ·{" "}
+                          {new Date(job.startAt).toLocaleDateString("en-GB")} ·{" "}
                           {new Date(job.startAt).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -340,7 +341,7 @@ export default function WorkerHomePage() {
 
               {failedItems.length > 0 && (
                 <div
-                  onClick={() => setLocation("/worker/uploads")}
+                  {...activatable(() => setLocation("/worker/uploads"), "Open uploads: submissions need attention")}
                   className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center gap-3">
@@ -358,7 +359,7 @@ export default function WorkerHomePage() {
 
               {conflictItems.length > 0 && (
                 <div
-                  onClick={() => setLocation("/worker/uploads")}
+                  {...activatable(() => setLocation("/worker/uploads"), "Open uploads: submissions waiting to sync")}
                   className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center gap-3">
@@ -393,7 +394,7 @@ export default function WorkerHomePage() {
         {summary.outstandingCorrections > 0 && (
           <section data-testid="worker-outstanding-corrections">
             <div
-              onClick={() => setLocation("/worker/history")}
+              {...activatable(() => setLocation("/worker/history"), "Open activity: submissions need changes. Tap to review reviewer notes")}
               className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
             >
               <div className="flex items-center gap-3">
@@ -424,7 +425,7 @@ export default function WorkerHomePage() {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{lastShift.jobTitle}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {new Date(lastShift.dateISO).toLocaleDateString()} ·{" "}
+                  {new Date(lastShift.dateISO).toLocaleDateString("en-GB")} ·{" "}
                   {Math.floor(lastShift.hours ?? 0)}h{" "}
                   {Math.round((((lastShift.hours ?? 0) % 1) * 60))}m
                 </p>
@@ -479,7 +480,7 @@ export default function WorkerHomePage() {
                       {kindLabel(item.kind)} — {item.title}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {new Date(item.dateISO).toLocaleDateString()}
+                      {new Date(item.dateISO).toLocaleDateString("en-GB")}
                     </p>
                   </div>
                   <Badge className="bg-muted text-muted-foreground border-none text-[10px] shrink-0 capitalize">

@@ -17,6 +17,7 @@ import { LoadingState } from "@/components/page-shell";
 // nothing and restores the invariant.
 import "@/lib/portalAudit";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import NotFound from "@/pages/not-found";
 const FinanceHubPage = lazy(() => import("@/pages/finance-hub"));
 const IntelligenceHubPage = lazy(() => import("@/pages/intelligence-hub"));
@@ -27,7 +28,6 @@ const JobDetailPage = lazy(() => import("@/pages/job-detail"));
 const ClientsPage = lazy(() => import("@/pages/clients"));
 const ClientDetailPage = lazy(() => import("@/pages/client-detail"));
 const ClientRequestsPage = lazy(() => import("@/pages/client-requests"));
-const InvoicesPage = lazy(() => import("@/pages/invoices"));
 const InvoiceDetailPage = lazy(() => import("@/pages/invoice-detail"));
 const FinancialsPage = lazy(() => import("@/pages/expenses"));
 const SchedulePage = lazy(() => import("@/pages/schedule"));
@@ -38,7 +38,6 @@ const EquipmentDetailPage = lazy(() => import("@/pages/equipment-detail"));
 const MapPage = lazy(() => import("@/pages/map"));
 const AuditPage = lazy(() => import("@/pages/audit"));
 const SettingsPage = lazy(() => import("@/pages/settings"));
-const AccountingSettingsPage = lazy(() => import("@/pages/accounting-settings"));
 const LegacyAccountingSettingsPage = lazy(() => import("@/pages/settings/accounting"));
 const IntegrationsPage = lazy(() => import("@/pages/integrations"));
 import AuthPage from "@/pages/auth";
@@ -61,12 +60,6 @@ const WorkerHistoryPage = lazy(() => import("@/pages/worker/history"));
 const JobIntelligenceDashboard = lazy(() => import("@/pages/job-intelligence"));
 const AutomationsPage = lazy(() => import("@/pages/automations"));
 const AutomationGovernanceCentrePage = lazy(() => import("@/pages/automation-governance"));
-const FinancialExplorerPage = lazy(() => import("@/pages/financial-explorer"));
-const PayrollStagingPage = lazy(() => import("@/pages/payroll"));
-const InvoiceBuilderPage = lazy(() => import("@/pages/invoice-builder"));
-const PayrollExportPage = lazy(() => import("@/pages/payroll-export"));
-const ReconciliationCenterPage = lazy(() => import("@/pages/reconciliation-center"));
-const ExceptionResolutionCenterPage = lazy(() => import("@/pages/exception-resolution-center"));
 const NotificationCentrePage = lazy(() => import("@/pages/notification-center"));
 const EventMonitorPage = lazy(() => import("@/pages/event-monitor"));
 const WorkflowCentrePage = lazy(() => import("@/pages/workflows"));
@@ -262,7 +255,7 @@ function Router() {
         <ProtectedRoute component={() => <RedirectToFinance tab="records" />} roles={["CEO"]} />
       </Route>
       <Route path="/invoices/:id">
-        <ProtectedRoute component={() => <RedirectToFinance tab="invoicing" />} roles={["CEO"]} />
+        <ProtectedRoute component={InvoiceDetailPage} roles={["CEO"]} />
       </Route>
       <Route path="/invoices">
         <ProtectedRoute component={() => <RedirectToFinance tab="invoicing" />} roles={["CEO"]} />
@@ -309,12 +302,6 @@ function Router() {
       <Route path="/clients/:id">
         <ProtectedRoute component={ClientDetailPage} roles={["CEO", "Project Manager"]} />
       </Route>
-      <Route path="/invoices">
-        <ProtectedRoute component={InvoicesPage} roles={["CEO"]} />
-      </Route>
-      <Route path="/invoices/:id">
-        <ProtectedRoute component={InvoiceDetailPage} roles={["CEO"]} />
-      </Route>
       <Route path="/expenses">
         <ProtectedRoute component={FinancialsPage} />
       </Route>
@@ -354,45 +341,21 @@ function Router() {
       <Route path="/audit">
         <ProtectedRoute component={AuditPage} roles={["CEO"]} />
       </Route>
-      <Route path="/financial-explorer">
-        <ProtectedRoute component={FinancialExplorerPage} roles={["CEO"]} />
-      </Route>
-      <Route path="/payroll">
-        <ProtectedRoute component={PayrollStagingPage} roles={["CEO"]} />
-      </Route>
-      <Route path="/payroll-export">
-        <ProtectedRoute component={PayrollExportPage} roles={["CEO"]} />
-      </Route>
-      <Route path="/invoice-builder">
-        <ProtectedRoute component={InvoiceBuilderPage} roles={["CEO"]} />
-      </Route>
-      {/* Phase 5.8: Reconciliation Centre — CEO only */}
-      <Route path="/reconciliation-center">
-        <ProtectedRoute component={ReconciliationCenterPage} roles={["CEO"]} />
-      </Route>
-      {/* Phase 5.9: Exception Resolution Centre — CEO only */}
-      <Route path="/exception-resolution-center">
-        <ProtectedRoute component={ExceptionResolutionCenterPage} roles={["CEO"]} />
-      </Route>
       <Route path="/settings">
         <ProtectedRoute component={SettingsPage} roles={["CEO"]} />
       </Route>
       <Route path="/settings/integrations">
         <ProtectedRoute component={IntegrationsPage} roles={["CEO"]} />
       </Route>
-      {/* Phase 5.7: Primary accounting settings route */}
-      <Route path="/accounting-settings">
-        <ProtectedRoute component={AccountingSettingsPage} roles={["CEO"]} />
-      </Route>
       {/* Phase 5.6 legacy route — now delegates to same component */}
       <Route path="/settings/integrations/accounting">
         <ProtectedRoute component={LegacyAccountingSettingsPage} roles={["CEO"]} />
       </Route>
       <Route path="/qa">
-        <ProtectedRoute component={QAPage} />
+        <ProtectedRoute component={QAPage} roles={["CEO"]} />
       </Route>
       <Route path="/qa/validation">
-        <ProtectedRoute component={Phase2ValidationChecklist} />
+        <ProtectedRoute component={Phase2ValidationChecklist} roles={["CEO"]} />
       </Route>
       <Route component={NotFound} />
     </Switch>
@@ -401,6 +364,7 @@ function Router() {
 }
 
 function App() {
+  useDocumentTitle();
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

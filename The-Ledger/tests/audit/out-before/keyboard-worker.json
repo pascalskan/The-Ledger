@@ -1,0 +1,34 @@
+{
+ "offlineBanner": {
+  "tag": "DIV",
+  "role": null,
+  "tabIndex": -1
+ },
+ "workerHomeStops": [
+  "BUTTON:Go to Job & Start Shift",
+  "BUTTON:Open Job",
+  "BUTTON:My Jobs",
+  "BUTTON:Schedule",
+  "BUTTON:Uploads",
+  "BUTTON:D\nProfile",
+  "BUTTON:View all",
+  "BUTTON:Home",
+  "BUTTON:Jobs",
+  "BUTTON:Schedule",
+  "BUTTON:Activity",
+  "BUTTON:Uploads",
+  "BUTTON:Profile",
+  "BUTTON:Enterprise Sync QA Panel",
+  "BODY: [NO RING]",
+  "BUTTON:Go to Job & Start Shift",
+  "BUTTON:Open Job",
+  "BUTTON:My Jobs",
+  "BUTTON:Schedule",
+  "BUTTON:Uploads",
+  "BUTTON:D\nProfile",
+  "BUTTON:View all",
+  "BUTTON:Home",
+  "BUTTON:Jobs",
+  "BUTTON:Schedule"
+ ]
+}

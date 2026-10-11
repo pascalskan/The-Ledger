@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format";
 import { Layout } from "@/components/layout";
 import { useStore, useAuth } from "@/lib/mockData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,6 +17,8 @@ import type { BatchReviewInput } from "@/lib/reviewBatchEngine";
 import { ReviewDecisionPanel } from "@/components/review/ReviewDecisionPanel";
 import { JobRecommendationPanel } from "@/components/review/ReviewRecommendations";
 import { isProjectManager } from "@/lib/roleHelpers";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ReviewDetailPage() {
   const { id } = useParams();
@@ -26,12 +29,20 @@ export default function ReviewDetailPage() {
   const [activeTab, setActiveTab] = useState("all");
   // UX-7.3 — batch selection. Keyed by id so it persists across tab filtering.
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // A rejection must carry a reason (REJECTION_DOMAIN) — collected in a dialog
+  // instead of rejecting on a single click.
+  const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const job = jobs.find(j => j.id === id);
 
   // Get real review items for this job
   const jobReviewItems = reviewItems.filter(r => r.jobId === id);
-  const pendingItems = jobReviewItems.filter(item => item.status === "pending");
+  // Escalated items are still awaiting a decision — the CEO needs to be able to act on them here.
+  const pendingItems = jobReviewItems.filter(item => item.status === "pending" || item.status === "escalated");
+  // Live decision history for this job. The seeded `reviewContext.history` never reflected
+  // approvals or rejections made in this session, so the tile always read 0.
+  const liveHistory = jobReviewItems.filter(item => item.status === "approved" || item.status === "rejected" || item.status === "needs-correction");
 
   if (!job) {
     return (
@@ -51,7 +62,14 @@ export default function ReviewDetailPage() {
   };
 
   const handleReject = (itemId: string) => {
-    updateReviewItem(itemId, { status: "rejected" });
+    setRejectReason("");
+    setRejectTargetId(itemId);
+  };
+  const confirmReject = () => {
+    if (!rejectTargetId || !rejectReason.trim()) return;
+    updateReviewItem(rejectTargetId, { status: "rejected", rejectionReason: rejectReason.trim() } as any);
+    setRejectTargetId(null);
+    setRejectReason("");
   };
 
   // UX-7.3 — Batch handlers. Each fans out to the SAME single-item store flow
@@ -61,8 +79,8 @@ export default function ReviewDetailPage() {
     ids.forEach((i) => updateReviewItem(i, { status: "approved" }));
     setSelectedIds([]);
   };
-  const handleBatchReject = (ids: string[], _reason: string) => {
-    ids.forEach((i) => updateReviewItem(i, { status: "rejected" }));
+  const handleBatchReject = (ids: string[], reason: string) => {
+    ids.forEach((i) => updateReviewItem(i, { status: "rejected", rejectionReason: reason } as any));
     setSelectedIds([]);
   };
   const handleBatchCorrection = (ids: string[], _reason: string, note: string) => {
@@ -142,7 +160,7 @@ export default function ReviewDetailPage() {
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => setLocation("/review")}>
+          <Button variant="ghost" size="icon" onClick={() => setLocation("/review")} aria-label="Back to review centre">
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -172,7 +190,7 @@ export default function ReviewDetailPage() {
                 <p className="mt-2 text-2xl font-bold text-foreground">
                   {reviewContext.exposure > 0 ? formatGbp(reviewContext.exposure) : "—"}
                 </p>
-                <p className="text-xs text-muted-foreground">Blocked pending approval</p>
+                <p className="text-xs text-muted-foreground">{pendingItems.length > 0 ? "Blocked pending approval" : "Nothing awaiting approval"}</p>
               </CardContent>
             </Card>
           )}
@@ -220,12 +238,12 @@ export default function ReviewDetailPage() {
                 </span>
               </div>
               <p className="mt-2 text-2xl font-bold text-foreground">
-                {reviewContext.history.length}
+                {liveHistory.length}
               </p>
               <p className="text-xs text-muted-foreground">
-                {reviewContext.history.filter((h) => h.status === "approved").length} approved ·{" "}
-                {reviewContext.history.filter((h) => h.status === "rejected").length} rejected ·{" "}
-                {reviewContext.history.filter((h) => h.status === "corrected").length} corrected
+                {liveHistory.filter((h) => h.status === "approved").length} approved ·{" "}
+                {liveHistory.filter((h) => h.status === "rejected").length} rejected ·{" "}
+                {liveHistory.filter((h) => h.status === "needs-correction").length} corrected
               </p>
             </CardContent>
           </Card>
@@ -402,7 +420,7 @@ export default function ReviewDetailPage() {
             </TabsList>
             
             {pendingItems.length > 0 && (
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
+              <Button className="bg-green-700 hover:bg-green-800 text-white">
                 <CheckCircle2 className="w-4 h-4 mr-2" /> Approve All Remaining
               </Button>
             )}
@@ -475,7 +493,7 @@ export default function ReviewDetailPage() {
                                 {item.type}
                               </Badge>
                               <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                <Clock className="h-3 w-3" /> {item.submittedAt}
+                                <Clock className="h-3 w-3" /> {formatDateTime(item.submittedAt)}
                               </span>
                             </div>
                             <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
@@ -555,7 +573,7 @@ export default function ReviewDetailPage() {
                       {/* Right side - Actions */}
                       <div className="bg-muted p-6 border-t md:border-t-0 md:border-l border-border md:w-48 flex flex-row md:flex-col justify-center gap-3">
                         <Button 
-                          className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white w-full"
+                          className="flex-1 md:flex-none bg-green-700 hover:bg-green-800 text-white w-full"
                           onClick={() => handleApprove(item.id)}
                         >
                           <CheckCircle2 className="h-4 w-4 mr-2" /> Approve
@@ -586,6 +604,35 @@ export default function ReviewDetailPage() {
           onAssign={handleBatchAssign}
           onClear={clearSelection}
         />
+
+        <Dialog open={rejectTargetId !== null} onOpenChange={(open) => { if (!open) setRejectTargetId(null); }}>
+          <DialogContent data-testid="review-reject-dialog">
+            <DialogHeader>
+              <DialogTitle>Reject this submission?</DialogTitle>
+              <DialogDescription>
+                A reason is required and is shared with the submitter. Nothing becomes financially real when a submission is rejected.
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Explain why this is being rejected…"
+              aria-label="Rejection reason"
+              data-testid="review-reject-reason"
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRejectTargetId(null)}>Cancel</Button>
+              <Button
+                variant="destructive"
+                onClick={confirmReject}
+                disabled={!rejectReason.trim()}
+                data-testid="review-reject-confirm"
+              >
+                Reject
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

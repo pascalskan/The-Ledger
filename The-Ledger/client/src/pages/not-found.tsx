@@ -12,7 +12,7 @@ export default function NotFound() {
           </div>
 
           <p className="mt-4 text-sm text-muted-foreground">
-            Did you forget to add the page to the router?
+            The page you are looking for does not exist or has moved.
           </p>
         </CardContent>
       </Card>

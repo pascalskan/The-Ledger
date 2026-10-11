@@ -1,0 +1,581 @@
+[
+ {
+  "role": "CEO",
+  "url": "/",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/review",
+  "violations": [
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "div:nth-child(1) > h3",
+      "html": "<h3 class=\"flex items-center gap-2 text-lg font-semibold text-foreground\">",
+      "summary": "Fix any of the following:   Heading order invalid"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/review/dj-pm-active-1",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 3,
+    "sample": [
+     {
+      "target": ".overflow-hidden.rounded-xl.bg-card:nth-child(1) > .md\\:flex-row.flex-col.flex > .md\\:border-t-0.md\\:border-l.md\\:w-48 > .text-rose-600.hover\\:text-rose-700.hover\\:bg-rose-50",
+      "html": "<button class=\"inline-flex items-ce...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.13 (foreground color: #ec003f, background color: #f1f5f9, font size: 10.5pt (14px), font weight: normal). Expected contrast rat"
+     },
+     {
+      "target": ".overflow-hidden.rounded-xl.bg-card:nth-child(2) > .md\\:flex-row.flex-col.flex > .md\\:border-t-0.md\\:border-l.md\\:w-48 > .text-rose-600.hover\\:text-rose-700.hover\\:bg-rose-50",
+      "html": "<button class=\"inline-flex items-ce...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.13 (foreground color: #ec003f, background color: #f1f5f9, font size: 10.5pt (14px), font weight: normal). Expected contrast rat"
+     },
+     {
+      "target": ".overflow-hidden.rounded-xl.bg-card:nth-child(3) > .md\\:flex-row.flex-col.flex > .md\\:border-t-0.md\\:border-l.md\\:w-48 > .text-rose-600.hover\\:text-rose-700.hover\\:bg-rose-50",
+      "html": "<button class=\"inline-flex items-ce...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.13 (foreground color: #ec003f, background color: #f1f5f9, font size: 10.5pt (14px), font weight: normal). Expected contrast rat"
+     }
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".overflow-hidden.rounded-xl.bg-card:nth-child(1) > .md\\:flex-row.flex-col.flex > .p-6.flex-1 > .mb-4.justify-between.items-start > div > h3",
+      "html": "<h3 class=\"text-xl font-semibold text-foreground\">End of Day Report — Day 5</h3>",
+      "summary": "Fix any of the following:   Heading order invalid"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/operations?tab=jobs",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/operations?tab=schedule",
+  "violations": [
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "div[data-testid=\"sched-day-2026-10-06\"] > .p-2\\.5.hover\\:shadow-md[data-testid=\"sched-job-card-dj-pm-active-1\"] > .pr-6 > h4",
+      "html": "<h4 class=\"font-semibold text-xs text-foreground truncate leading-tight\">HVAC system replacement — Block C</h4>",
+      "summary": "Fix any of the following:   Heading order invalid"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/operations?tab=workers",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/operations?tab=clients",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/operations?tab=map",
+  "violations": [
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix all of the following:   Page must have a level-one heading"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/operations?tab=stock",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/jobs/dj-pm-active-1",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 2,
+    "sample": [
+     {
+      "target": ".text-amber-700\\/70.mt-1",
+      "html": "<p class=\"text-xs text-amber-700/70 mt-1\">Estimate only — these figures are from unapproved submissions. They will become financial facts wh",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 2.92 (foreground color: #ce814a, background color: #fafaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".text-amber-700\\/70.italic",
+      "html": "<p class=\"text-xs text-amber-700/70 italic\">Pending items have no cost payload — may be reports or photos only.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 2.92 (foreground color: #ce814a, background color: #fafaf7, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/clients/dc1",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 3,
+    "sample": [
+     {
+      "target": ".bg-background.justify-between.py-2:nth-child(1) > .shrink-0.gap-2.flex > .h-8.text-destructive.min-h-8",
+      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"button-portal-accoun...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.59 (foreground color: #ef4444, background color: #f8fafc, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".bg-background.justify-between.py-2:nth-child(2) > .shrink-0.gap-2.flex > .h-8.text-destructive.min-h-8",
+      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"button-portal-accoun...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.59 (foreground color: #ef4444, background color: #f8fafc, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".bg-destructive",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"badge-client-invoice...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.59 (foreground color: #f8fafc, background color: #ef4444, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/workers/dw2",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/equipment/de1",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/assets/asset-1",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/stock/stock-1",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".px-2\\.5",
+      "html": "<div class=\"whitespace-nowrap rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.59 (foreground color: #f8fafc, background color: #ef4444, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/locations/loc-2",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/client-requests",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 5,
+    "sample": [
+     {
+      "target": ".self-start",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"client-requests-esca...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.59 (foreground color: #f8fafc, background color: #ef4444, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": "button[data-testid=\"client-request-decline-req-1\"]",
+      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"client-request-decli...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.76 (foreground color: #ef4444, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": "button[data-testid=\"client-request-decline-req-5\"]",
+      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"client-request-decli...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.76 (foreground color: #ef4444, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/job-intelligence",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 4,
+    "sample": [
+     {
+      "target": ".bg-card.text-card-foreground.shadow:nth-child(1) > .p-5.gap-5.flex-col > .py-4.text-center.text-muted-foreground > .opacity-70.mt-1",
+      "html": "<p class=\"text-xs mt-1 opacity-70\">Approve a worker report to see live data.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.09 (foreground color: #8a93a2, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".bg-card.text-card-foreground.shadow:nth-child(2) > .p-5.gap-5.flex-col > .py-4.text-center.text-muted-foreground > .opacity-70.mt-1",
+      "html": "<p class=\"text-xs mt-1 opacity-70\">Approve a worker report to see live data.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.09 (foreground color: #8a93a2, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".bg-card.text-card-foreground.shadow:nth-child(3) > .p-5.gap-5.flex-col > .py-4.text-center.text-muted-foreground > .opacity-70.mt-1",
+      "html": "<p class=\"text-xs mt-1 opacity-70\">Approve a worker report to see live data.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.09 (foreground color: #8a93a2, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/expenses",
+  "violations": [
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "h4",
+      "html": "<h4 class=\"text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3\">Highest Pending Exposure</h4>",
+      "summary": "Fix any of the following:   Heading order invalid"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/finance?tab=overview",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/finance?tab=records",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/finance?tab=invoicing",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/finance?tab=payroll",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/finance?tab=accounting&sub=sync",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".border-red-200",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"sync-status-badge-fa...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.36 (foreground color: #e7000b, background color: #fef2f2, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/finance?tab=accounting&sub=reconciliation",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".border-red-200",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"recon-status-unmatch...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.36 (foreground color: #e7000b, background color: #fef2f2, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/finance?tab=accounting&sub=exceptions",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 5,
+    "sample": [
+     {
+      "target": "td:nth-child(2) > .border-red-200.bg-red-50.text-red-600",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"exc-type-reconciliat...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.36 (foreground color: #e7000b, background color: #fef2f2, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": "tr[data-testid=\"exc-row-exc-001\"] > td:nth-child(4) > .border-red-200.bg-red-50[data-testid=\"exc-status-open\"]",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"exc-status-open\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.36 (foreground color: #e7000b, background color: #fef2f2, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".text-rose-600",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"exc-type-sync_failur...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.12 (foreground color: #ec003f, background color: #fff1f2, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/finance?tab=accounting&sub=providers",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 7,
+    "sample": [
+     {
+      "target": ".px-1\\.5",
+      "html": "<span data-testid=\"provider-default-indicator-quickbooks\" class=\"inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-primary/10 ",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.49 (foreground color: #2463eb, background color: #e9effd, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".text-red-700.text-base.font-bold",
+      "html": "<span class=\"font-bold text-base text-red-700\">ZB</span>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.3 (foreground color: #d76469, background color: #fcf5f6, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio "
+     },
+     {
+      "target": ".opacity-60 > .items-start.flex-wrap.justify-between > .gap-3.flex.items-center > div:nth-child(2) > .mt-0\\.5",
+      "html": "<p class=\"text-xs text-muted-foreground mt-0.5\">Comprehensive finance management within the Zoho ecosystem.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 2.56 (foreground color: #98a1ae, background color: #fcfdfe, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/intelligence?tab=overview",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/intelligence?tab=analytics",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 18,
+    "sample": [
+     {
+      "target": ".bg-red-50.border-red-200.text-red-700:nth-child(1) > .opacity-70.italic.mt-1",
+      "html": "<p class=\"text-xs mt-1 opacity-70 italic\">Investigate unmatched records in Reconciliation Centre immediately.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.97 (foreground color: #d3494e, background color: #fef2f2, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".bg-red-50.border-red-200.text-red-700:nth-child(2) > .opacity-70.italic.mt-1",
+      "html": "<p class=\"text-xs mt-1 opacity-70 italic\">Review and action critical notifications immediately.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.97 (foreground color: #d3494e, background color: #fef2f2, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".text-orange-700.bg-orange-50.border-orange-200:nth-child(3) > .opacity-80.mt-1.text-xs",
+      "html": "<p class=\"text-xs mt-1 opacity-80\">1 automation(s) have restricted operation scope.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.66 (foreground color: #d55c2f, background color: #fff7ed, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/intelligence?tab=reports",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/intelligence?tab=exports",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/intelligence?tab=activity",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/event-monitor",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/automations",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 13,
+    "sample": [
+     {
+      "target": "div[data-testid=\"aut-attention-item-failed\"] > .min-w-0 > .gap-1\\.5.font-semibold.text-sm > span:nth-child(2)",
+      "html": "<span>Failed executions</span>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.36 (foreground color: #e7000b, background color: #fef2f2, font size: 10.5pt (14px), font weight: normal). Expected contrast rat"
+     },
+     {
+      "target": "div[data-testid=\"aut-attention-item-failed\"] > .min-w-0 > .opacity-80",
+      "html": "<p class=\"text-[11px] opacity-80 leading-tight mt-0.5\">Executions that did not complete successfully — review for recurring faults.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.8 (foreground color: #ec3039, background color: #fef2f2, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio"
+     },
+     {
+      "target": "div[data-testid=\"aut-attention-item-restricted\"] > .min-w-0 > .opacity-80",
+      "html": "<p class=\"text-[11px] opacity-80 leading-tight mt-0.5\">Automations halted by CEO governance and unable to execute while restricted.</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.48 (foreground color: #c8702f, background color: #fffbeb, font size: 8.3pt (11px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/workflows",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 5,
+    "sample": [
+     {
+      "target": "button[data-testid=\"wf-exec-panel-view-wf-001\"]",
+      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"wf-exec-panel-view-w...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     },
+     {
+      "target": "button[data-testid=\"wf-exec-panel-view-wf-002\"]",
+      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"wf-exec-panel-view-w...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     },
+     {
+      "target": "button[data-testid=\"wf-exec-panel-view-wf-003\"]",
+      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"wf-exec-panel-view-w...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/automation-governance",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 3,
+    "sample": [
+     {
+      "target": "div[data-testid=\"gov-risk-high\"]",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"gov-risk-high\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.38 (foreground color: #f54900, background color: #fff7ed, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".border-red-200",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"gov-risk-critical\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.36 (foreground color: #e7000b, background color: #fef2f2, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": "div[data-testid=\"gov-status-restricted\"]",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"gov-status-restricte...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.38 (foreground color: #f54900, background color: #fff7ed, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "CEO",
+  "url": "/roles",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/audit",
+  "violations": []
+ },
+ {
+  "role": "CEO",
+  "url": "/settings",
+  "violations": [
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "h4",
+      "html": "<h4 class=\"text-sm font-medium\">Accounting Integration</h4>",
+      "summary": "Fix any of the following:   Heading order invalid"
+     }
+    ]
+   }
+  ]
+ }
+]

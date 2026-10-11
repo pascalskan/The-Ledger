@@ -132,7 +132,7 @@ function ProviderCard({
       } ${isDefault ? "ring-2 ring-primary/30" : ""}`}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div
             className={`h-11 w-11 rounded-lg ${meta.bgColor} border ${meta.borderColor} flex items-center justify-center`}
@@ -372,7 +372,7 @@ export function AccountingSettingsContent() {
                     Manual
                   </span>
                   <Switch
-                    data-testid="toggle-sync-mode"
+                    data-testid="toggle-sync-mode" aria-label="Automatic sync"
                     checked={settings.syncPolicy.mode === "automatic"}
                     onCheckedChange={(checked) =>
                       handlePolicyChange({ mode: (checked ? "automatic" : "manual") as SyncMode })
@@ -396,7 +396,7 @@ export function AccountingSettingsContent() {
                   </p>
                 </div>
                 <Switch
-                  data-testid="toggle-retry-failed"
+                  data-testid="toggle-retry-failed" aria-label="Retry failed syncs"
                   checked={settings.syncPolicy.retryFailedSyncs}
                   onCheckedChange={(checked) => handlePolicyChange({ retryFailedSyncs: checked })}
                 />
@@ -419,6 +419,7 @@ export function AccountingSettingsContent() {
                   <SelectTrigger
                     className="w-44 text-xs"
                     data-testid="select-retry-interval"
+                    aria-label="Retry interval"
                   >
                     <SelectValue />
                   </SelectTrigger>
@@ -445,7 +446,7 @@ export function AccountingSettingsContent() {
                   </p>
                 </div>
                 <Switch
-                  data-testid="toggle-sync-notifications"
+                  data-testid="toggle-sync-notifications" aria-label="Sync notifications"
                   checked={settings.syncPolicy.syncNotifications}
                   onCheckedChange={(checked) => handlePolicyChange({ syncNotifications: checked })}
                 />

@@ -1,0 +1,122 @@
+- link "Skip to content":
+  - /url: "#main-content"
+- complementary:
+  - text: L The Ledger
+  - button
+  - navigation:
+    - paragraph: Core
+    - link "Command":
+      - /url: /
+    - link "Review 7":
+      - /url: /review
+    - paragraph: Operational
+    - link "Operations":
+      - /url: /operations
+    - link "Client Requests":
+      - /url: /client-requests
+    - link "Job Intelligence":
+      - /url: /job-intelligence
+    - link "Financial Insights":
+      - /url: /expenses
+    - link "Finance":
+      - /url: /finance
+    - paragraph: Intelligence
+    - link "Intelligence":
+      - /url: /intelligence
+    - paragraph: Automation
+    - link "Automations":
+      - /url: /automations
+    - link "Workflows":
+      - /url: /workflows
+    - link "Automation Governance":
+      - /url: /automation-governance
+    - paragraph: Administration
+    - button "Administration"
+  - text: D
+  - paragraph: Demo CEO
+  - paragraph: CEO
+  - button "Sign Out"
+- button "System alerts": "4"
+- button "Notifications": "9"
+- main:
+  - paragraph: Example Business — Demo Data
+  - paragraph: You are viewing a demonstration environment. Changes made here will not affect real business data.
+  - heading "Finance — Invoicing" [level=1]
+  - paragraph: Revenue, costs, payroll, invoicing and accounting — in one place.
+  - tablist:
+    - tab "Overview"
+    - tab "Records"
+    - tab "Invoicing" [selected]
+    - tab "Payroll"
+    - tab "Accounting"
+  - tabpanel "Invoicing":
+    - heading "Invoicing" [level=2]
+    - button "+ Create Invoice"
+    - button "All"
+    - button "Draft"
+    - button "Sent"
+    - button "Overdue"
+    - button "Paid"
+    - paragraph: No accounting software connected.
+    - paragraph: Connect an accounting provider like QuickBooks or Xero to sync and view your invoices.
+    - button "Connect Provider"
+    - text: All Invoices
+    - table:
+      - rowgroup:
+        - row "Invoice No. Client Issue Date Due Date Total Status Action":
+          - columnheader "Invoice No."
+          - columnheader "Client"
+          - columnheader "Issue Date"
+          - columnheader "Due Date"
+          - columnheader "Total"
+          - columnheader "Status"
+          - columnheader "Action"
+      - rowgroup:
+        - row "EXB-2026-0007 HSS Limited 10/4/2026 10/18/2026 £6,715.00 Sent View":
+          - cell "EXB-2026-0007"
+          - cell "HSS Limited"
+          - cell "10/4/2026"
+          - cell "10/18/2026"
+          - cell "£6,715.00"
+          - cell "Sent"
+          - cell "View":
+            - button "View"
+        - row "EXB-2026-0008 Showcase Systems Ltd 10/9/2026 10/23/2026 £575.00 Draft View":
+          - cell "EXB-2026-0008"
+          - cell "Showcase Systems Ltd"
+          - cell "10/9/2026"
+          - cell "10/23/2026"
+          - cell "£575.00"
+          - cell "Draft"
+          - cell "View":
+            - button "View"
+        - row "EXB-2026-0005 HSS Limited 9/10/2026 9/24/2026 £3,000.00 Paid View":
+          - cell "EXB-2026-0005"
+          - cell "HSS Limited"
+          - cell "9/10/2026"
+          - cell "9/24/2026"
+          - cell "£3,000.00"
+          - cell "Paid"
+          - cell "View":
+            - button "View"
+        - row "EXB-2026-0009 HSS Limited 9/20/2026 10/4/2026 £2,400.00 Overdue View":
+          - cell "EXB-2026-0009"
+          - cell "HSS Limited"
+          - cell "9/20/2026"
+          - cell "10/4/2026"
+          - cell "£2,400.00"
+          - cell "Overdue"
+          - cell "View":
+            - button "View"
+        - row "EXB-2026-0010 HSS Limited 10/9/2026 10/23/2026 £1,000.00 Draft View":
+          - cell "EXB-2026-0010"
+          - cell "HSS Limited"
+          - cell "10/9/2026"
+          - cell "10/23/2026"
+          - cell "£1,000.00"
+          - cell "Draft"
+          - cell "View":
+            - button "View"
+- region "Notifications (F8)":
+  - list
+- button "Enterprise Sync QA Panel"

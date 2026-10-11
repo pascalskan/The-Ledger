@@ -300,12 +300,12 @@ export function AutomationApprovalQueue() {
             <Input placeholder="Search rule, queue ID, job, client, trigger, approver…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" data-testid="aut-aq-search" />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <select className={selectClass} value={approverFilter} onChange={(e) => setApproverFilter(e.target.value as ApproverRole | "all")} data-testid="aut-aq-filter-approver">
+            <select className={selectClass} value={approverFilter} onChange={(e) => setApproverFilter(e.target.value as ApproverRole | "all")} data-testid="aut-aq-filter-approver" aria-label="Filter by approver">
               <option value="all">All Approvers</option>
               <option value="CEO">CEO Approval</option>
               <option value="PM">PM Approval</option>
             </select>
-            <select className={selectClass} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as ApprovalType | "all")} data-testid="aut-aq-filter-type">
+            <select className={selectClass} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as ApprovalType | "all")} data-testid="aut-aq-filter-type" aria-label="Filter by type">
               <option value="all">All Types</option>
               <option value="Financial">Financial Approval</option>
               <option value="Operational">Operational Approval</option>

@@ -1,0 +1,90 @@
+[
+ {
+  "role": "Anon",
+  "url": "/auth",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".border-primary-border.bg-primary.text-primary-foreground > .text-left.w-full > .opacity-70.text-\\[10px\\]",
+      "html": "<div class=\"text-[10px] opacity-70\">ceo@ledger.com</div>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.23 (foreground color: #b8cdf7, background color: #2463eb, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "Anon",
+  "url": "/portal",
+  "violations": []
+ },
+ {
+  "role": "Client",
+  "url": "/portal",
+  "violations": []
+ },
+ {
+  "role": "Client",
+  "url": "/portal/jobs",
+  "violations": []
+ },
+ {
+  "role": "Client",
+  "url": "/portal/jobs/dj-pm-active-1",
+  "violations": [
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".space-y-2\\.5:nth-child(1) > h4",
+      "html": "<h4 class=\"text-xs font-semibold text-muted-foreground uppercase tracking-wider\">Project Manager</h4>",
+      "summary": "Fix any of the following:   Heading order invalid"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "Client",
+  "url": "/portal/sites",
+  "violations": []
+ },
+ {
+  "role": "Client",
+  "url": "/portal/documents",
+  "violations": []
+ },
+ {
+  "role": "Client",
+  "url": "/portal/invoices",
+  "violations": []
+ },
+ {
+  "role": "Client",
+  "url": "/portal/invoices/dinv-kex-1",
+  "violations": []
+ },
+ {
+  "role": "Client",
+  "url": "/portal/requests",
+  "violations": []
+ },
+ {
+  "role": "Client",
+  "url": "/portal/messages",
+  "violations": []
+ },
+ {
+  "role": "Client",
+  "url": "/portal/notifications",
+  "violations": []
+ }
+]

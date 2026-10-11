@@ -1,0 +1,141 @@
+[
+ {
+  "role": "PM",
+  "url": "/",
+  "violations": []
+ },
+ {
+  "role": "PM",
+  "url": "/jobs",
+  "violations": []
+ },
+ {
+  "role": "PM",
+  "url": "/review",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 2,
+    "sample": [
+     {
+      "target": ".text-blue-500",
+      "html": "<p class=\"text-[11px] text-blue-500 mt-0.5\">awaiting review</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.52 (foreground color: #2b7fff, background color: #f4f8fe, font size: 8.3pt (11px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".text-rose-600",
+      "html": "<p class=\"text-xs font-medium text-rose-600 uppercase tracking-wide\">Overdue</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.23 (foreground color: #ec003f, background color: #fcf6f7, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/schedule",
+  "violations": [
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "div[data-testid=\"pm-schedule-my-jobs\"] > h3",
+      "html": "<h3 class=\"text-lg font-semibold mb-3\">My Scheduled Jobs</h3>",
+      "summary": "Fix any of the following:   Heading order invalid"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/workers",
+  "violations": [
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "div[data-testid=\"pm-workforce-my-jobs\"] > h3",
+      "html": "<h3 class=\"text-base font-semibold mb-3\">Active &amp; Planned Jobs</h3>",
+      "summary": "Fix any of the following:   Heading order invalid"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/clients",
+  "violations": []
+ },
+ {
+  "role": "PM",
+  "url": "/client-requests",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".text-destructive",
+      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"client-request-decli...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.76 (foreground color: #ef4444, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/map",
+  "violations": [
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix all of the following:   Page must have a level-one heading"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/equipment",
+  "violations": []
+ },
+ {
+  "role": "PM",
+  "url": "/notifications",
+  "violations": [
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".bg-gray-50",
+      "html": "<div class=\"whitespace-nowrap in...\" data-testid=\"notif-status-badge-n...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 2.48 (foreground color: #99a1af, background color: #f9fafb, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   }
+  ]
+ }
+]

@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle, Clock } from "lucide-react";
+import { formatDate, daysUntil } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 
 export function AlertsPanel({ lowStock, serviceAlerts }: { lowStock: any[], serviceAlerts: any[] }) {
@@ -49,15 +50,16 @@ export function AlertsPanel({ lowStock, serviceAlerts }: { lowStock: any[], serv
             </TableHeader>
             <TableBody>
               {serviceAlerts.map((item, idx) => {
-                const daysLeft = Math.ceil((new Date(item.nextService).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-                const isOverdue = daysLeft < 0;
+                const nextDate = item.nextServiceDate ?? item.nextService;
+                const daysLeft = daysUntil(nextDate);
+                const isOverdue = daysLeft !== null && daysLeft < 0;
                 
                 return (
                   <TableRow key={idx}>
                     <TableCell className="font-medium text-foreground">{item.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{new Date(item.nextService).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatDate(nextDate)}</TableCell>
                     <TableCell className={`text-right font-bold ${isOverdue ? 'text-rose-600' : 'text-amber-600'}`}>
-                      {isOverdue ? `${Math.abs(daysLeft)} days overdue` : `${daysLeft} days`}
+                      {daysLeft === null ? "No service date" : isOverdue ? `${Math.abs(daysLeft)} days overdue` : `${daysLeft} days`}
                     </TableCell>
                     <TableCell>
                        {isOverdue ? 

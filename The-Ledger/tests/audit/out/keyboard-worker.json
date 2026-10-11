@@ -1,0 +1,34 @@
+{
+ "offlineBanner": {
+  "tag": "DIV",
+  "role": "button",
+  "tabIndex": 0
+ },
+ "workerHomeStops": [
+  "DIV:Online. Activate to switch to offline mo",
+  "BUTTON:Go to Job & Start Shift",
+  "BUTTON:Open Job",
+  "BUTTON:My Jobs",
+  "BUTTON:Schedule",
+  "BUTTON:Uploads",
+  "BUTTON:D\nProfile",
+  "DIV:Open activity: submissions need changes.",
+  "BUTTON:View all",
+  "BUTTON:Home",
+  "BUTTON:Jobs",
+  "BUTTON:Schedule",
+  "BUTTON:Activity",
+  "BUTTON:Uploads",
+  "BUTTON:Profile",
+  "BUTTON:Enterprise Sync QA Panel",
+  "BODY: [NO RING]",
+  "DIV:Online. Activate to switch to offline mo",
+  "BUTTON:Go to Job & Start Shift",
+  "BUTTON:Open Job",
+  "BUTTON:My Jobs",
+  "BUTTON:Schedule",
+  "BUTTON:Uploads",
+  "BUTTON:D\nProfile",
+  "DIV:Open activity: submissions need changes."
+ ]
+}

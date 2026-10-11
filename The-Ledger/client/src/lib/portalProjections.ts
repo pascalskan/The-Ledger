@@ -210,7 +210,7 @@ export function toPortalJob(job: Job, workers: Worker[], roles: Role[]): PortalJ
     .map((wid) => {
       const w = workers.find((worker) => worker.id === wid);
       if (!w) return null;
-      return toPortalCrewMember(w, roles, new Date(job.startAt).toLocaleDateString());
+      return toPortalCrewMember(w, roles, new Date(job.startAt).toLocaleDateString("en-GB"));
     })
     .filter((c): c is PortalCrewMember => c !== null);
 

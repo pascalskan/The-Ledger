@@ -1,0 +1,30 @@
+{
+ "create-job": {
+  "opened": true,
+  "tabsLandingOutsideDialog_of_40": 0,
+  "escapeCloses": true,
+  "focusAfterClose": {
+   "tag": "BODY",
+   "txt": "Skip to content\nL\nTh"
+  }
+ },
+ "add-worker": {
+  "opened": true,
+  "tabsLandingOutsideDialog_of_40": 0,
+  "escapeCloses": true,
+  "focusAfterClose": {
+   "tag": "BUTTON",
+   "txt": "Add Worker"
+  }
+ },
+ "build-report": {
+  "opened": true,
+  "tabsLandingOutsideDialog_of_40": 0,
+  "escapeCloses": true,
+  "focusAfterClose": {
+   "tag": "BODY",
+   "txt": "Skip to content\nL\nTh"
+  }
+ },
+ "sidebarToggleHasName": "Collapse sidebar"
+}

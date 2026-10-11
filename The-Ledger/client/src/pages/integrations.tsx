@@ -193,7 +193,7 @@ export default function IntegrationsPage() {
                         <div className="grid grid-cols-2 gap-1">
                           <span className="text-muted-foreground">Last Sync</span>
                           <span className="font-medium flex items-center gap-1">
-                            {activeIntegration?.lastSyncAt ? new Date(activeIntegration.lastSyncAt).toLocaleString() : "Never"}
+                            {activeIntegration?.lastSyncAt ? new Date(activeIntegration.lastSyncAt).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Never"}
                             {activeIntegration?.lastSyncStatus === "Success" && <CheckCircle2 className="h-3 w-3 text-green-600" />}
                             {activeIntegration?.lastSyncStatus === "Failed" && <AlertCircle className="h-3 w-3 text-red-600" />}
                           </span>

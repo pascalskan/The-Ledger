@@ -44,7 +44,10 @@ export default function ReviewPage() {
     return true;
   }).map(job => {
     // Check real review items for this job
-    const jobItems = reviewItems.filter(r => r.jobId === job.id && r.status === "pending");
+    // Items a PM escalated to the CEO ("awaiting CEO review") must stay visible and actionable
+    // here — they previously dropped out of every queue once escalated.
+    const jobItems = reviewItems.filter(r => r.jobId === job.id && (r.status === "pending" || r.status === "escalated"));
+    const escalatedCount = jobItems.filter(r => r.status === "escalated").length;
     
     const pendingPhotos = jobItems.filter(r => r.type === "photo").length;
     const pendingReports = jobItems.filter(
@@ -59,7 +62,8 @@ export default function ReviewPage() {
       pendingPhotos,
       pendingReports,
       pendingIssues,
-      totalPending
+      totalPending,
+      escalatedCount,
     };
   }).filter(j => j.totalPending > 0);
 
@@ -172,10 +176,10 @@ export default function ReviewPage() {
                   <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{(item as any).content}</p>
                 )}
               </div>
-              <div className="flex flex-row sm:flex-col gap-2 shrink-0">
+              <div className="flex flex-row flex-wrap sm:flex-nowrap sm:flex-col gap-2 shrink-0">
                 <Button
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-xs"
+                  className="bg-emerald-700 hover:bg-emerald-800 text-white h-8 text-xs"
                   data-testid={`pm-review-quick-approve-${item.id}`}
                   onClick={() => handleQuickApprove(item.id)}
                 >
@@ -631,12 +635,17 @@ export default function ReviewPage() {
                         <div className="flex gap-2">
                           {job.pendingReports > 0 && (
                             <Badge variant="secondary" className="bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200">
-                              <FileText className="w-3 h-3 mr-1" /> {job.pendingReports} Reports
+                              <FileText className="w-3 h-3 mr-1" /> {job.pendingReports} {job.pendingReports === 1 ? "Report" : "Reports"}
                             </Badge>
                           )}
                           {job.pendingPhotos > 0 && (
                             <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
-                              <ImageIcon className="w-3 h-3 mr-1" /> {job.pendingPhotos} Photos
+                              <ImageIcon className="w-3 h-3 mr-1" /> {job.pendingPhotos} {job.pendingPhotos === 1 ? "Photo" : "Photos"}
+                            </Badge>
+                          )}
+                          {job.escalatedCount > 0 && (
+                            <Badge variant="secondary" className="bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200" data-testid={`review-job-escalated-${job.id}`}>
+                              <ShieldAlert className="w-3 h-3 mr-1" /> {job.escalatedCount} Escalated
                             </Badge>
                           )}
                           {job.pendingIssues > 0 && (

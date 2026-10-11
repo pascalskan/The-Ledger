@@ -196,11 +196,11 @@ export default function InvoiceDetailPage() {
               <div className="grid grid-cols-2 gap-6 text-sm bg-muted/50 p-4 rounded-lg border border-border">
                 <div>
                   <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-1.5">Issue Date</h4>
-                  <p className="font-medium text-foreground">{new Date(invoice.issueDate).toLocaleDateString()}</p>
+                  <p className="font-medium text-foreground">{new Date(invoice.issueDate).toLocaleDateString("en-GB")}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-1.5">Due Date</h4>
-                  <p className="font-medium text-foreground">{new Date(invoice.dueDate).toLocaleDateString()}</p>
+                  <p className="font-medium text-foreground">{new Date(invoice.dueDate).toLocaleDateString("en-GB")}</p>
                 </div>
                 {job && (
                   <div className="col-span-2 pt-2 border-t border-border/60">

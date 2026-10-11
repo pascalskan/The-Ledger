@@ -1,3 +1,4 @@
+import { activatable } from "@/lib/a11y";
 import { WorkerMobileLayout } from "@/components/WorkerMobileLayout";
 import { useStore, useAuth } from "@/lib/mockData";
 import { MapPin, Clock, ArrowRight, Calendar } from "lucide-react";
@@ -34,7 +35,7 @@ export default function WorkerJobsPage() {
                   key={job.id}
                   data-testid={`worker-job-card-${job.id}`}
                   className="bg-card rounded-2xl p-5 shadow-sm border border-border active:scale-[0.98] transition-transform cursor-pointer"
-                  onClick={() => setLocation(`/worker/jobs/${job.id}`)}
+                  {...activatable(() => setLocation(`/worker/jobs/${job.id}`), `Open job ${job.title}`)}
                 >
                   <div className="flex justify-between items-start mb-3">
                     <Badge variant={job.status === 'Active' ? 'default' : 'secondary'} className="text-xs">
@@ -53,7 +54,7 @@ export default function WorkerJobsPage() {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <span>{new Date(job.startAt).toLocaleDateString()} at {new Date(job.startAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                      <span>{new Date(job.startAt).toLocaleDateString("en-GB")} at {new Date(job.startAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
                   </div>
 
@@ -79,13 +80,13 @@ export default function WorkerJobsPage() {
               <div
                 key={job.id}
                 className="bg-card rounded-xl p-4 shadow-sm border border-border flex items-center justify-between cursor-pointer"
-                onClick={() => setLocation(`/worker/jobs/${job.id}`)}
+                {...activatable(() => setLocation(`/worker/jobs/${job.id}`), `Open job ${job.title}`)}
               >
                 <div>
                   <h4 className="font-semibold text-sm truncate max-w-[200px]">{job.title}</h4>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                     <Calendar className="w-3 h-3" />
-                    {new Date(job.startAt).toLocaleDateString()}
+                    {new Date(job.startAt).toLocaleDateString("en-GB")}
                   </div>
                 </div>
                 <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground">Completed</Badge>

@@ -36,13 +36,13 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-muted dark:bg-slate-950 p-4">
+    <main id="main-content" className="min-h-screen w-full flex items-center justify-center bg-muted dark:bg-slate-950 p-4">
       <Card className="w-full max-w-md shadow-xl border-border dark:border-slate-800">
         <CardHeader className="space-y-1 text-center pb-8">
           <div className="mx-auto w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
             <span className="text-2xl font-bold text-primary-foreground">L</span>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">The Ledger</CardTitle>
+          <CardTitle role="heading" aria-level={1} className="text-2xl font-bold tracking-tight">The Ledger</CardTitle>
           <CardDescription>
             Operational Intelligence for Field Service Businesses
           </CardDescription>
@@ -111,6 +111,6 @@ export default function AuthPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }

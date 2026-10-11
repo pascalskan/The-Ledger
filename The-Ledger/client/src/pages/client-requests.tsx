@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { StaffConversations } from "@/components/StaffConversations";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, TriangleAlert, ShieldCheck, Search, Building2, Briefcase } from "lucide-react";
 import {
@@ -160,7 +161,7 @@ export default function ClientRequestsPage() {
               className="h-10 rounded-md border bg-background px-3 text-sm"
               value={filter}
               onChange={(e) => setFilter(e.target.value as StatusFilter)}
-              data-testid="client-requests-filter"
+              data-testid="client-requests-filter" aria-label="Client requests filter"
             >
               <option value="outstanding">Outstanding</option>
               <option value="all">All</option>
@@ -215,7 +216,7 @@ export default function ClientRequestsPage() {
                           <Briefcase className="h-3 w-3" /> {jobTitle(r.projectId) ?? "No linked project"}
                         </span>
                         <span>{meta.label}</span>
-                        <span>Submitted {new Date(r.createdAt).toLocaleDateString()}</span>
+                        <span>Submitted {new Date(r.createdAt).toLocaleDateString("en-GB")}</span>
                       </div>
                     </div>
 
@@ -278,6 +279,12 @@ export default function ClientRequestsPage() {
             })}
           </div>
         )}
+
+        <StaffConversations
+          visibleProjectIds={userIsCEO ? jobs.map((j) => j.id) : jobs.filter((j) => j.managerId === user?.id).map((j) => j.id)}
+          jobTitle={(id) => jobTitle(id)}
+          staffName={actor}
+        />
       </div>
 
       {/* Resolve / decline dialog — note is mandatory and shared with the client */}

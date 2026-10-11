@@ -242,3 +242,43 @@ export function recordThreadViewed(threadId: string, who: string, clientId: stri
     externalReference: thread.projectId,
   });
 }
+
+// ── Staff side (CEO / PM) ───────────────────────────────────────────────────
+// Clients could start conversations in the portal but nothing internal could read
+// or answer them. These accessors/mutators back the staff inbox on the Client
+// Requests page. Still no financial effect and never enters the Review Centre.
+
+export function getAllThreads(): ClientCommunicationThread[] {
+  return [...threads].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+}
+
+export interface StaffReplyInput {
+  threadId: string;
+  message: string;
+  /** The signed-in staff member's display name. */
+  senderName: string;
+}
+
+/** Staff reply. The thread now waits on the client, so it returns to "Open". */
+export function addStaffReply(input: StaffReplyInput): ClientCommunicationMessage | undefined {
+  const idx = threads.findIndex((t) => t.id === input.threadId);
+  if (idx === -1 || !input.message.trim()) return undefined;
+  const now = new Date().toISOString();
+  const msg: ClientCommunicationMessage = {
+    id: `msg-${Math.random().toString(36).slice(2, 9)}`,
+    threadId: input.threadId,
+    senderType: "ProjectManager",
+    senderName: input.senderName,
+    message: input.message.trim(),
+    createdAt: now,
+  };
+  messages.push(msg);
+  threads[idx] = { ...threads[idx], status: "Open", updatedAt: now };
+  return msg;
+}
+
+export function closeThread(threadId: string): void {
+  const idx = threads.findIndex((t) => t.id === threadId);
+  if (idx === -1) return;
+  threads[idx] = { ...threads[idx], status: "Closed", updatedAt: new Date().toISOString() };
+}

@@ -214,7 +214,7 @@ export function ReconciliationTab() {
             className="h-9 rounded-md border bg-background px-3 text-sm"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as ReconciliationStatus | "all")}
-            data-testid="recon-filter-status"
+            data-testid="recon-filter-status" aria-label="Filter by status"
           >
             <option value="all">All Statuses</option>
             <option value="matched">Matched</option>
@@ -228,7 +228,7 @@ export function ReconciliationTab() {
             className="h-9 rounded-md border bg-background px-3 text-sm"
             value={providerFilter}
             onChange={(e) => setProviderFilter(e.target.value as AccountingProvider | "all")}
-            data-testid="recon-filter-provider"
+            data-testid="recon-filter-provider" aria-label="Filter by provider"
           >
             <option value="all">All Providers</option>
             <option value="quickbooks">QuickBooks</option>
@@ -241,7 +241,7 @@ export function ReconciliationTab() {
             className="h-9 rounded-md border bg-background px-3 text-sm"
             value={entityTypeFilter}
             onChange={(e) => setEntityTypeFilter(e.target.value as EntityType | "all")}
-            data-testid="recon-filter-entity-type"
+            data-testid="recon-filter-entity-type" aria-label="Filter by entity type"
           >
             <option value="all">All Entity Types</option>
             <option value="invoice">Invoice</option>

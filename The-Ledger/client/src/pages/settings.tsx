@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { isEmail, isUkSortCode, isAccountNumber } from "@/lib/validate";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -16,6 +17,15 @@ export default function SettingsPage() {
   const [, setLocation] = useLocation();
 
   const handleSave = () => {
+    const problems: string[] = [];
+    if (!formData.companyLegalName?.trim()) problems.push("Legal company name is required.");
+    if (formData.email && !isEmail(formData.email)) problems.push("Email address is not valid.");
+    if (formData.sortCode && !isUkSortCode(formData.sortCode)) problems.push("Sort code must look like 20-11-99.");
+    if (formData.accountNumber && !isAccountNumber(formData.accountNumber)) problems.push("Account number must be 6–8 digits.");
+    if (problems.length > 0) {
+      toast({ title: "Check the highlighted details", description: problems.join(" "), variant: "destructive" });
+      return;
+    }
     updateSettings(formData);
     toast({ title: "Settings Saved", description: "Company details updated successfully." });
   };
@@ -37,30 +47,30 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Legal Company Name</Label>
-                <Input value={formData.companyLegalName} onChange={e => setFormData({...formData, companyLegalName: e.target.value})} />
+                <Input aria-label="Legal company name" value={formData.companyLegalName} onChange={e => setFormData({...formData, companyLegalName: e.target.value})} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label>Registration Number</Label>
-                    <Input value={formData.registrationNumber || ""} onChange={e => setFormData({...formData, registrationNumber: e.target.value})} placeholder="e.g. 12345678" />
+                    <Input aria-label="Registration number" value={formData.registrationNumber || ""} onChange={e => setFormData({...formData, registrationNumber: e.target.value})} placeholder="e.g. 12345678" />
                 </div>
                 <div className="space-y-2">
                     <Label>Tax / VAT ID</Label>
-                    <Input value={formData.taxId || ""} onChange={e => setFormData({...formData, taxId: e.target.value})} placeholder="e.g. GB 123 4567 89" />
+                    <Input aria-label="Tax or VAT ID" value={formData.taxId || ""} onChange={e => setFormData({...formData, taxId: e.target.value})} placeholder="e.g. GB 123 4567 89" />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Registered Address</Label>
-                <Input value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                <Input aria-label="Registered address" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label>Email</Label>
-                    <Input value={formData.email || ""} onChange={e => setFormData({...formData, email: e.target.value})} type="email" />
+                    <Input aria-label="Email" value={formData.email || ""} onChange={e => setFormData({...formData, email: e.target.value})} type="email" />
                 </div>
                 <div className="space-y-2">
                     <Label>Phone</Label>
-                    <Input value={formData.phone || ""} onChange={e => setFormData({...formData, phone: e.target.value})} type="tel" />
+                    <Input aria-label="Phone" value={formData.phone || ""} onChange={e => setFormData({...formData, phone: e.target.value})} type="tel" />
                 </div>
               </div>
             </CardContent>
@@ -75,21 +85,21 @@ export default function SettingsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Bank Name</Label>
-                  <Input value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} />
+                  <Input aria-label="Bank name" value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} />
                 </div>
                 <div className="space-y-2">
                   <Label>Account Name</Label>
-                  <Input value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})} />
+                  <Input aria-label="Account name" value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Account Number</Label>
-                  <Input value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})} />
+                  <Input aria-label="Account number" value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})} />
                 </div>
                 <div className="space-y-2">
                   <Label>Sort Code (UK)</Label>
-                  <Input value={formData.sortCode} onChange={e => setFormData({...formData, sortCode: e.target.value})} />
+                  <Input aria-label="Sort code" value={formData.sortCode} onChange={e => setFormData({...formData, sortCode: e.target.value})} />
                 </div>
               </div>
             </CardContent>

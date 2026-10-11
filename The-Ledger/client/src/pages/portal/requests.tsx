@@ -163,7 +163,7 @@ function RequestList({
                   className="h-10 w-full rounded-md border border-border bg-card px-3 text-sm"
                   value={type}
                   onChange={(e) => setType(e.target.value as ClientRequestType)}
-                  data-testid="portal-request-type"
+                  data-testid="portal-request-type" aria-label="Portal request type"
                 >
                   {CLIENT_REQUEST_TYPES.map((t) => (
                     <option key={t.code} value={t.code}>{t.label}</option>
@@ -180,7 +180,7 @@ function RequestList({
                   className="h-10 w-full rounded-md border border-border bg-card px-3 text-sm"
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
-                  data-testid="portal-request-project"
+                  data-testid="portal-request-project" aria-label="Portal request project"
                 >
                   <option value="">No specific project</option>
                   {jobs.map((j) => (
@@ -257,7 +257,7 @@ function RequestList({
                       {r.statusLabel}
                     </Badge>
                     <span className="text-[11px] text-muted-foreground">
-                      {new Date(r.submittedAt).toLocaleDateString()}
+                      {new Date(r.submittedAt).toLocaleDateString("en-GB")}
                     </span>
                   </div>
                 </div>
@@ -290,7 +290,7 @@ function RequestDetail({ request, onBack }: { request: PortalRequest; onBack: ()
           {request.subject}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Submitted {new Date(request.submittedAt).toLocaleString()}
+          Submitted {new Date(request.submittedAt).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
           {request.projectTitle ? ` · ${request.projectTitle}` : ""}
         </p>
       </div>

@@ -161,7 +161,7 @@ export default function WorkerHistoryPage() {
                         <div className="min-w-0">
                           <p className="font-semibold text-sm truncate">{e.title}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {kindLabel(e.kind)} · {new Date(e.dateISO).toLocaleDateString()}
+                            {kindLabel(e.kind)} · {new Date(e.dateISO).toLocaleDateString("en-GB")}
                           </p>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                             <Briefcase className="w-3 h-3 shrink-0" />

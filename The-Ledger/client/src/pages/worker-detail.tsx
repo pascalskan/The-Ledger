@@ -7,8 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, User, FileText, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { isEmail } from "@/lib/validate";
 
 export default function WorkerDetailPage() {
+  const { toast } = useToast();
   const { workers, roles, updateWorker } = useStore();
   const [match, params] = useRoute("/workers/:id");
   const [, setLocation] = useLocation();
@@ -50,6 +53,10 @@ export default function WorkerDetailPage() {
 
   const saveEdit = () => {
     if (!worker) return;
+    if (editForm.email.trim() && !isEmail(editForm.email)) {
+      toast({ title: "Email not valid", description: "Enter a valid email address or leave it blank.", variant: "destructive" });
+      return;
+    }
     updateWorker(worker.id, {
       firstName: editForm.firstName.trim() || worker.firstName,
       lastName: editForm.lastName.trim() || worker.lastName,
@@ -57,6 +64,7 @@ export default function WorkerDetailPage() {
       phone: editForm.phone.trim() || worker.phone,
       status: editForm.status,
     });
+    toast({ title: "Worker updated", description: "Changes have been saved." });
     setIsEditing(false);
   };
 
@@ -82,6 +90,7 @@ export default function WorkerDetailPage() {
               size="icon"
               onClick={() => setLocation("/workers")}
               data-testid="button-back-workers"
+              aria-label="Back to workers"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -167,7 +176,7 @@ export default function WorkerDetailPage() {
                               <span data-testid="text-worker-status">{worker.status}</span>
                             ) : (
                               <select
-                                data-testid="select-worker-status-edit"
+                                data-testid="select-worker-status-edit" aria-label="Worker status"
                                 className="h-9 w-[220px] rounded-md border bg-background px-3 text-sm"
                                 value={editForm.status}
                                 onChange={(e) => setEditForm((p) => ({ ...p, status: e.target.value as any }))}
@@ -192,7 +201,7 @@ export default function WorkerDetailPage() {
                             worker.documents.map((doc, i) => (
                                 <div key={i} className="flex justify-between items-center border rounded p-2 text-sm bg-muted dark:bg-slate-900">
                                     <span className="truncate max-w-[120px]" title={doc.name}>{doc.name}</span>
-                                    <Button variant="ghost" size="sm" onClick={() => setViewDoc(doc)} className="h-6 px-2">
+                                    <Button variant="ghost" size="sm" onClick={() => setViewDoc(doc)} className="h-6 px-2" aria-label={`View ${doc.name}`}>
                                         <Eye className="h-3 w-3" />
                                     </Button>
                                 </div>
@@ -214,7 +223,7 @@ export default function WorkerDetailPage() {
                         <div key={job.id} className="flex justify-between items-center border rounded p-2" onClick={() => setLocation(`/jobs/${job.id}`)}>
                             <div>
                                 <p className="font-medium cursor-pointer hover:underline">{job.title}</p>
-                                <p className="text-xs text-muted-foreground">{new Date(job.startAt).toLocaleDateString()}</p>
+                                <p className="text-xs text-muted-foreground">{new Date(job.startAt).toLocaleDateString("en-GB")}</p>
                             </div>
                             <Badge variant={job.status === "Active" ? "default" : "secondary"}>{job.status}</Badge>
                         </div>

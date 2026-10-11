@@ -20,6 +20,7 @@
 
 import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { PageHeader } from '@/components/page-shell';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -514,6 +515,17 @@ export default function AutomationGovernanceCentrePage() {
   // Governance actions
   const performerName = user?.name ?? "CEO";
 
+  // Restrict and Suspend halt an automation — ask first instead of acting on one click.
+  const [pendingGovAction, setPendingGovAction] = useState<{ action: string; ruleId: string; ruleName: string } | null>(null);
+  function requestGovernanceAction(action: string, ruleId: string) {
+    if (action === "restrict" || action === "suspend") {
+      const name = govRecords.find((r) => r.ruleId === ruleId)?.ruleName ?? ruleId;
+      setPendingGovAction({ action, ruleId, ruleName: name });
+      return;
+    }
+    handleGovernanceAction(action, ruleId);
+  }
+
   function handleGovernanceAction(action: string, ruleId: string) {
     const defaultNote = `${action} action performed by ${performerName}.`;
     let result: { record: AutomationGovernanceRecord; audit: GovernanceAuditEntry } | null = null;
@@ -629,7 +641,7 @@ export default function AutomationGovernanceCentrePage() {
                     className="border rounded-md px-3 py-2 text-sm bg-background"
                     value={govRiskFilter}
                     onChange={(e) => setGovRiskFilter(e.target.value)}
-                    data-testid="gov-filter-risk"
+                    data-testid="gov-filter-risk" aria-label="Filter by risk"
                   >
                     <option value="all">All Risk Levels</option>
                     <option value="Low">Low</option>
@@ -641,7 +653,7 @@ export default function AutomationGovernanceCentrePage() {
                     className="border rounded-md px-3 py-2 text-sm bg-background"
                     value={govStatusFilter}
                     onChange={(e) => setGovStatusFilter(e.target.value)}
-                    data-testid="gov-filter-status"
+                    data-testid="gov-filter-status" aria-label="Filter by status"
                   >
                     <option value="all">All Statuses</option>
                     <option value="Compliant">Compliant</option>
@@ -653,7 +665,7 @@ export default function AutomationGovernanceCentrePage() {
                     className="border rounded-md px-3 py-2 text-sm bg-background"
                     value={govCategoryFilter}
                     onChange={(e) => setGovCategoryFilter(e.target.value)}
-                    data-testid="gov-filter-category"
+                    data-testid="gov-filter-category" aria-label="Filter by category"
                   >
                     <option value="all">All Categories</option>
                     <option value="Operational">Operational</option>
@@ -841,7 +853,7 @@ export default function AutomationGovernanceCentrePage() {
                     className="border rounded-md px-3 py-2 text-sm bg-background"
                     value={auditRiskFilter}
                     onChange={(e) => setAuditRiskFilter(e.target.value)}
-                    data-testid="gov-audit-filter-risk"
+                    data-testid="gov-audit-filter-risk" aria-label="Filter by risk"
                   >
                     <option value="all">All Risk Impacts</option>
                     <option value="Low">Low</option>
@@ -913,9 +925,26 @@ export default function AutomationGovernanceCentrePage() {
         <GovernanceDetailDialog
           record={selectedRecord}
           onClose={() => setSelectedRecord(null)}
-          onAction={handleGovernanceAction}
+          onAction={requestGovernanceAction}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingGovAction !== null}
+        title={pendingGovAction?.action === "suspend" ? "Suspend this automation?" : "Restrict this automation?"}
+        description={
+          pendingGovAction
+            ? `${pendingGovAction.ruleName} will be ${pendingGovAction.action === "suspend" ? "fully halted" : "limited"} and the action is recorded in the compliance audit. You can restore it afterwards.`
+            : undefined
+        }
+        confirmLabel={pendingGovAction?.action === "suspend" ? "Suspend" : "Restrict"}
+        destructive
+        onCancel={() => setPendingGovAction(null)}
+        onConfirm={() => {
+          if (pendingGovAction) handleGovernanceAction(pendingGovAction.action, pendingGovAction.ruleId);
+          setPendingGovAction(null);
+        }}
+      />
 
       {/* Exception Detail Dialog */}
       {selectedEx && (

@@ -556,7 +556,7 @@ export default function WorkflowCentrePage() {
                 className="h-9 rounded-md border bg-background px-3 text-sm"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as WorkflowStatus | 'all')}
-                data-testid="wf-filter-status"
+                data-testid="wf-filter-status" aria-label="Filter by status"
               >
                 <option value="all">All Statuses</option>
                 <option value="active">Active</option>
@@ -568,7 +568,7 @@ export default function WorkflowCentrePage() {
                 className="h-9 rounded-md border bg-background px-3 text-sm"
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value as WorkflowType | 'all')}
-                data-testid="wf-filter-type"
+                data-testid="wf-filter-type" aria-label="Filter by type"
               >
                 <option value="all">All Types</option>
                 {allTypes.map((t) => (
@@ -682,6 +682,7 @@ export default function WorkflowCentrePage() {
                                 className="text-xs h-7 text-amber-700 border-amber-300"
                                 onClick={() => handlePause(wf)}
                                 data-testid={`wf-btn-pause-${wf.id}`}
+                                aria-label={`Pause ${wf.name}`}
                               >
                                 <PauseCircle className="h-3 w-3" />
                               </Button>
@@ -693,6 +694,7 @@ export default function WorkflowCentrePage() {
                                 className="text-xs h-7 text-emerald-700 border-emerald-300"
                                 onClick={() => handleResume(wf)}
                                 data-testid={`wf-btn-resume-${wf.id}`}
+                                aria-label={`Resume ${wf.name}`}
                               >
                                 <PlayCircle className="h-3 w-3" />
                               </Button>
@@ -704,6 +706,7 @@ export default function WorkflowCentrePage() {
                                 className="text-xs h-7 text-stone-600"
                                 onClick={() => handleArchive(wf)}
                                 data-testid={`wf-btn-archive-${wf.id}`}
+                                aria-label={`Archive ${wf.name}`}
                               >
                                 <Archive className="h-3 w-3" />
                               </Button>

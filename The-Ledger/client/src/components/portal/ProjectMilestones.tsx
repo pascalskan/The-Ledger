@@ -29,8 +29,8 @@ export function ProjectMilestones({ milestones }: { milestones: PortalMilestone[
               const Icon = meta.icon;
               const dateLabel =
                 m.status === "Completed" && m.completedDate
-                  ? `Completed ${new Date(m.completedDate).toLocaleDateString()}`
-                  : `Target ${new Date(m.targetDate).toLocaleDateString()}`;
+                  ? `Completed ${new Date(m.completedDate).toLocaleDateString("en-GB")}`
+                  : `Target ${new Date(m.targetDate).toLocaleDateString("en-GB")}`;
               return (
                 <li
                   key={m.id}

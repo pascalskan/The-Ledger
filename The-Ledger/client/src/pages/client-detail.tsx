@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Phone, Building2, Save, X, FileText, Upload, Link2, Trash2, Tag, BadgeCheck, CircleSlash, HandCoins, MessageSquareText, PhoneCall, Send, StickyNote, ShieldCheck, Users, Eye, KeyRound, Clock, BadgeDollarSign } from "lucide-react";
 import { useMemo, useState } from "react";
+import { isEmail } from "@/lib/validate";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/mockData";
 import {
@@ -281,6 +282,7 @@ export default function ClientDetailPage() {
               size="icon"
               onClick={() => setLocation("/clients")}
               data-testid="button-back-clients"
+              aria-label="Back to clients"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -366,6 +368,10 @@ export default function ClientDetailPage() {
                         toast({ title: "Email required", description: "Enter the client user's email.", variant: "destructive" });
                         return;
                       }
+                      if (!isEmail(trimmed)) {
+                        toast({ title: "Email not valid", description: "Enter a valid email address, e.g. name@client.com.", variant: "destructive" });
+                        return;
+                      }
                       createPortalAccount({
                         clientId: client.id,
                         email: trimmed,
@@ -427,7 +433,7 @@ export default function ClientDetailPage() {
                                 </div>
                                 <div className="mt-0.5 text-[11px] text-muted-foreground" data-testid={`text-portal-account-last-login-${acc.id}`}>
                                   <Clock className="inline h-3 w-3 mr-1" />
-                                  {acc.lastLoginAt ? `Last login ${new Date(acc.lastLoginAt).toLocaleDateString()}` : "Never signed in"}
+                                  {acc.lastLoginAt ? `Last login ${new Date(acc.lastLoginAt).toLocaleDateString("en-GB")}` : "Never signed in"}
                                 </div>
                               </div>
 
@@ -502,7 +508,7 @@ export default function ClientDetailPage() {
                       className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                       value={relDraft.status}
                       onChange={(e) => setRelDraft((p) => ({ ...p, status: e.target.value as any }))}
-                      data-testid="select-client-relationship-status"
+                      data-testid="select-client-relationship-status" aria-label="Client relationship status"
                     >
                       {(["Active", "On Hold", "Do Not Serve"] as const).map((s) => (
                         <option key={s} value={s}>
@@ -643,19 +649,19 @@ export default function ClientDetailPage() {
                 <div className="space-y-0.5">
                   <span className="text-xs text-muted-foreground">Total Billed</span>
                   <p className="text-lg font-semibold" data-testid="text-client-total-billed">
-                    ${totalBilled.toLocaleString()}
+                    £{totalBilled.toLocaleString()}
                   </p>
                 </div>
                 <div className="space-y-0.5">
                   <span className="text-xs text-muted-foreground">Paid</span>
                   <p className="text-lg font-semibold text-green-600" data-testid="text-client-total-paid">
-                    ${totalPaid.toLocaleString()}
+                    £{totalPaid.toLocaleString()}
                   </p>
                 </div>
                 <div className="space-y-0.5">
                   <span className="text-xs text-muted-foreground">Outstanding</span>
                   <p className="text-lg font-semibold text-red-600" data-testid="text-client-outstanding">
-                    ${outstanding.toLocaleString()}
+                    £{outstanding.toLocaleString()}
                   </p>
                 </div>
               </CardContent>
@@ -703,7 +709,7 @@ export default function ClientDetailPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <div className="inline-flex rounded-md border bg-background p-1" data-testid="segmented-client-activity-filter">
                     <button
                       type="button"
@@ -763,7 +769,7 @@ export default function ClientDetailPage() {
                         className="mt-1 h-9 w-full rounded-md border bg-background px-3 text-sm"
                         value={newActivity.type}
                         onChange={(e) => setNewActivity((p) => ({ ...p, type: e.target.value as any }))}
-                        data-testid="select-client-activity-type"
+                        data-testid="select-client-activity-type" aria-label="Client activity type"
                       >
                         <option value="note">Note</option>
                         <option value="call">Call</option>
@@ -788,7 +794,7 @@ export default function ClientDetailPage() {
                         className="mt-1 h-9 w-full rounded-md border bg-background px-3 text-sm"
                         value={newActivity.priority}
                         onChange={(e) => setNewActivity((p) => ({ ...p, priority: e.target.value as any }))}
-                        data-testid="select-client-activity-priority"
+                        data-testid="select-client-activity-priority" aria-label="Client activity priority"
                       >
                         <option value="Low">Low</option>
                         <option value="Normal">Normal</option>
@@ -910,7 +916,7 @@ export default function ClientDetailPage() {
                                     className="text-xs text-muted-foreground font-mono"
                                     data-testid={`text-client-activity-date-${a.id}`}
                                   >
-                                    {new Date(a.createdAt).toLocaleString()}
+                                    {new Date(a.createdAt).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                                   </span>
                                 </div>
                                 <div className="mt-1 font-medium" data-testid={`text-client-activity-title-${a.id}`}>
@@ -942,6 +948,7 @@ export default function ClientDetailPage() {
                                   className="text-destructive"
                                   onClick={() => setActivity((p) => p.filter((x) => x.id !== a.id))}
                                   data-testid={`button-client-activity-delete-${a.id}`}
+                                  aria-label="Delete activity entry"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -996,8 +1003,8 @@ export default function ClientDetailPage() {
                           <span className="font-mono" data-testid={`text-client-job-id-${job.id}`}>{job.jobId}</span>
                           <span aria-hidden>•</span>
                           <span data-testid={`text-client-job-date-${job.id}`}>
-                            {new Date(job.startAt).toLocaleDateString()}
-                            {job.endAt ? ` → ${new Date(job.endAt).toLocaleDateString()}` : ""}
+                            {new Date(job.startAt).toLocaleDateString("en-GB")}
+                            {job.endAt ? ` → ${new Date(job.endAt).toLocaleDateString("en-GB")}` : ""}
                           </span>
                         </div>
                       </div>
@@ -1013,7 +1020,7 @@ export default function ClientDetailPage() {
                         <span className="text-muted-foreground">Priority:</span> {job.priority || "—"}
                       </div>
                       <div className="text-xs" data-testid={`text-client-job-costs-${job.id}`}>
-                        <span className="text-muted-foreground">Cost:</span> ${
+                        <span className="text-muted-foreground">Cost:</span> £{
                           (
                             (job.costs?.labour ?? 0) +
                             (job.costs?.equipment ?? 0) +
@@ -1075,7 +1082,7 @@ export default function ClientDetailPage() {
                   className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                   value={newDoc.type}
                   onChange={(e) => setNewDoc((p) => ({ ...p, type: e.target.value }))}
-                  data-testid="select-client-doc-type"
+                  data-testid="select-client-doc-type" aria-label="Client doc type"
                 >
                   {Object.entries(DOC_LABEL).map(([k, v]) => (
                     <option key={k} value={k}>
@@ -1090,7 +1097,7 @@ export default function ClientDetailPage() {
                   className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                   value={newDoc.status}
                   onChange={(e) => setNewDoc((p) => ({ ...p, status: e.target.value }))}
-                  data-testid="select-client-doc-status"
+                  data-testid="select-client-doc-status" aria-label="Client doc status"
                 >
                   {["Required", "Received", "Approved", "Expired"].map((s) => (
                     <option key={s} value={s}>
@@ -1106,6 +1113,7 @@ export default function ClientDetailPage() {
                   value={newDoc.expiryDate}
                   onChange={(e) => setNewDoc((p) => ({ ...p, expiryDate: e.target.value }))}
                   data-testid="input-client-doc-expiry"
+                  aria-label="Document expiry date"
                 />
               </div>
             </div>
@@ -1153,13 +1161,13 @@ export default function ClientDetailPage() {
                               className="text-xs text-muted-foreground font-mono"
                               data-testid={`text-client-doc-expiry-${d.id || idx}`}
                             >
-                              exp {new Date(d.expiryDate).toLocaleDateString()}
+                              exp {new Date(d.expiryDate).toLocaleDateString("en-GB")}
                             </span>
                           )}
                         </div>
                         {d.uploadedAt && (
                           <div className="text-xs text-muted-foreground" data-testid={`text-client-doc-uploaded-${d.id || idx}`}>
-                            Uploaded {new Date(d.uploadedAt).toLocaleDateString()}
+                            Uploaded {new Date(d.uploadedAt).toLocaleDateString("en-GB")}
                           </div>
                         )}
                       </div>

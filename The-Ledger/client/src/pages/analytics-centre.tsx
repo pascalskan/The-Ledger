@@ -48,7 +48,7 @@ import {
   ShieldAlert,
   GitBranch,
   RefreshCw,
-  DollarSign,
+  PoundSterling,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ function TrendIcon({ direction }: { direction: string }) {
 function CategoryIcon({ category }: { category: RiskItem['category'] | BottleneckItem['category'] }) {
   switch (category) {
     case 'governance': return <Shield className="h-4 w-4" />;
-    case 'financial': return <DollarSign className="h-4 w-4" />;
+    case 'financial': return <PoundSterling className="h-4 w-4" />;
     case 'workflow': return <GitBranch className="h-4 w-4" />;
     case 'review': return <ShieldAlert className="h-4 w-4" />;
     case 'exception': return <TriangleAlert className="h-4 w-4" />;
@@ -306,6 +306,7 @@ export function AnalyticsCentreContent({ embedded = false }: { embedded?: boolea
                       </Badge>
                       <Button
                         data-testid={`analytics-risk-link-${risk.id}`}
+                        aria-label={`Investigate ${risk.title}`}
                         variant="ghost"
                         size="sm"
                         className="h-6 text-xs gap-1 px-2"

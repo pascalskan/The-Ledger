@@ -180,7 +180,7 @@ export default function EventMonitorPage() {
                     value={typeFilter}
                     onValueChange={(v) => setTypeFilter(v as BusEventCategory | 'all')}
                   >
-                    <SelectTrigger data-testid="em-filter-type" className="w-44">
+                    <SelectTrigger data-testid="em-filter-type" aria-label="Filter by event type" className="w-44">
                       <SelectValue placeholder="Event Type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -194,7 +194,7 @@ export default function EventMonitorPage() {
                     value={priorityFilter}
                     onValueChange={(v) => setPriorityFilter(v as BusEventPriority | 'all')}
                   >
-                    <SelectTrigger data-testid="em-filter-priority" className="w-36">
+                    <SelectTrigger data-testid="em-filter-priority" aria-label="Filter by priority" className="w-36">
                       <SelectValue placeholder="Priority" />
                     </SelectTrigger>
                     <SelectContent>

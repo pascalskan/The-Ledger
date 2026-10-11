@@ -20,7 +20,7 @@ export function SmartFilters({ filters, setFilters }: SmartFiltersProps) {
       </div>
       
       <Select value={filters.margin} onValueChange={(v) => setFilters({...filters, margin: v})}>
-        <SelectTrigger className="h-8 border-0 bg-transparent text-xs font-medium w-[130px] focus:ring-0">
+        <SelectTrigger className="h-8 border-0 bg-transparent text-xs font-medium w-[130px] focus:ring-0" aria-label="Filter by margin status">
           <SelectValue placeholder="Margin Status" />
         </SelectTrigger>
         <SelectContent>
@@ -33,7 +33,7 @@ export function SmartFilters({ filters, setFilters }: SmartFiltersProps) {
       <div className="w-px h-4 bg-slate-200 mx-1"></div>
 
       <Select value={filters.client} onValueChange={(v) => setFilters({...filters, client: v})}>
-        <SelectTrigger className="h-8 border-0 bg-transparent text-xs font-medium w-[120px] focus:ring-0">
+        <SelectTrigger className="h-8 border-0 bg-transparent text-xs font-medium w-[120px] focus:ring-0" aria-label="Filter by client">
           <SelectValue placeholder="All Clients" />
         </SelectTrigger>
         <SelectContent>

@@ -44,7 +44,7 @@ export function WeeklyIntelligenceStrip({ metrics }: WeeklyIntelligenceStripProp
       <Card className="shadow-sm border-border bg-muted/50">
         <CardContent className="p-3">
           <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-            <Clock className="h-3.5 w-3.5" /> Est. Labor
+            <Clock className="h-3.5 w-3.5" /> Est. Labour
           </div>
           <div className="text-xl font-bold text-foreground">{formatCur(metrics.forecastedLaborCost)}</div>
         </CardContent>

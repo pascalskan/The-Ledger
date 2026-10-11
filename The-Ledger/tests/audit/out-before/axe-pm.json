@@ -1,0 +1,716 @@
+[
+ {
+  "role": "PM",
+  "url": "/",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".md\\:flex.hidden.h-9",
+      "html": "<button class=\"items-center justify...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 2,
+    "sample": [
+     {
+      "target": ".py-1.mt-3.mb-1:nth-child(1)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Primary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".py-1.mt-3.mb-1:nth-child(3)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Secondary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   },
+   {
+    "id": "document-title",
+    "impact": "serious",
+    "help": "Documents must have <title> element to aid in navigation",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix any of the following:   Document does not have a non-empty <title> element"
+     }
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "meta[name=\"viewport\"]",
+      "html": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">",
+      "summary": "Fix any of the following:   maximum-scale on <meta> tag disables zooming on mobile devices"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/jobs",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".md\\:flex.hidden.h-9",
+      "html": "<button class=\"items-center justify...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 10,
+    "sample": [
+     {
+      "target": ".uppercase.tracking-wider.py-1:nth-child(1)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Primary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".uppercase.tracking-wider.py-1:nth-child(3)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Secondary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": "div[data-testid=\"text-job-id-dj-pm-active-1\"]",
+      "html": "<div class=\"text-muted-foreground font-mono text-xs truncate\" data-testid=\"text-job-id-dj-pm-active-1\">DEMO-JOB-0203</div>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.46 (foreground color: #64748b, background color: #faf7f8, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   },
+   {
+    "id": "document-title",
+    "impact": "serious",
+    "help": "Documents must have <title> element to aid in navigation",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix any of the following:   Document does not have a non-empty <title> element"
+     }
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "meta[name=\"viewport\"]",
+      "html": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">",
+      "summary": "Fix any of the following:   maximum-scale on <meta> tag disables zooming on mobile devices"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/review",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".md\\:flex.hidden.w-9",
+      "html": "<button class=\"items-center justify...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 24,
+    "sample": [
+     {
+      "target": ".tracking-wider.mt-3.select-none:nth-child(1)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Primary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".tracking-wider.mt-3.select-none:nth-child(3)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Secondary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".text-blue-500",
+      "html": "<p class=\"text-[11px] text-blue-500 mt-0.5\">awaiting review</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.52 (foreground color: #2b7fff, background color: #f4f8fe, font size: 8.3pt (11px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   },
+   {
+    "id": "document-title",
+    "impact": "serious",
+    "help": "Documents must have <title> element to aid in navigation",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix any of the following:   Document does not have a non-empty <title> element"
+     }
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "meta[name=\"viewport\"]",
+      "html": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">",
+      "summary": "Fix any of the following:   maximum-scale on <meta> tag disables zooming on mobile devices"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/schedule",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".md\\:flex.hidden.h-9",
+      "html": "<button class=\"items-center justify...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 2,
+    "sample": [
+     {
+      "target": ".tracking-wider.py-1.mt-3:nth-child(1)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Primary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".tracking-wider.py-1.mt-3:nth-child(3)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Secondary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   },
+   {
+    "id": "document-title",
+    "impact": "serious",
+    "help": "Documents must have <title> element to aid in navigation",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix any of the following:   Document does not have a non-empty <title> element"
+     }
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "div[data-testid=\"pm-schedule-my-jobs\"] > h3",
+      "html": "<h3 class=\"text-lg font-semibold mb-3\">My Scheduled Jobs</h3>",
+      "summary": "Fix any of the following:   Heading order invalid"
+     }
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "meta[name=\"viewport\"]",
+      "html": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">",
+      "summary": "Fix any of the following:   maximum-scale on <meta> tag disables zooming on mobile devices"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/workers",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".md\\:flex.hidden.h-9",
+      "html": "<button class=\"items-center justify...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 2,
+    "sample": [
+     {
+      "target": ".uppercase.tracking-wider.py-1:nth-child(1)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Primary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".uppercase.tracking-wider.py-1:nth-child(3)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Secondary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   },
+   {
+    "id": "document-title",
+    "impact": "serious",
+    "help": "Documents must have <title> element to aid in navigation",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix any of the following:   Document does not have a non-empty <title> element"
+     }
+    ]
+   },
+   {
+    "id": "heading-order",
+    "impact": "moderate",
+    "help": "Heading levels should only increase by one",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "div[data-testid=\"pm-workforce-my-jobs\"] > h3",
+      "html": "<h3 class=\"text-base font-semibold mb-3\">Active &amp; Planned Jobs</h3>",
+      "summary": "Fix any of the following:   Heading order invalid"
+     }
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "meta[name=\"viewport\"]",
+      "html": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">",
+      "summary": "Fix any of the following:   maximum-scale on <meta> tag disables zooming on mobile devices"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/clients",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".md\\:flex.hidden.border-transparent",
+      "html": "<button class=\"items-center justify...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 2,
+    "sample": [
+     {
+      "target": ".uppercase.tracking-wider.mt-3:nth-child(1)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Primary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".uppercase.tracking-wider.mt-3:nth-child(3)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Secondary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   },
+   {
+    "id": "document-title",
+    "impact": "serious",
+    "help": "Documents must have <title> element to aid in navigation",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix any of the following:   Document does not have a non-empty <title> element"
+     }
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "meta[name=\"viewport\"]",
+      "html": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">",
+      "summary": "Fix any of the following:   maximum-scale on <meta> tag disables zooming on mobile devices"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/client-requests",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".md\\:flex.hidden.w-9",
+      "html": "<button class=\"items-center justify...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 3,
+    "sample": [
+     {
+      "target": ".uppercase.tracking-wider.mt-3:nth-child(1)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Primary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".uppercase.tracking-wider.mt-3:nth-child(3)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Secondary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".text-destructive",
+      "html": "<button class=\"inline-flex items-ce...\" data-testid=\"client-request-decli...\">",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.76 (foreground color: #ef4444, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   },
+   {
+    "id": "document-title",
+    "impact": "serious",
+    "help": "Documents must have <title> element to aid in navigation",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix any of the following:   Document does not have a non-empty <title> element"
+     }
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "meta[name=\"viewport\"]",
+      "html": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">",
+      "summary": "Fix any of the following:   maximum-scale on <meta> tag disables zooming on mobile devices"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/map",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": ".md\\:flex.hidden.border-transparent",
+      "html": "<button class=\"items-center justify...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 2,
+    "sample": [
+     {
+      "target": ".uppercase.tracking-wider.text-muted-foreground:nth-child(1)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Primary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".uppercase.tracking-wider.text-muted-foreground:nth-child(3)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Secondary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   },
+   {
+    "id": "document-title",
+    "impact": "serious",
+    "help": "Documents must have <title> element to aid in navigation",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix any of the following:   Document does not have a non-empty <title> element"
+     }
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "meta[name=\"viewport\"]",
+      "html": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">",
+      "summary": "Fix any of the following:   maximum-scale on <meta> tag disables zooming on mobile devices"
+     }
+    ]
+   },
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix all of the following:   Page must have a level-one heading"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/equipment",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 3,
+    "sample": [
+     {
+      "target": ".md\\:flex.hidden.border-transparent",
+      "html": "<button class=\"items-center justify...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     },
+     {
+      "target": ".w-\\[140px\\]",
+      "html": "<button type=\"button\" role=\"combobox\" aria-controls=\"radix-_r_b_\" aria-expanded=\"false\" aria-autocomplete=\"none\" dir=\"ltr\" data-state=\"close",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     },
+     {
+      "target": ".w-\\[160px\\]",
+      "html": "<button type=\"button\" role=\"combobox\" aria-controls=\"radix-_r_c_\" aria-expanded=\"false\" aria-autocomplete=\"none\" dir=\"ltr\" data-state=\"close",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 7,
+    "sample": [
+     {
+      "target": ".tracking-wider.mb-1.select-none:nth-child(1)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Primary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".tracking-wider.mb-1.select-none:nth-child(3)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Secondary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": "#radix-_r_d_-trigger-stock",
+      "html": "<button type=\"button\" role=\"tab\" aria-selected=\"false\" aria-controls=\"radix-_r_d_-content-...\" data-state=\"inactive\" id=\"radix-_r_d_-trigger",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.34 (foreground color: #64748b, background color: #f1f5f9, font size: 10.5pt (14px), font weight: normal). Expected contrast rat"
+     }
+    ]
+   },
+   {
+    "id": "document-title",
+    "impact": "serious",
+    "help": "Documents must have <title> element to aid in navigation",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix any of the following:   Document does not have a non-empty <title> element"
+     }
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "meta[name=\"viewport\"]",
+      "html": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">",
+      "summary": "Fix any of the following:   maximum-scale on <meta> tag disables zooming on mobile devices"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "role": "PM",
+  "url": "/notifications",
+  "violations": [
+   {
+    "id": "button-name",
+    "impact": "critical",
+    "help": "Buttons must have discernible text",
+    "nodes": 4,
+    "sample": [
+     {
+      "target": ".md\\:flex.hidden.w-9",
+      "html": "<button class=\"items-center justify...\">",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     },
+     {
+      "target": "button[aria-controls=\"radix-_r_5_\"]",
+      "html": "<button type=\"button\" role=\"combobox\" aria-controls=\"radix-_r_5_\" aria-expanded=\"false\" aria-autocomplete=\"none\" dir=\"ltr\" data-state=\"close",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     },
+     {
+      "target": ".w-44",
+      "html": "<button type=\"button\" role=\"combobox\" aria-controls=\"radix-_r_6_\" aria-expanded=\"false\" aria-autocomplete=\"none\" dir=\"ltr\" data-state=\"close",
+      "summary": "Fix any of the following:   Element does not have inner text that is visible to screen readers"
+     }
+    ]
+   },
+   {
+    "id": "color-contrast",
+    "impact": "serious",
+    "help": "Elements must meet minimum color contrast ratio thresholds",
+    "nodes": 11,
+    "sample": [
+     {
+      "target": ".uppercase.tracking-wider.mt-3:nth-child(1)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Primary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".uppercase.tracking-wider.mt-3:nth-child(3)",
+      "html": "<p class=\"text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none\">Secondary</p>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.75 (foreground color: #64748b, background color: #0f1729, font size: 7.5pt (10px), font weight: normal). Expected contrast rati"
+     },
+     {
+      "target": ".bg-blue-50.border-blue-200.py-1\\.5 > span",
+      "html": "<span>Notifications are informational. No financial mutations are triggered here.</span>",
+      "summary": "Fix any of the following:   Element has insufficient color contrast of 4.37 (foreground color: #64748b, background color: #eff6ff, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
+     }
+    ]
+   },
+   {
+    "id": "document-title",
+    "impact": "serious",
+    "help": "Documents must have <title> element to aid in navigation",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\">",
+      "summary": "Fix any of the following:   Document does not have a non-empty <title> element"
+     }
+    ]
+   },
+   {
+    "id": "meta-viewport",
+    "impact": "moderate",
+    "help": "Zooming and scaling must not be disabled",
+    "nodes": 1,
+    "sample": [
+     {
+      "target": "meta[name=\"viewport\"]",
+      "html": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1\">",
+      "summary": "Fix any of the following:   maximum-scale on <meta> tag disables zooming on mobile devices"
+     }
+    ]
+   }
+  ]
+ }
+]

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useStore } from "@/lib/mockData";
-import { TrendingUp, TrendingDown, Minus, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, PoundSterling } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function fmt(n: number) {
@@ -55,7 +55,7 @@ export function JobFinancialSummarySection({ jobId }: { jobId: string }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-sm">
-            <DollarSign className="h-4 w-4" /> Financial Summary
+            <PoundSterling className="h-4 w-4" /> Financial Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -88,7 +88,7 @@ export function JobFinancialSummarySection({ jobId }: { jobId: string }) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-sm">
-            <DollarSign className="h-4 w-4" /> Financial Summary
+            <PoundSterling className="h-4 w-4" /> Financial Summary
           </CardTitle>
           <div className={cn("flex items-center gap-1.5 text-sm font-semibold", marginClass)}>
             {profitIcon}

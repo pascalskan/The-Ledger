@@ -109,7 +109,7 @@ function ThreadList({
                   className="h-10 w-full rounded-md border border-border bg-card px-3 text-sm"
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
-                  data-testid="portal-thread-project"
+                  data-testid="portal-thread-project" aria-label="Portal thread project"
                 >
                   {jobs.map((j) => (
                     <option key={j.id} value={j.id}>{j.title}</option>
@@ -123,7 +123,7 @@ function ThreadList({
                   className="h-10 w-full rounded-md border border-border bg-card px-3 text-sm"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value as ClientThreadTopic)}
-                  data-testid="portal-thread-topic"
+                  data-testid="portal-thread-topic" aria-label="Portal thread topic"
                 >
                   {THREAD_TOPICS.map((t) => (
                     <option key={t} value={t}>{t}</option>
@@ -194,7 +194,7 @@ function ThreadList({
                   <Badge variant="outline" className={STATUS_CLS[t.status]} data-testid={`portal-thread-status-${t.id}`}>
                     {t.status}
                   </Badge>
-                  <span className="text-[11px] text-muted-foreground">{new Date(t.updatedAt).toLocaleDateString()}</span>
+                  <span className="text-[11px] text-muted-foreground">{new Date(t.updatedAt).toLocaleDateString("en-GB")}</span>
                 </div>
               </div>
             </button>
@@ -269,7 +269,7 @@ function ThreadDetail({
                         {m.senderType === "Client" ? m.senderName : meta.label}
                       </span>
                       <span className="text-[11px] text-muted-foreground">
-                        {new Date(m.createdAt).toLocaleString()}
+                        {new Date(m.createdAt).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
                     <p className="text-sm text-foreground mt-1 leading-relaxed">{m.message}</p>

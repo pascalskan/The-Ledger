@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useStore, useAuth } from "@/lib/mockData";
 import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +53,8 @@ export default function JobDetailPage() {
   const [newCommContent, setNewCommContent] = useState("");
   // CL-5 — client document sharing (re-derives the shared list after a mutation)
   const [docShareVersion, setDocShareVersion] = useState(0);
+  // Sharing publishes to the client portal — confirm before it goes out.
+  const [pendingShareId, setPendingShareId] = useState<string | null>(null);
 
   const userIsPM = isProjectManager(user, roles);
   const userIsCEO = isCEO(user, roles);
@@ -242,6 +245,7 @@ export default function JobDetailPage() {
                 size="icon"
                 onClick={() => setLocation("/jobs")}
                 data-testid="button-back-jobs"
+                aria-label="Back to jobs"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -555,10 +559,21 @@ export default function JobDetailPage() {
                                 <Eye className="h-4 w-4 mr-1" /> View
                               </Button>
                               {(userIsPM || userIsCEO) && (
-                                <Button
+                                <><Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => {
+                                  onClick={() => setPendingShareId(String(doc.id || i))}
+                                  data-testid={`button-job-doc-share-${doc.id || i}`}
+                                >
+                                  <Send className="h-4 w-4 mr-1" /> Share
+                                </Button>
+                                <ConfirmDialog
+                                  open={pendingShareId === String(doc.id || i)}
+                                  title="Share this document with the client?"
+                                  description={`${doc.name} will become visible in the client portal straight away. You can revoke access afterwards.`}
+                                  confirmLabel="Share with client"
+                                  onCancel={() => setPendingShareId(null)}
+                                  onConfirm={() => {
                                     shareDocumentWithClient({
                                       projectId: job.id,
                                       title: doc.name,
@@ -570,11 +585,9 @@ export default function JobDetailPage() {
                                     });
                                     setDocShareVersion(v => v + 1);
                                     toast({ title: "Shared with client", description: `${doc.name} is now visible in the client portal.` });
+                                    setPendingShareId(null);
                                   }}
-                                  data-testid={`button-job-doc-share-${doc.id || i}`}
-                                >
-                                  <Send className="h-4 w-4 mr-1" /> Share
-                                </Button>
+                                /></>
                               )}
                             </div>
                           </div>
@@ -1035,6 +1048,7 @@ export default function JobDetailPage() {
               size="icon"
               onClick={() => setLocation("/jobs")}
               data-testid="button-back-jobs"
+                aria-label="Back to jobs"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -1050,7 +1064,7 @@ export default function JobDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {!isEditing ? (
               <Button variant="outline" onClick={startEdit} data-testid="button-job-edit">Edit</Button>
             ) : (
@@ -1072,9 +1086,9 @@ export default function JobDetailPage() {
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 <span data-testid="text-job-dates">
-                  {new Date(job.startAt).toLocaleString()} 
+                  {new Date(job.startAt).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })} 
                   {" · "}
-                  {new Date(job.endAt).toLocaleString()}
+                  {new Date(job.endAt).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -1095,7 +1109,7 @@ export default function JobDetailPage() {
                   <span data-testid="text-job-priority">{job.priority}</span>
                 ) : (
                   <select
-                    data-testid="select-job-priority-edit"
+                    data-testid="select-job-priority-edit" aria-label="Job priority"
                     className="h-9 rounded-md border bg-background px-3 text-sm"
                     value={edit.priority as any}
                     onChange={(e) => setEdit((p) => ({ ...p, priority: e.target.value as any }))}
@@ -1114,6 +1128,7 @@ export default function JobDetailPage() {
                   </span>
                 ) : (
                   <select
+                    aria-label="Project manager"
                     className="h-9 rounded-md border bg-background px-3 text-sm"
                     value={edit.managerId}
                     onChange={(e) => setEdit((p) => ({ ...p, managerId: e.target.value }))}
@@ -1131,7 +1146,7 @@ export default function JobDetailPage() {
                   <span data-testid="text-job-status">{job.status}</span>
                 ) : (
                   <select
-                    data-testid="select-job-status-edit"
+                    data-testid="select-job-status-edit" aria-label="Job status"
                     className="h-9 rounded-md border bg-background px-3 text-sm"
                     value={edit.status as any}
                     onChange={(e) => setEdit((p) => ({ ...p, status: e.target.value as any }))}
@@ -1386,10 +1401,21 @@ export default function JobDetailPage() {
                                         <Eye className="h-4 w-4 mr-1" /> View
                                     </Button>
                                     {userIsCEO && (
-                                        <Button
+                                        <><Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => {
+                                            onClick={() => setPendingShareId(String(doc.id || i))}
+                                            data-testid={`button-job-doc-share-${doc.id || i}`}
+                                          >
+                                            <Send className="h-4 w-4 mr-1" /> Share
+                                          </Button>
+                                          <ConfirmDialog
+                                            open={pendingShareId === String(doc.id || i)}
+                                            title="Share this document with the client?"
+                                            description={`${doc.name} will become visible in the client portal straight away. You can revoke access afterwards.`}
+                                            confirmLabel="Share with client"
+                                            onCancel={() => setPendingShareId(null)}
+                                            onConfirm={() => {
                                                 shareDocumentWithClient({
                                                     projectId: job.id,
                                                     title: doc.name,
@@ -1401,11 +1427,9 @@ export default function JobDetailPage() {
                                                 });
                                                 setDocShareVersion(v => v + 1);
                                                 toast({ title: "Shared with client", description: `${doc.name} is now visible in the client portal.` });
+                                              setPendingShareId(null);
                                             }}
-                                            data-testid={`button-job-doc-share-${doc.id || i}`}
-                                        >
-                                            <Send className="h-4 w-4 mr-1" /> Share
-                                        </Button>
+                                          /></>
                                     )}
                                 </div>
                             </div>

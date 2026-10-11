@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { Layout } from '@/components/layout';
 import { Badge } from '@/components/ui/badge';
@@ -713,7 +714,7 @@ export function ReportsContent({ embedded = false }: { embedded?: boolean }) {
                     <FileText className="h-4 w-4 text-purple-500" />
                     Reports
                   </CardTitle>
-                  <div data-testid="reporting-status-filter" className="flex items-center gap-1">
+                  <div data-testid="reporting-status-filter" className="flex flex-wrap items-center gap-1">
                     {(['all', 'generated', 'draft', 'archived'] as const).map((s) => (
                       <button
                         key={s}
@@ -818,6 +819,7 @@ export function ReportsContent({ embedded = false }: { embedded?: boolean }) {
 // ─────────────────────────────────────────────────────────────────────
 
 export function ExportsContent() {
+  const { toast } = useToast();
   const { user } = useAuth();
 
   const [exports, setExports] = useState<ReportExport[]>([]);
@@ -841,6 +843,8 @@ export function ExportsContent() {
   function handleExportDownload(id: string) {
     if (user?.name) downloadExport(id, user.name);
     setExports(getAllExports());
+    // PDF rendering is simulated in the prototype — say so rather than failing silently.
+    toast({ title: "Download recorded", description: "Export marked as downloaded. PDF file generation is simulated in this prototype." });
   }
 
   function handleExportArchive(id: string) {
@@ -923,7 +927,7 @@ export function ExportsContent() {
                     <Download className="h-4 w-4 text-indigo-500" />
                     Exports
                   </CardTitle>
-                  <div data-testid="exports-status-filter" className="flex items-center gap-1">
+                  <div data-testid="exports-status-filter" className="flex flex-wrap items-center gap-1">
                     {(['all', 'generated', 'downloaded', 'distributed', 'archived'] as const).map((s) => (
                       <button
                         key={s}

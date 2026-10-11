@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Wrench, Settings, Pencil, Save, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useMemo, useState } from "react";
 
 export default function EquipmentDetailPage() {
+  const { toast } = useToast();
   const { equipment, jobs, updateEquipment } = useStore();
   const [match, params] = useRoute("/equipment/:id");
   const [, setLocation] = useLocation();
@@ -69,6 +71,10 @@ export default function EquipmentDetailPage() {
 
   const saveEdit = () => {
     if (!item) return;
+    if (edit.dayRate !== "" && (!Number.isFinite(Number(edit.dayRate)) || Number(edit.dayRate) < 0)) {
+      toast({ title: "Day rate not valid", description: "Day rate cannot be negative.", variant: "destructive" });
+      return;
+    }
     updateEquipment(item.id, {
       name: edit.name.trim() || item.name,
       category: edit.category.trim() || item.category,
@@ -110,6 +116,7 @@ export default function EquipmentDetailPage() {
               size="icon"
               onClick={() => setLocation("/equipment")}
               data-testid="button-back-equipment"
+              aria-label="Back to equipment"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -180,7 +187,7 @@ export default function EquipmentDetailPage() {
                     <span data-testid="text-equipment-status">{item.status}</span>
                   ) : (
                     <select
-                      data-testid="select-equipment-status-edit"
+                      data-testid="select-equipment-status-edit" aria-label="Equipment status"
                       className="h-9 w-[240px] rounded-md border bg-background px-3 text-sm"
                       value={edit.status}
                       onChange={(e) => setEdit((p) => ({ ...p, status: e.target.value as any }))}
@@ -196,7 +203,7 @@ export default function EquipmentDetailPage() {
                 <div className="flex justify-between items-center gap-3">
                   <span className="text-muted-foreground">Day rate</span>
                   {!isEditing ? (
-                    <span data-testid="text-equipment-dayRate">${(((item as any).dayRate ?? 150) as number).toFixed(2)}/day</span>
+                    <span data-testid="text-equipment-dayRate">{(item as any).dayRate != null ? `£${Number((item as any).dayRate).toFixed(2)}/day` : "Not set"}</span>
                   ) : (
                     <Input
                       data-testid="input-equipment-dayRate-edit"
@@ -361,7 +368,7 @@ export default function EquipmentDetailPage() {
                         <div key={job.id} className="flex justify-between items-center border rounded p-2" onClick={() => setLocation(`/jobs/${job.id}`)}>
                             <div>
                                 <p className="font-medium cursor-pointer hover:underline">{job.title}</p>
-                                <p className="text-xs text-muted-foreground">{new Date(job.startAt).toLocaleDateString()}</p>
+                                <p className="text-xs text-muted-foreground">{new Date(job.startAt).toLocaleDateString("en-GB")}</p>
                             </div>
                             <Badge variant="outline">{job.status}</Badge>
                         </div>

@@ -24,6 +24,9 @@ test('Review creation generates audit entry', async ({ page }) => {
     name: /Submit Report/i,
   }).click();
 
+  // Empty reports are rejected, so the report needs some content.
+  await page.getByPlaceholder(/Describe the work completed today/i).fill('Audit log test report');
+
   await page.getByRole('button', {
     name: /Save/i,
   }).click();

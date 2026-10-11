@@ -36,7 +36,7 @@ export default function LocationDetailPage() {
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => setLocation("/equipment")}>
+          <Button variant="ghost" size="icon" onClick={() => setLocation("/equipment")} aria-label="Back to stock & assets">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>

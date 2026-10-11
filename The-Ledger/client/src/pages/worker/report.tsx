@@ -19,7 +19,7 @@ const EXPENSE_CATEGORIES = ["Travel", "Materials", "Parking", "Subsistence", "To
 export default function WorkerReportPage() {
   const [, params] = useRoute("/worker/jobs/:id/report");
   const [, setLocation] = useLocation();
-  const { jobs, stockItems, assets, addReviewItem } = useStore();
+  const { jobs, stockItems, equipment, addReviewItem } = useStore();
   const {isOffline, addToQueue, queue, syncQueue, updateQueueItem, clearSyncedItems, retryUpload} = useOfflineQueueStore();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -27,6 +27,13 @@ export default function WorkerReportPage() {
 
   const jobId = params?.id;
   const job = jobs.find(j => j.id === jobId);
+
+  // Equipment a worker can report using. This MUST be the billable `equipment` catalogue: the
+  // approval path prices usage via `equipment.find(id)` (day rate / client day rate), so reporting
+  // against `assets` (different ids, no rates) silently produced £0 cost and £0 revenue.
+  const pickableAssets = equipment
+    .filter((e) => e.status !== "Retired")
+    .map((e) => ({ id: e.id, name: e.name, type: e.category, serialNumber: e.serialNumber, companyId: e.companyId, status: "Active" as const }));
 
   // Pre-fill timesheet hours from the live shift timer when the report is
   // opened for the job the worker is currently clocked into. Editable below.
@@ -73,13 +80,19 @@ export default function WorkerReportPage() {
   const [assetsUsed, setAssetsUsed] = useState<{
     id: string; // temp id
     assetId: string;
+    /** Hours the equipment was used; defaults to the hours worked on this report. */
+    hours?: number;
   }[]>([]);
 
-  if (!job) {
+  // A worker may only open jobs they are assigned to (CEO/PM can preview the worker view).
+  const isWorkerUser = Boolean(user?.roleIds?.some((r) => r.includes("worker")));
+  const notAssigned = isWorkerUser && !!job && !job.assignedWorkerIds.includes(user?.id || "");
+
+  if (!job || notAssigned) {
     return (
       <WorkerMobileLayout title="Report">
         <div className="p-4">
-          <p>Job not found</p>
+          <p>Job not found or access denied.</p>
           <Button onClick={() => setLocation("/worker")}>Back to Dashboard</Button>
         </div>
       </WorkerMobileLayout>
@@ -94,7 +107,7 @@ export default function WorkerReportPage() {
   );
 
   // Filter assets
-  const filteredAssets = assets.filter(a => 
+  const filteredAssets = pickableAssets.filter(a => 
     a.companyId === job.companyId && 
     a.status === "Active" &&
     (a.name.toLowerCase().includes(assetSearch.toLowerCase()) || (a.serialNumber && a.serialNumber.toLowerCase().includes(assetSearch.toLowerCase()))) &&
@@ -211,6 +224,22 @@ export default function WorkerReportPage() {
   };
 
   const handleSubmit = () => {
+    // An empty report used to be accepted and sent to the Review Centre as a blank submission.
+    const hasContent =
+      notes.trim().length > 0 ||
+      expenses.length > 0 ||
+      stockUsed.length > 0 ||
+      assetsUsed.length > 0 ||
+      uploads.length > 0;
+    if (!hasContent) {
+      toast({
+        title: "Nothing to submit",
+        description: "Add a work summary, expenses, materials, equipment or an upload before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // ======================================================
     // OPERATIONAL PAYLOADS
     // No financial mutation occurs here
@@ -239,11 +268,14 @@ export default function WorkerReportPage() {
     });
 
     const equipmentUsage = assetsUsed.map(item => {
-      const asset = assets.find(a => a.id === item.assetId);
+      const asset = pickableAssets.find(a => a.id === item.assetId);
 
+      const usedHours = item.hours ?? hours;
       return {
         assetId: item.assetId,
         assetName: asset?.name || "Unknown Asset",
+        // Without hours the approval path prices usage at £0 (cost AND revenue).
+        hoursUsed: Number.isFinite(usedHours) ? usedHours : 0,
       };
     });
 
@@ -419,7 +451,7 @@ return (
 
         <Button
           onClick={handleSubmit}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-full px-4 h-10 shadow-lg shadow-emerald-500/20"
+          className="bg-emerald-700 hover:bg-emerald-800 text-white rounded-full px-4 h-10 shadow-lg shadow-emerald-500/20"
         >
           <Save className="w-4 h-4 mr-2" />
           Save
@@ -482,7 +514,7 @@ return (
                     <p className="text-xs text-muted-foreground">
                       {new Date(
                         item.createdAt
-                      ).toLocaleString()}
+                      ).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
 
@@ -687,7 +719,7 @@ return (
                     {upload.type} •{" "}
                     {new Date(
                       upload.uploadedAt
-                    ).toLocaleString()}
+                    ).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
 
@@ -734,6 +766,7 @@ return (
             <Label className="text-sm font-medium text-foreground">Hours:</Label>
             <Input
               data-testid="worker-report-hours"
+              aria-label="Hours worked"
               type="number"
               min="0"
               step="0.25"
@@ -784,6 +817,7 @@ return (
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Category</Label>
                       <select
+                        aria-label="Expense category"
                         value={exp.category}
                         onChange={(e) => updateExpense(exp.id, { category: e.target.value })}
                         className="w-full h-9 rounded-lg border border-border text-sm px-2 bg-card"
@@ -856,7 +890,7 @@ return (
                         <p className="font-semibold text-sm">{item.name}</p>
                         <p className="text-xs text-muted-foreground">{item.sku} • {item.quantity} available</p>
                       </div>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-700">
+                      <Button size="icon" variant="ghost" aria-label={`Add ${item.name}`} className="h-8 w-8 rounded-full text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-700">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
@@ -939,7 +973,7 @@ return (
                         <p className="font-semibold text-sm">{asset.name}</p>
                         <p className="text-xs text-muted-foreground">{asset.type} {asset.serialNumber ? `• ${asset.serialNumber}` : ''}</p>
                       </div>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-amber-600 bg-amber-50 hover:bg-amber-100 hover:text-amber-700">
+                      <Button size="icon" variant="ghost" aria-label={`Add ${asset.name}`} className="h-8 w-8 rounded-full text-amber-600 bg-amber-50 hover:bg-amber-100 hover:text-amber-700">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
@@ -956,7 +990,7 @@ return (
               <p className="text-sm text-muted-foreground italic">No assets selected.</p>
             ) : (
               assetsUsed.map((item) => {
-                const asset = assets.find(a => a.id === item.assetId);
+                const asset = pickableAssets.find(a => a.id === item.assetId);
                 if (!asset) return null;
 
                 return (
@@ -968,8 +1002,21 @@ return (
                         {asset.serialNumber && <Badge variant="secondary" className="text-xs font-mono">{asset.serialNumber}</Badge>}
                       </div>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground" htmlFor={`asset-hours-${item.id}`}>Hours</label>
+                      <Input
+                        id={`asset-hours-${item.id}`}
+                        type="number"
+                        min="0"
+                        step="0.25"
+                        className="h-9 w-20"
+                        value={item.hours ?? hours}
+                        onChange={(e) => setAssetsUsed(assetsUsed.map((a) => a.id === item.id ? { ...a, hours: Math.max(0, Number(e.target.value)) } : a))}
+                      />
+                    </div>
                     <button
                       onClick={() => handleRemoveAsset(item.id)}
+                      aria-label={`Remove ${asset.name}`}
                       className="text-muted-foreground hover:text-red-500 p-2"
                     >
                       <Trash2 className="h-5 w-5" />

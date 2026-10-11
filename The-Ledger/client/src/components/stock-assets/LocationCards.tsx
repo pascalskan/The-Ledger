@@ -1,13 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, AlertTriangle } from "lucide-react";
+import { useLocation } from "wouter";
+import { activatable } from "@/lib/a11y";
 
 export function LocationCards({ locations }: { locations: any[] }) {
+  const [, setLocation] = useLocation();
   const formatCur = (val: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(val);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
       {locations.map((loc, idx) => (
-        <Card key={idx} className="cursor-pointer hover:border-blue-300 hover:shadow-md transition-all border-border shadow-sm">
+        <Card key={idx} {...activatable(() => setLocation(`/locations/${loc.id}`), `Open location ${loc.name}`)} className="cursor-pointer hover:border-blue-300 hover:shadow-md transition-all border-border shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">

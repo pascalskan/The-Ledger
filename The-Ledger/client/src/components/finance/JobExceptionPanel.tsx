@@ -96,7 +96,7 @@ export function JobExceptionPanel({ jobId }: JobExceptionPanelProps) {
   return (
     <Card data-testid={`job-exception-panel-${jobId}`}>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <OverallIcon />
             <CardTitle className="text-base">Exceptions &amp; Controls</CardTitle>
