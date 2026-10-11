@@ -223,7 +223,7 @@ function PipelineStrip({ drafts }: { drafts: InvoiceDraft[] }) {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
-              <div className="flex items-end justify-between">
+              <div className="flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
                 <span
                   className="text-2xl font-bold"
                   data-testid={`pipeline-count-${status}`}
@@ -231,7 +231,7 @@ function PipelineStrip({ drafts }: { drafts: InvoiceDraft[] }) {
                   {bucket.length}
                 </span>
                 <span
-                  className="text-sm font-medium text-muted-foreground"
+                  className="text-sm font-medium text-muted-foreground whitespace-nowrap"
                   data-testid={`pipeline-total-${status}`}
                 >
                   {fmt(total)}
@@ -379,6 +379,9 @@ export function InvoiceBuilderContent({ onComplete }: { onComplete?: () => void 
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
             Invoice Pipeline ({invoiceDrafts.length})
           </h3>
+          <p className="text-xs text-muted-foreground mb-3">
+            Drafts built from approved reports. Once sent, they are issued and tracked as invoices under Finance → Invoicing, so the counts there can differ.
+          </p>
 
           {invoiceDrafts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground border rounded-md">

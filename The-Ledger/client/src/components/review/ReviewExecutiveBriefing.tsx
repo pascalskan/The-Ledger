@@ -67,9 +67,9 @@ export function ReviewExecutiveBriefing() {
   return (
     <div className="space-y-6" data-testid="review-executive-briefing">
       <div>
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Briefcase className="h-5 w-5 text-blue-600" /> Executive Review Briefing
-        </h3>
+        </h2>
         <p className="text-sm text-muted-foreground">
           What decisions require your attention today — consolidated across the
           Review Centre. Summary only; every decision still happens below.

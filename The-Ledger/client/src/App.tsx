@@ -74,9 +74,13 @@ function ProtectedRoute({ component: Component, roles }: { component: React.Comp
 
   useEffect(() => {
     if (!user) {
+      try {
+        if (sessionStorage.getItem("ledger-skip-return")) sessionStorage.removeItem("ledger-skip-return");
+        else sessionStorage.setItem("ledger-return-to", location + window.location.search);
+      } catch { /* storage unavailable */ }
       setLocation("/auth");
     }
-  }, [user, setLocation]);
+  }, [user, location, setLocation]);
 
   if (!user) return null;
 

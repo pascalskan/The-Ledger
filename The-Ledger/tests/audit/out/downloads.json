@@ -1,5 +1,7 @@
 {
  "exportDownload": "no download event",
  "exportToasts": [],
- "portalInvoiceDownload": "no download event"
+ "portalInvoiceDownload": {
+  "file": "EXB-2026-0007.html"
+ }
 }

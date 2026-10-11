@@ -378,7 +378,7 @@ export default function SchedulePage() {
 
           {/* My Scheduled Jobs */}
           <div data-testid="pm-schedule-my-jobs">
-            <h3 className="text-lg font-semibold mb-3">My Scheduled Jobs</h3>
+            <h2 className="text-lg font-semibold mb-3">My Scheduled Jobs</h2>
             {scheduledDisplay.length === 0 ? (
               <div className="text-center py-8 border-2 border-dashed rounded-lg bg-muted">
                 <p className="text-muted-foreground text-sm">No active or planned jobs.</p>
@@ -401,7 +401,7 @@ export default function SchedulePage() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                              <h4 className="font-semibold text-sm truncate">{job.title}</h4>
+                              <h2 className="font-semibold text-sm truncate">{job.title}</h2>
                               <Badge
                                 variant={job.status === 'Active' ? 'default' : 'outline'}
                                 className="text-[10px] h-5"

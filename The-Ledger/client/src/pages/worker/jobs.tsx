@@ -83,7 +83,7 @@ export default function WorkerJobsPage() {
                 {...activatable(() => setLocation(`/worker/jobs/${job.id}`), `Open job ${job.title}`)}
               >
                 <div>
-                  <h4 className="font-semibold text-sm truncate max-w-[200px]">{job.title}</h4>
+                  <h2 className="font-semibold text-sm truncate max-w-[200px]">{job.title}</h2>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                     <Calendar className="w-3 h-3" />
                     {new Date(job.startAt).toLocaleDateString("en-GB")}

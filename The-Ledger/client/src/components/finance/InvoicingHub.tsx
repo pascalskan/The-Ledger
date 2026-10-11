@@ -62,7 +62,7 @@ export function InvoicingHub() {
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="right" className="w-[600px]">
+        <SheetContent side="right" className="w-[600px] max-w-full overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Create Invoice</SheetTitle>
           </SheetHeader>

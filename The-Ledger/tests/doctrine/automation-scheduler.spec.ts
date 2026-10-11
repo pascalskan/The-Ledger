@@ -269,6 +269,7 @@ test('AS-22: Disable button visible for Active schedule and disables it', async 
   await expect(page.getByTestId('sched-detail-dialog')).toBeVisible();
   await expect(page.getByTestId('sched-btn-disable')).toBeVisible();
   await page.getByTestId('sched-btn-disable').click();
+  await page.getByTestId('confirm-dialog-confirm').click();
   await expect(page.getByTestId('sched-detail-dialog')).not.toBeVisible();
 });
 

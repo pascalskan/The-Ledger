@@ -62,6 +62,12 @@
  */
 @theme {
   --color-red-500: #dc2626;
+  --color-red-600: #b91c1c;
+  --color-rose-600: #be123c;
+  --color-orange-600: #c2410c;
+  --color-orange-500: #c2410c;
+  --color-blue-500: #1d4ed8;
+  --color-blue-600: #1d4ed8;
   --color-rose-500: #be123c;
   --color-green-500: #15803d;
   --color-green-600: #15803d;
@@ -102,7 +108,7 @@
   --accent-foreground: 222 47% 11.2%;
 
   /* Destructive: Red */
-  --destructive: 0 84.2% 60.2%;
+  --destructive: 0 72% 40%;
   --destructive-foreground: 210 40% 98%;
 
   /* Borders: Slate 300 */

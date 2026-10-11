@@ -108,10 +108,15 @@ export default function JobDetailPage() {
   const existingInvoice = invoices.find(i => i.jobId === job.id);
 
   const [isEditing, setIsEditing] = useState(false);
+  const toLocalInput = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? "" : new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
   const [workerSearch, setWorkerSearch] = useState("");
   const [equipmentSearch, setEquipmentSearch] = useState("");
 
   const [edit, setEdit] = useState({
+    title: job.title,
+    locationAddress: job.locationAddress ?? "",
+    startAt: toLocalInput(job.startAt),
+    endAt: toLocalInput(job.endAt),
     status: job.status,
     priority: job.priority,
     managerId: job.managerId || "",
@@ -191,6 +196,10 @@ export default function JobDetailPage() {
         }));
 
     setEdit({
+      title: job.title,
+      locationAddress: job.locationAddress ?? "",
+      startAt: toLocalInput(job.startAt),
+      endAt: toLocalInput(job.endAt),
       status: job.status,
       priority: job.priority,
       managerId: job.managerId || "",
@@ -204,7 +213,22 @@ export default function JobDetailPage() {
   const saveEdit = () => {
     const usage = (edit as any).equipmentUsage as any[];
 
+    if (!edit.title.trim()) {
+      toast({ title: "Title required", description: "A job needs a title.", variant: "destructive" });
+      return;
+    }
+    const startMs = new Date(edit.startAt).getTime();
+    const endMs = new Date(edit.endAt).getTime();
+    if (Number.isNaN(startMs) || Number.isNaN(endMs) || endMs < startMs) {
+      toast({ title: "Dates not valid", description: "The end must be on or after the start.", variant: "destructive" });
+      return;
+    }
+
     updateJob(job.id, {
+      title: edit.title.trim(),
+      locationAddress: edit.locationAddress.trim(),
+      startAt: new Date(startMs).toISOString(),
+      endAt: new Date(endMs).toISOString(),
       status: edit.status,
       priority: edit.priority,
       managerId: edit.managerId === "none" ? undefined : (edit.managerId || undefined),
@@ -220,7 +244,7 @@ export default function JobDetailPage() {
         })),
     } as any);
 
-    toast({ title: "Job updated", description: "Assignments and status saved." });
+    toast({ title: "Job updated", description: "Changes saved." });
     setIsEditing(false);
   };
 
@@ -1057,7 +1081,16 @@ export default function JobDetailPage() {
                 <Badge variant="outline" className="font-mono" data-testid="badge-job-id">{job.jobId}</Badge>
                 <Badge data-testid="badge-job-status">{job.status}</Badge>
               </div>
-              <h1 className="text-2xl font-bold mt-1" data-testid="text-job-title">{job.title}</h1>
+              {!isEditing ? (
+                <h1 className="text-2xl font-bold mt-1" data-testid="text-job-title">{job.title}</h1>
+              ) : (
+                <input
+                  data-testid="input-job-title-edit" aria-label="Job title"
+                  className="mt-1 h-10 w-full max-w-xl rounded-md border bg-background px-3 text-xl font-bold"
+                  value={edit.title}
+                  onChange={(e) => setEdit((p) => ({ ...p, title: e.target.value }))}
+                />
+              )}
               {client && (
                 <p className="text-sm text-muted-foreground cursor-pointer hover:underline" onClick={() => setLocation(`/clients/${client.id}`)} data-testid="text-job-client">for {client.name}</p>
               )}
@@ -1083,6 +1116,19 @@ export default function JobDetailPage() {
               <CardTitle>Schedule &amp; Location</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
+              {isEditing ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="grid gap-1 text-xs text-muted-foreground">Start
+                    <input type="datetime-local" data-testid="input-job-start-edit" className="h-9 rounded-md border bg-background px-3 text-sm text-foreground" value={edit.startAt} onChange={(e) => setEdit((p) => ({ ...p, startAt: e.target.value }))} />
+                  </label>
+                  <label className="grid gap-1 text-xs text-muted-foreground">End
+                    <input type="datetime-local" data-testid="input-job-end-edit" className="h-9 rounded-md border bg-background px-3 text-sm text-foreground" value={edit.endAt} onChange={(e) => setEdit((p) => ({ ...p, endAt: e.target.value }))} />
+                  </label>
+                  <label className="grid gap-1 text-xs text-muted-foreground sm:col-span-2">Site address
+                    <input data-testid="input-job-address-edit" className="h-9 rounded-md border bg-background px-3 text-sm text-foreground" value={edit.locationAddress} onChange={(e) => setEdit((p) => ({ ...p, locationAddress: e.target.value }))} />
+                  </label>
+                </div>
+              ) : (<>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 <span data-testid="text-job-dates">
@@ -1095,6 +1141,7 @@ export default function JobDetailPage() {
                 <MapPin className="h-4 w-4" />
                 <span data-testid="text-job-location">{job.locationAddress}</span>
               </div>
+              </>)}
             </CardContent>
           </Card>
 

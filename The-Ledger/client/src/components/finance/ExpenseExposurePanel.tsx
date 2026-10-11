@@ -35,7 +35,7 @@ export function ExpenseExposurePanel({ data }: { data: any }) {
         </div>
 
         <div className="pt-2">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Highest Pending Exposure</h4>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Highest Pending Exposure</h2>
           <div className="space-y-3">
             {data.topJobs.map((job: any, idx: number) => (
               <div key={idx} className="flex justify-between items-center bg-muted p-2 rounded border border-border">

@@ -1,0 +1,610 @@
+
+Running 363 tests using 3 workers
+
+[1A[2K[1/363] tests\doctrine\accounting-sync.spec.ts:35:1 › 1. Accounting Sync tab trigger renders in Financial Explorer
+[1A[2K[2/363] tests\doctrine\accounting-settings.spec.ts:36:1 › 1. Accounting Settings page loads at /accounting-settings
+[1A[2K[3/363] tests\doctrine\analytics-centre.spec.ts:28:1 › AC-01: Analytics tab is accessible to CEO via sidebar nav + hub tab
+[1A[2K[4/363] tests\doctrine\analytics-centre.spec.ts:37:1 › AC-02: Analytics tab renders hub heading and CEO-only badge
+[1A[2K[5/363] tests\doctrine\analytics-centre.spec.ts:44:1 › AC-03: Analytics Centre renders without runtime errors
+[1A[2K[6/363] tests\doctrine\analytics-centre.spec.ts:51:1 › AC-04: Analytics Centre doctrine notice renders and states advisory-only
+[1A[2K[7/363] tests\doctrine\analytics-centre.spec.ts:63:1 › AC-05: KPI strip renders all five KPI cards
+[1A[2K[8/363] tests\doctrine\analytics-centre.spec.ts:74:1 › AC-06: Operational Health KPI shows a score out of 100
+[1A[2K[9/363] tests\doctrine\analytics-centre.spec.ts:81:1 › AC-07: Financial Health KPI shows a score out of 100
+[1A[2K  1) tests\doctrine\accounting-sync.spec.ts:35:1 › 1. Accounting Sync tab trigger renders in Financial Explorer 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByTestId('accounting-subtab-sync-status')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByTestId('accounting-subtab-sync-status')[22m
+
+
+      36 |   await loginAsCEO(page);
+      37 |   await page.goto(`${BASE}/finance?tab=accounting&sub=sync`);
+    > 38 |   await expect(page.getByTestId("accounting-subtab-sync-status")).toBeVisible();
+         |                                                                   ^
+      39 | });
+      40 |
+      41 | // ── 2: Tab panel loads without error ────────────────────────────────────────
+        at C:\Users\pskan\Documents\The-Ledger\The-Ledger\The-Ledger\tests\doctrine\accounting-sync.spec.ts:38:67
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\doctrine-accounting-sync-1-dd9b6-nders-in-Financial-Explorer\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\doctrine-accounting-sync-1-dd9b6-nders-in-Financial-Explorer\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\doctrine-accounting-sync-1-dd9b6-nders-in-Financial-Explorer\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\doctrine-accounting-sync-1-dd9b6-nders-in-Financial-Explorer\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\doctrine-accounting-sync-1-dd9b6-nders-in-Financial-Explorer\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K  2) tests\doctrine\accounting-settings.spec.ts:36:1 › 1. Accounting Settings page loads at /accounting-settings 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByTestId('accounting-settings-page')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByTestId('accounting-settings-page')[22m
+
+
+      37 |   await loginAsCEO(page);
+      38 |   await page.goto(`${BASE}/finance?tab=accounting&sub=providers`);
+    > 39 |   await expect(page.getByTestId("accounting-settings-page")).toBeVisible();
+         |                                                              ^
+      40 | });
+      41 |
+      42 | // ── 2: CEO visibility ──────────────────────────────────────────────
+        at C:\Users\pskan\Documents\The-Ledger\The-Ledger\The-Ledger\tests\doctrine\accounting-settings.spec.ts:39:62
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\doctrine-accounting-settin-a68b5-oads-at-accounting-settings\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\doctrine-accounting-settin-a68b5-oads-at-accounting-settings\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\doctrine-accounting-settin-a68b5-oads-at-accounting-settings\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\doctrine-accounting-settin-a68b5-oads-at-accounting-settings\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\doctrine-accounting-settin-a68b5-oads-at-accounting-settings\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[10/363] tests\doctrine\accounting-sync.spec.ts:42:1 › 2. Accounting Sync tab panel renders without error
+[1A[2K[11/363] tests\doctrine\accounting-settings.spec.ts:43:1 › 2. CEO can see Accounting Settings page heading
+[1A[2K[12/363] tests\doctrine\analytics-centre.spec.ts:88:1 › AC-08: Governance Risk KPI shows a score out of 100
+[1A[2K[13/363] tests\doctrine\accounting-sync.spec.ts:50:1 › 3. Sync KPI strip renders Pending, Synced, Failed, Retry Required cards
+[1A[2K[14/363] tests\doctrine\accounting-settings.spec.ts:50:1 › 3. Provider cards section renders
+[1A[2K[15/363] tests\doctrine\analytics-centre.spec.ts:95:1 › AC-09: Workflow Efficiency KPI shows a score out of 100
+[1A[2K[16/363] tests\doctrine\accounting-sync.spec.ts:62:1 › 4. Seed data KPI values: 1 pending, 2 synced, 1 failed, 1 retry required
+[1A[2K[17/363] tests\doctrine\accounting-settings.spec.ts:57:1 › 4. All four provider cards render (QuickBooks, Xero, FreshBooks, Zoho)
+[1A[2K[18/363] tests\doctrine\analytics-centre.spec.ts:102:1 › AC-10: Automation Effectiveness KPI shows a score out of 100
+[1A[2K[19/363] tests\doctrine\accounting-sync.spec.ts:73:1 › 5. Sync queue table renders with seeded records
+[1A[2K[20/363] tests\doctrine\accounting-sync.spec.ts:83:1 › 6. Provider badges are visible in the sync queue
+[1A[2K[21/363] tests\doctrine\analytics-centre.spec.ts:113:1 › AC-11: Trend Analysis panel renders
+[1A[2K[22/363] tests\doctrine\accounting-settings.spec.ts:67:1 › 5. QuickBooks card shows Connected status
+[1A[2K[23/363] tests\doctrine\accounting-sync.spec.ts:92:1 › 7. QuickBooks provider badge is visible in sync queue
+[1A[2K[24/363] tests\doctrine\analytics-centre.spec.ts:119:1 › AC-12: Trend panel renders trend items
+[1A[2K[25/363] tests\doctrine\accounting-settings.spec.ts:75:1 › 6. Xero card shows Connected status
+[1A[2K[26/363] tests\doctrine\accounting-sync.spec.ts:101:1 › 8. Xero provider badge is visible in sync queue
+[1A[2K[27/363] tests\doctrine\analytics-centre.spec.ts:128:1 › AC-13: Trend items show direction indicators (up/down/stable)
+[1A[2K[28/363] tests\doctrine\accounting-settings.spec.ts:83:1 › 7. FreshBooks card shows Disconnected status
+[1A[2K[29/363] tests\doctrine\accounting-sync.spec.ts:110:1 › 9. Synced records show external reference IDs
+[1A[2K[30/363] tests\doctrine\analytics-centre.spec.ts:135:1 › AC-14: Trend items show percentage change values
+[1A[2K[31/363] tests\doctrine\accounting-settings.spec.ts:91:1 › 8. Default provider indicator is visible on QuickBooks card
+[1A[2K[32/363] tests\doctrine\accounting-sync.spec.ts:120:1 › 10. Failed sync record shows Retry and Details buttons
+[1A[2K[33/363] tests\doctrine\analytics-centre.spec.ts:147:1 › AC-15: Forecast Intelligence panel renders
+[1A[2K[34/363] tests\doctrine\accounting-settings.spec.ts:98:1 › 9. Setting Xero as default removes QuickBooks default indicator
+[1A[2K[35/363] tests\doctrine\accounting-sync.spec.ts:130:1 › 11. Error details panel opens and shows sync failure resolution guidance
+[1A[2K[36/363] tests\doctrine\analytics-centre.spec.ts:153:1 › AC-16: Forecast panel shows Projections — Advisory Only badge
+[1A[2K[37/363] tests\doctrine\accounting-settings.spec.ts:110:1 › 10. Disabling Xero shows Enable button instead of Disable
+[1A[2K[38/363] tests\doctrine\accounting-sync.spec.ts:141:1 › 12. Sync audit trail toggle opens the audit trail panel
+[1A[2K[39/363] tests\doctrine\analytics-centre.spec.ts:159:1 › AC-17: Forecast panel renders forecast items
+[1A[2K[40/363] tests\doctrine\accounting-settings.spec.ts:121:1 › 11. Sync policies section renders all controls
+[1A[2K[41/363] tests\doctrine\accounting-sync.spec.ts:155:1 › 13. Job Detail page shows Accounting Synchronization panel for seeded job
+[1A[2K[42/363] tests\doctrine\analytics-centre.spec.ts:168:1 › AC-18: Forecast items show confidence level badges
+[1A[2K[43/363] tests\doctrine\accounting-settings.spec.ts:132:1 › 12. Sync mode toggle is visible and interactive
+[1A[2K[44/363] tests\doctrine\audit-remediation.spec.ts:24:1 › AR-01: worker job view offers tap-to-navigate directions
+[1A[2K[45/363] tests\doctrine\analytics-centre.spec.ts:174:1 › AC-19: Forecast items show advisory note
+[1A[2K[46/363] tests\doctrine\accounting-settings.spec.ts:145:1 › 13. Entity mapping section renders all four entity rows
+[1A[2K[47/363] tests\doctrine\audit-remediation.spec.ts:34:1 › AR-02: worker job view surfaces site access instructions
+[1A[2K[48/363] tests\doctrine\analytics-centre.spec.ts:185:1 › AC-20: Risk Intelligence panel renders
+[1A[2K[49/363] tests\doctrine\audit-remediation.spec.ts:41:1 › AR-03: worker job view lists site and emergency contacts as tel: links
+[1A[2K[50/363] tests\doctrine\accounting-settings.spec.ts:156:1 › 14. Customer entity mapping status shows Mapped
+[1A[2K[51/363] tests\doctrine\analytics-centre.spec.ts:191:1 › AC-21: Risk panel renders risk items from seed data
+[1A[2K[52/363] tests\doctrine\audit-remediation.spec.ts:52:1 › AR-04: CEO can drag a job card onto another day to reschedule it
+[1A[2K[53/363] tests\doctrine\accounting-settings.spec.ts:163:1 › 15. Job entity mapping status shows Not Mapped
+[1A[2K[54/363] tests\doctrine\analytics-centre.spec.ts:200:1 › AC-22: Risk items show severity badges (CRITICAL/HIGH/MEDIUM)
+[1A[2K[55/363] tests\doctrine\audit-remediation.spec.ts:69:1 › AR-05: schedule drawer deep-links to the job crew editor
+[1A[2K[56/363] tests\doctrine\analytics-centre.spec.ts:207:1 › AC-23: Risk items have deep link buttons to source modules
+[1A[2K[57/363] tests\doctrine\client-portal-communication.spec.ts:22:3 › Portal Communication — thread visibility (CL-5) › CPC-01: communication centre lists the client threads
+[1A[2K[58/363] tests\doctrine\client-portal-communication.spec.ts:31:3 › Portal Communication — thread visibility (CL-5) › CPC-02: threads are scoped to the signed-in client
+[1A[2K[59/363] tests\doctrine\audit-remediation.spec.ts:82:1 › AR-06: week grid positions jobs by scheduled dates, not record timestamps
+[1A[2K[60/363] tests\doctrine\analytics-centre.spec.ts:216:1 › AC-24: Clicking a risk deep link navigates to the source module
+[1A[2K[61/363] tests\doctrine\client-portal-communication.spec.ts:39:3 › Portal Communication — thread visibility (CL-5) › CPC-03: client B sees only its own threads
+[1A[2K[62/363] tests\doctrine\audit-remediation.spec.ts:92:1 › AR-07: clicking a job card opens the Job Analysis drawer
+[1A[2K[63/363] tests\doctrine\analytics-centre.spec.ts:228:1 › AC-25: Bottleneck Analysis panel renders
+[1A[2K[64/363] tests\doctrine\client-portal-communication.spec.ts:48:3 › Portal Communication — thread visibility (CL-5) › CPC-04: thread statuses render in the list
+[1A[2K[65/363] tests\doctrine\analytics-centre.spec.ts:234:1 › AC-26: Bottleneck panel renders bottleneck items or empty state
+[1A[2K[66/363] tests\doctrine\client-portal-communication.spec.ts:62:3 › Portal Communication — thread detail (CL-5) › CPC-05: thread detail renders chronological message history
+[1A[2K[67/363] tests\doctrine\audit-remediation.spec.ts:105:1 › AR-08: executive nav marks the current item with aria-current
+[1A[2K[68/363] tests\doctrine\client-portal-communication.spec.ts:77:3 › Portal Communication — thread detail (CL-5) › CPC-06: messages are scoped to their thread
+[1A[2K[69/363] tests\doctrine\analytics-centre.spec.ts:248:1 › AC-27: Bottleneck items have deep link view buttons
+[1A[2K[70/363] tests\doctrine\audit-remediation.spec.ts:114:1 › AR-09: skip-to-content link exists and targets main
+[1A[2K[71/363] tests\doctrine\client-portal-communication.spec.ts:88:3 › Portal Communication — thread detail (CL-5) › CPC-07: message sender attribution renders
+[1A[2K[72/363] tests\doctrine\analytics-centre.spec.ts:264:1 › AC-28: Dashboard shows Zone A attention strip for CEO
+[1A[2K[73/363] tests\doctrine\audit-remediation.spec.ts:124:1 › AR-10: mobile bottom tab bar renders five destinations for CEO
+[1A[2K[74/363] tests\doctrine\client-portal-communication.spec.ts:97:3 › Portal Communication — thread detail (CL-5) › CPC-08: closed threads expose no reply control
+[1A[2K[75/363] tests\doctrine\analytics-centre.spec.ts:270:1 › AC-29: Legacy /analytics-centre redirects CEO to the hub Analytics tab
+[1A[2K[76/363] tests\doctrine\client-portal-communication.spec.ts:112:3 › Portal Communication — thread creation & audit (CL-5) › CPC-09: client can create a new conversation
+[1A[2K[77/363] tests\doctrine\audit-remediation.spec.ts:135:1 › AR-11: mobile tab bar is role-aware — PM gets their own surfaces
+[1A[2K[78/363] tests\doctrine\client-portal-communication.spec.ts:124:3 › Portal Communication — thread creation & audit (CL-5) › CPC-10: new conversation requires subject and message
+[1A[2K[79/363] tests\doctrine\analytics-centre.spec.ts:277:1 › AC-30: Hub Analytics tab URL is bookmarkable
+[1A[2K[80/363] tests\doctrine\audit-remediation.spec.ts:150:1 › AR-12: Operations Hub renders all six tabs
+[1A[2K[81/363] tests\doctrine\analytics-centre.spec.ts:284:1 › AC-31: Analytics Centre shows risk and forecast data
+[1A[2K[82/363] tests\doctrine\client-portal-communication.spec.ts:133:3 › Portal Communication — thread creation & audit (CL-5) › CPC-11: creating a thread records a client_created_thread audit event
+[1A[2K[83/363] tests\doctrine\audit-remediation.spec.ts:161:3 › AR-13: Operations "jobs" tab composes without duplicating the shell
+[1A[2K[84/363] tests\doctrine\analytics-centre.spec.ts:291:1 › AC-32: Analytics Centre shows advisory label on forecast data
+[1A[2K[85/363] tests\doctrine\client-portal-communication.spec.ts:146:3 › Portal Communication — thread creation & audit (CL-5) › CPC-12: viewing a thread records a client_viewed_thread audit event
+[1A[2K[86/363] tests\doctrine\audit-remediation.spec.ts:161:3 › AR-13: Operations "schedule" tab composes without duplicating the shell
+[1A[2K[87/363] tests\doctrine\client-portal-communication.spec.ts:157:3 › Portal Communication — thread creation & audit (CL-5) › CPC-13: replying to an open thread updates its status
+[1A[2K[88/363] tests\doctrine\analytics-centre.spec.ts:298:1 › AC-33: Analytics Centre shows trend data for CEO
+[1A[2K[89/363] tests\doctrine\audit-remediation.spec.ts:161:3 › AR-13: Operations "workers" tab composes without duplicating the shell
+[1A[2K[90/363] tests\doctrine\client-portal-documents.spec.ts:22:3 › Portal Documents — client visibility (CL-5) › CPD-01: documents shared with the client are visible
+[1A[2K[91/363] tests\doctrine\analytics-centre.spec.ts:304:1 › AC-34: Analytics Centre renders trend items
+[1A[2K[92/363] tests\doctrine\client-portal-documents.spec.ts:30:3 › Portal Documents — client visibility (CL-5) › CPD-02: revoked documents are never visible
+[1A[2K[93/363] tests\doctrine\audit-remediation.spec.ts:161:3 › AR-13: Operations "clients" tab composes without duplicating the shell
+[1A[2K[94/363] tests\doctrine\analytics-centre.spec.ts:324:1 › AC-40: CEO can access the Analytics tab at /intelligence?tab=analytics
+[1A[2K[95/363] tests\doctrine\client-portal-documents.spec.ts:39:3 › Portal Documents — client visibility (CL-5) › CPD-03: internal job documents are never exposed
+[1A[2K[96/363] tests\doctrine\audit-remediation.spec.ts:161:3 › AR-13: Operations "map" tab composes without duplicating the shell
+[1A[2K[97/363] tests\doctrine\client-portal-documents.spec.ts:50:3 › Portal Documents — client visibility (CL-5) › CPD-04: documents are scoped to the signed-in client
+[1A[2K[98/363] tests\doctrine\analytics-centre.spec.ts:330:1 › AC-41: PM is denied access to the legacy /analytics-centre route
+[1A[2K[99/363] tests\doctrine\client-portal-documents.spec.ts:57:3 › Portal Documents — client visibility (CL-5) › CPD-05: client B sees only its own documents
+[1A[2K[100/363] tests\doctrine\analytics-centre.spec.ts:342:1 › AC-42: Worker is denied access to the legacy /analytics-centre route (Unauthorized page)
+[1A[2K[101/363] tests\doctrine\audit-remediation.spec.ts:161:3 › AR-13: Operations "stock" tab composes without duplicating the shell
+[1A[2K[102/363] tests\doctrine\client-portal-documents.spec.ts:65:3 › Portal Documents — client visibility (CL-5) › CPD-06: document metadata (category, shared date, shared by) renders
+[1A[2K[103/363] tests\doctrine\client-portal-financials.spec.ts:33:3 › Portal Financials — KPIs & balance (CL-6) › CPF-01: financial centre renders all KPI cards
+[1A[2K[104/363] tests\doctrine\client-portal-documents.spec.ts:74:3 › Portal Documents — client visibility (CL-5) › CPD-07: category filter narrows the document list
+[1A[2K[105/363] tests\doctrine\audit-remediation.spec.ts:175:1 › AR-14: standalone operational routes are retained, not redirected
+[1A[2K[106/363] tests\doctrine\client-portal-financials.spec.ts:42:3 › Portal Financials — KPIs & balance (CL-6) › CPF-02: KPI values are derived from client financial data
+[1A[2K[107/363] tests\doctrine\client-portal-documents.spec.ts:83:3 › Portal Documents — client visibility (CL-5) › CPD-08: search narrows the document list
+[1A[2K[108/363] tests\doctrine\audit-remediation.spec.ts:185:1 › AR-15: Operations Hub is denied to a Worker
+[1A[2K[109/363] tests\doctrine\client-portal-financials.spec.ts:58:3 › Portal Financials — KPIs & balance (CL-6) › CPF-03: outstanding balance panel shows overdue amount and health
+[1A[2K[110/363] tests\doctrine\client-portal-documents.spec.ts:92:3 › Portal Documents — client visibility (CL-5) › CPD-09: viewing a document creates a client_viewed_document audit event
+[1A[2K[111/363] tests\doctrine\client-portal-financials.spec.ts:68:3 › Portal Financials — KPIs & balance (CL-6) › CPF-04: next due invoice is surfaced
+[1A[2K[112/363] tests\doctrine\audit-remediation.spec.ts:192:1 › AR-16: CEO nav consolidates operations into a single entry
+[1A[2K[113/363] tests\doctrine\client-portal-documents.spec.ts:108:3 › Portal Documents — internal sharing controls (CL-5) › CPD-10: PM can share a job document with the client
+[1A[2K[114/363] tests\doctrine\client-portal-financials.spec.ts:81:3 › Portal Financials — Quotes (CL-6) › CPF-05: draft quotes are never visible
+[1A[2K[115/363] tests\doctrine\audit-remediation.spec.ts:202:1 › AR-17: CEO dashboard surfaces pending exposure
+[1A[2K[116/363] tests\doctrine\client-portal-financials.spec.ts:90:3 › Portal Financials — Quotes (CL-6) › CPF-06: sent/accepted/declined quotes are visible with statuses
+[1A[2K[117/363] tests\doctrine\client-portal-documents.spec.ts:118:3 › Portal Documents — internal sharing controls (CL-5) › CPD-11: CEO can share a job document with the client
+[1A[2K[118/363] tests\doctrine\client-portal-financials.spec.ts:101:3 › Portal Financials — Quotes (CL-6) › CPF-07: quotes are isolated per client
+[1A[2K[119/363] tests\doctrine\audit-remediation.spec.ts:211:1 › AR-18: pending exposure is labelled pre-approval, not settled money
+[1A[2K[120/363] tests\doctrine\client-portal-financials.spec.ts:109:3 › Portal Financials — Quotes (CL-6) › CPF-08: client B sees only its own quotes
+[1A[2K[121/363] tests\doctrine\audit-remediation.spec.ts:221:1 › AR-19: PM dashboard does not expose pending financial data
+[1A[2K[122/363] tests\doctrine\client-portal-documents.spec.ts:127:3 › Portal Documents — internal sharing controls (CL-5) › CPD-12: revoking client access updates the document status
+[1A[2K[123/363] tests\doctrine\client-portal-financials.spec.ts:117:3 › Portal Financials — Quotes (CL-6) › CPF-09: viewing a quote creates a client_viewed_quote audit event
+[1A[2K[124/363] tests\doctrine\client-portal-projects.spec.ts:25:3 › Portal Projects — Visibility & status filtering (CL-4) › CPP-01: client sees only their own projects
+[1A[2K[125/363] tests\doctrine\client-portal-financials.spec.ts:133:3 › Portal Financials — Variations (CL-6) › CPF-10: pending approval variations are never visible
+[1A[2K[126/363] tests\doctrine\client-portal-documents.spec.ts:136:3 › Portal Documents — internal sharing controls (CL-5) › CPD-13: sharing a document creates a document_shared_with_client audit event
+[1A[2K[127/363] tests\doctrine\client-portal-projects.spec.ts:33:3 › Portal Projects — Visibility & status filtering (CL-4) › CPP-02: cancelled projects are not rendered
+[1A[2K[128/363] tests\doctrine\client-portal-financials.spec.ts:142:3 › Portal Financials — Variations (CL-6) › CPF-11: approved and rejected variations are visible
+[1A[2K[129/363] tests\doctrine\client-portal-projects.spec.ts:40:3 › Portal Projects — Visibility & status filtering (CL-4) › CPP-03: project summary shows site, status, PM and dates
+[1A[2K[130/363] tests\doctrine\client-portal-documents.spec.ts:147:3 › Portal Documents — internal sharing controls (CL-5) › CPD-14: revoking access creates a document_access_revoked audit event
+[1A[2K[131/363] tests\doctrine\client-portal-projects.spec.ts:57:3 › Portal Projects — Milestones (CL-4) › CPP-04: milestones render on a project
+[1A[2K[132/363] tests\doctrine\client-portal-financials.spec.ts:157:3 › Portal Financials — Invoices (CL-6) › CPF-12: draft invoices are never visible
+[1A[2K[133/363] tests\doctrine\client-portal-requests.spec.ts:29:3 › Client Requests — portal submission surface (CL-8) › CR-01: client sees their own requests
+[1A[2K[134/363] tests\doctrine\client-portal-projects.spec.ts:65:3 › Portal Projects — Milestones (CL-4) › CPP-05: delayed milestones are visible
+[1A[2K[135/363] tests\doctrine\client-portal-financials.spec.ts:166:3 › Portal Financials — Invoices (CL-6) › CPF-13: invoice statuses are derived from payments
+[1A[2K[136/363] tests\doctrine\client-portal-requests.spec.ts:38:3 › Client Requests — portal submission surface (CL-8) › CR-02: requests are isolated per client
+[1A[2K[137/363] tests\doctrine\client-portal-projects.spec.ts:73:3 › Portal Projects — Milestones (CL-4) › CPP-06: milestone statuses render (completed/in-progress/upcoming)
+[1A[2K[138/363] tests\doctrine\client-portal-financials.spec.ts:178:3 › Portal Financials — Invoices (CL-6) › CPF-14: invoice detail renders summary, line items and payments
+[1A[2K[139/363] tests\doctrine\client-portal-requests.spec.ts:46:3 › Client Requests — portal submission surface (CL-8) › CR-03: client B sees only its own requests
+[1A[2K[140/363] tests\doctrine\client-portal-projects.spec.ts:88:3 › Portal Projects — Progress (CL-4) › CPP-07: completed project shows 100% derived progress
+[1A[2K[141/363] tests\doctrine\client-portal-financials.spec.ts:192:3 › Portal Financials — Invoices (CL-6) › CPF-15: downloading an invoice creates a client_downloaded_invoice audit event
+[1A[2K[142/363] tests\doctrine\client-portal-requests.spec.ts:55:3 › Client Requests — portal submission surface (CL-8) › CR-04: request statuses and types render
+[1A[2K[143/363] tests\doctrine\client-portal-projects.spec.ts:97:3 › Portal Projects — Progress (CL-4) › CPP-08: active project shows partial derived progress
+[1A[2K[144/363] tests\doctrine\client-portal-financials.spec.ts:204:3 › Portal Financials — Invoices (CL-6) › CPF-16: viewing an invoice creates a client_viewed_invoice audit event
+[1A[2K[145/363] tests\doctrine\client-portal-requests.spec.ts:65:3 › Client Requests — portal submission surface (CL-8) › CR-05: resolution note is visible to the client
+[1A[2K[146/363] tests\doctrine\client-portal-projects.spec.ts:112:3 › Portal Projects — Deliverables (CL-4) › CPP-09: deliverables render with statuses
+[1A[2K[147/363] tests\doctrine\client-portal-financials.spec.ts:221:3 › Portal Financials — Payments (CL-6) › CPF-17: payment history renders date, amount, reference and invoice
+[1A[2K[148/363] tests\doctrine\client-portal-requests.spec.ts:75:3 › Client Requests — portal submission surface (CL-8) › CR-06: decline reason is visible to the client
+[1A[2K[149/363] tests\doctrine\client-portal-projects.spec.ts:122:3 › Portal Projects — Deliverables (CL-4) › CPP-10: deliverables expose no approval controls
+[1A[2K[150/363] tests\doctrine\client-portal-financials.spec.ts:231:3 › Portal Financials — Payments (CL-6) › CPF-18: payments are isolated per client
+[1A[2K[151/363] tests\doctrine\client-portal-requests.spec.ts:85:3 › Client Requests — portal submission surface (CL-8) › CR-07: internal routing and escalation are never exposed
+[1A[2K[152/363] tests\doctrine\client-portal-projects.spec.ts:129:3 › Portal Projects — Deliverables (CL-4) › CPP-11: deliverables are scoped per client
+[1A[2K[153/363] tests\doctrine\client-portal-financials.spec.ts:245:3 › Portal Financials — Projection layer doctrine (CL-6) › CPF-19: internal cost, margin and payroll data is never exposed
+[1A[2K[154/363] tests\doctrine\client-portal-requests.spec.ts:96:3 › Client Requests — portal submission surface (CL-8) › CR-08: client can submit a new request
+[1A[2K[155/363] tests\doctrine\client-portal-financials.spec.ts:258:3 › Portal Financials — Projection layer doctrine (CL-6) › CPF-20: accounting sync and internal controls are never exposed
+[1A[2K[156/363] tests\doctrine\client-portal-projects.spec.ts:144:3 › Portal Projects — Team visibility (CL-4) › CPP-12: crew first names are visible
+[1A[2K[157/363] tests\doctrine\client-portal-requests.spec.ts:108:3 › Client Requests — portal submission surface (CL-8) › CR-09: all eight request types are available
+[1A[2K[158/363] tests\doctrine\client-portal-financials.spec.ts:273:3 › Portal Financials — Projection layer doctrine (CL-6) › CPF-21: financial pages display branded payment contact details
+[1A[2K[159/363] tests\doctrine\client-portal-projects.spec.ts:151:3 › Portal Projects — Team visibility (CL-4) › CPP-13: crew surnames remain hidden
+[1A[2K[160/363] tests\doctrine\client-portal-requests.spec.ts:116:3 › Client Requests — portal submission surface (CL-8) › CR-10: submission requires subject and details
+[1A[2K[161/363] tests\doctrine\client-portal-projects.spec.ts:166:3 › Portal Projects — Timeline (CL-4) › CPP-14: project timeline renders events
+[1A[2K[162/363] tests\doctrine\client-portal-shell.spec.ts:18:3 › Client Portal Shell — Navigation (CL-3) › CPS-01: portal shell shows all navigation items
+[1A[2K[163/363] tests\doctrine\client-portal-requests.spec.ts:125:3 › Client Requests — portal submission surface (CL-8) › CR-11: submitting a request records an audit event
+[1A[2K[164/363] tests\doctrine\client-portal-projects.spec.ts:174:3 › Portal Projects — Timeline (CL-4) › CPP-15: project detail excludes internal operational data
+[1A[2K[165/363] tests\doctrine\client-portal-shell.spec.ts:26:3 › Client Portal Shell — Navigation (CL-3) › CPS-02: each portal section renders when navigated
+[1A[2K[166/363] tests\doctrine\client-portal-requests.spec.ts:138:3 › Client Requests — portal submission surface (CL-8) › CR-12: requests hosts conversations and nav has seven sections
+[1A[2K[167/363] tests\doctrine\client-portal-projects.spec.ts:185:3 › Portal Projects — Timeline (CL-4) › CPP-16: project deliverables and milestones are isolated per client
+[1A[2K[168/363] tests\doctrine\client-portal-shell.spec.ts:45:3 › Client Portal Shell — Navigation (CL-3) › CPS-03: protected — direct URL to /portal/jobs requires authentication
+[1A[2K[169/363] tests\doctrine\client-portal-requests.spec.ts:164:3 › Client Requests — management surface RBAC (CL-8) › CR-13: CEO sees all client requests
+[1A[2K[170/363] tests\doctrine\client-portal.spec.ts:18:3 › Client Portal — Authentication (CL-2) › CP-01: active portal account signs in successfully
+[1A[2K[171/363] tests\doctrine\client-portal-shell.spec.ts:54:3 › Client Portal Shell — Navigation (CL-3) › CPS-04: protected — direct URL to /portal/invoices requires authentication
+[1A[2K[172/363] tests\doctrine\client-portal-requests.spec.ts:175:3 › Client Requests — management surface RBAC (CL-8) › CR-14: PM sees only requests for their assigned jobs
+[1A[2K[173/363] tests\doctrine\client-portal.spec.ts:25:3 › Client Portal — Authentication (CL-2) › CP-02: disabled portal account is blocked from signing in
+[1A[2K[174/363] tests\doctrine\client-portal-shell.spec.ts:68:3 › Client Portal Shell — Jobs visibility (CL-3) › CPS-05: cancelled jobs are hidden from the portal
+[1A[2K[175/363] tests\doctrine\client-portal.spec.ts:33:3 › Client Portal — Authentication (CL-2) › CP-03: pending portal account is blocked from signing in
+[1A[2K[176/363] tests\doctrine\client-portal-requests.spec.ts:188:3 › Client Requests — management surface RBAC (CL-8) › CR-15: management surface states requests do not enter the Review Centre
+[1A[2K[177/363] tests\doctrine\client-portal-shell.spec.ts:79:3 › Client Portal Shell — Jobs visibility (CL-3) › CPS-06: jobs completed filter narrows the list
+[1A[2K[178/363] tests\doctrine\client-portal.spec.ts:41:3 › Client Portal — Authentication (CL-2) › CP-04: unknown email is rejected
+[1A[2K[179/363] tests\doctrine\client-portal-shell.spec.ts:95:3 › Client Portal Shell — Sites (CL-3) › CPS-07: client sees only their own sites
+[1A[2K[180/363] tests\doctrine\client-portal-requests.spec.ts:198:3 › Client Requests — management surface RBAC (CL-8) › CR-16: unacknowledged requests past threshold are flagged as escalated
+[1A[2K[181/363] tests\doctrine\client-portal.spec.ts:48:3 › Client Portal — Authentication (CL-2) › CP-05: sign out clears the session and returns to login
+[1A[2K[182/363] tests\doctrine\client-portal-shell.spec.ts:105:3 › Client Portal Shell — Sites (CL-3) › CPS-08: sites never expose access notes or security info
+[1A[2K[183/363] tests\doctrine\client-portal.spec.ts:61:3 › Client Portal — Isolation / RBAC (CL-2) › CP-06: client A (HSS) sees only its own jobs
+[1A[2K[184/363] tests\doctrine\client-portal-requests.spec.ts:213:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-17: acknowledging an open request updates its status
+[1A[2K[185/363] tests\doctrine\client-portal-shell.spec.ts:115:3 › Client Portal Shell — Sites (CL-3) › CPS-09: client B sites are isolated from client A
+[1A[2K[186/363] tests\doctrine\client-portal.spec.ts:71:3 › Client Portal — Isolation / RBAC (CL-2) › CP-07: client B (Showcase) cannot see client A jobs
+[1A[2K[187/363] tests\doctrine\client-portal-shell.spec.ts:130:3 › Client Portal Shell — Dashboard metrics (CL-3) › CPS-10: dashboard renders all KPI cards
+[1A[2K[188/363] tests\doctrine\client-portal-requests.spec.ts:222:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-18: resolving requires a resolution note
+[1A[2K[189/363] tests\doctrine\client-portal.spec.ts:81:3 › Client Portal — Isolation / RBAC (CL-2) › CP-08: signed-in client identity matches the account
+[1A[2K[190/363] tests\doctrine\client-portal-shell.spec.ts:138:3 › Client Portal Shell — Dashboard metrics (CL-3) › CPS-11: dashboard KPI values are derived correctly
+[1A[2K[191/363] tests\doctrine\client-portal.spec.ts:94:3 › Client Portal — Crew Visibility Doctrine (CL-2) › CP-09: crew first name is visible on a job
+[1A[2K[192/363] tests\doctrine\client-portal-shell.spec.ts:150:3 › Client Portal Shell — Dashboard metrics (CL-3) › CPS-12: dashboard recent activity renders items
+[1A[2K[193/363] tests\doctrine\client-portal-requests.spec.ts:233:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-19: declining requires a reason
+[1A[2K[194/363] tests\doctrine\client-portal.spec.ts:105:3 › Client Portal — Crew Visibility Doctrine (CL-2) › CP-10: crew surnames are never exposed
+[1A[2K[195/363] tests\doctrine\client-portal-shell.spec.ts:163:3 › Client Portal Shell — Branding (CL-3) › CPS-13: portal branding is displayed in the shell
+[1A[2K[196/363] tests\doctrine\client-portal.spec.ts:117:3 › Client Portal — Crew Visibility Doctrine (CL-2) › CP-11: crew names render as first name only (single token)
+[1A[2K[197/363] tests\doctrine\client-portal-shell.spec.ts:172:3 › Client Portal Shell — Branding (CL-3) › CPS-14: opening a job through the shell records an audit event
+[1A[2K[198/363] tests\doctrine\client-portal-requests.spec.ts:242:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-20: resolving with a note succeeds and is audited
+[1A[2K[199/363] tests\doctrine\client-portal.spec.ts:137:3 › Client Portal — Audit Infrastructure (CL-2) › CP-12: sign-in creates a client_portal_login audit event
+[1A[2K[200/363] tests\doctrine\financial-explorer.spec.ts:16:1 › Financial Records tab loads and all tabs render
+[1A[2K[201/363] tests\doctrine\client-portal.spec.ts:145:3 › Client Portal — Audit Infrastructure (CL-2) › CP-13: sign-out creates a client_portal_logout audit event
+[1A[2K[202/363] tests\doctrine\client-portal-requests.spec.ts:257:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-21: declining with a reason succeeds and is audited
+[1A[2K[203/363] tests\doctrine\financial-explorer.spec.ts:41:1 › Financial Records Profitability tab renders content
+[1A[2K[204/363] tests\doctrine\client-portal.spec.ts:155:3 › Client Portal — Audit Infrastructure (CL-2) › CP-14: opening a job creates a client_viewed_job audit event
+[1A[2K[205/363] tests\doctrine\client-portal.spec.ts:166:3 › Client Portal — Audit Infrastructure (CL-2) › CP-15: signing in records a client_viewed_dashboard audit event
+[1A[2K[206/363] tests\doctrine\client-portal-requests.spec.ts:271:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-22: a declined request exposes no lifecycle actions
+[1A[2K[207/363] tests\doctrine\financial-explorer.spec.ts:57:1 › Financial Records Timesheets tab renders without error
+[1A[2K[208/363] tests\doctrine\invoice-pipeline.spec.ts:29:1 › Invoice Builder page loads and shows seed draft INV-2026-0001
+[1A[2K[209/363] tests\doctrine\client-portal-requests.spec.ts:283:3 › Client Requests — lifecycle & mandatory notes (CL-8) › CR-23: decision-required request types are marked
+[1A[2K[210/363] tests\doctrine\job-financial-summary.spec.ts:24:1 › Job financial summary displays revenue, cost, profit and margin for seeded job
+[1A[2K[211/363] tests\doctrine\invoice-pipeline.spec.ts:55:1 › Pipeline strip shows correct counts from seed data
+[1A[2K[212/363] tests\doctrine\notification-centre.spec.ts:27:1 › NC-01: CEO /notifications redirects to the hub Activity tab
+[1A[2K[213/363] tests\doctrine\job-financial-summary.spec.ts:47:1 › Job financial summary section renders for active job without errors
+[1A[2K[214/363] tests\doctrine\notification-centre.spec.ts:34:1 › NC-02: CEO sidebar shows Intelligence and no Notifications item
+[1A[2K[215/363] tests\doctrine\invoice-pipeline.spec.ts:71:1 › Invoice draft can be advanced from draft to ready
+[1A[2K[216/363] tests\doctrine\platform-ia.spec.ts:60:1 › IA-01 — CEO Review page uses Centre spelling
+[1A[2K[217/363] tests\doctrine\notification-centre.spec.ts:41:1 › NC-03: PM can access Notification Centre (page unchanged, nav item retained)
+[1A[2K[218/363] tests\doctrine\platform-ia.spec.ts:66:1 › IA-02 — PM Review surface never renders the American spelling
+[1A[2K[219/363] tests\doctrine\notification-centre.spec.ts:52:1 › NC-04: KPI strip renders all 5 cards for PM
+[1A[2K[220/363] tests\doctrine\platform-ia.spec.ts:74:1 › IA-03 — CEO Review surface never renders the American spelling
+[1A[2K[221/363] tests\doctrine\notification-centre.spec.ts:63:1 › NC-05: KPI total matches seed data (15 — KPI strip is engine-wide)
+[1A[2K[222/363] tests\doctrine\platform-ia.spec.ts:80:1 › IA-04 — Financial Records copy references the Review Centre
+[1A[2K[223/363] tests\doctrine\notification-centre.spec.ts:73:1 › NC-06: KPI unread count is non-zero from seed data (PM scope)
+[1A[2K[224/363] tests\doctrine\platform-ia.spec.ts:86:1 › IA-05 — Payroll copy uses Centre spelling
+[1A[2K[225/363] tests\doctrine\notification-centre.spec.ts:82:1 › NC-07: KPI critical count reflects seed data (PM scope)
+[1A[2K[226/363] tests\doctrine\platform-ia.spec.ts:92:1 › IA-06 — no CEO nav label uses the American spelling
+[1A[2K[227/363] tests\doctrine\notification-centre.spec.ts:95:1 › NC-08: Notification table renders with seed data rows
+[1A[2K[228/363] tests\doctrine\platform-ia.spec.ts:103:1 › IA-07 — CEO dashboard renders exactly one h1
+[1A[2K[229/363] tests\doctrine\notification-centre.spec.ts:104:1 › NC-09: Action Required indicator visible for notifications requiring action
+[1A[2K[230/363] tests\doctrine\platform-ia.spec.ts:109:1 › IA-08 — PM dashboard renders exactly one h1
+[1A[2K[231/363] tests\doctrine\notification-centre.spec.ts:110:1 › NC-10: Status filter shows only Dismissed notifications
+[1A[2K[232/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route / renders exactly one h1
+[1A[2K[233/363] tests\doctrine\notification-centre.spec.ts:119:1 › NC-11: Type filter shows only Sync Failure notifications
+[1A[2K[234/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /review renders exactly one h1
+[1A[2K[235/363] tests\doctrine\notification-centre.spec.ts:129:1 › NC-12: Priority filter shows only Critical notifications
+[1A[2K[236/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /jobs renders exactly one h1
+[1A[2K[237/363] tests\doctrine\notification-centre.spec.ts:139:1 › NC-13: Search by title filters notifications
+[1A[2K[238/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /schedule renders exactly one h1
+[1A[2K[239/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /workers renders exactly one h1
+[1A[2K[240/363] tests\doctrine\notification-centre.spec.ts:147:1 › NC-14: Search by source ID filters notifications
+[1A[2K[241/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /clients renders exactly one h1
+[1A[2K[242/363] tests\doctrine\notification-centre.spec.ts:155:1 › NC-15: Search by job ID filters notifications
+[1A[2K[243/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /client-requests renders exactly one h1
+[1A[2K[244/363] tests\doctrine\notification-centre.spec.ts:163:1 › NC-16: Clearing search restores all notifications
+[1A[2K[245/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /equipment renders exactly one h1
+[1A[2K[246/363] tests\doctrine\notification-centre.spec.ts:176:1 › NC-17: Notification detail dialog opens on View
+[1A[2K[247/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /job-intelligence renders exactly one h1
+[1A[2K[248/363] tests\doctrine\notification-centre.spec.ts:183:1 › NC-18: Detail dialog shows type, priority, and status badges
+[1A[2K[249/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /expenses renders exactly one h1
+[1A[2K  3) tests\doctrine\invoice-pipeline.spec.ts:71:1 › Invoice draft can be advanced from draft to ready 
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByTestId('btn-advance-seed-draft-kex-1')[22m
+    [2m    - locator resolved to <button data-testid="btn-advance-seed-draft-kex-1" class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 bg-primary text-primary-foreground border border-primary-border min-h-8 rounded-md px-3 text-xs">…</button>[22m
+    [2m  - attempting click action[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not stable[22m
+    [2m    - retrying click action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not stable[22m
+    [2m    - retrying click action[22m
+    [2m      - waiting 100ms[22m
+    [2m    57 × waiting for element to be visible, enabled and stable[22m
+    [2m       - element is visible, enabled and stable[22m
+    [2m       - scrolling into view if needed[22m
+    [2m       - done scrolling[22m
+    [2m       - element is outside of the viewport[22m
+    [2m     - retrying click action[22m
+    [2m       - waiting 500ms[22m
+
+
+      80 |   await expect(advanceBtn).toContainText("Mark as Ready");
+      81 |
+    > 82 |   await advanceBtn.click();
+         |                    ^
+      83 |
+      84 |   // Status updates to Ready
+      85 |   await expect(page.getByTestId("draft-status-seed-draft-kex-1")).toContainText("Ready");
+        at C:\Users\pskan\Documents\The-Ledger\The-Ledger\The-Ledger\tests\doctrine\invoice-pipeline.spec.ts:82:20
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\doctrine-invoice-pipeline--4e69a-dvanced-from-draft-to-ready\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\doctrine-invoice-pipeline--4e69a-dvanced-from-draft-to-ready\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\doctrine-invoice-pipeline--4e69a-dvanced-from-draft-to-ready\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\doctrine-invoice-pipeline--4e69a-dvanced-from-draft-to-ready\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\doctrine-invoice-pipeline--4e69a-dvanced-from-draft-to-ready\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[250/363] tests\doctrine\notification-centre.spec.ts:193:1 › NC-19: Detail dialog shows Action Required badge for action-required notifications
+[1A[2K[251/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /intelligence renders exactly one h1
+[1A[2K[252/363] tests\doctrine\invoice-pipeline.spec.ts:95:1 › Invoice draft completes full workflow draft → ready → sent → paid
+[1A[2K[253/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /automations renders exactly one h1
+[1A[2K[254/363] tests\doctrine\notification-centre.spec.ts:200:1 › NC-20: Detail dialog shows Go to Source deep-link button
+[1A[2K[255/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /workflows renders exactly one h1
+[1A[2K[256/363] tests\doctrine\notification-centre.spec.ts:208:1 › NC-21: Informational doctrine notice visible in detail dialog
+[1A[2K[257/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /automation-governance renders exactly one h1
+[1A[2K[258/363] tests\doctrine\notification-centre.spec.ts:222:1 › NC-22: Mark Read action removes unread highlight and shows toast
+[1A[2K[259/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /roles renders exactly one h1
+[1A[2K[260/363] tests\doctrine\notification-centre.spec.ts:237:1 › NC-23: Dismiss action shows toast and audit confirmation
+[1A[2K[261/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /audit renders exactly one h1
+[1A[2K[262/363] tests\doctrine\notification-centre.spec.ts:249:1 › NC-24: Dismiss from detail dialog closes dialog and shows toast
+[1A[2K[263/363] tests\doctrine\platform-ia.spec.ts:116:3 › IA-09 — CEO route /settings renders exactly one h1
+[1A[2K[264/363] tests\doctrine\notification-centre.spec.ts:268:1 › NC-25: Bell renders with unread badge on mobile bar for CEO
+[1A[2K[265/363] tests\doctrine\platform-ia.spec.ts:123:1 › IA-10 — the page h1 is non-empty
+[1A[2K[266/363] tests\doctrine\notification-centre.spec.ts:278:1 › NC-26: Bell dropdown opens and shows preview notifications
+[1A[2K[267/363] tests\doctrine\platform-ia.spec.ts:143:1 › IA-09b — CEO route /finance renders exactly one h1
+[1A[2K[268/363] tests\doctrine\notification-centre.spec.ts:291:1 › NC-27: Bell View All navigates CEO to the hub Activity tab
+[1A[2K[269/363] tests\doctrine\platform-ia.spec.ts:149:1 › IA-11 — hub h1 carries its stable testid
+[1A[2K[270/363] tests\doctrine\notification-centre.spec.ts:306:1 › NC-28 (RBAC): Worker is denied access to Notification Centre
+[1A[2K[271/363] tests\doctrine\platform-ia.spec.ts:157:1 › IA-12 — Intelligence hub h1 carries its stable testid
+[1A[2K[272/363] tests\doctrine\reporting-centre.spec.ts:31:1 › RC-01: CEO can navigate to the Reports tab via sidebar + hub tab
+[1A[2K[273/363] tests\doctrine\platform-ia.spec.ts:163:1 › IA-13 — job detail renders exactly one h1
+[1A[2K[274/363] tests\doctrine\reporting-centre.spec.ts:38:1 › RC-02: legacy /reporting-centre redirects CEO to the hub Reports tab
+[1A[2K[275/363] tests\doctrine\platform-ia.spec.ts:172:1 › IA-14 — /map is the documented single-h1 exemption
+[1A[2K[276/363] tests\doctrine\reporting-centre.spec.ts:45:1 › RC-03: PM denied access to legacy and hub reports routes
+[1A[2K[277/363] tests\doctrine\reporting-centre.spec.ts:53:1 › RC-04: Reports tab renders hub heading with CEO Only badge
+[1A[2K[278/363] tests\doctrine\reporting-centre.spec.ts:60:1 › RC-05: Reporting Centre doctrine notice is displayed
+[1A[2K[279/363] tests\doctrine\reporting-centre.spec.ts:71:1 › RC-06: KPI strip renders on Reporting Centre page
+[1A[2K[280/363] tests\doctrine\reporting-centre.spec.ts:77:1 › RC-07: KPI strip shows Total Reports card
+[1A[2K[281/363] tests\doctrine\reporting-centre.spec.ts:83:1 › RC-08: KPI strip shows Generated Reports card
+[1A[2K[282/363] tests\doctrine\reporting-centre.spec.ts:89:1 › RC-09: KPI strip shows Draft Reports card
+[1A[2K[283/363] tests\doctrine\reporting-centre.spec.ts:95:1 › RC-10: KPI strip shows Archived and This Month cards
+[1A[2K  4) tests\doctrine\invoice-pipeline.spec.ts:95:1 › Invoice draft completes full workflow draft → ready → sent → paid 
+
+    TimeoutError: locator.click: Timeout 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByTestId('btn-advance-seed-draft-kex-1')[22m
+    [2m    - locator resolved to <button data-testid="btn-advance-seed-draft-kex-1" class="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 bg-primary text-primary-foreground border border-primary-border min-h-8 rounded-md px-3 text-xs">…</button>[22m
+    [2m  - attempting click action[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is not stable[22m
+    [2m    - retrying click action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible, enabled and stable[22m
+    [2m      - element is visible, enabled and stable[22m
+    [2m      - scrolling into view if needed[22m
+    [2m      - done scrolling[22m
+    [2m      - element is outside of the viewport[22m
+    [2m    - retrying click action[22m
+    [2m      - waiting 100ms[22m
+    [2m    48 × waiting for element to be visible, enabled and stable[22m
+    [2m       - element is visible, enabled and stable[22m
+    [2m       - scrolling into view if needed[22m
+    [2m       - done scrolling[22m
+    [2m       - element is outside of the viewport[22m
+    [2m     - retrying click action[22m
+    [2m       - waiting 500ms[22m
+
+
+      101 |
+      102 |   // draft → ready
+    > 103 |   await page.getByTestId("btn-advance-seed-draft-kex-1").click();
+          |                                                          ^
+      104 |   await expect(page.getByTestId("draft-status-seed-draft-kex-1")).toContainText("Ready");
+      105 |
+      106 |   // ready → sent
+        at C:\Users\pskan\Documents\The-Ledger\The-Ledger\The-Ledger\tests\doctrine\invoice-pipeline.spec.ts:103:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\doctrine-invoice-pipeline--ebeaf-draft-→-ready-→-sent-→-paid\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\doctrine-invoice-pipeline--ebeaf-draft-→-ready-→-sent-→-paid\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\doctrine-invoice-pipeline--ebeaf-draft-→-ready-→-sent-→-paid\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\doctrine-invoice-pipeline--ebeaf-draft-→-ready-→-sent-→-paid\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\doctrine-invoice-pipeline--ebeaf-draft-→-ready-→-sent-→-paid\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[284/363] tests\doctrine\invoice-pipeline.spec.ts:127:1 › Finance Hub Records tab shows Invoice Pipeline tab with seed data
+[1A[2K[285/363] tests\doctrine\reporting-centre.spec.ts:106:1 › RC-11: Reports table renders with seeded reports
+[1A[2K[286/363] tests\doctrine\reporting-centre.spec.ts:113:1 › RC-12: Reports table shows View button for each report
+[1A[2K[287/363] tests\doctrine\invoice-pipeline.spec.ts:145:1 › Job Detail shows invoice draft panel for seeded job
+[1A[2K[288/363] tests\doctrine\reporting-centre.spec.ts:119:1 › RC-13: Reports table shows Archive button for non-archived reports
+[1A[2K[289/363] tests\doctrine\worker-history.spec.ts:25:3 › Worker History & Performance (WK-5) › WK5-01: worker sees own submissions
+[1A[2K[290/363] tests\doctrine\worker-history.spec.ts:33:3 › Worker History & Performance (WK-5) › WK5-02: submission statuses display
+[1A[2K[291/363] tests\doctrine\reporting-centre.spec.ts:125:1 › RC-14: Status filter buttons are rendered
+[1A[2K[292/363] tests\doctrine\worker-history.spec.ts:42:3 › Worker History & Performance (WK-5) › WK5-03: worker sees shift history
+[1A[2K[293/363] tests\doctrine\reporting-centre.spec.ts:134:1 › RC-15: Filtering by Generated shows only generated reports
+[1A[2K  5) tests\doctrine\platform-ia.spec.ts:172:1 › IA-14 — /map is the documented single-h1 exemption ─
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCount[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  locator('h1')
+    Expected: [32m0[39m
+    Received: [31m1[39m
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toHaveCount" with timeout 5000ms[22m
+    [2m  - waiting for locator('h1')[22m
+    [2m    13 × locator resolved to 1 element[22m
+    [2m       - unexpected value "1"[22m
+
+
+      175 |   // Full-bleed map surface: no page header by design. If a header is ever
+      176 |   // added it must be an h1, and this expectation should be updated to 1.
+    > 177 |   await expect(page.locator('h1')).toHaveCount(0);
+          |                                    ^
+      178 | });
+      179 |
+      180 | // ══════════════════════════════════════════════════════
+        at C:\Users\pskan\Documents\The-Ledger\The-Ledger\The-Ledger\tests\doctrine\platform-ia.spec.ts:177:36
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\doctrine-platform-ia-IA-14-54b40-umented-single-h1-exemption\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\doctrine-platform-ia-IA-14-54b40-umented-single-h1-exemption\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\doctrine-platform-ia-IA-14-54b40-umented-single-h1-exemption\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\doctrine-platform-ia-IA-14-54b40-umented-single-h1-exemption\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\doctrine-platform-ia-IA-14-54b40-umented-single-h1-exemption\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K[294/363] tests\doctrine\worker-history.spec.ts:53:3 › Worker History & Performance (WK-5) › WK5-04: activity timeline aggregates correctly
+[1A[2K[295/363] tests\doctrine\reporting-centre.spec.ts:147:1 › RC-16: Clicking View on a report opens detail dialog
+[1A[2K[296/363] tests\doctrine\platform-ia.spec.ts:184:1 › IA-15 — Financial Insights nav label matches its page title
+[1A[2K[297/363] tests\doctrine\worker-history.spec.ts:65:3 › Worker History & Performance (WK-5) › WK5-05: profile metrics display
+[1A[2K[298/363] tests\doctrine\reporting-centre.spec.ts:154:1 › RC-17: Report detail dialog shows Executive Summary section
+[1A[2K[299/363] tests\doctrine\platform-ia.spec.ts:191:1 › IA-16 — Automation Governance nav label matches its page title
+[1A[2K[300/363] tests\doctrine\worker-history.spec.ts:73:3 › Worker History & Performance (WK-5) › WK5-06: no financial visibility
+[1A[2K[301/363] tests\doctrine\worker-history.spec.ts:88:3 › Worker History & Performance (WK-5) › WK5-07: worker cannot access other worker data
+[1A[2K[302/363] tests\doctrine\platform-ia.spec.ts:197:1 › IA-17 — the CEO nav no longer offers a bare "Expenses" label
+[1A[2K[303/363] tests\doctrine\reporting-centre.spec.ts:161:1 › RC-18: Report detail dialog shows KPI Snapshot
+[1A[2K[304/363] tests\doctrine\worker-home.spec.ts:14:3 › Worker Home Screen (WK-2) › WK2-01: worker home displays shift status
+[1A[2K[305/363] tests\doctrine\platform-ia.spec.ts:204:1 › IA-18 — Stock & Assets nav label matches its page title
+[1A[2K[306/363] tests\doctrine\reporting-centre.spec.ts:168:1 › RC-19: Report detail dialog shows Risk Summary section
+[1A[2K[307/363] tests\doctrine\worker-home.spec.ts:23:3 › Worker Home Screen (WK-2) › WK2-02: worker home shows assigned jobs only
+[1A[2K[308/363] tests\doctrine\platform-ia.spec.ts:210:1 › IA-19 — PM nav exposes Financial Insights with matching destination
+[1A[2K[309/363] tests\doctrine\reporting-centre.spec.ts:175:1 › RC-20: Report detail dialog shows Forecast Summary section
+[1A[2K[310/363] tests\doctrine\worker-home.spec.ts:36:3 › Worker Home Screen (WK-2) › WK2-03: worker home shows quick actions
+[1A[2K[311/363] tests\doctrine\platform-ia.spec.ts:226:1 › IA-21 — page titles share one type scale across hub and leaf pages
+[1A[2K[312/363] tests\doctrine\worker-home.spec.ts:47:3 › Worker Home Screen (WK-2) › WK2-04: worker home shows attention required section
+[1A[2K[313/363] tests\doctrine\reporting-centre.spec.ts:182:1 › RC-21: Report detail dialog shows Governance Summary section
+[1A[2K[314/363] tests\doctrine\worker-home.spec.ts:57:3 › Worker Home Screen (WK-2) › WK2-05: worker home shows recent activity section
+[1A[2K[315/363] tests\doctrine\platform-ia.spec.ts:243:1 › IA-22 — no page title uses a hardcoded slate colour
+[1A[2K[316/363] tests\doctrine\reporting-centre.spec.ts:189:1 › RC-22: Report detail dialog shows doctrine notice
+[1A[2K[317/363] tests\doctrine\worker-home.spec.ts:63:3 › Worker Home Screen (WK-2) › WK2-06: CEO experience is unchanged
+[1A[2K[318/363] tests\doctrine\platform-ia.spec.ts:254:1 › IA-23 — Workstream E introduced no approval control outside the Review Centre
+[1A[2K[319/363] tests\doctrine\worker-home.spec.ts:74:3 › Worker Home Screen (WK-2) › WK2-07: PM experience is unchanged
+[1A[2K[320/363] tests\doctrine\reporting-centre.spec.ts:201:1 › RC-23: Archive button in detail dialog archives the report
+[1A[2K[321/363] tests\doctrine\platform-ia.spec.ts:263:1 › IA-24 — the Review Centre remains the approval surface
+[1A[2K[322/363] tests\doctrine\worker-jobs-submissions.spec.ts:68:3 › Worker Jobs & Submissions (WK-3) › WK3-01: log issue enters the queue
+[1A[2K[323/363] tests\doctrine\reporting-centre.spec.ts:210:1 › RC-24: Archive button in table row archives the report
+[1A[2K[324/363] tests\doctrine\worker-mobile-polish.spec.ts:30:3 › Worker Mobile Polish (WK-6) › WK6-01: schedule view functional
+[1A[2K[325/363] tests\doctrine\worker-jobs-submissions.spec.ts:83:3 › Worker Jobs & Submissions (WK-3) › WK3-02: issue survives refresh
+[1A[2K[326/363] tests\doctrine\worker-mobile-polish.spec.ts:45:3 › Worker Mobile Polish (WK-6) › WK6-02: no blocking alert usage
+[1A[2K[327/363] tests\doctrine\reporting-centre.spec.ts:219:1 › RC-25: Archived reports do not show Archive button in table
+[1A[2K[328/363] tests\doctrine\worker-jobs-submissions.spec.ts:101:3 › Worker Jobs & Submissions (WK-3) › WK3-03: shift end creates a timesheet submission
+[1A[2K[329/363] tests\doctrine\reporting-centre.spec.ts:235:1 › RC-26: Close button in detail dialog dismisses the dialog
+[1A[2K[330/363] tests\doctrine\worker-mobile-polish.spec.ts:66:3 › Worker Mobile Polish (WK-6) › WK6-03: navigation remains operational
+[1A[2K[331/363] tests\doctrine\worker-jobs-submissions.spec.ts:114:3 › Worker Jobs & Submissions (WK-3) › WK3-04: report hours populate correctly
+[1A[2K[332/363] tests\doctrine\reporting-centre.spec.ts:248:1 › RC-27: Build Report button opens Report Builder dialog
+[1A[2K[333/363] tests\doctrine\worker-jobs-submissions.spec.ts:133:3 › Worker Jobs & Submissions (WK-3) › WK3-05: expense enters the queue
+[1A[2K[334/363] tests\doctrine\worker-mobile-polish.spec.ts:82:3 › Worker Mobile Polish (WK-6) › WK6-04: accessibility attributes present
+[1A[2K[335/363] tests\doctrine\worker-mobile-polish.spec.ts:94:3 › Worker Mobile Polish (WK-6) › WK6-05: empty states render
+[1A[2K[336/363] tests\doctrine\reporting-centre.spec.ts:255:1 › RC-28: Report Builder shows report type selection
+[1A[2K[337/363] tests\doctrine\worker-jobs-submissions.spec.ts:156:3 › Worker Jobs & Submissions (WK-3) › WK3-06: photo upload survives refresh
+[1A[2K[338/363] tests\doctrine\worker-mobile-polish.spec.ts:101:3 › Worker Mobile Polish (WK-6) › WK6-06: error states render
+[1A[2K[339/363] tests\doctrine\worker-jobs-submissions.spec.ts:171:3 › Worker Jobs & Submissions (WK-3) › WK3-07: offline replay works
+[1A[2K[340/363] tests\doctrine\reporting-centre.spec.ts:264:1 › RC-29: Report Builder shows period selection
+[1A[2K[341/363] tests\doctrine\worker-mobile-polish.spec.ts:132:3 › Worker Mobile Polish (WK-6) › WK6-07: mobile layout functional
+[1A[2K[342/363] tests\doctrine\reporting-centre.spec.ts:272:1 › RC-30: Generating a report from builder adds it to the table
+[1A[2K[343/363] tests\doctrine\worker-jobs-submissions.spec.ts:200:3 › Worker Jobs & Submissions (WK-3) › WK3-08: submission enters the Review Centre path
+[1A[2K[344/363] tests\doctrine\worker-offline-sync.spec.ts:67:3 › Worker Offline & Sync (WK-4) › WK4-01: report survives refresh
+[1A[2K[345/363] tests\doctrine\reporting-centre.spec.ts:289:1 › RC-31: Reporting Centre is accessible for CEO
+[1A[2K[346/363] tests\doctrine\worker-offline-sync.spec.ts:81:3 › Worker Offline & Sync (WK-4) › WK4-02: issue survives refresh
+[1A[2K[347/363] tests\doctrine\worker-jobs-submissions.spec.ts:219:3 › Worker Jobs & Submissions (WK-3) › WK3-09: no financial mutation before approval
+[1A[2K[348/363] tests\doctrine\reporting-centre.spec.ts:295:1 › RC-32: Reporting Centre shows report KPI counts
+[1A[2K[349/363] tests\doctrine\worker-offline-sync.spec.ts:97:3 › Worker Offline & Sync (WK-4) › WK4-03: expense survives refresh
+[1A[2K[350/363] tests\doctrine\worker-to-review.spec.ts:8:1 › Worker review pipeline basic flow
+[1A[2K[351/363] tests\doctrine\reporting-centre.spec.ts:302:1 › RC-33: Reporting Centre page loads without errors
+[1A[2K[352/363] tests\doctrine\worker-offline-sync.spec.ts:115:3 › Worker Offline & Sync (WK-4) › WK4-04: upload survives refresh
+[1A[2K[353/363] tests\doctrine\reporting-centre.spec.ts:320:1 › RC-37: Deep link from report Governance section navigates to Automation Governance
+[1A[2K[354/363] tests\doctrine\worker-offline-sync.spec.ts:129:3 › Worker Offline & Sync (WK-4) › WK4-05: replay succeeds
+[1A[2K[355/363] tests\jobs.spec.ts:5:1 › CEO can access jobs page
+[1A[2K[356/363] tests\doctrine\reporting-centre.spec.ts:332:1 › RC-38: Deep link from Financial report navigates to Financial Explorer
+[1A[2K[357/363] tests\worker.spec.ts:5:1 › Worker can submit a report
+[1A[2K[358/363] tests\doctrine\worker-offline-sync.spec.ts:158:3 › Worker Offline & Sync (WK-4) › WK4-06: failed replay is visible
+[1A[2K[359/363] tests\doctrine\reporting-centre.spec.ts:348:1 › RC-39: Reporting Centre does not contain approve/mutate controls
+[1A[2K[360/363] tests\doctrine\worker-offline-sync.spec.ts:194:3 › Worker Offline & Sync (WK-4) › WK4-07: no duplicate submission creation
+[1A[2K[361/363] tests\doctrine\reporting-centre.spec.ts:357:1 › RC-40: Report detail dialog contains no mutation controls
+[1A[2K[362/363] tests\doctrine\worker-offline-sync.spec.ts:224:3 › Worker Offline & Sync (WK-4) › WK4-08: offline indicator visible
+[1A[2K[363/363] tests\doctrine\worker-offline-sync.spec.ts:233:3 › Worker Offline & Sync (WK-4) › WK4-09: Review Centre path preserved
+[1A[2K  Slow test file: tests\doctrine\analytics-centre.spec.ts (8.7m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  5 failed
+    tests\doctrine\accounting-settings.spec.ts:36:1 › 1. Accounting Settings page loads at /accounting-settings 
+    tests\doctrine\accounting-sync.spec.ts:35:1 › 1. Accounting Sync tab trigger renders in Financial Explorer 
+    tests\doctrine\invoice-pipeline.spec.ts:71:1 › Invoice draft can be advanced from draft to ready 
+    tests\doctrine\invoice-pipeline.spec.ts:95:1 › Invoice draft completes full workflow draft → ready → sent → paid 
+    tests\doctrine\platform-ia.spec.ts:172:1 › IA-14 — /map is the documented single-h1 exemption ──
+  358 passed (19.6m)

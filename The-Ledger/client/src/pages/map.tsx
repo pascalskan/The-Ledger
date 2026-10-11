@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, X } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // Fix Leaflet icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -54,6 +54,40 @@ function FlyTo({ lat, lon, zoom }: { lat: number; lon: number; zoom?: number }) 
   return null;
 }
 
+function FitBounds({ points, skip }: { points: [number, number][]; skip: boolean }) {
+  const map = useMap();
+  const key = points.map((p) => p.join(",")).join("|");
+  useEffect(() => {
+    if (skip || points.length === 0) return;
+    if (points.length === 1) map.setView(points[0], 13);
+    else map.fitBounds(points, { padding: [60, 60], maxZoom: 14 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, skip, map]);
+  return null;
+}
+
+const statusIcon = (status: string) =>
+  L.divIcon({
+    className: "",
+    html: `<span style="display:block;width:24px;height:24px;border-radius:9999px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45);background:${status === "Active" ? "#1d4ed8" : "#475569"}"></span>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
+  });
+
+/** Jobs that share a site would sit exactly on top of each other; fan them out slightly so each stays clickable. */
+function spreadPositions<T extends { id: string; latitude?: number | null; longitude?: number | null }>(list: T[]) {
+  const seen: Record<string, number> = {};
+  return list.map((job) => {
+    const key = `${job.latitude!.toFixed(5)},${job.longitude!.toFixed(5)}`;
+    const n = (seen[key] = (seen[key] ?? -1) + 1);
+    if (n === 0) return { job, position: [job.latitude!, job.longitude!] as [number, number] };
+    const angle = n * 2.4;
+    const r = 0.0004 * Math.ceil(n / 3);
+    return { job, position: [job.latitude! + Math.sin(angle) * r, job.longitude! + Math.cos(angle) * r] as [number, number] };
+  });
+}
+
 async function searchPlaces(query: string): Promise<PlaceResult[]> {
   const q = query.trim();
   if (!q) return [];
@@ -82,7 +116,7 @@ async function searchPlaces(query: string): Promise<PlaceResult[]> {
 
 export default function MapPage() {
   const { jobs, clients } = useStore();
-  const [, setLocation] = useLocation();
+  const [pathname, setLocation] = useLocation();
 
   // Filter jobs with coordinates
   const mapJobs = jobs.filter((j) => j.latitude && j.longitude);
@@ -199,6 +233,7 @@ export default function MapPage() {
 
   return (
     <Layout>
+      {pathname === "/map" && <h1 className="sr-only">Map</h1>}
       <div className="h-[calc(100vh-140px)] w-full rounded-xl overflow-hidden border border-border relative">
         {/* Search (collapsible) */}
         <div className="absolute top-4 left-[52px] z-[450] pointer-events-none">
@@ -334,8 +369,10 @@ export default function MapPage() {
 
           {selected && <FlyTo lat={selected.lat} lon={selected.lon} zoom={14} />}
 
-          {mapJobs.map((job) => (
-            <Marker key={job.id} position={[job.latitude!, job.longitude!]}
+          <FitBounds points={spreadPositions(mapJobs).map((p) => p.position)} skip={!!selected} />
+
+          {spreadPositions(mapJobs).map(({ job, position }) => (
+            <Marker key={job.id} position={position} icon={statusIcon(job.status)} title={`${job.title} (${job.status})`} alt={`${job.title} (${job.status})`}
               eventHandlers={{
                 click: () => setSelected({ lat: job.latitude!, lon: job.longitude!, label: job.title })
               }}
@@ -368,11 +405,11 @@ export default function MapPage() {
           <h4 className="font-bold mb-2">Map Legend</h4>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+              <span className="w-3 h-3 rounded-full bg-blue-700"></span>
               <span>Active Jobs</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-slate-500"></span>
+              <span className="w-3 h-3 rounded-full bg-slate-600"></span>
               <span>Planned Jobs</span>
             </div>
           </div>

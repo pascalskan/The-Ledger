@@ -1217,13 +1217,13 @@ const DEMO_INVOICES: Invoice[] = [
     status: "Sent",
     lineItems: [
       { description: "Labour: Installation & fitting", qty: 1, unitPrice: 2860 },
-      { description: "Equipment (per day): Hiab support (canopy lift)", qty: 2, unitPrice: 420 },
-      { description: "Equipment (per day): Flatbed truck (materials run)", qty: 1, unitPrice: 280 },
-      { description: "Equipment (per day): Scaffolding (access)", qty: 3, unitPrice: 90 },
-      { description: "Equipment (per day): Generator (temporary power)", qty: 2, unitPrice: 110 },
-      { description: "Equipment (per day): Forklift (pallet handling)", qty: 1, unitPrice: 360 },
-      { description: "Equipment (per day): Crew van (tools transport)", qty: 3, unitPrice: 120 },
-      { description: "Equipment (per day): Ladder set (plant room access)", qty: 4, unitPrice: 35 },
+      { description: "Equipment (per day): Hiab support (canopy lift)", qty: 2, unitPrice: 520 },
+      { description: "Equipment (per day): Flatbed truck (materials run)", qty: 1, unitPrice: 350 },
+      { description: "Equipment (per day): Scaffolding (access)", qty: 3, unitPrice: 115 },
+      { description: "Equipment (per day): Generator (temporary power)", qty: 2, unitPrice: 140 },
+      { description: "Equipment (per day): Forklift (pallet handling)", qty: 1, unitPrice: 450 },
+      { description: "Equipment (per day): Crew van (tools transport)", qty: 3, unitPrice: 150 },
+      { description: "Equipment (per day): Ladder set (plant room access)", qty: 4, unitPrice: 45 },
       { description: "Materials: Ducting, canopy fixings, sealants & consumables", qty: 1, unitPrice: 1385 },
     ],
     notes: "Works completed and commissioned. Please include invoice reference with payment.",
@@ -1621,6 +1621,7 @@ export const useAuth = () => {
   const logout = () => {
     currentUser = null;
     try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch { /* ignore */ }
+    try { sessionStorage.removeItem("ledger-return-to"); sessionStorage.setItem("ledger-skip-return", "1"); } catch { /* ignore */ }
     setUser(null);
   };
 

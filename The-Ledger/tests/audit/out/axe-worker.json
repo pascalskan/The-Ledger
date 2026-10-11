@@ -2,40 +2,12 @@
  {
   "role": "Worker",
   "url": "/worker/home",
-  "violations": [
-   {
-    "id": "color-contrast",
-    "impact": "serious",
-    "help": "Elements must meet minimum color contrast ratio thresholds",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": ".text-orange-600.mt-0\\.5",
-      "html": "<p class=\"text-xs text-orange-600 mt-0.5\">Tap to review reviewer notes</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.38 (foreground color: #f54900, background color: #fff7ed, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "Worker",
   "url": "/worker/jobs",
-  "violations": [
-   {
-    "id": "heading-order",
-    "impact": "moderate",
-    "help": "Heading levels should only increase by one",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": "h4",
-      "html": "<h4 class=\"font-semibold text-sm truncate max-w-[200px]\">Kitchen extraction &amp; ventilation install</h4>",
-      "summary": "Fix any of the following:   Heading order invalid"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "Worker",
@@ -45,34 +17,7 @@
  {
   "role": "Worker",
   "url": "/worker/jobs/dj-showcase-maint-1/report",
-  "violations": [
-   {
-    "id": "color-contrast",
-    "impact": "serious",
-    "help": "Elements must meet minimum color contrast ratio thresholds",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": ".max-w-\\[200px\\]",
-      "html": "<p class=\"text-muted-foreground text-xs truncate max-w-[200px]\">Preventative maintenance visit</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.02 (foreground color: #58657a, background color: #0f172b, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     }
-    ]
-   },
-   {
-    "id": "heading-order",
-    "impact": "moderate",
-    "help": "Heading levels should only increase by one",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": "div:nth-child(1) > .font-semibold",
-      "html": "<h3 class=\"text-lg font-semibold text-foreground\">Uploads &amp; QA</h3>",
-      "summary": "Fix any of the following:   Heading order invalid"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "Worker",
@@ -82,21 +27,7 @@
  {
   "role": "Worker",
   "url": "/worker/uploads",
-  "violations": [
-   {
-    "id": "color-contrast",
-    "impact": "serious",
-    "help": "Elements must meet minimum color contrast ratio thresholds",
-    "nodes": 1,
-    "sample": [
-     {
-      "target": ".opacity-80",
-      "html": "<p class=\"text-xs mt-1 opacity-80\">All operational data is backed up.</p>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.36 (foreground color: #309b5c, background color: #f0fdf4, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     }
-    ]
-   }
-  ]
+  "violations": []
  },
  {
   "role": "Worker",
@@ -111,21 +42,11 @@
     "id": "color-contrast",
     "impact": "serious",
     "help": "Elements must meet minimum color contrast ratio thresholds",
-    "nodes": 5,
+    "nodes": 1,
     "sample": [
      {
-      "target": ".shadow-md > h3",
-      "html": "<h3 class=\"text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4\">Performance Snapshot</h3>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.02 (foreground color: #58657a, background color: #0f172b, font size: 9.0pt (12px), font weight: normal). Expected contrast rati"
-     },
-     {
-      "target": "div:nth-child(1) > .text-\\[11px\\].mt-1.text-muted-foreground",
-      "html": "<div class=\"text-[11px] text-muted-foreground mt-1\">Total Shifts</div>",
-      "summary": "Fix any of the following:   Element has insufficient color contrast of 3.02 (foreground color: #58657a, background color: #0f172b, font size: 8.3pt (11px), font weight: normal). Expected contrast rati"
-     },
-     {
-      "target": ".grid-cols-3 > div:nth-child(2) > .text-\\[11px\\].mt-1.text-muted-foreground",
-      "html": "<div class=\"text-[11px] text-muted-foreground mt-1\">Total Hours</div>",
+      "target": "div:nth-child(3) > .text-\\[11px\\].mt-1.text-muted-foreground",
+      "html": "<div class=\"text-[11px] text-muted-foreground mt-1\">Reports / Month</div>",
       "summary": "Fix any of the following:   Element has insufficient color contrast of 3.02 (foreground color: #58657a, background color: #0f172b, font size: 8.3pt (11px), font weight: normal). Expected contrast rati"
      }
     ]

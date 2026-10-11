@@ -48,7 +48,7 @@ export function PendingExposurePanel({ jobId }: { jobId: string }) {
             {exposure.pendingItemCount} item{exposure.pendingItemCount !== 1 ? 's' : ''} awaiting approval
           </Badge>
         </div>
-        <p className="text-xs text-amber-700/70 mt-1">
+        <p className="text-xs text-amber-800 mt-1">
           Estimate only — these figures are from unapproved submissions. They will become financial facts when a PM approves them via the Review Centre.
         </p>
       </CardHeader>
@@ -79,7 +79,7 @@ export function PendingExposurePanel({ jobId }: { jobId: string }) {
             </div>
           )}
           {exposure.totalPendingCost === 0 && (
-            <p className="text-xs text-amber-700/70 italic">
+            <p className="text-xs text-amber-800 italic">
               Pending items have no cost payload — may be reports or photos only.
             </p>
           )}

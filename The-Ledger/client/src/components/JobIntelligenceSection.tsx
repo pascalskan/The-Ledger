@@ -32,9 +32,11 @@ export function JobIntelligenceSection({ jobId }: { jobId: string }) {
     summary,
   } = metrics;
 
-  let healthColor = "text-green-500 bg-green-50";
-  if (healthScore < 60) healthColor = "text-red-500 bg-red-50";
-  else if (healthScore < 80) healthColor = "text-yellow-600 bg-yellow-50";
+  const noActivity = !summary.hasActivity;
+  let healthColor = "text-green-700 bg-green-50";
+  if (noActivity) healthColor = "text-slate-700 bg-slate-100";
+  else if (healthScore < 60) healthColor = "text-red-700 bg-red-50";
+  else if (healthScore < 80) healthColor = "text-yellow-800 bg-yellow-50";
 
   return (
     <Card className="border-indigo-100 bg-gradient-to-br from-indigo-50/50 to-white overflow-hidden shadow-sm">
@@ -51,21 +53,23 @@ export function JobIntelligenceSection({ jobId }: { jobId: string }) {
           className={cn(
             "px-3 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 border",
             healthColor,
-            healthScore < 60
+            noActivity
+              ? "border-slate-200"
+              : healthScore < 60
               ? "border-red-200"
               : healthScore < 80
               ? "border-yellow-200"
               : "border-green-200"
           )}
         >
-          {healthScore >= 80 ? (
+          {noActivity ? null : healthScore >= 80 ? (
             <CheckCircle2 className="w-4 h-4" />
           ) : healthScore < 60 ? (
             <AlertCircle className="w-4 h-4" />
           ) : (
             <AlertTriangle className="w-4 h-4" />
           )}
-          Health Score: {healthScore}
+          {noActivity ? "Health Score: not yet available" : `Health Score: ${healthScore}`}
         </div>
       </CardHeader>
 
@@ -198,7 +202,7 @@ export function JobIntelligenceSection({ jobId }: { jobId: string }) {
           <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
             <Activity className="h-10 w-10 mb-3 opacity-20" />
             <p className="text-sm font-medium">No approved financial activity yet.</p>
-            <p className="text-xs mt-1 opacity-70">
+            <p className="text-xs mt-1">
               Approve a worker report in the Review Centre to populate live financials.
             </p>
             {/* Schedule risk still shows even without approved financials */}

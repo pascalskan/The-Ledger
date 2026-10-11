@@ -114,7 +114,7 @@ export default function SettingsPage() {
               <div className="rounded-lg border p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-medium">Accounting Integration</h4>
+                    <h2 className="text-sm font-medium">Accounting Integration</h2>
                     <p className="text-xs text-muted-foreground mt-1">Connect to QuickBooks, Xero, FreshBooks, or Zoho.</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => setLocation("/settings/integrations")}>

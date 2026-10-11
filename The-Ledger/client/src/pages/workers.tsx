@@ -99,7 +99,7 @@ export default function WorkersPage() {
 
           {/* Active & Planned Jobs Summary */}
           <div data-testid="pm-workforce-my-jobs">
-            <h3 className="text-base font-semibold mb-3">Active & Planned Jobs</h3>
+            <h2 className="text-base font-semibold mb-3">Active & Planned Jobs</h2>
             {pmJobs.length === 0 ? (
               <p className="text-sm text-muted-foreground">No active or planned jobs.</p>
             ) : (

@@ -316,8 +316,8 @@ export function AnalyticsCentreContent({ embedded = false }: { embedded?: boolea
                       </Button>
                     </div>
                   </div>
-                  <p className="text-xs mt-1 opacity-80">{risk.description}</p>
-                  <p className="text-xs mt-1 opacity-70 italic">{risk.recommendation}</p>
+                  <p className="text-xs mt-1">{risk.description}</p>
+                  <p className="text-xs mt-1 italic">{risk.recommendation}</p>
                 </div>
               ))}
             </CardContent>
@@ -402,7 +402,7 @@ export function AnalyticsCentreContent({ embedded = false }: { embedded?: boolea
                       {bn.severity}
                     </Badge>
                   </div>
-                  <p className="text-xs mt-0.5 opacity-80">{bn.impact}</p>
+                  <p className="text-xs mt-0.5">{bn.impact}</p>
                 </div>
                 <Button
                   data-testid={`analytics-bottleneck-link-${bn.id}`}

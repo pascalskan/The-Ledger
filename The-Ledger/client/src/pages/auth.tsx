@@ -21,7 +21,13 @@ export default function AuthPage() {
     setTimeout(() => {
       login(email);
       setIsLoading(false);
-      setLocation("/");
+      let target = "/";
+      try {
+        const saved = sessionStorage.getItem("ledger-return-to");
+        sessionStorage.removeItem("ledger-return-to");
+        if (saved && saved.startsWith("/") && !saved.startsWith("//") && !saved.startsWith("/auth")) target = saved;
+      } catch { /* storage unavailable */ }
+      setLocation(target);
     }, 800);
   };
 
@@ -69,7 +75,7 @@ export default function AuthPage() {
                         <span className="font-bold text-xs">{getRoleNames(u.roleIds)}</span>
                         {email === u.email && <Badge variant="secondary" className="text-[10px] h-4">Selected</Badge>}
                       </div>
-                      <div className="text-[10px] opacity-70">{u.email}</div>
+                      <div className="text-[10px] opacity-90">{u.email}</div>
                     </div>
                   </Button>
                 ))}
@@ -98,7 +104,7 @@ export default function AuthPage() {
                         <span className="font-bold text-xs text-blue-600 dark:text-blue-400">{u.name} ({getRoleNames(u.roleIds)})</span>
                         {email === u.email && <Badge variant="outline" className="text-[10px] h-4 border-blue-200 text-blue-600">Active</Badge>}
                       </div>
-                      <div className="text-[10px] opacity-70">{u.email}</div>
+                      <div className="text-[10px] opacity-90">{u.email}</div>
                     </div>
                   </Button>
                 ))}

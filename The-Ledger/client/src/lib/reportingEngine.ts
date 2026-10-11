@@ -566,7 +566,7 @@ function buildReport(
 
   const sections: ReportSection[] = [];
   if (includedSections.includes('executive_summary')) {
-    sections.push({ id: 'exec', title: 'Executive Summary', content: execText, deepLinkRoute: '/intelligence?tab=overview', deepLinkLabel: 'Command Centre' });
+    sections.push({ id: 'exec', title: 'Executive Summary', content: execText, deepLinkRoute: '/intelligence?tab=overview', deepLinkLabel: 'Intelligence Overview' });
   }
   if (includedSections.includes('governance_summary')) {
     sections.push({ id: 'gov', title: 'Governance Summary', content: govText, deepLinkRoute: '/automation-governance', deepLinkLabel: 'Automation Governance' });

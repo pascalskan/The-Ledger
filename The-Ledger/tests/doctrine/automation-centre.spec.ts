@@ -148,6 +148,7 @@ test('AC-14: Clicking Disable changes rule status badge to Disabled', async ({ p
   await page.goto('/automations');
   await page.getByTestId('aut-btn-view-rule-001').click();
   await page.getByTestId('aut-btn-disable-rule').click();
+  await page.getByTestId('confirm-dialog-confirm').click();
   // Dialog should now show Enable button
   await expect(page.getByTestId('aut-btn-enable-rule')).toBeVisible();
 });
