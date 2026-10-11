@@ -16,7 +16,7 @@ export function NextVisit({ date, timeWindow, crewSize, notes }: { date?: string
           <div className="space-y-3">
             <div className="flex items-center gap-3 bg-card p-3 rounded-lg border border-border shadow-sm">
               <div className="flex flex-col items-center justify-center bg-slate-800 text-white rounded-md h-12 w-12 shrink-0">
-                <span className="text-[10px] uppercase font-bold tracking-widest">{new Date(date).toLocaleString('default', { month: 'short' })}</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest">{new Date(date).toLocaleString('en-GB', { month: 'short' })}</span>
                 <span className="text-lg font-bold leading-none mt-0.5">{new Date(date).getDate()}</span>
               </div>
               <div>

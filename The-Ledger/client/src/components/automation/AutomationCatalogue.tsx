@@ -269,7 +269,7 @@ export function AutomationCatalogue({
         </div>
         <div className="flex items-center gap-2 lg:ml-auto">
           <span className="text-xs text-muted-foreground hidden sm:inline">Sort</span>
-          <select className={selectClass} value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} data-testid="aut-sort-key">
+          <select className={selectClass} value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} data-testid="aut-sort-key" aria-label="Sort automations by">
             <option value="name">Name</option>
             <option value="lastExecution">Last Execution</option>
             <option value="nextExecution">Next Execution</option>
@@ -285,37 +285,37 @@ export function AutomationCatalogue({
 
       {/* Filter row */}
       <div className="flex flex-wrap items-center gap-2" data-testid="aut-catalogue-filters">
-        <select className={selectClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as AutomationStatus | "all")} data-testid="aut-filter-status">
+        <select className={selectClass} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as AutomationStatus | "all")} data-testid="aut-filter-status" aria-label="Filter by status">
           <option value="all">All Statuses</option>
           <option value="active">Active</option>
           <option value="disabled">Disabled</option>
           <option value="draft">Draft</option>
           <option value="archived">Archived</option>
         </select>
-        <select className={selectClass} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value as AutomationCategory | "all")} data-testid="aut-filter-category">
+        <select className={selectClass} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value as AutomationCategory | "all")} data-testid="aut-filter-category" aria-label="Filter by category">
           <option value="all">All Categories</option>
           <option value="Operational">Operational</option>
           <option value="Workflow">Workflow</option>
           <option value="FinanciallySensitive">Financially Sensitive</option>
         </select>
-        <select className={selectClass} value={govFilter} onChange={(e) => setGovFilter(e.target.value as AutomationGovernanceStatus | "all")} data-testid="aut-filter-governance">
+        <select className={selectClass} value={govFilter} onChange={(e) => setGovFilter(e.target.value as AutomationGovernanceStatus | "all")} data-testid="aut-filter-governance" aria-label="Filter by governance">
           <option value="all">All Governance</option>
           <option value="Compliant">Compliant</option>
           <option value="Requires Review">Requires Review</option>
           <option value="Restricted">Restricted</option>
           <option value="Suspended">Suspended</option>
         </select>
-        <select className={selectClass} value={sensitiveFilter} onChange={(e) => setSensitiveFilter(e.target.value as TriStateSensitive)} data-testid="aut-filter-sensitive">
+        <select className={selectClass} value={sensitiveFilter} onChange={(e) => setSensitiveFilter(e.target.value as TriStateSensitive)} data-testid="aut-filter-sensitive" aria-label="Filter by sensitivity">
           <option value="all">All (Sensitivity)</option>
           <option value="yes">Financially Sensitive</option>
           <option value="no">Not Sensitive</option>
         </select>
-        <select className={selectClass} value={execFilter} onChange={(e) => setExecFilter(e.target.value as ExecKind)} data-testid="aut-filter-exec">
+        <select className={selectClass} value={execFilter} onChange={(e) => setExecFilter(e.target.value as ExecKind)} data-testid="aut-filter-exec" aria-label="Filter by trigger type">
           <option value="all">All Triggers</option>
           <option value="scheduled">Scheduled</option>
           <option value="event">Event-driven</option>
         </select>
-        <select className={selectClass} value={riskFilter} onChange={(e) => setRiskFilter(e.target.value as AutomationRiskLevel | "all")} data-testid="aut-filter-risk">
+        <select className={selectClass} value={riskFilter} onChange={(e) => setRiskFilter(e.target.value as AutomationRiskLevel | "all")} data-testid="aut-filter-risk" aria-label="Filter by risk">
           <option value="all">All Risk Levels</option>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>

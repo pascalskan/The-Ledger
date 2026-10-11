@@ -20,6 +20,7 @@ import { Plus, Search, MapPin, Calendar, Users, Truck, FileText, Trash2, Receipt
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { activatable } from "@/lib/a11y";
 
 export default function JobsPage() {
   const { jobs, addJob, updateJob, deleteJob, workers, equipment, clients, addInvoice, addClient, users, roles, reviewItems } = useStore();
@@ -175,7 +176,7 @@ export default function JobsPage() {
       <Card
         key={job.id}
         className={`cursor-pointer hover:border-primary/50 transition-all ${stateConfig.class}`}
-        onClick={() => setLocation(`/jobs/${job.id}`)}
+        {...activatable(() => setLocation(`/jobs/${job.id}`), `Open job ${job.title}`)}
         data-testid={`pm-job-card-${job.id}`}
       >
         <CardHeader className="pb-3">
@@ -304,6 +305,7 @@ export default function JobsPage() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <Input
                         type="date"
+                        aria-label="Show jobs from"
                         className="h-6 w-auto border-0 p-0 focus-visible:ring-0"
                         value={dateFilter.start}
                         onChange={(e) => setDateFilter({...dateFilter, start: e.target.value})}
@@ -311,6 +313,7 @@ export default function JobsPage() {
                     <span className="text-muted-foreground">-</span>
                     <Input
                         type="date"
+                        aria-label="Show jobs until"
                         className="h-6 w-auto border-0 p-0 focus-visible:ring-0"
                         value={dateFilter.end}
                         onChange={(e) => setDateFilter({...dateFilter, end: e.target.value})}
@@ -343,7 +346,7 @@ export default function JobsPage() {
                 <Card
                   key={job.id}
                   className="cursor-pointer hover:border-primary/50"
-                  onClick={() => setLocation(`/jobs/${job.id}`)}
+                  {...activatable(() => setLocation(`/jobs/${job.id}`), `Open job ${job.title}`)}
                   data-testid={`card-job-${job.id}`}
                 >
                 <CardHeader className="pb-3">
@@ -361,7 +364,7 @@ export default function JobsPage() {
                         <Building2 className="h-4 w-4" /> {clients.find(c => c.id === job.clientId)?.name || "Unknown Client"}
                     </div>
                     <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /> {job.locationAddress}</div>
-                    <div className="flex items-center gap-2"><Calendar className="h-4 w-4" /> {new Date(job.startAt).toLocaleDateString()}</div>
+                    <div className="flex items-center gap-2"><Calendar className="h-4 w-4" /> {new Date(job.startAt).toLocaleDateString("en-GB")}</div>
                     </div>
                 </CardContent>
                 </Card>
@@ -391,7 +394,7 @@ export default function JobsPage() {
                               }
                               setCreateForm({ ...createForm, clientId: v });
                             }}>
-                              <SelectTrigger data-testid="select-client">
+                              <SelectTrigger data-testid="select-client" aria-label="Client">
                                 <SelectValue placeholder="Select a client" />
                               </SelectTrigger>
                               <SelectContent>
@@ -467,7 +470,7 @@ export default function JobsPage() {
                          <div className="grid gap-2">
                             <Label>Status</Label>
                             <Select value={createForm.status} onValueChange={(v) => setCreateForm({...createForm, status: v})}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectTrigger aria-label="Status"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Planned">Planned</SelectItem>
                                     <SelectItem value="Active">Active</SelectItem>
@@ -477,7 +480,7 @@ export default function JobsPage() {
                         <div className="grid gap-2">
                             <Label>Priority</Label>
                             <Select value={createForm.priority} onValueChange={(v) => setCreateForm({...createForm, priority: v})}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectTrigger aria-label="Priority"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Low">Low</SelectItem>
                                     <SelectItem value="Medium">Medium</SelectItem>
@@ -494,7 +497,7 @@ export default function JobsPage() {
                     <div className="grid gap-2">
                         <Label>Project Manager</Label>
                         <Select value={createForm.managerId} onValueChange={(v) => setCreateForm({...createForm, managerId: v})}>
-                            <SelectTrigger><SelectValue placeholder="Select PM (Optional)" /></SelectTrigger>
+                            <SelectTrigger aria-label="Project manager"><SelectValue placeholder="Select PM (Optional)" /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="none">None</SelectItem>
                                 {users.filter(u => u.roleIds?.includes("role-pm") || u.roleIds?.includes("drole-pm")).map(u => (
@@ -506,11 +509,11 @@ export default function JobsPage() {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
                             <Label>Start Date</Label>
-                            <Input type="date" value={createForm.startAt} onChange={(e) => setCreateForm({...createForm, startAt: e.target.value})} />
+                            <Input type="date" aria-label="Start date" value={createForm.startAt} onChange={(e) => setCreateForm({...createForm, startAt: e.target.value})} />
                         </div>
                         <div className="grid gap-2">
                             <Label>End Date</Label>
-                            <Input type="date" value={createForm.endAt} onChange={(e) => setCreateForm({...createForm, endAt: e.target.value})} />
+                            <Input type="date" aria-label="End date" value={createForm.endAt} onChange={(e) => setCreateForm({...createForm, endAt: e.target.value})} />
                         </div>
                     </div>
 

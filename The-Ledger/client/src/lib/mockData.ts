@@ -141,7 +141,7 @@ export interface Invoice {
 export interface AuditLog {
   id: string;
   actorName: string;
-  action: "CREATE" | "UPDATE" | "DELETE" | "ASSIGN" | "LOGIN" | "VIOLATION" | "OVERRIDE" | "SEND" | "APPROVE";
+  action: "CREATE" | "UPDATE" | "DELETE" | "ASSIGN" | "LOGIN" | "VIOLATION" | "OVERRIDE" | "SEND" | "APPROVE" | "REJECT" | "CORRECT" | "ESCALATE";
   entity: string;
   details: string;
   timestamp: string;
@@ -352,6 +352,8 @@ export interface ReviewItem {
   escalatedAt?: string;
   escalatedBy?: string;
   correctionNotes?: string;
+  /** Reason captured when a submission is rejected (REJECTION_DOMAIN). */
+  rejectionReason?: string;
 
   /**
    * Optional: only 8 of the 13 seed submissions carry a workerId. Attribution
@@ -1795,30 +1797,44 @@ export const useStore = () => {
       clients.push(entry); addLog("CREATE", "Client", `Created ${c.name}`); refresh();
     },
     updateClient: (id: string, u: Partial<Client>) => {
-      clients = clients.map(c => c.id === id ? { ...c, ...u } : c); refresh();
+      const before = clients.find(c => c.id === id);
+      clients = clients.map(c => c.id === id ? { ...c, ...u } : c);
+      addLog("UPDATE", "Client", `Updated client ${before?.name ?? id} (${Object.keys(u).join(", ")})`); refresh();
     },
     deleteClient: (id: string) => {
-      clients = clients.filter(c => c.id !== id); refresh();
+      const before = clients.find(c => c.id === id);
+      clients = clients.filter(c => c.id !== id);
+      addLog("DELETE", "Client", `Deleted client ${before?.name ?? id}`); refresh();
     },
 
     addWorker: (w: Omit<Worker, "id" | "companyId">) => {
-      workers.push({ ...w, id: Math.random().toString(36).substr(2, 9), companyId: currentCompanyId }); refresh();
+      workers.push({ ...w, id: Math.random().toString(36).substr(2, 9), companyId: currentCompanyId });
+      addLog("CREATE", "Worker", `Created worker ${w.firstName} ${w.lastName}`); refresh();
     },
     updateWorker: (id: string, u: Partial<Worker>) => {
-      workers = workers.map(w => w.id === id ? { ...w, ...u } : w); refresh();
+      const before = workers.find(w => w.id === id);
+      workers = workers.map(w => w.id === id ? { ...w, ...u } : w);
+      addLog("UPDATE", "Worker", `Updated worker ${before ? `${before.firstName} ${before.lastName}` : id} (${Object.keys(u).join(", ")})`); refresh();
     },
     deleteWorker: (id: string) => {
-      workers = workers.filter(w => w.id !== id); refresh();
+      const before = workers.find(w => w.id === id);
+      workers = workers.filter(w => w.id !== id);
+      addLog("DELETE", "Worker", `Deleted worker ${before ? `${before.firstName} ${before.lastName}` : id}`); refresh();
     },
 
     addEquipment: (e: Omit<Equipment, "id" | "companyId">) => {
-      equipment.push({ ...e, id: Math.random().toString(36).substr(2, 9), companyId: currentCompanyId }); refresh();
+      equipment.push({ ...e, id: Math.random().toString(36).substr(2, 9), companyId: currentCompanyId });
+      addLog("CREATE", "Equipment", `Created equipment ${e.name}`); refresh();
     },
     updateEquipment: (id: string, u: Partial<Equipment>) => {
-      equipment = equipment.map(e => e.id === id ? { ...e, ...u } : e); refresh();
+      const before = equipment.find(e => e.id === id);
+      equipment = equipment.map(e => e.id === id ? { ...e, ...u } : e);
+      addLog("UPDATE", "Equipment", `Updated equipment ${before?.name ?? id} (${Object.keys(u).join(", ")})`); refresh();
     },
     deleteEquipment: (id: string) => {
-      equipment = equipment.filter(e => e.id !== id); refresh();
+      const before = equipment.find(e => e.id === id);
+      equipment = equipment.filter(e => e.id !== id);
+      addLog("DELETE", "Equipment", `Deleted equipment ${before?.name ?? id}`); refresh();
     },
 
     addJob: (j: Omit<Job, "id" | "jobId" | "companyId" | "assignedWorkerIds" | "assignedEquipmentIds" | "documents">) => {
@@ -1826,6 +1842,7 @@ export const useStore = () => {
       const lat = 51.5074 + (Math.random() * 0.1 - 0.05);
       const lng = -0.1278 + (Math.random() * 0.1 - 0.05);
 
+      addLog("CREATE", "Job", `Created job ${j.title}`);
       jobs.push({
         ...j,
         id: Math.random().toString(36).substr(2, 9),
@@ -1863,7 +1880,8 @@ export const useStore = () => {
             return {
               description: `Equipment (per day): ${name}${note}`,
               qty: eu.days,
-              unitPrice: eu.dayRateAtTime,
+              // Bill the CLIENT rate. dayRateAtTime is the internal cost basis and must never reach an invoice.
+              unitPrice: eq?.clientDayRate ?? eu.dayRateAtTime,
             };
           });
 
@@ -1880,11 +1898,15 @@ export const useStore = () => {
 
       if (u.status === "Active" || u.status === "Completed") {
         addLog("UPDATE", "Job", `Job ${before?.jobId} status updated to ${u.status}`);
+      } else {
+        addLog("UPDATE", "Job", `Job ${before?.jobId ?? id} updated (${Object.keys(u).join(", ")})`);
       }
       refresh();
     },
     deleteJob: (id: string) => {
-      jobs = jobs.filter(j => j.id !== id); refresh();
+      const before = jobs.find(j => j.id === id);
+      jobs = jobs.filter(j => j.id !== id);
+      addLog("DELETE", "Job", `Deleted job ${before?.jobId ?? id}`); refresh();
     },
 
     addInvoice: (inv: Omit<Invoice, "id" | "invoiceId" | "companyId">) => {
@@ -1903,10 +1925,14 @@ export const useStore = () => {
       refresh();
     },
     deleteInvoice: (id: string) => {
-      invoices = invoices.filter(i => i.id !== id); refresh();
+      const before = invoices.find(i => i.id === id);
+      invoices = invoices.filter(i => i.id !== id);
+      addLog("DELETE", "Invoice", `Deleted invoice ${before?.invoiceId ?? id}`); refresh();
     },
 
     updateSettings: (s: Partial<CompanySettings>) => {
+      // Legal and bank details drive invoices — record which fields changed (never the values).
+      addLog("UPDATE", "CompanySettings", `Company settings updated (${Object.keys(s).join(", ")})`);
       if (currentCompanyId === DEMO_COMPANY_ID) {
         demoSettings = { ...demoSettings, ...s };
       } else {
@@ -1942,10 +1968,14 @@ export const useStore = () => {
         users.push(entry); addLog("CREATE", "User", `Created user ${u.name}`); refresh();
     },
     updateUser: (id: string, u: Partial<User>) => {
-        users = users.map(user => user.id === id ? { ...user, ...u } : user); refresh();
+        const before = users.find(user => user.id === id);
+        users = users.map(user => user.id === id ? { ...user, ...u } : user);
+        addLog("UPDATE", "User", `Updated user ${before?.name ?? id} (${Object.keys(u).join(", ")})`); refresh();
     },
     deleteUser: (id: string) => {
-        users = users.filter(user => user.id !== id); refresh();
+        const before = users.find(user => user.id === id);
+        users = users.filter(user => user.id !== id);
+        addLog("DELETE", "User", `Deleted user ${before?.name ?? id}`); refresh();
     },
 
     // Stock, Assets, Locations CRUD
@@ -1957,7 +1987,9 @@ export const useStore = () => {
       locations = locations.map(l => l.id === id ? { ...l, ...u } : l); refresh();
     },
     deleteLocation: (id: string) => {
-      locations = locations.filter(l => l.id !== id); refresh();
+      const before = locations.find(l => l.id === id);
+      locations = locations.filter(l => l.id !== id);
+      addLog("DELETE", "Location", `Deleted location ${before?.name ?? id}`); refresh();
     },
 
     addStockItem: (s: Omit<StockItem, "id" | "companyId" | "createdAt" | "updatedAt">) => {
@@ -2000,7 +2032,9 @@ export const useStore = () => {
       stockItems = stockItems.map(s => s.id === id ? { ...s, ...u, updatedAt: new Date().toISOString() } : s); refresh();
     },
     deleteStockItem: (id: string) => {
-      stockItems = stockItems.filter(s => s.id !== id); refresh();
+      const before = stockItems.find(s => s.id === id);
+      stockItems = stockItems.filter(s => s.id !== id);
+      addLog("DELETE", "StockItem", `Deleted stock item ${before?.name ?? id}`); refresh();
     },
     deductStockQuantity,
 
@@ -2009,7 +2043,9 @@ export const useStore = () => {
       assets.push(entry); addLog("CREATE", "Asset", `Created asset ${a.name}`); refresh();
     },
     updateAsset: (id: string, u: Partial<Asset>) => {
-      assets = assets.map(a => a.id === id ? { ...a, ...u, updatedAt: new Date().toISOString() } : a); refresh();
+      const before = assets.find(a => a.id === id);
+      assets = assets.map(a => a.id === id ? { ...a, ...u, updatedAt: new Date().toISOString() } : a);
+      addLog("UPDATE", "Asset", `Updated asset ${before?.name ?? id} (${Object.keys(u).join(", ")})`); refresh();
     },
     deleteAsset: (id: string) => {
       assets = assets.filter(a => a.id !== id); addLog("DELETE", "Asset", `Deleted asset ${id}`); refresh();
@@ -2017,7 +2053,6 @@ export const useStore = () => {
 
     addReviewItem: (r: Omit<ReviewItem, "id" | "companyId">) => {
       const entry = { ...r, id: Math.random().toString(36).substr(2, 9), companyId: currentCompanyId };
-      console.log('ADD REVIEW ITEM', entry);
       reviewItems.push(entry as ReviewItem);
       addLog("CREATE", "ReviewItem", `Created new review item ${r.title || "Unknown"}`);
       refresh();
@@ -2343,6 +2378,17 @@ export const useStore = () => {
         // ─────────────────────────────────────────────────────────────────
         // END PHASE 4.2 / 4.5
         // ─────────────────────────────────────────────────────────────────
+      }
+
+      if (item && u.status && u.status !== item.status && u.status !== 'approved') {
+        const label = item.title || item.id;
+        if (u.status === 'rejected') {
+          addLog('REJECT', 'ReviewItem', `Rejected review item ${label}${(u as any).rejectionReason ? ` — ${(u as any).rejectionReason}` : ''}`);
+        } else if (u.status === 'needs-correction') {
+          addLog('CORRECT', 'ReviewItem', `Requested correction on review item ${label}${u.correctionNotes ? ` — ${u.correctionNotes}` : ''}`);
+        } else if (u.status === 'escalated') {
+          addLog('ESCALATE', 'ReviewItem', `Escalated review item ${label} to the CEO`);
+        }
       }
 
       reviewItems = reviewItems.map(r => r.id === id ? { ...r, ...u } as ReviewItem : r);

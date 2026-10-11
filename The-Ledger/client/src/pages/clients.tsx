@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout";
 import { PageHeader } from "@/components/page-shell";
 import { useStore, Client } from "@/lib/mockData";
 import { useLocation } from "wouter";
+import { activatable } from "@/lib/a11y";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -103,7 +104,7 @@ export default function ClientsPage() {
               <Card
                 key={client.id}
                 className="cursor-pointer hover:border-primary/50 transition-colors"
-                onClick={() => setLocation(`/clients/${client.id}`)}
+                {...activatable(() => setLocation(`/clients/${client.id}`), `Open client ${client.name}`)}
                 data-testid={`card-client-${client.id}`}
               >
                 <CardHeader>

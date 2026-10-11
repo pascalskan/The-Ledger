@@ -1,0 +1,71 @@
+- link "Skip to content":
+  - /url: "#main-content"
+- complementary:
+  - text: L The Ledger
+  - button
+  - navigation:
+    - paragraph: Core
+    - link "Command":
+      - /url: /
+    - link "Review 7":
+      - /url: /review
+    - paragraph: Operational
+    - link "Operations":
+      - /url: /operations
+    - link "Client Requests":
+      - /url: /client-requests
+    - link "Job Intelligence":
+      - /url: /job-intelligence
+    - link "Financial Insights":
+      - /url: /expenses
+    - link "Finance":
+      - /url: /finance
+    - paragraph: Intelligence
+    - link "Intelligence":
+      - /url: /intelligence
+    - paragraph: Automation
+    - link "Automations":
+      - /url: /automations
+    - link "Workflows":
+      - /url: /workflows
+    - link "Automation Governance":
+      - /url: /automation-governance
+    - paragraph: Administration
+    - button "Administration"
+  - text: D
+  - paragraph: Demo CEO
+  - paragraph: CEO
+  - button "Sign Out"
+- button "System alerts": "4"
+- button "Notifications": "9"
+- main:
+  - paragraph: Example Business — Demo Data
+  - paragraph: You are viewing a demonstration environment. Changes made here will not affect real business data.
+  - tablist:
+    - tab "Jobs" [selected]
+    - tab "Schedule"
+    - tab "Workers"
+    - tab "Clients"
+    - tab "Map"
+    - tab "Stock & Assets"
+  - tabpanel "Jobs":
+    - heading "Jobs" [level=1]
+    - paragraph: Manage scheduled work, assignments, and status.
+    - button "Create Job"
+    - textbox "Search jobs..."
+    - textbox: 2026-09-10
+    - text: "-"
+    - textbox: 2026-12-10
+    - checkbox "Show Completed"
+    - text: Show Completed HVAC system replacement — Block C DEMO-JOB-0203 Active
+    - img
+    - text: HSS Limited Unit 14, Riverside Industrial Estate, Manchester, M15 4FN 10/5/2026 Preventative maintenance visit DEMO-JOB-0202 Active
+    - img
+    - text: HSS Limited 45 Kingsway, London, WC2B 6SR 10/12/2026 Office fit-out — 2nd floor partitioning DEMO-JOB-0205 Planned
+    - img
+    - text: Showcase Systems Ltd 45 Kingsway, London, WC2B 6SR 10/12/2026 Boiler room upgrade & pipework replacement DEMO-JOB-0204 Planned
+    - img
+    - text: HSS Limited Unit 14, Riverside Industrial Estate, Manchester, M15 4FN 10/14/2026
+- region "Notifications (F8)":
+  - list
+- button "Enterprise Sync QA Panel"

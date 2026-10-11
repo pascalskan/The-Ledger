@@ -353,6 +353,19 @@ export const SEED_NOTIFICATIONS: Notification[] = [
 
 // In-memory mutable state (mirrors existing engine patterns)
 let _notifications: Notification[] = [...SEED_NOTIFICATIONS];
+
+// Change subscription so read-only views (the header bell) stay in step with
+// mark-read / dismiss done elsewhere (Intelligence > Activity). Informational only.
+const _listeners = new Set<() => void>();
+export function subscribeNotifications(listener: () => void): () => void {
+  _listeners.add(listener);
+  return () => {
+    _listeners.delete(listener);
+  };
+}
+function _notifyListeners(): void {
+  _listeners.forEach((l) => l());
+}
 let _auditLog: NotificationAuditEntry[] = [];
 let _auditCounter = 1;
 
@@ -508,6 +521,7 @@ export function markNotificationRead(
     i === idx ? { ...n, status: 'read' as NotificationStatus } : n,
   );
   createAuditEntry(id, 'marked_read', performedBy);
+  _notifyListeners();
   return _notifications[idx];
 }
 
@@ -526,6 +540,7 @@ export function dismissNotification(
     i === idx ? { ...n, status: 'dismissed' as NotificationStatus } : n,
   );
   createAuditEntry(id, 'dismissed', performedBy);
+  _notifyListeners();
   return _notifications[idx];
 }
 

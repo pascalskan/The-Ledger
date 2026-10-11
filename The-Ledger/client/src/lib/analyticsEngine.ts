@@ -423,7 +423,7 @@ export function getCriticalRisks(): RiskItem[] {
       category: 'financial',
       severity: 'high',
       sourceRoute: '/finance?tab=records',
-      recommendation: 'Retry failed syncs from the Financial Explorer accounting sync panel.',
+      recommendation: 'Retry failed syncs from Finance → Accounting → Sync Status.',
     });
   }
 

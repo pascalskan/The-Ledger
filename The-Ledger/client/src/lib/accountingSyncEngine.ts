@@ -66,11 +66,11 @@ export const SYNC_ERROR_RESOLUTIONS: Record<SyncErrorType, string> = {
   customer_missing:
     "Create the customer record in the accounting system, then retry.",
   mapping_missing:
-    "Define the account mapping in Settings → Integrations, then retry.",
+    "Define the account mapping in Finance → Accounting → Providers, then retry.",
   duplicate_entity:
     "Remove the duplicate record from the accounting system or update the external reference.",
   provider_disconnected:
-    "Reconnect the accounting provider in Settings → Integrations.",
+    "Reconnect the accounting provider in Finance → Accounting → Providers.",
 };
 
 // ──────────────────────────────────────────────────────
@@ -393,7 +393,7 @@ export function simulateMockSync(
       "failed",
       undefined,
       "mapping_missing",
-      "Account mapping not configured. Check Settings → Integrations."
+      "Account mapping not configured. Check Finance → Accounting → Providers."
     );
     if (step2) results.push(step2);
   }

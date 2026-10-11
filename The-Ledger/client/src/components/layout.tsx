@@ -45,7 +45,7 @@ import {
   ExternalLink,
   CheckCircle,
   GitBranch,
-  DollarSign,
+  PoundSterling,
   Brain,
   MessageSquare,
 } from "lucide-react";
@@ -56,6 +56,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   getAllNotifications,
+  subscribeNotifications,
   markNotificationRead,
   NOTIFICATION_TYPE_LABELS,
 } from "@/lib/notificationEngine";
@@ -72,11 +73,14 @@ function NotificationBell({
   testId = "notif-bell-btn",
   badgeTestId = "notif-bell-badge",
   viewAllHref = "/notifications",
+  tone = "dark",
 }: {
   userId: string;
   testId?: string;
   badgeTestId?: string;
   viewAllHref?: string;
+  /** "dark" = on the dark sidebar-coloured mobile bar; "light" = on the light desktop header. */
+  tone?: "dark" | "light";
 }) {
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
@@ -86,9 +90,14 @@ function NotificationBell({
     setNotifications(getAllNotifications());
   }
 
+  // Stay in step with mark-read / dismiss performed elsewhere (e.g. the
+  // Intelligence > Activity tab) — the badge previously froze at its mount value.
+  useEffect(() => subscribeNotifications(refresh), []);
+
   const unreadCount = notifications.filter((n) => n.status === 'unread').length;
 
   const preview = [...notifications]
+    .filter((n) => n.status !== "dismissed")
     .sort((a, b) => {
       if (a.status === 'unread' && b.status !== 'unread') return -1;
       if (a.status !== 'unread' && b.status === 'unread') return 1;
@@ -114,7 +123,12 @@ function NotificationBell({
           data-testid={testId}
           variant="ghost"
           size="icon"
-          className="relative text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          className={cn(
+            "relative",
+            tone === "light"
+              ? "text-muted-foreground hover:text-foreground hover:bg-muted"
+              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          )}
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
@@ -230,7 +244,7 @@ function SystemAlertIndicator() {
 function NavSectionLabel({ label, collapsed }: { label: string; collapsed: boolean }) {
   if (collapsed) return <div className="h-px bg-sidebar-border mx-2 my-2" />;
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-1 mt-3 mb-1 select-none">
+    <p className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/60 px-3 py-1 mt-3 mb-1 select-none">
       {label}
     </p>
   );
@@ -285,7 +299,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 function LayoutShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { logout, user } = useAuth();
-  const { roles, reviewItems } = useStore();
+  const { roles, reviewItems, jobs } = useStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem("sidebar-collapsed") === "true";
@@ -324,7 +338,11 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   const userIsPM = isProjectManager(user, roles);
   const isCEOorPM = userIsCEO || userIsPM;
 
-  const pendingReviewCount = reviewItems.filter(r => r.status === 'pending').length;
+  // A PM only reviews submissions for jobs they manage; the CEO sees the whole company.
+  // (The badge used to count every pending item for every role, disagreeing with the PM Review page.)
+  const pendingReviewCount = reviewItems.filter(
+    (r) => r.status === 'pending' && (!userIsPM || jobs.some((j) => j.id === r.jobId && j.managerId === user?.id))
+  ).length;
 
   // Mobile bottom tab bar destinations (UX-8).
   // Five is the practical ceiling before labels truncate on a narrow phone, so
@@ -336,7 +354,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
         { key: "command", label: "Command", href: "/", icon: LayoutDashboard },
         { key: "review", label: "Review", href: "/review", icon: ClipboardCheck },
         { key: "jobs", label: "Jobs", href: "/jobs", icon: Briefcase },
-        { key: "finance", label: "Finance", href: "/finance", icon: DollarSign },
+        { key: "finance", label: "Finance", href: "/finance", icon: PoundSterling },
         { key: "intelligence", label: "Insights", href: "/intelligence", icon: Brain },
       ]
     : [
@@ -366,7 +384,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
     { label: "Client Requests", href: "/client-requests", icon: MessageSquare, roles: [], testId: "nav-client-requests" },
     { label: "Job Intelligence", href: "/job-intelligence", icon: TrendingUp, roles: [] },
     { label: "Financial Insights", href: "/expenses", icon: ReceiptText, roles: [] },
-    { label: "Finance", href: "/finance", icon: DollarSign, roles: [], testId: "nav-finance-hub" },
+    { label: "Finance", href: "/finance", icon: PoundSterling, roles: [], testId: "nav-finance-hub" },
   ];
 
   const CEO_INTELLIGENCE_ITEMS: NavItem[] = [
@@ -473,7 +491,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
         {collapsed && <div className="mx-auto h-8 w-8 bg-primary rounded-sm flex items-center justify-center font-bold text-primary-foreground">L</div>}
-        <Button variant="ghost" size="icon" onClick={toggleSidebar} className="hidden md:flex">
+        <Button variant="ghost" size="icon" onClick={toggleSidebar} className="hidden lg:flex" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed}>
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
@@ -603,10 +621,10 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
       >
         Skip to content
       </a>
-      <aside className="hidden md:block fixed inset-y-0 z-50">
+      <aside className="hidden lg:block fixed inset-y-0 z-50">
         <SidebarContent />
       </aside>
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-sidebar z-50 flex items-center px-4 justify-between border-b border-sidebar-border">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-sidebar z-50 flex items-center px-4 justify-between border-b border-sidebar-border">
         <div className="flex items-center gap-2 text-sidebar-foreground font-bold">
           <div className="h-6 w-6 bg-primary rounded-sm flex items-center justify-center text-primary-foreground text-xs">L</div>
           The Ledger
@@ -620,7 +638,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
             />
           )}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild><Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button></SheetTrigger>
+            <SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="Open menu"><Menu className="h-5 w-5" /></Button></SheetTrigger>
             <SheetContent side="left" className="p-0 w-64 border-r-sidebar-border bg-sidebar text-sidebar-foreground">
                <SidebarContent />
             </SheetContent>
@@ -630,7 +648,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
 
       {/* Desktop header bar */}
       <div className={cn(
-        "hidden md:flex fixed top-0 right-0 h-16 z-40 items-center justify-end px-6 gap-2 border-b bg-background/95 backdrop-blur",
+        "hidden lg:flex fixed top-0 right-0 h-16 z-40 items-center justify-end px-6 gap-2 border-b bg-background/95 backdrop-blur",
         collapsed ? "left-16" : "left-64"
       )}>
         {isCEOorPM && <SystemAlertIndicator />}
@@ -638,13 +656,14 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
           <NotificationBell
             userId={user.id}
             testId="notif-bell-btn-desktop"
+            tone="light"
             badgeTestId="notif-bell-badge-desktop"
             viewAllHref={hasAnyRole(["CEO"]) ? "/intelligence?tab=activity" : "/notifications"}
           />
         )}
       </div>
 
-      <main id="main-content" tabIndex={-1} className={cn("flex-1 p-6 md:p-8 pt-20 md:pt-24 pb-24 md:pb-8 transition-all duration-300 relative", collapsed ? "md:ml-16" : "md:ml-64")}>
+      <main id="main-content" tabIndex={-1} className={cn("flex-1 min-w-0 p-4 sm:p-6 lg:p-8 pt-20 lg:pt-24 pb-24 lg:pb-8 transition-all duration-300 relative", collapsed ? "lg:ml-16" : "lg:ml-64")}>
         {isDemo && (
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-6 flex items-center gap-3 text-blue-700 dark:text-blue-300">
             <Info className="h-5 w-5 flex-shrink-0" />
@@ -669,7 +688,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
         <nav
           aria-label="Primary"
           data-testid="mobile-tab-bar"
-          className="md:hidden fixed bottom-0 inset-x-0 z-50 flex justify-around border-t border-sidebar-border bg-sidebar px-1 py-1.5 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]"
+          className="lg:hidden fixed bottom-0 inset-x-0 z-50 flex justify-around border-t border-sidebar-border bg-sidebar px-1 py-1.5 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]"
         >
           {MOBILE_TABS.map((t) => {
             const active = location === t.href || location.startsWith(t.href + "?");

@@ -50,6 +50,25 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+/**
+ * WCAG AA contrast overrides (axe `color-contrast`, run 6).
+ *
+ * These Tailwind shades are used as TEXT on white or pale tinted backgrounds
+ * throughout the app (status deltas, amounts, "overdue", health badges) and
+ * fall below 4.5:1: red-500 3.8, green-500 2.1 (on green-50), green-600 3.2,
+ * emerald-600 3.7, amber-600 3.1, rose-500 4.1. Re-pointing the palette keeps
+ * one source of truth instead of editing ~hundreds of class names. As solid
+ * fills they remain clearly the same hue, just a step deeper.
+ */
+@theme {
+  --color-red-500: #dc2626;
+  --color-rose-500: #be123c;
+  --color-green-500: #15803d;
+  --color-green-600: #15803d;
+  --color-emerald-600: #047857;
+  --color-amber-600: #b45309;
+}
+
 /* INDUSTRIAL SLATE THEME */
 :root {
   --radius: 0.25rem; /* Sharper corners for industrial feel */
@@ -76,7 +95,7 @@
 
   /* Muted: Slate 100 */
   --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+  --muted-foreground: 215.4 16.3% 41%;
 
   /* Accent: Safety Orange (Industrial) */
   --accent: 210 40% 96.1%;
@@ -154,5 +173,20 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/*
+ * Responsive overflow guard (audit R2-65 / R3-30).
+ *
+ * Grid and flex items default to `min-width: auto`, so one unbreakable row
+ * (a nowrap badge line, a long title) stretches the whole track past the
+ * viewport — the executive shell grew to 592–1086px on a 375–768px screen and
+ * pushed the fixed header/tab bar off-screen. Letting grid items shrink fixes
+ * that class of bug once instead of per page.
+ */
+@layer base {
+  main .grid > * {
+    min-width: 0;
   }
 }

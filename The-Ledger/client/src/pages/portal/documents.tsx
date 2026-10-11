@@ -83,7 +83,7 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
               className="h-10 rounded-md border border-border bg-card px-3 text-sm text-foreground"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
-              data-testid="portal-documents-sort"
+              data-testid="portal-documents-sort" aria-label="Portal documents sort"
             >
               <option value="shared-desc">Newest first</option>
               <option value="shared-asc">Oldest first</option>
@@ -150,9 +150,9 @@ export function PortalDocumentsPage({ documents, projectTitleById, onViewDocumen
                     <span data-testid={`portal-document-project-${doc.id}`}>
                       {projectTitleById[doc.projectId] ?? "Project"}
                     </span>
-                    <span>Uploaded {new Date(doc.uploadedAt).toLocaleDateString()}</span>
+                    <span>Uploaded {new Date(doc.uploadedAt).toLocaleDateString("en-GB")}</span>
                     <span data-testid={`portal-document-shared-${doc.id}`}>
-                      Shared {new Date(doc.sharedAt).toLocaleDateString()}
+                      Shared {new Date(doc.sharedAt).toLocaleDateString("en-GB")}
                     </span>
                     <span data-testid={`portal-document-sharedby-${doc.id}`}>by {doc.sharedBy}</span>
                   </div>

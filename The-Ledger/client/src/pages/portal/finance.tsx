@@ -212,7 +212,7 @@ function Overview({
                       {financials.nextDueInvoice.invoiceId}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(financials.nextDueInvoice.dueDate).toLocaleDateString()}
+                      {new Date(financials.nextDueInvoice.dueDate).toLocaleDateString("en-GB")}
                     </div>
                   </button>
                 ) : (
@@ -267,8 +267,8 @@ function Quotes({ quotes, onViewQuote }: { quotes: PortalQuote[]; onViewQuote: (
               <p className="text-sm text-foreground mt-1 font-medium truncate">{q.description}</p>
               <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-muted-foreground">
                 <span>{q.projectTitle}</span>
-                <span>Issued {new Date(q.issueDate).toLocaleDateString()}</span>
-                <span data-testid={`portal-quote-expiry-${q.id}`}>Expires {new Date(q.expiryDate).toLocaleDateString()}</span>
+                <span>Issued {new Date(q.issueDate).toLocaleDateString("en-GB")}</span>
+                <span data-testid={`portal-quote-expiry-${q.id}`}>Expires {new Date(q.expiryDate).toLocaleDateString("en-GB")}</span>
               </div>
             </div>
             <div className="flex items-center gap-3 shrink-0">
@@ -310,7 +310,7 @@ function Variations({ financials }: { financials: ClientFinancialProjection }) {
               <p className="text-sm text-foreground mt-1 font-medium">{v.description}</p>
               <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-muted-foreground">
                 <span>{v.projectTitle}</span>
-                {v.approvalDate && <span>Decided {new Date(v.approvalDate).toLocaleDateString()}</span>}
+                {v.approvalDate && <span>Decided {new Date(v.approvalDate).toLocaleDateString("en-GB")}</span>}
               </div>
             </div>
             <span className="text-lg font-semibold text-foreground shrink-0" data-testid={`portal-variation-value-${v.id}`}>
@@ -341,8 +341,8 @@ function Invoices({ invoices, onOpenInvoice }: { invoices: PortalInvoice[]; onOp
               </div>
               <div className="mt-1 flex flex-wrap gap-x-4 text-[11px] text-muted-foreground">
                 {inv.projectTitle && <span data-testid={`portal-invoice-project-${inv.id}`}>{inv.projectTitle}</span>}
-                <span>Issued {new Date(inv.issueDate).toLocaleDateString()}</span>
-                <span data-testid={`portal-invoice-due-${inv.id}`}>Due {new Date(inv.dueDate).toLocaleDateString()}</span>
+                <span>Issued {new Date(inv.issueDate).toLocaleDateString("en-GB")}</span>
+                <span data-testid={`portal-invoice-due-${inv.id}`}>Due {new Date(inv.dueDate).toLocaleDateString("en-GB")}</span>
               </div>
             </div>
             <div className="flex items-center gap-3 shrink-0">
@@ -388,7 +388,7 @@ function Payments({
               {payments.map((p) => (
                 <li key={p.id} className="py-3 flex items-center justify-between gap-3" data-testid={`portal-payment-${p.id}`}>
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-foreground">{new Date(p.paymentDate).toLocaleDateString()}</div>
+                    <div className="text-sm font-medium text-foreground">{new Date(p.paymentDate).toLocaleDateString("en-GB")}</div>
                     <div className="text-[11px] text-muted-foreground">
                       <span data-testid={`portal-payment-ref-${p.id}`}>{p.reference}</span> · {p.method} · Invoice{" "}
                       <span data-testid={`portal-payment-invoice-${p.id}`}>{p.invoiceNumber}</span>
@@ -417,7 +417,7 @@ function Payments({
                     <div className="text-sm font-medium text-foreground">{c.creditNoteNumber}</div>
                     <div className="text-[11px] text-muted-foreground">{c.reason}</div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
-                      Against invoice {c.invoiceNumber} · {new Date(c.issueDate).toLocaleDateString()}
+                      Against invoice {c.invoiceNumber} · {new Date(c.issueDate).toLocaleDateString("en-GB")}
                     </div>
                   </div>
                   <span className="text-sm font-semibold text-foreground shrink-0">-{gbp(c.amount)}</span>
@@ -476,8 +476,8 @@ function InvoiceDetail({
           <CardTitle className="text-lg">Invoice Summary</CardTitle>
         </CardHeader>
         <CardContent className="pt-4 grid sm:grid-cols-4 gap-4 text-sm">
-          <Field label="Issue date" value={new Date(invoice.issueDate).toLocaleDateString()} />
-          <Field label="Due date" value={new Date(invoice.dueDate).toLocaleDateString()} />
+          <Field label="Issue date" value={new Date(invoice.issueDate).toLocaleDateString("en-GB")} />
+          <Field label="Due date" value={new Date(invoice.dueDate).toLocaleDateString("en-GB")} />
           <Field label="Total" value={gbp(invoice.total)} testid="portal-invoice-detail-total" />
           <Field label="Outstanding" value={gbp(invoice.amountOutstanding)} testid="portal-invoice-detail-outstanding" />
         </CardContent>
@@ -552,7 +552,7 @@ function InvoiceDetail({
               {relatedPayments.map((p) => (
                 <li key={p.id} className="py-2.5 flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-sm text-foreground">{new Date(p.paymentDate).toLocaleDateString()}</div>
+                    <div className="text-sm text-foreground">{new Date(p.paymentDate).toLocaleDateString("en-GB")}</div>
                     <div className="text-[11px] text-muted-foreground">{p.reference} · {p.method}</div>
                   </div>
                   <span className="text-sm font-semibold text-emerald-700">{gbp(p.amount)}</span>

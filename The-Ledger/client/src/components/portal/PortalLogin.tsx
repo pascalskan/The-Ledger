@@ -24,7 +24,7 @@ export function PortalLogin({ branding, signIn }: PortalLoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4" data-testid="portal-login">
+    <main id="main-content" className="min-h-screen bg-muted flex flex-col items-center justify-center p-4" data-testid="portal-login">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center mb-8 gap-2 text-2xl font-bold tracking-tight text-foreground">
           {branding.logo ? (
@@ -36,7 +36,7 @@ export function PortalLogin({ branding, signIn }: PortalLoginProps) {
         </div>
         <Card className="shadow-lg border-0">
           <CardHeader className="space-y-1 pb-6 text-center">
-            <CardTitle className="text-2xl font-semibold text-foreground">Client Sign In</CardTitle>
+            <CardTitle role="heading" aria-level={1} className="text-2xl font-semibold text-foreground">Client Sign In</CardTitle>
             <CardDescription>
               Welcome to your client portal. Access your projects, sites, and documents.
             </CardDescription>
@@ -100,6 +100,6 @@ export function PortalLogin({ branding, signIn }: PortalLoginProps) {
           Protected by The Ledger Operations Platform
         </div>
       </div>
-    </div>
+    </main>
   );
 }

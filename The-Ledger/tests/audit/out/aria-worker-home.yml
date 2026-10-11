@@ -1,0 +1,50 @@
+- region "Connection status":
+  - button "Online. Activate to switch to offline mode": Online
+- banner:
+  - heading "Home" [level=1]
+  - text: D
+- main:
+  - text: Not On Shift
+  - paragraph: Your next job is Preventative maintenance visit. Open the job to start your shift.
+  - button "Go to Job & Start Shift"
+  - heading "Today & Upcoming" [level=2]
+  - paragraph: Preventative maintenance visit
+  - paragraph: 45 Kingsway, London, WC2B 6SR
+  - paragraph: 13/10/2026 · 02:49 PM
+  - text: Active
+  - button "Open Job"
+  - heading "Quick Actions" [level=2]
+  - button "My Jobs"
+  - button "Schedule"
+  - button "Uploads":
+    - paragraph: Uploads
+  - button "D Profile"
+  - heading "Attention Required" [level=2]
+  - paragraph: All clear — nothing requires attention.
+  - 'link "Open activity: submissions need changes. Tap to review reviewer notes"':
+    - paragraph: 1 submission need changes
+    - paragraph: Tap to review reviewer notes
+  - heading "Last Shift" [level=2]
+  - paragraph: Kitchen extraction & ventilation install
+  - paragraph: 04/10/2026 · 8h 0m
+  - heading "Recent Activity" [level=2]
+  - button "View all"
+  - paragraph: Upload — Site Photo
+  - paragraph: 09/10/2026
+  - text: pending
+  - paragraph: Issue — Issue Reported — High
+  - paragraph: 06/10/2026
+  - text: Changes
+  - paragraph: Timesheet — Shift Timesheet
+  - paragraph: 04/10/2026
+  - text: approved
+- navigation "Worker navigation":
+  - button "Home"
+  - button "Jobs"
+  - button "Schedule"
+  - button "Activity"
+  - button "Uploads"
+  - button "Profile"
+- region "Notifications (F8)":
+  - list
+- button "Enterprise Sync QA Panel"

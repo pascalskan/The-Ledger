@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Users, Clock, DollarSign, AlertTriangle, Activity } from "lucide-react";
+import { Users, Clock, PoundSterling, AlertTriangle, Activity } from "lucide-react";
 import { useState } from "react";
 
 function fmt(n: number) {
@@ -125,7 +125,7 @@ export function PayrollProcessingContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <PoundSterling className="h-5 w-5 text-red-500 flex-shrink-0" />
               <span className="text-2xl font-bold">{fmt(totalCost)}</span>
             </CardContent>
           </Card>
@@ -136,7 +136,7 @@ export function PayrollProcessingContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+              <PoundSterling className="h-5 w-5 text-emerald-600 flex-shrink-0" />
               <span className="text-2xl font-bold">{fmt(totalRevenue)}</span>
             </CardContent>
           </Card>

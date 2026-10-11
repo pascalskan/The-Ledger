@@ -140,7 +140,7 @@ export function SynchronizationDebugPanel() {
              ) : (
                  events.slice(0, 50).map(evt => (
                      <div key={evt.id} className="border-b border-slate-800 pb-1">
-                         <span className="text-muted-foreground">[{new Date(evt.timestamp).toLocaleTimeString()}]</span>{" "}
+                         <span className="text-muted-foreground">[{new Date(evt.timestamp).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}]</span>{" "}
                          <span className="text-blue-400">{evt.type}</span>{" "}
                          <span className="text-slate-300">{evt.entityId.slice(0,8)}...</span>
                      </div>

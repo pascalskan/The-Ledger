@@ -110,6 +110,7 @@ test.describe('Portal Documents — internal sharing controls (CL-5)', () => {
     await page.goto('/jobs/dj-kitchen-extract-1');
     await expect(page.getByTestId('pm-workspace-documents')).toBeVisible();
     await page.getByTestId('button-job-doc-share-dd-kex-1').click();
+    await page.getByTestId('confirm-dialog-confirm').click();
     await expect(page.getByTestId('pm-client-shared-documents')).toContainText('Site_Survey_Photos');
   });
 
@@ -118,6 +119,7 @@ test.describe('Portal Documents — internal sharing controls (CL-5)', () => {
     await loginAsCEO(page);
     await page.goto('/jobs/dj-kitchen-extract-1');
     await page.getByTestId('button-job-doc-share-dd-kex-1').click();
+    await page.getByTestId('confirm-dialog-confirm').click();
     await expect(page.getByTestId('pm-client-shared-documents')).toContainText('Site_Survey_Photos');
   });
 
@@ -136,6 +138,7 @@ test.describe('Portal Documents — internal sharing controls (CL-5)', () => {
     await page.goto('/jobs/dj-kitchen-extract-1');
     const before = await page.evaluate(() => (window as any).__portalAudit.countByType('document_shared_with_client'));
     await page.getByTestId('button-job-doc-share-dd-kex-1').click();
+    await page.getByTestId('confirm-dialog-confirm').click();
     const after = await page.evaluate(() => (window as any).__portalAudit.countByType('document_shared_with_client'));
     expect(after).toBeGreaterThan(before);
   });

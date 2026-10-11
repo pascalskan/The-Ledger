@@ -30,7 +30,7 @@ export default function AuditPage() {
               {logs.map((log) => (
                 <TableRow key={log.id}>
                   <TableCell className="font-mono text-xs text-muted-foreground">
-                    {new Date(log.timestamp).toLocaleString()}
+                    {new Date(log.timestamp).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </TableCell>
                   <TableCell className="font-medium">{log.actorName}</TableCell>
                   <TableCell>

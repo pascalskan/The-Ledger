@@ -83,7 +83,7 @@ export function PortalDashboard({ client, jobs, sites, invoices, activity, onOpe
                       </div>
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-foreground">{item.title}</div>
-                        <div className="text-xs text-muted-foreground">{new Date(item.date).toLocaleDateString()}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(item.date).toLocaleDateString("en-GB")}</div>
                       </div>
                     </li>
                   );
@@ -117,7 +117,7 @@ export function PortalDashboard({ client, jobs, sites, invoices, activity, onOpe
                   </div>
                   <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    {new Date(job.startAt).toLocaleDateString()}
+                    {new Date(job.startAt).toLocaleDateString("en-GB")}
                   </div>
                 </button>
               ))

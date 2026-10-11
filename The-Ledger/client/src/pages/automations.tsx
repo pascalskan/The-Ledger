@@ -289,7 +289,7 @@ function StepIndicator({ current, total }: { current: BuilderStep; total: number
                 isActive
                   ? "bg-violet-600 text-white border-violet-600"
                   : isDone
-                  ? "bg-emerald-500 text-white border-emerald-500"
+                  ? "bg-emerald-700 text-white border-emerald-700"
                   : "bg-muted text-muted-foreground border-border"
               }`}
               data-testid={`builder-step-${step}${isActive ? "-active" : ""}`}
@@ -338,7 +338,7 @@ function ScheduleConfigForm({
             className="h-9 w-full rounded-md border bg-background px-3 text-sm"
             value={config.hourInterval ?? 1}
             onChange={(e) => onChange({ ...config, hourInterval: Number(e.target.value) })}
-            data-testid="builder-schedule-hour-interval"
+            data-testid="builder-schedule-hour-interval" aria-label="Builder schedule hour interval"
           >
             {[1, 2, 4, 6, 12].map((h) => (
               <option key={h} value={h}>Every {h} hour{h > 1 ? "s" : ""}</option>
@@ -354,7 +354,7 @@ function ScheduleConfigForm({
             className="h-9 w-full rounded-md border bg-background px-3 text-sm"
             value={config.dailyHour ?? 9}
             onChange={(e) => onChange({ ...config, dailyHour: Number(e.target.value) })}
-            data-testid="builder-schedule-daily-hour"
+            data-testid="builder-schedule-daily-hour" aria-label="Builder schedule daily hour"
           >
             {Array.from({ length: 24 }, (_, h) => (
               <option key={h} value={h}>{String(h).padStart(2, "0")}:00</option>
@@ -371,7 +371,7 @@ function ScheduleConfigForm({
               className="h-9 w-full rounded-md border bg-background px-3 text-sm"
               value={config.weeklyDay ?? 1}
               onChange={(e) => onChange({ ...config, weeklyDay: Number(e.target.value) })}
-              data-testid="builder-schedule-weekly-day"
+              data-testid="builder-schedule-weekly-day" aria-label="Builder schedule weekly day"
             >
               {["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].map((d, i) => (
                 <option key={i} value={i}>{d}</option>
@@ -384,7 +384,7 @@ function ScheduleConfigForm({
               className="h-9 w-full rounded-md border bg-background px-3 text-sm"
               value={config.weeklyHour ?? 9}
               onChange={(e) => onChange({ ...config, weeklyHour: Number(e.target.value) })}
-              data-testid="builder-schedule-weekly-hour"
+              data-testid="builder-schedule-weekly-hour" aria-label="Builder schedule weekly hour"
             >
               {Array.from({ length: 24 }, (_, h) => (
                 <option key={h} value={h}>{String(h).padStart(2, "0")}:00</option>
@@ -402,7 +402,7 @@ function ScheduleConfigForm({
               className="h-9 w-full rounded-md border bg-background px-3 text-sm"
               value={config.monthlyDay ?? 1}
               onChange={(e) => onChange({ ...config, monthlyDay: Number(e.target.value) })}
-              data-testid="builder-schedule-monthly-day"
+              data-testid="builder-schedule-monthly-day" aria-label="Builder schedule monthly day"
             >
               {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
                 <option key={d} value={d}>{d}</option>
@@ -415,7 +415,7 @@ function ScheduleConfigForm({
               className="h-9 w-full rounded-md border bg-background px-3 text-sm"
               value={config.monthlyHour ?? 9}
               onChange={(e) => onChange({ ...config, monthlyHour: Number(e.target.value) })}
-              data-testid="builder-schedule-monthly-hour"
+              data-testid="builder-schedule-monthly-hour" aria-label="Builder schedule monthly hour"
             >
               {Array.from({ length: 24 }, (_, h) => (
                 <option key={h} value={h}>{String(h).padStart(2, "0")}:00</option>
@@ -764,7 +764,7 @@ function AutomationBuilderDialog({
                 className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                 value={form.category}
                 onChange={(e) => setForm((p) => ({ ...p, category: e.target.value as AutomationCategory }))}
-                data-testid="builder-select-category"
+                data-testid="builder-select-category" aria-label="Builder select category"
               >
                 <option value="Operational">Operational</option>
                 <option value="Workflow">Workflow</option>
@@ -813,7 +813,7 @@ function AutomationBuilderDialog({
                           className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                           value={scheduleType}
                           onChange={(e) => handleScheduleTypeChange(e.target.value as AutomationScheduleType)}
-                          data-testid="builder-schedule-type"
+                          data-testid="builder-schedule-type" aria-label="Builder schedule type"
                         >
                           <option value="Hourly">Hourly</option>
                           <option value="Daily">Daily</option>
@@ -847,7 +847,7 @@ function AutomationBuilderDialog({
             {form.conditions.map((cond, idx) => (
               <div key={cond.id} className="flex flex-wrap items-center gap-2 rounded-md border p-2" data-testid={`builder-condition-row-${idx}`}>
                 <Input placeholder="Field" value={cond.field} onChange={(e) => updateCondition(cond.id, { field: e.target.value })} className="w-28 text-xs h-8" data-testid={`builder-condition-field-${idx}`} />
-                <select className="h-8 rounded-md border bg-background px-2 text-xs" value={cond.operator} onChange={(e) => updateCondition(cond.id, { operator: e.target.value as BuilderCondition["operator"] })} data-testid={`builder-condition-operator-${idx}`}>
+                <select aria-label="Condition operator" className="h-8 rounded-md border bg-background px-2 text-xs" value={cond.operator} onChange={(e) => updateCondition(cond.id, { operator: e.target.value as BuilderCondition["operator"] })} data-testid={`builder-condition-operator-${idx}`}>
                   {Object.entries(CONDITION_OPERATOR_LABELS).map(([k, v]) => (<option key={k} value={k}>{v}</option>))}
                 </select>
                 <Input placeholder="Value" value={cond.value} onChange={(e) => updateCondition(cond.id, { value: e.target.value })} className="w-28 text-xs h-8" data-testid={`builder-condition-value-${idx}`} />
@@ -1384,13 +1384,13 @@ export default function AutomationsPage() {
                   <Input placeholder="Search schedule, rule…" value={schedSearch} onChange={(e) => setSchedSearch(e.target.value)} className="pl-9" data-testid="sched-search" />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <select className="h-9 rounded-md border bg-background px-3 text-sm" value={schedStatusFilter} onChange={(e) => setSchedStatusFilter(e.target.value as AutomationScheduleStatus | "all")} data-testid="sched-filter-status">
+                  <select className="h-9 rounded-md border bg-background px-3 text-sm" value={schedStatusFilter} onChange={(e) => setSchedStatusFilter(e.target.value as AutomationScheduleStatus | "all")} data-testid="sched-filter-status" aria-label="Filter by status">
                     <option value="all">All Statuses</option>
                     <option value="Active">Active</option>
                     <option value="Paused">Paused</option>
                     <option value="Disabled">Disabled</option>
                   </select>
-                  <select className="h-9 rounded-md border bg-background px-3 text-sm" value={schedTypeFilter} onChange={(e) => setSchedTypeFilter(e.target.value as AutomationScheduleType | "all")} data-testid="sched-filter-type">
+                  <select className="h-9 rounded-md border bg-background px-3 text-sm" value={schedTypeFilter} onChange={(e) => setSchedTypeFilter(e.target.value as AutomationScheduleType | "all")} data-testid="sched-filter-type" aria-label="Filter by type">
                     <option value="all">All Types</option>
                     <option value="Hourly">Hourly</option>
                     <option value="Daily">Daily</option>
@@ -1528,7 +1528,7 @@ export default function AutomationsPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input placeholder="Search rule, user, job…" value={auditSearch} onChange={(e) => setAuditSearch(e.target.value)} className="pl-9" data-testid="aut-audit-search" />
                 </div>
-                <select className="h-9 rounded-md border bg-background px-3 text-sm" value={auditResultFilter} onChange={(e) => setAuditResultFilter(e.target.value)} data-testid="aut-audit-filter-result">
+                <select className="h-9 rounded-md border bg-background px-3 text-sm" value={auditResultFilter} onChange={(e) => setAuditResultFilter(e.target.value)} data-testid="aut-audit-filter-result" aria-label="Filter by result">
                   <option value="all">All Results</option>
                   <option value="success">Success</option>
                   <option value="blocked_approval_required">Blocked — Approval Required</option>

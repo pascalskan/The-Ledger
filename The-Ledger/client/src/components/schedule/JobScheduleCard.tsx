@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { activatable } from "@/lib/a11y";
 import { Users, AlertTriangle } from "lucide-react";
 
 interface JobScheduleCardProps {
@@ -44,7 +45,8 @@ export function JobScheduleCard({ job, onClick, isSelected, onDragStart, onDragE
 
   return (
     <div
-      onClick={onClick}
+      {...activatable(onClick, `${job.title}, ${job.scheduledHours} hours, ${job.crewCount} crew`, "button")}
+      aria-pressed={isSelected}
       // Drag-to-reschedule. Native HTML5 DnD rather than a library — this is a
       // single interaction on one grid, and a drag-and-drop dependency would be
       // a large addition to the bundle E-7 just cut by 80%.

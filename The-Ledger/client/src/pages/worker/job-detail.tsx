@@ -33,7 +33,11 @@ export default function WorkerJobDetailPage() {
   const [issueText, setIssueText] = useState("");
   const [issuePriority, setIssuePriority] = useState<IssuePriority>("Medium");
 
-  if (!job) return <WorkerMobileLayout title="Job Not Found"><div className="p-8 text-center text-muted-foreground">Job not found or access denied.</div></WorkerMobileLayout>;
+  // A worker may only open jobs they are assigned to (CEO/PM can preview the worker view).
+  const isWorkerUser = Boolean(user?.roleIds?.some((r) => r.includes("worker")));
+  const notAssigned = isWorkerUser && !!job && !job.assignedWorkerIds.includes(user?.id || "");
+
+  if (!job || notAssigned) return <WorkerMobileLayout title="Job Not Found"><div className="p-8 text-center text-muted-foreground">Job not found or access denied.</div></WorkerMobileLayout>;
 
   const assignedWorkers = workers.filter(w => job.assignedWorkerIds.includes(w.id));
   const assignedEquipment = equipment.filter(e => job.assignedEquipmentIds.includes(e.id));
@@ -73,7 +77,7 @@ export default function WorkerJobDetailPage() {
           id: crypto.randomUUID(),
           uploadId: crypto.randomUUID(),
           type: "general",
-          fileName: `Site Photo ${new Date().toLocaleDateString()}.jpg`,
+          fileName: `Site Photo ${new Date().toLocaleDateString("en-GB")}.jpg`,
           uploadedAt: nowISO,
           url: "mock-upload-url",
           syncStatus: isOffline ? "pending" : "uploaded",
@@ -210,12 +214,12 @@ export default function WorkerJobDetailPage() {
           <div className="grid grid-cols-2 gap-3 pt-2">
             <div className="bg-muted p-3 rounded-xl">
               <div className="text-xs text-muted-foreground mb-1">Start</div>
-              <div className="font-semibold text-sm">{new Date(job.startAt).toLocaleDateString()}</div>
+              <div className="font-semibold text-sm">{new Date(job.startAt).toLocaleDateString("en-GB")}</div>
               <div className="text-xs text-muted-foreground">{new Date(job.startAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
             </div>
             <div className="bg-muted p-3 rounded-xl">
               <div className="text-xs text-muted-foreground mb-1">End</div>
-              <div className="font-semibold text-sm">{new Date(job.endAt).toLocaleDateString()}</div>
+              <div className="font-semibold text-sm">{new Date(job.endAt).toLocaleDateString("en-GB")}</div>
               <div className="text-xs text-muted-foreground">{new Date(job.endAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
             </div>
           </div>
@@ -311,7 +315,7 @@ export default function WorkerJobDetailPage() {
             size="lg" 
             className={cn(
               "w-full font-bold text-lg rounded-xl h-14", 
-              isShiftActiveForJob ? "bg-red-500 hover:bg-red-600 text-white" : "bg-emerald-500 hover:bg-emerald-600 text-white"
+              isShiftActiveForJob ? "bg-red-700 hover:bg-red-800 text-white" : "bg-emerald-700 hover:bg-emerald-800 text-white"
             )}
             onClick={handleToggleShift}
             data-testid={isShiftActiveForJob ? "worker-end-shift-btn" : "worker-start-shift-btn"}

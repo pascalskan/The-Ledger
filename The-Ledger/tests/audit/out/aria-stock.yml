@@ -1,0 +1,73 @@
+- link "Skip to content":
+  - /url: "#main-content"
+- complementary:
+  - text: L The Ledger
+  - button "Collapse sidebar" [expanded]
+  - navigation:
+    - paragraph: Core
+    - link "Command":
+      - /url: /
+    - link "Review 7":
+      - /url: /review
+    - paragraph: Operational
+    - link "Operations":
+      - /url: /operations
+    - link "Client Requests":
+      - /url: /client-requests
+    - link "Job Intelligence":
+      - /url: /job-intelligence
+    - link "Financial Insights":
+      - /url: /expenses
+    - link "Finance":
+      - /url: /finance
+    - paragraph: Intelligence
+    - link "Intelligence":
+      - /url: /intelligence
+    - paragraph: Automation
+    - link "Automations":
+      - /url: /automations
+    - link "Workflows":
+      - /url: /workflows
+    - link "Automation Governance":
+      - /url: /automation-governance
+    - paragraph: Administration
+    - button "Administration"
+  - text: D
+  - paragraph: Demo CEO
+  - paragraph: CEO
+  - button "Sign Out"
+- button "System alerts": "4"
+- button "Notifications": "9"
+- main:
+  - paragraph: Example Business — Demo Data
+  - paragraph: You are viewing a demonstration environment. Changes made here will not affect real business data.
+  - tablist:
+    - tab "Jobs"
+    - tab "Schedule"
+    - tab "Workers"
+    - tab "Clients"
+    - tab "Map"
+    - tab "Stock & Assets" [selected]
+  - tabpanel "Stock & Assets":
+    - heading "Stock & Assets" [level=1]
+    - paragraph: Manage consumable stock and long-term assets across locations.
+    - button "Add Stock"
+    - button "Add Asset"
+    - textbox "Search inventory or assets..."
+    - combobox "Filter by type": All Types
+    - combobox "Filter by location": All Locations
+    - tablist:
+      - tab "Overview" [selected]
+      - tab "Stock"
+      - tab "Assets"
+      - tab "Locations"
+      - tab "Alerts 6"
+    - tabpanel "Overview":
+      - text: Stock Summary £1,702
+      - paragraph: Total stock value
+      - text: 365 units · 4 lines 2 low stock Asset Summary 4
+      - paragraph: Assets in service
+      - text: 3 active 4 due for service Activity Snapshot Stock movements (30 days) 0 Assets assigned to jobs 2 Idle assets 2
+- region "Notifications (F8)":
+  - list
+- button "Enterprise Sync QA Panel"

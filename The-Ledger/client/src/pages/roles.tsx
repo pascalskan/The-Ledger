@@ -1,6 +1,6 @@
 import { Layout } from "@/components/layout";
 import { PageHeader } from "@/components/page-shell";
-import { PERMISSION_LABELS, PermissionKey, Role, useStore } from "@/lib/mockData";
+import { PERMISSION_LABELS, PermissionKey, Role, useStore, useAuth } from "@/lib/mockData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
 export default function RolesPage() {
+  const { user: currentUser } = useAuth();
   const { users, roles, updateUser, addRole, updateRole } = useStore();
   const { toast } = useToast();
 
@@ -69,6 +70,19 @@ export default function RolesPage() {
 
   const handleUpdateRole = () => {
     if (!editingRole) return;
+    // Self-lockout guard: you cannot remove your own ability to manage roles or settings.
+    if (currentUser?.roleIds?.includes(editingRole.id)) {
+      const critical: PermissionKey[] = ["assign_roles", "manage_settings"];
+      const lost = critical.filter((p) => editingRole.permissions.includes(p) && !editRolePermissions.includes(p));
+      if (lost.length > 0) {
+        toast({
+          title: "You cannot remove your own access",
+          description: `This is your role — keep ${lost.map((p) => PERMISSION_LABELS[p]).join(" and ")} so you cannot lock yourself out.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     updateRole(editingRole.id, {
       name: editRoleName.trim() || editingRole.name,
       description: editRoleDescription,

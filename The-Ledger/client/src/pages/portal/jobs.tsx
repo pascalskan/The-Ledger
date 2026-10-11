@@ -1,3 +1,4 @@
+import { activatable } from "@/lib/a11y";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +82,7 @@ export function PortalJobs({ jobs, selectedJob, threads, onOpenJob, onBack, onOp
           <Card
             key={job.id}
             className="cursor-pointer border-border hover:border-slate-400 hover:shadow-md transition-all group"
-            onClick={() => onOpenJob(job)}
+            {...activatable(() => onOpenJob(job), `Open project ${job.title}`)}
             data-testid={`portal-job-card-${job.id}`}
           >
             <CardHeader className="pb-3">
@@ -103,7 +104,7 @@ export function PortalJobs({ jobs, selectedJob, threads, onOpenJob, onBack, onOp
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span>{new Date(job.startAt).toLocaleDateString()}</span>
+                  <span>{new Date(job.startAt).toLocaleDateString("en-GB")}</span>
                 </div>
                 {job.managerName && (
                   <div className="flex items-center gap-2 text-muted-foreground" data-testid={`portal-job-pm-${job.id}`}>
@@ -190,8 +191,8 @@ function PortalJobDetail({
             <SummaryField icon={Building2} label="Site" value={job.locationAddress} testid="portal-summary-site" />
             <SummaryField icon={Activity} label="Status" value={job.status} testid="portal-summary-status" />
             <SummaryField icon={UserCog} label="Assigned PM" value={job.managerName || "—"} testid="portal-detail-pm" />
-            <SummaryField icon={Calendar} label="Start date" value={new Date(job.startAt).toLocaleDateString()} testid="portal-summary-start" />
-            <SummaryField icon={CalendarClock} label="Target completion" value={new Date(job.endAt).toLocaleDateString()} testid="portal-summary-target" />
+            <SummaryField icon={Calendar} label="Start date" value={new Date(job.startAt).toLocaleDateString("en-GB")} testid="portal-summary-start" />
+            <SummaryField icon={CalendarClock} label="Target completion" value={new Date(job.endAt).toLocaleDateString("en-GB")} testid="portal-summary-target" />
           </div>
         </CardContent>
       </Card>

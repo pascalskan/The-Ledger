@@ -479,7 +479,7 @@ export function AutomationAuditCentre() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2" data-testid="aut-audc-filters">
-          <select className={selectClass} value={catFilter} onChange={(e) => { setCatFilter(e.target.value as AuditEventCategory | "all"); setLimit(PAGE); }} data-testid="aut-audc-filter-category">
+          <select className={selectClass} value={catFilter} onChange={(e) => { setCatFilter(e.target.value as AuditEventCategory | "all"); setLimit(PAGE); }} data-testid="aut-audc-filter-category" aria-label="Filter by category">
             <option value="all">All Event Types</option>
             <option value="Automation">Automation</option>
             <option value="Scheduler">Scheduler</option>
@@ -487,15 +487,15 @@ export function AutomationAuditCentre() {
             <option value="Execution">Execution</option>
             <option value="Exception">Exception</option>
           </select>
-          <select className={selectClass} value={userFilter} onChange={(e) => { setUserFilter(e.target.value); setLimit(PAGE); }} data-testid="aut-audc-filter-user">
+          <select className={selectClass} value={userFilter} onChange={(e) => { setUserFilter(e.target.value); setLimit(PAGE); }} data-testid="aut-audc-filter-user" aria-label="Filter by user">
             <option value="all">All Users</option>
             {users.map((u) => (<option key={u} value={u}>{u}</option>))}
           </select>
-          <select className={selectClass} value={riskFilter} onChange={(e) => { setRiskFilter(e.target.value as AutomationRiskLevel | "all"); setLimit(PAGE); }} data-testid="aut-audc-filter-risk">
+          <select className={selectClass} value={riskFilter} onChange={(e) => { setRiskFilter(e.target.value as AutomationRiskLevel | "all"); setLimit(PAGE); }} data-testid="aut-audc-filter-risk" aria-label="Filter by risk">
             <option value="all">All Risk</option>
             <option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option><option value="Critical">Critical</option>
           </select>
-          <select className={selectClass} value={govFilter} onChange={(e) => { setGovFilter(e.target.value as AutomationGovernanceStatus | "all"); setLimit(PAGE); }} data-testid="aut-audc-filter-governance">
+          <select className={selectClass} value={govFilter} onChange={(e) => { setGovFilter(e.target.value as AutomationGovernanceStatus | "all"); setLimit(PAGE); }} data-testid="aut-audc-filter-governance" aria-label="Filter by governance">
             <option value="all">All Governance</option>
             <option value="Compliant">Compliant</option><option value="Requires Review">Requires Review</option><option value="Restricted">Restricted</option><option value="Suspended">Suspended</option>
           </select>

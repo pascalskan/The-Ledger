@@ -241,7 +241,7 @@ export default function NotificationCentrePage() {
             value={statusFilter}
             onValueChange={(v) => setStatusFilter(v as NotificationStatus | 'all')}
           >
-            <SelectTrigger data-testid="notif-filter-status" className="w-36">
+            <SelectTrigger data-testid="notif-filter-status" aria-label="Filter by status" className="w-36">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -255,7 +255,7 @@ export default function NotificationCentrePage() {
             value={typeFilter}
             onValueChange={(v) => setTypeFilter(v as NotificationType | 'all')}
           >
-            <SelectTrigger data-testid="notif-filter-type" className="w-44">
+            <SelectTrigger data-testid="notif-filter-type" aria-label="Filter by type" className="w-44">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
@@ -272,7 +272,7 @@ export default function NotificationCentrePage() {
             value={priorityFilter}
             onValueChange={(v) => setPriorityFilter(v as NotificationPriority | 'all')}
           >
-            <SelectTrigger data-testid="notif-filter-priority" className="w-36">
+            <SelectTrigger data-testid="notif-filter-priority" aria-label="Filter by priority" className="w-36">
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent>

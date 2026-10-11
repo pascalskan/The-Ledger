@@ -22,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { activatable } from "@/lib/a11y";
+import { humaniseType } from "@/lib/format";
 import { getExecutiveSummary } from "@/lib/executiveCommandEngine";
 import { isCEO, isProjectManager } from "@/lib/roleHelpers";
 
@@ -247,7 +249,7 @@ function PMDashboard() {
   const attentionItems = [
     ...overdueReviews.map(r => ({
       id: r.id,
-      label: `Overdue review — ${r.type}`,
+      label: `Overdue review — ${humaniseType(r.type)}`,
       sub: `Submitted ${daysSince(r.submittedAt ?? '')}d ago`,
       badge: 'overdue' as const,
       action: () => setLocation('/review'),
@@ -261,7 +263,7 @@ function PMDashboard() {
     })),
     ...correctedReviews.slice(0, 3).map(r => ({
       id: r.id,
-      label: `Correction required — ${r.type}`,
+      label: `Correction required — ${humaniseType(r.type)}`,
       sub: 'Awaiting resubmission',
       badge: 'correction' as const,
       action: () => setLocation('/review'),
@@ -346,7 +348,7 @@ function PMDashboard() {
                       key={job.id}
                       data-testid={`pm-job-row-${job.id}`}
                       className="flex items-center gap-3 p-2.5 rounded-lg border border-transparent hover:border-border hover:bg-muted transition-all cursor-pointer"
-                      onClick={() => setLocation(`/jobs/${job.id}`)}
+                      {...activatable(() => setLocation(`/jobs/${job.id}`), `Open job ${job.title}`)}
                     >
                       <div className={cn(
                         "h-2 w-2 rounded-full flex-shrink-0",
@@ -431,7 +433,7 @@ function PMDashboard() {
                 {pendingReviews.slice(0, 3).map(r => (
                   <div key={r.id} className="flex items-center gap-2 text-xs text-muted-foreground">
                     <ClipboardCheck className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">{r.type} — {jobs.find(j => j.id === r.jobId)?.title ?? r.jobId}</span>
+                    <span className="truncate">{humaniseType(r.type)} — {jobs.find(j => j.id === r.jobId)?.title ?? r.jobId}</span>
                   </div>
                 ))}
               </div>
@@ -581,7 +583,7 @@ function PMDashboard() {
                   <div
                     key={item.id}
                     className="flex items-start gap-3 p-2.5 rounded-lg border border-transparent hover:border-border hover:bg-muted transition-all cursor-pointer"
-                    onClick={item.action}
+                    {...activatable(item.action, `${item.label}. ${item.sub}`)}
                   >
                     <TriangleAlert className={cn(
                       "h-4 w-4 flex-shrink-0 mt-0.5",
@@ -829,7 +831,7 @@ function CEODashboard() {
                     <div
                       key={job.id}
                       className="flex items-center gap-3 p-2.5 rounded-lg border border-transparent hover:border-border hover:bg-muted transition-all cursor-pointer"
-                      onClick={() => setLocation(`/jobs/${job.id}`)}
+                      {...activatable(() => setLocation(`/jobs/${job.id}`), `Open job ${job.title}`)}
                     >
                       <div className={cn(
                         "h-2 w-2 rounded-full flex-shrink-0",

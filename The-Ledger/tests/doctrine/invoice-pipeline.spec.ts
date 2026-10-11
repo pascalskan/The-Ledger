@@ -105,10 +105,12 @@ test("Invoice draft completes full workflow draft → ready → sent → paid", 
 
   // ready → sent
   await page.getByTestId("btn-advance-seed-draft-kex-1").click();
+  await page.getByTestId("confirm-dialog-confirm").click();
   await expect(page.getByTestId("draft-status-seed-draft-kex-1")).toContainText("Sent");
 
   // sent → paid
   await page.getByTestId("btn-advance-seed-draft-kex-1").click();
+  await page.getByTestId("confirm-dialog-confirm").click();
   await expect(page.getByTestId("draft-status-seed-draft-kex-1")).toContainText("Paid");
 
   // No advance button at terminal state

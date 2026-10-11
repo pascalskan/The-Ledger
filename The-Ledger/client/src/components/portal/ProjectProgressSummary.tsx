@@ -14,7 +14,7 @@ export function ProjectProgressSummary({ progress }: { progress: PortalProjectPr
           <span className="text-2xl font-bold text-foreground" data-testid="portal-progress-percent">{pct}%</span>
         </div>
 
-        <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+        <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden" role="progressbar" aria-label="Project progress" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
           <div
             className="h-full bg-slate-800 rounded-full transition-all duration-500"
             style={{ width: `${pct}%` }}

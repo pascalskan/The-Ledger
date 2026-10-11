@@ -4,6 +4,7 @@ import { Home, Briefcase, CalendarDays, UploadCloud, UserCircle, Wifi, WifiOff, 
 import { cn } from "@/lib/utils";
 import { useOfflineQueueStore } from "@/lib/offlineQueueStore";
 import { useAuth } from "@/lib/mockData";
+import { activatable } from "@/lib/a11y";
 
 export function WorkerMobileLayout({ children, title }: { children: ReactNode, title: string }) {
   const [location, setLocation] = useLocation();
@@ -29,13 +30,18 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
   return (
     <div className="flex flex-col min-h-[100dvh] bg-muted text-foreground pb-[80px]">
       {/* Offline/Sync Banner */}
+      <div role="region" aria-label="Connection status" aria-live="polite">
       <div
         data-testid="worker-offline-banner"
         className={cn(
           "h-8 px-4 flex items-center justify-between text-xs font-medium cursor-pointer transition-colors",
-          isOnline ? "bg-green-600 text-white" : "bg-red-600 text-white"
+          isOnline ? "bg-green-700 text-white" : "bg-red-700 text-white"
         )}
-        onClick={toggleOnline}
+        {...activatable(
+          toggleOnline,
+          isOnline ? "Online. Activate to switch to offline mode" : "Offline mode. Activate to go back online",
+          "button",
+        )}
       >
         <div className="flex items-center gap-2">
           {isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
@@ -47,6 +53,7 @@ export function WorkerMobileLayout({ children, title }: { children: ReactNode, t
             <span>{pendingSyncCount} pending sync</span>
           </div>
         )}
+      </div>
       </div>
 
       {/* Header */}

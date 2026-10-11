@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Trash2, Edit, Users } from "lucide-react";
 import { useLocation } from "wouter";
+import { activatable } from "@/lib/a11y";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -33,6 +35,8 @@ export default function WorkersPage() {
   const [, setLocation] = useLocation();
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
   const [search, setSearch] = useState("");
+  // Deleting a worker removes them from jobs and history — confirm first.
+  const [pendingDelete, setPendingDelete] = useState<Worker | null>(null);
 
   const userIsPM = isProjectManager(user, roles);
 
@@ -253,7 +257,7 @@ export default function WorkersPage() {
                         <FormLabel>Status</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-worker-status"><SelectValue /></SelectTrigger>
+                            <SelectTrigger data-testid="select-worker-status" aria-label="Worker status"><SelectValue /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {(["Active", "Inactive"] as const).map(s => (
@@ -294,7 +298,7 @@ export default function WorkersPage() {
                 <TableRow
                   key={worker.id}
                   className="cursor-pointer"
-                  onClick={() => setLocation(`/workers/${worker.id}`)}
+                  {...activatable(() => setLocation(`/workers/${worker.id}`), `Open ${worker.firstName} ${worker.lastName}`, "row")}
                   data-testid={`row-worker-${worker.id}`}
                 >
                   <TableCell className="font-medium">{worker.firstName} {worker.lastName}</TableCell>
@@ -306,14 +310,16 @@ export default function WorkersPage() {
                       size="icon"
                       onClick={(e) => { e.stopPropagation(); setLocation(`/workers/${worker.id}`); }}
                       data-testid={`button-edit-worker-${worker.id}`}
+                      aria-label={`Edit ${worker.firstName} ${worker.lastName}`}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={(e) => { e.stopPropagation(); deleteWorker(worker.id); }}
+                      onClick={(e) => { e.stopPropagation(); setPendingDelete(worker); }}
                       data-testid={`button-delete-worker-${worker.id}`}
+                      aria-label={`Delete ${worker.firstName} ${worker.lastName}`}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -324,6 +330,18 @@ export default function WorkersPage() {
           </Table>
         </div>
       </div>
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Delete this worker?"
+        description={pendingDelete ? `${pendingDelete.firstName} ${pendingDelete.lastName} will be removed from the workforce. This is recorded in the audit log and cannot be undone here.` : undefined}
+        confirmLabel="Delete worker"
+        destructive
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) deleteWorker(pendingDelete.id);
+          setPendingDelete(null);
+        }}
+      />
     </Layout>
   );
 }

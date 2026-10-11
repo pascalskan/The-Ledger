@@ -132,7 +132,7 @@ export function JobForecastPanel({ jobId }: { jobId: string }) {
       data-testid={`job-forecast-panel-${jobId}`}
     >
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2 text-sm">
             <BarChart3 className="h-4 w-4" /> Financial Forecast
           </CardTitle>

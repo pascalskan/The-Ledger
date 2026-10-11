@@ -196,7 +196,7 @@ export default function WorkerUploadsPage() {
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(
                       item.createdAt
-                    ).toLocaleString()}
+                    ).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
               </div>

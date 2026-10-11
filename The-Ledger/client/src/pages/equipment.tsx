@@ -19,7 +19,7 @@ import { AlertsPanel } from "@/components/stock-assets/AlertsPanel";
 
 export default function StockAssetsPage() {
   const [activeTab, setActiveTab] = useState("overview");
-  const { stockItems, assets, locations, addStockItem, addAsset, deleteAsset } = useStore();
+  const { stockItems, assets, stockMovements, locations, jobs, addStockItem, addAsset, deleteAsset } = useStore();
   const { toast } = useToast();
 
   const [search, setSearch] = useState("");
@@ -37,6 +37,10 @@ export default function StockAssetsPage() {
   const handleAddStock = () => {
     if (!newStock.name || !newStock.sku || !newStock.locationId) {
       toast({ title: "Validation Error", description: "Name, SKU, and Location are required.", variant: "destructive" });
+      return;
+    }
+    if (Number(newStock.quantity) < 0 || Number(newStock.unitCost) < 0 || Number(newStock.reorderLevel) < 0) {
+      toast({ title: "Validation Error", description: "Quantity, unit cost and reorder level cannot be negative.", variant: "destructive" });
       return;
     }
     addStockItem(newStock);
@@ -102,7 +106,7 @@ export default function StockAssetsPage() {
   });
 
   const lowStock = stockItems.filter(item => item.quantity <= item.reorderLevel);
-  const serviceAlerts = assets.filter(item => item.status === 'Needs Service' || item.status === 'Broken' || item.status === 'Retired' || (item.nextServiceDate && new Date(item.nextServiceDate).getTime() < new Date().getTime() + (30 * 24 * 60 * 60 * 1000)));
+  const serviceAlerts = assets.filter(item => item.status === 'Needs Service' || item.status === 'Broken' || item.status === 'Under Repair' || (item.status !== 'Retired' && item.nextServiceDate && new Date(item.nextServiceDate).getTime() < new Date().getTime() + (30 * 24 * 60 * 60 * 1000)));
 
   return (
     <Layout>
@@ -152,7 +156,7 @@ export default function StockAssetsPage() {
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label className="text-right">Location</Label>
                     <Select value={newStock.locationId} onValueChange={v => setNewStock({...newStock, locationId: v})}>
-                      <SelectTrigger className="col-span-3"><SelectValue placeholder="Select Location" /></SelectTrigger>
+                      <SelectTrigger aria-label="Stock location" className="col-span-3"><SelectValue placeholder="Select Location" /></SelectTrigger>
                       <SelectContent>
                         {locations.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
                       </SelectContent>
@@ -185,7 +189,7 @@ export default function StockAssetsPage() {
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label className="text-right">Type</Label>
                     <Select value={newAsset.type} onValueChange={v => setNewAsset({...newAsset, type: v})}>
-                      <SelectTrigger className="col-span-3"><SelectValue placeholder="Select Type" /></SelectTrigger>
+                      <SelectTrigger aria-label="Asset type" className="col-span-3"><SelectValue placeholder="Select Type" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Vehicle">Vehicle</SelectItem>
                         <SelectItem value="Heavy Equipment">Heavy Equipment</SelectItem>
@@ -197,7 +201,7 @@ export default function StockAssetsPage() {
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label className="text-right">Location</Label>
                     <Select value={newAsset.locationId} onValueChange={v => setNewAsset({...newAsset, locationId: v})}>
-                      <SelectTrigger className="col-span-3"><SelectValue placeholder="Select Location" /></SelectTrigger>
+                      <SelectTrigger aria-label="Asset location" className="col-span-3"><SelectValue placeholder="Select Location" /></SelectTrigger>
                       <SelectContent>
                         {locations.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
                       </SelectContent>
@@ -227,7 +231,7 @@ export default function StockAssetsPage() {
           </div>
           <div className="flex gap-2">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[140px] bg-card border-border">
+              <SelectTrigger className="w-[140px] bg-card border-border" aria-label="Filter by type">
                 <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
@@ -238,7 +242,7 @@ export default function StockAssetsPage() {
               </SelectContent>
             </Select>
             <Select value={locationFilter} onValueChange={setLocationFilter}>
-              <SelectTrigger className="w-[160px] bg-card border-border">
+              <SelectTrigger className="w-[160px] bg-card border-border" aria-label="Filter by location">
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
               <SelectContent>
@@ -266,7 +270,7 @@ export default function StockAssetsPage() {
           </TabsList>
 
           <TabsContent value="overview" className="mt-0 outline-none">
-            <OverviewCards />
+            <OverviewCards stockItems={stockItems} assets={assets} stockMovements={stockMovements} />
           </TabsContent>
 
           <TabsContent value="stock" className="mt-0 outline-none space-y-4">
@@ -275,7 +279,7 @@ export default function StockAssetsPage() {
 
           <TabsContent value="assets" className="mt-0 outline-none space-y-4">
             {/* The AssetTable previously didn't have onDelete, let's just pass it in even if we have to update AssetTable later */}
-            <AssetTable data={filteredAssets.map(a => ({ ...a, location: locations.find(l => l.id === a.locationId)?.name || "Unknown" }))} onDelete={handleDeleteAsset} />
+            <AssetTable data={filteredAssets.map(a => ({ ...a, location: locations.find(l => l.id === a.locationId)?.name || "Unknown", assignedJob: jobs.find(j => j.id === a.assignedToJobId)?.title }))} onDelete={handleDeleteAsset} />
           </TabsContent>
 
           <TabsContent value="locations" className="mt-0 outline-none">

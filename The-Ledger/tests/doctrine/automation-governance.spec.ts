@@ -167,6 +167,7 @@ test('AG-13: Restrict action updates governance status and generates audit', asy
   await page.getByTestId('gov-btn-view-rule-001').click();
   await expect(page.getByTestId('gov-detail-dialog')).toBeVisible();
   await page.getByTestId('gov-btn-restrict').click();
+  await page.getByTestId('confirm-dialog-confirm').click();
   // Dialog should close and table should update
   await expect(page.getByTestId('gov-detail-dialog')).not.toBeVisible();
   // Audit tab should now have a new entry
@@ -180,6 +181,7 @@ test('AG-14: Suspend action updates governance status and generates audit', asyn
   await page.getByTestId('gov-btn-view-rule-002').click();
   await expect(page.getByTestId('gov-detail-dialog')).toBeVisible();
   await page.getByTestId('gov-btn-suspend').click();
+  await page.getByTestId('confirm-dialog-confirm').click();
   await expect(page.getByTestId('gov-detail-dialog')).not.toBeVisible();
 });
 

@@ -48,7 +48,7 @@ export function OperationalDrawer(props: OperationalDrawerProps) {
           <h3 className="font-semibold text-foreground">{type === 'job' ? 'Job Analysis' : 'Daily Rollup'}</h3>
           <p className="text-xs text-muted-foreground">{type === 'job' ? selectedItem.title : selectedItem.dateStr}</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-muted-foreground hover:text-foreground">
+        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close panel" className="h-8 w-8 text-muted-foreground hover:text-foreground">
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -104,7 +104,7 @@ export function OperationalDrawer(props: OperationalDrawerProps) {
               </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between items-center py-1.5 border-b border-border">
-                  <span className="text-muted-foreground">Remaining Labor</span>
+                  <span className="text-muted-foreground">Remaining Labour</span>
                   <span className="font-medium text-foreground">{selectedItem.remainingLaborHours} hrs</span>
                 </div>
                 <div className="flex justify-between items-center py-1.5 border-b border-border">
@@ -155,7 +155,7 @@ export function OperationalDrawer(props: OperationalDrawerProps) {
                 <div className="text-lg font-bold text-blue-900">{formatCur(selectedItem.totalScheduledRevenue)}</div>
               </div>
               <div className="p-3 bg-muted rounded border border-border">
-                <div className="text-[10px] text-muted-foreground uppercase font-semibold mb-1 tracking-wider">Est. Labor Cost</div>
+                <div className="text-[10px] text-muted-foreground uppercase font-semibold mb-1 tracking-wider">Est. Labour Cost</div>
                 <div className="text-lg font-bold text-foreground">{formatCur(selectedItem.totalEstimatedLaborCost)}</div>
               </div>
             </div>

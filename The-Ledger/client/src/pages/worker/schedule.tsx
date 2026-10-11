@@ -21,7 +21,7 @@ function dayLabel(iso: string) {
     a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
   if (sameDay(d, today)) return "Today";
   if (sameDay(d, tomorrow)) return "Tomorrow";
-  return d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" });
+  return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" });
 }
 
 export default function WorkerSchedulePage() {

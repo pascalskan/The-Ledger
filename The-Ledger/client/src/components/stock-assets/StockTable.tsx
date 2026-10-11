@@ -1,9 +1,12 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, AlertTriangle } from "lucide-react";
+import { ChevronRight, AlertTriangle } from "lucide-react";
+import { useLocation } from "wouter";
+import { activatable } from "@/lib/a11y";
 
 export function StockTable({ data }: { data: any[] }) {
+  const [, setLocation] = useLocation();
   const formatCur = (val: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 2 }).format(val);
 
   return (
@@ -26,7 +29,7 @@ export function StockTable({ data }: { data: any[] }) {
           {data.map((item, idx) => {
             const isLowStock = item.quantity <= item.reorderLevel;
             return (
-              <TableRow key={idx}>
+              <TableRow key={idx} className="cursor-pointer" {...activatable(() => setLocation(`/stock/${item.id}`), `Open stock item ${item.name}`, "row")}>
                 <TableCell className="font-medium text-foreground flex items-center gap-2">
                   {item.name}
                   {isLowStock && <AlertTriangle className="h-3 w-3 text-rose-500" />}
@@ -36,12 +39,10 @@ export function StockTable({ data }: { data: any[] }) {
                 <TableCell className="text-right text-muted-foreground">{formatCur(item.unitCost)}</TableCell>
                 <TableCell className="text-right font-medium text-foreground">{formatCur(item.quantity * item.unitCost)}</TableCell>
                 <TableCell><Badge variant="outline" className="font-normal text-muted-foreground bg-muted">{item.location}</Badge></TableCell>
-                <TableCell className="text-right text-muted-foreground">{item.pendingRequests}</TableCell>
+                <TableCell className="text-right text-muted-foreground">{item.pendingRequests ?? "—"}</TableCell>
                 <TableCell className="text-right text-muted-foreground">{item.reorderLevel}</TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
+                  <ChevronRight className="h-4 w-4 inline text-muted-foreground" aria-hidden="true" />
                 </TableCell>
               </TableRow>
             );

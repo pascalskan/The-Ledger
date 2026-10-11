@@ -1,0 +1,154 @@
+- link "Skip to content":
+  - /url: "#main-content"
+- complementary:
+  - text: L The Ledger
+  - button
+  - navigation:
+    - paragraph: Core
+    - link "Command":
+      - /url: /
+    - link "Review 7":
+      - /url: /review
+    - paragraph: Operational
+    - link "Operations":
+      - /url: /operations
+    - link "Client Requests":
+      - /url: /client-requests
+    - link "Job Intelligence":
+      - /url: /job-intelligence
+    - link "Financial Insights":
+      - /url: /expenses
+    - link "Finance":
+      - /url: /finance
+    - paragraph: Intelligence
+    - link "Intelligence":
+      - /url: /intelligence
+    - paragraph: Automation
+    - link "Automations":
+      - /url: /automations
+    - link "Workflows":
+      - /url: /workflows
+    - link "Automation Governance":
+      - /url: /automation-governance
+    - paragraph: Administration
+    - button "Administration"
+  - text: D
+  - paragraph: Demo CEO
+  - paragraph: CEO
+  - button "Sign Out"
+- button "System alerts": "4"
+- button "Notifications": "9"
+- main:
+  - paragraph: Example Business — Demo Data
+  - paragraph: You are viewing a demonstration environment. Changes made here will not affect real business data.
+  - heading "Review Operations Centre" [level=1]
+  - paragraph: The decision engine of the business — attention, prioritisation, impact, recommendations and operations in one place. Every approval still happens in the queue below.
+  - tablist "Review Operations Centre sections":
+    - tab "Briefing" [selected]
+    - tab "Dashboard"
+    - tab "Prioritisation"
+    - tab "Recommendations"
+    - tab "Analytics"
+  - tabpanel "Briefing":
+    - heading "Executive Review Briefing" [level=3]
+    - paragraph: What decisions require your attention today — consolidated across the Review Centre. Summary only; every decision still happens below.
+    - text: Approval Readiness Attention Required
+    - paragraph: 2 critical · 2 over SLA
+    - text: Financial Readiness Healthy
+    - paragraph: £17,600 exposure awaiting review
+    - text: Operational Readiness Healthy
+    - paragraph: 10 backlog · ~7/day
+    - text: Review Operations Readiness Attention Required
+    - paragraph: Operations health 67/100 (Strained)
+    - text: Today's Review Briefing
+    - list:
+      - listitem: 10 reviews pending approval.
+      - listitem: £17,600 currently awaiting review.
+      - listitem: 2 reviews exceed SLA.
+      - listitem: Payroll exposure is within normal range.
+      - listitem: Approval throughput needs attention.
+    - text: Approval Health
+    - paragraph: Pending
+    - paragraph: "10"
+    - paragraph: Critical
+    - paragraph: "2"
+    - paragraph: Exceeding SLA
+    - paragraph: "2"
+    - paragraph: Avg Approval
+    - paragraph: 1d 1h
+    - text: Financial Exposure
+    - paragraph: Revenue
+    - paragraph: £10,750
+    - paragraph: Costs
+    - paragraph: £4,610
+    - paragraph: Payroll
+    - paragraph: £2,240
+    - paragraph: Total Exposure
+    - paragraph: £17,600
+    - text: Operational Health
+    - paragraph: Backlog
+    - paragraph: "10"
+    - paragraph: Throughput / wk
+    - paragraph: "47"
+    - paragraph: Velocity / day
+    - paragraph: "7"
+    - paragraph: Ops Health
+    - paragraph: 67/100
+    - text: Executive Attention Ranked by priority — no actions taken here. Critical rx-ts-1 Timesheets £1,760 · 2d 6h Manual judgement required Critical rx-eq-1 Equipment Usage £2,380 · 2d 14h Manual judgement required High rx-rep-1 Reports £6,200 · 2h Manual judgement required High rx-rep-3 Reports £3,100 · 12h Manual judgement required High rx-rep-2 Reports £1,450 · 20h Likely needs correction Medium rx-exp-1 Expenses £845 · 1d 6h Likely needs correction Medium rx-inv-1 Inventory Usage £1,385 · 1d 16h Fast-track candidate Medium rx-qa-1 QA Records — · 1d 2h Likely needs correction Financial Exposure Summary £17,600 awaiting review, led by revenue (61%). Revenue awaiting £10,750 Revenue delayed £0 Invoice-gating reviews 3 Costs awaiting £4,610 Margin impact £3,900 Payroll awaiting £2,240 Payroll-ready reviews 2 Decision Impact Roll-Up Approving the pending backlog recognises £10,750 revenue against £6,850 cost & payroll (net £3,900). Revenue awaiting £10,750 Cost awaiting £4,610 Payroll awaiting £2,240 Profitability impact £3,900 Bottleneck Summary Largest backlog Reports (3) Slowest category QA Records (12h avg) Reviewer bottleneck PM (6 in queue) Review type bottleneck Reports Approval bottleneck 2 review(s) over SLA Recommendation Roll-Up Advisory only. High-confidence approvals 3 High-confidence corrections 0 Requires manual review 4 Likely Approve 3 (30%) Likely Reject 0 (0%) Likely Correction 3 (30%) Requires Human Review 4 (40%) Weekly Review Summary
+    - paragraph: Processed
+    - paragraph: "47"
+    - paragraph: Approved
+    - paragraph: "2"
+    - paragraph: Rejected
+    - paragraph: "1"
+    - paragraph: Corrected
+    - paragraph: "1"
+    - paragraph: Value Processed
+    - paragraph: £730
+    - paragraph: Throughput Δ
+    - paragraph: +42%
+    - paragraph: SLA Performance
+    - paragraph: 79%
+    - text: Strategic Insights
+    - list:
+      - listitem: Payroll approvals represent 13% of current exposure.
+      - listitem: Review backlog has decreased compared to last week.
+      - listitem: Approval throughput is below target.
+      - listitem: 1 high-value job is awaiting review completion.
+  - heading "Review Queue" [level=3]
+  - paragraph: Total Pending
+  - paragraph: "6"
+  - paragraph: Reports
+  - paragraph: "3"
+  - paragraph: Photos
+  - paragraph: "3"
+  - text: Jobs Requiring Review Select a job to review its pending submissions
+  - button "Standard Order" [pressed]
+  - button "Priority Order"
+  - textbox "Search jobs..."
+  - table:
+    - rowgroup:
+      - row "Job ID Title Pending Items Priority Action":
+        - columnheader "Job ID"
+        - columnheader "Title"
+        - columnheader "Pending Items"
+        - columnheader "Priority"
+        - columnheader "Action"
+    - rowgroup:
+      - row "DEMO-JOB-0201 Kitchen extraction & ventilation install Unit 14, Riverside Industrial Estate, Manchester, M15 4FN 2 Reports 2 Photos Critical Review Items":
+        - cell "DEMO-JOB-0201"
+        - cell "Kitchen extraction & ventilation install Unit 14, Riverside Industrial Estate, Manchester, M15 4FN"
+        - cell "2 Reports 2 Photos"
+        - cell "Critical"
+        - cell "Review Items":
+          - button "Review Items"
+      - row "DEMO-JOB-0203 HVAC system replacement — Block C Unit 14, Riverside Industrial Estate, Manchester, M15 4FN 1 Reports 1 Photos Low Review Items":
+        - cell "DEMO-JOB-0203"
+        - cell "HVAC system replacement — Block C Unit 14, Riverside Industrial Estate, Manchester, M15 4FN"
+        - cell "1 Reports 1 Photos"
+        - cell "Low"
+        - cell "Review Items":
+          - button "Review Items"
+- region "Notifications (F8)":
+  - list
+- button "Enterprise Sync QA Panel"

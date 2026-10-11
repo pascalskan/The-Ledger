@@ -421,7 +421,7 @@ export function ActivityHub() {
               data-priority={canonical}
               className="p-3 rounded-md border bg-card"
             >
-              <div className="flex items-start gap-3">
+              <div className="flex flex-wrap items-start gap-3">
                 <span
                   className={cn(
                     "h-2.5 w-2.5 rounded-full mt-1.5 flex-shrink-0",
@@ -461,7 +461,7 @@ export function ActivityHub() {
                 </div>
 
                 {/* Trailing actions */}
-                <div className="flex items-center gap-1 flex-shrink-0">
+                <div className="flex flex-wrap items-center gap-1 sm:flex-shrink-0 max-sm:basis-full max-sm:pl-5">
                   {row.kind === "activity" && (
                     <Button
                       variant="ghost"

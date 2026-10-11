@@ -1,0 +1,186 @@
+{
+ "/": {
+  "firstStop": "Skip to content",
+  "totalStops": 60,
+  "unnamedStops": 0,
+  "stopsWithoutFocusIndicator": 0,
+  "sample": [
+   "A:Skip to content",
+   "BUTTON:Collapse sidebar",
+   "A:Command",
+   "A:Review\n7",
+   "A:Operations",
+   "A:Client Requests",
+   "A:Job Intelligence",
+   "A:Financial Insights",
+   "A:Finance",
+   "A:Intelligence",
+   "A:Automations",
+   "A:Workflows",
+   "A:Automation Governance",
+   "BUTTON:Administration"
+  ]
+ },
+ "/operations?tab=jobs": {
+  "firstStop": "Skip to content",
+  "totalStops": 60,
+  "unnamedStops": 1,
+  "stopsWithoutFocusIndicator": 0,
+  "sample": [
+   "A:Skip to content",
+   "BUTTON:Collapse sidebar",
+   "A:Command",
+   "A:Review\n7",
+   "A:Operations",
+   "A:Client Requests",
+   "A:Job Intelligence",
+   "A:Financial Insights",
+   "A:Finance",
+   "A:Intelligence",
+   "A:Automations",
+   "A:Workflows",
+   "A:Automation Governance",
+   "BUTTON:Administration"
+  ]
+ },
+ "/operations?tab=schedule": {
+  "firstStop": "Skip to content",
+  "totalStops": 60,
+  "unnamedStops": 0,
+  "stopsWithoutFocusIndicator": 0,
+  "sample": [
+   "A:Skip to content",
+   "BUTTON:Collapse sidebar",
+   "A:Command",
+   "A:Review\n7",
+   "A:Operations",
+   "A:Client Requests",
+   "A:Job Intelligence",
+   "A:Financial Insights",
+   "A:Finance",
+   "A:Intelligence",
+   "A:Automations",
+   "A:Workflows",
+   "A:Automation Governance",
+   "BUTTON:Administration"
+  ]
+ },
+ "/operations?tab=workers": {
+  "firstStop": "Skip to content",
+  "totalStops": 60,
+  "unnamedStops": 0,
+  "stopsWithoutFocusIndicator": 0,
+  "sample": [
+   "A:Skip to content",
+   "BUTTON:Collapse sidebar",
+   "A:Command",
+   "A:Review\n7",
+   "A:Operations",
+   "A:Client Requests",
+   "A:Job Intelligence",
+   "A:Financial Insights",
+   "A:Finance",
+   "A:Intelligence",
+   "A:Automations",
+   "A:Workflows",
+   "A:Automation Governance",
+   "BUTTON:Administration"
+  ]
+ },
+ "/review": {
+  "firstStop": "Skip to content",
+  "totalStops": 60,
+  "unnamedStops": 0,
+  "stopsWithoutFocusIndicator": 0,
+  "sample": [
+   "A:Skip to content",
+   "BUTTON:Collapse sidebar",
+   "A:Command",
+   "A:Review\n7",
+   "A:Operations",
+   "A:Client Requests",
+   "A:Job Intelligence",
+   "A:Financial Insights",
+   "A:Finance",
+   "A:Intelligence",
+   "A:Automations",
+   "A:Workflows",
+   "A:Automation Governance",
+   "BUTTON:Administration"
+  ]
+ },
+ "/finance?tab=invoicing": {
+  "firstStop": "Skip to content",
+  "totalStops": 60,
+  "unnamedStops": 0,
+  "stopsWithoutFocusIndicator": 0,
+  "sample": [
+   "A:Skip to content",
+   "BUTTON:Collapse sidebar",
+   "A:Command",
+   "A:Review\n7",
+   "A:Operations",
+   "A:Client Requests",
+   "A:Job Intelligence",
+   "A:Financial Insights",
+   "A:Finance",
+   "A:Intelligence",
+   "A:Automations",
+   "A:Workflows",
+   "A:Automation Governance",
+   "BUTTON:Administration"
+  ]
+ },
+ "/automations": {
+  "firstStop": "Skip to content",
+  "totalStops": 60,
+  "unnamedStops": 0,
+  "stopsWithoutFocusIndicator": 0,
+  "sample": [
+   "A:Skip to content",
+   "BUTTON:Collapse sidebar",
+   "A:Command",
+   "A:Review\n7",
+   "A:Operations",
+   "A:Client Requests",
+   "A:Job Intelligence",
+   "A:Financial Insights",
+   "A:Finance",
+   "A:Intelligence",
+   "A:Automations",
+   "A:Workflows",
+   "A:Automation Governance",
+   "BUTTON:Administration"
+  ]
+ },
+ "/client-requests": {
+  "firstStop": "Skip to content",
+  "totalStops": 60,
+  "unnamedStops": 0,
+  "stopsWithoutFocusIndicator": 0,
+  "sample": [
+   "A:Skip to content",
+   "BUTTON:Collapse sidebar",
+   "A:Command",
+   "A:Review\n7",
+   "A:Operations",
+   "A:Client Requests",
+   "A:Job Intelligence",
+   "A:Financial Insights",
+   "A:Finance",
+   "A:Intelligence",
+   "A:Automations",
+   "A:Workflows",
+   "A:Automation Governance",
+   "BUTTON:Administration"
+  ]
+ },
+ "jobCardsKeyboard": {
+  "cards": 4,
+  "focusable": 4
+ },
+ "scheduleCards": {
+  "cards": 7,
+  "focusable": 7
+ }
+}

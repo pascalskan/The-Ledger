@@ -1,3 +1,4 @@
+import { activatable } from "@/lib/a11y";
 import { Layout } from "@/components/layout";
 import { PageHeader } from "@/components/page-shell";
 import { useStore } from "@/lib/mockData";
@@ -140,13 +141,13 @@ export function InvoicesContent({ statusFilter, embedded }: { statusFilter?: str
                   const total = inv.lineItems.reduce((sum, li) => sum + li.qty * li.unitPrice, 0);
 
                   return (
-                    <TableRow key={inv.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => setLocation(`/invoices/${inv.id}`)}>
+                    <TableRow key={inv.id} className="hover:bg-muted/50 cursor-pointer" {...activatable(() => setLocation(`/invoices/${inv.id}`), `Open invoice ${inv.invoiceId}`, "row")}>
                       <TableCell className="font-medium text-foreground">
                         {inv.invoiceId || `QB-${inv.id.split("-")[1]}`}
                       </TableCell>
                       <TableCell className="font-medium text-foreground">{client?.name || "Unknown Client"}</TableCell>
-                      <TableCell className="text-muted-foreground">{new Date(inv.issueDate || Date.now()).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-muted-foreground">{new Date(inv.dueDate || Date.now()).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-muted-foreground">{new Date(inv.issueDate || Date.now()).toLocaleDateString("en-GB")}</TableCell>
+                      <TableCell className="text-muted-foreground">{new Date(inv.dueDate || Date.now()).toLocaleDateString("en-GB")}</TableCell>
                       <TableCell className="text-right font-medium text-foreground">{formatCur(total)}</TableCell>
                       <TableCell>{getStatusBadge(inv.status)}</TableCell>
                       <TableCell className="text-right">

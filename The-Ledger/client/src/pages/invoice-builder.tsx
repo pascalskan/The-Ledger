@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { useStore } from "@/lib/mockData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -140,7 +142,7 @@ function InvoiceDraftCard({
                       variant="outline"
                       className={LINE_TYPE_COLORS[li.type] ?? ""}
                     >
-                      {li.type}
+                      {li.type === "labor" ? "Labour" : li.type.charAt(0).toUpperCase() + li.type.slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm max-w-[240px] truncate">
@@ -303,7 +305,13 @@ export function InvoiceBuilderContent({ onComplete }: { onComplete?: () => void 
     });
   };
 
+  // Sending or marking an invoice paid is outward-facing / financial — confirm first.
+  const [pendingAdvance, setPendingAdvance] = useState<{ id: string; to: InvoiceStatus } | null>(null);
   const handleAdvance = (draftId: string, to: InvoiceStatus) => {
+    if (to === "sent" || to === "paid") {
+      setPendingAdvance({ id: draftId, to });
+      return;
+    }
     updateInvoiceDraftStatus(draftId, to);
   };
 
@@ -393,6 +401,19 @@ export function InvoiceBuilderContent({ onComplete }: { onComplete?: () => void 
             </div>
           )}
         </div>
+        <ConfirmDialog
+          open={pendingAdvance !== null}
+          title={pendingAdvance?.to === "paid" ? "Mark this invoice as paid?" : "Mark this invoice as sent?"}
+          description={pendingAdvance?.to === "paid"
+            ? "This records the invoice as paid. Check the payment has been received — there is no undo here."
+            : "This records the invoice as sent to the client."}
+          confirmLabel={pendingAdvance?.to === "paid" ? "Mark as paid" : "Mark as sent"}
+          onCancel={() => setPendingAdvance(null)}
+          onConfirm={() => {
+            if (pendingAdvance) updateInvoiceDraftStatus(pendingAdvance.id, pendingAdvance.to);
+            setPendingAdvance(null);
+          }}
+        />
       </div>
   );
 }

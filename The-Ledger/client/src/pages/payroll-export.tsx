@@ -45,7 +45,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Users,
   Clock,
-  DollarSign,
+  PoundSterling,
   AlertTriangle,
   Activity,
   Download,
@@ -224,7 +224,7 @@ export function PayrollExportContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <PoundSterling className="h-5 w-5 text-red-500 flex-shrink-0" />
               <span className="text-2xl font-bold" data-testid="preview-total-cost">
                 {fmt(previewTotalCost)}
               </span>

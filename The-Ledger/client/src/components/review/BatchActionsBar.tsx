@@ -180,7 +180,7 @@ export function BatchActionsBar({
         <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-green-700 hover:bg-green-800 text-white"
             data-testid="batch-approve-btn"
             onClick={() => openDialog("batch-approve")}
           >
@@ -305,7 +305,7 @@ export function BatchActionsBar({
             <div className="space-y-1">
               <Label>Assign to</Label>
               <Select value={assignee} onValueChange={setAssignee}>
-                <SelectTrigger data-testid="batch-assignee-select">
+                <SelectTrigger data-testid="batch-assignee-select" aria-label="Assign to">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

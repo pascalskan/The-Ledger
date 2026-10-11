@@ -242,6 +242,7 @@ export default function MapPage() {
                           className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                           onClick={clear}
                           data-testid="button-map-search-clear"
+                          aria-label="Clear search"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -348,7 +349,7 @@ export default function MapPage() {
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{job.locationAddress}</p>
-                  <p className="text-xs">Start: {new Date(job.startAt).toLocaleDateString()}</p>
+                  <p className="text-xs">Start: {new Date(job.startAt).toLocaleDateString("en-GB")}</p>
                   <Link
                     href={`/jobs/${job.id}`}
                     className="text-xs text-primary underline block pt-2"

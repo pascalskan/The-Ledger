@@ -312,7 +312,7 @@ export function ExceptionResolutionContent() {
                     className="h-9 rounded-md border bg-background px-3 text-sm"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as ExceptionStatus | "all")}
-                    data-testid="exc-filter-status"
+                    data-testid="exc-filter-status" aria-label="Filter by status"
                   >
                     <option value="all">All Statuses</option>
                     <option value="open">Open</option>
@@ -325,7 +325,7 @@ export function ExceptionResolutionContent() {
                     className="h-9 rounded-md border bg-background px-3 text-sm"
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value as ExceptionType | "all")}
-                    data-testid="exc-filter-type"
+                    data-testid="exc-filter-type" aria-label="Filter by type"
                   >
                     <option value="all">All Types</option>
                     <option value="reconciliation_mismatch">Reconciliation Mismatch</option>
@@ -339,7 +339,7 @@ export function ExceptionResolutionContent() {
                     className="h-9 rounded-md border bg-background px-3 text-sm"
                     value={assigneeFilter}
                     onChange={(e) => setAssigneeFilter(e.target.value)}
-                    data-testid="exc-filter-assignee"
+                    data-testid="exc-filter-assignee" aria-label="Filter by assignee"
                   >
                     <option value="all">All Assignees</option>
                     {assigneeNames.map((name) => (
