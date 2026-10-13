@@ -1,0 +1,16 @@
+# Replit config for the public demo deploy (branch: deploy/replit-public).
+# The app lives in ./The-Ledger, so every command runs from there.
+modules = ["nodejs-22", "web"]
+run = "cd The-Ledger && npm install && npm run dev"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+deploymentTarget = "autoscale"
+build = ["sh", "-c", "cd The-Ledger && npm install && npm run build"]
+run = ["sh", "-c", "cd The-Ledger && npm run start"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
