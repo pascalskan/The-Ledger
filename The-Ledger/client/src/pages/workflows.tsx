@@ -396,7 +396,7 @@ export default function WorkflowCentrePage() {
 
   function handlePause(w: WorkflowRecord) {
     try {
-      pauseWorkflow(w.id, 'Marcus Webb');
+      pauseWorkflow(w.id, 'Demo Manager 2');
       refresh();
       setSelectedWorkflow(null);
       toast({ title: 'Workflow Paused', description: `'${w.name}' has been paused.` });
@@ -407,7 +407,7 @@ export default function WorkflowCentrePage() {
 
   function handleResume(w: WorkflowRecord) {
     try {
-      resumeWorkflow(w.id, 'Marcus Webb');
+      resumeWorkflow(w.id, 'Demo Manager 2');
       refresh();
       setSelectedWorkflow(null);
       toast({ title: 'Workflow Resumed', description: `'${w.name}' has been resumed.` });
@@ -418,7 +418,7 @@ export default function WorkflowCentrePage() {
 
   function handleArchive(w: WorkflowRecord) {
     try {
-      archiveWorkflow(w.id, 'Marcus Webb');
+      archiveWorkflow(w.id, 'Demo Manager 2');
       refresh();
       setSelectedWorkflow(null);
       toast({ title: 'Workflow Archived', description: `'${w.name}' has been archived.` });

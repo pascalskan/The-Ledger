@@ -439,7 +439,7 @@ const DEMO_JOB_NOTES: JobNote[] = [
     jobId: "dj-pm-active-1",
     companyId: DEMO_COMPANY_ID,
     authorId: "du2",
-    authorName: "Alex Reid",
+    authorName: "Demo PM",
     content: "Confirmed with client that Zone C work can proceed during off-peak hours (before 8am and after 6pm). Night shift approved for Mon/Tue.",
     createdAt: new Date(Date.now() - 6 * 3600000).toISOString(),
   },
@@ -448,8 +448,8 @@ const DEMO_JOB_NOTES: JobNote[] = [
     jobId: "dj-pm-active-1",
     companyId: DEMO_COMPANY_ID,
     authorId: "du2",
-    authorName: "Alex Reid",
-    content: "Legacy pipework asbestos survey booked with Enviro-Safe Ltd — awaiting confirmed appointment time. All work in Zone C paused pending clearance.",
+    authorName: "Demo PM",
+    content: "Legacy pipework asbestos survey booked with Demo Survey Ltd — awaiting confirmed appointment time. All work in Zone C paused pending clearance.",
     createdAt: new Date(Date.now() - 28 * 3600000).toISOString(),
   },
   {
@@ -457,8 +457,8 @@ const DEMO_JOB_NOTES: JobNote[] = [
     jobId: "dj-pm-active-1",
     companyId: DEMO_COMPANY_ID,
     authorId: "du2",
-    authorName: "Alex Reid",
-    content: "Additional fixings ordered from HSS Direct — delivery expected Thursday. Marcus to check stock on arrival before proceeding with Zone C brackets.",
+    authorName: "Demo PM",
+    content: "Additional fixings ordered from Demo Supplier — delivery expected Thursday. Demo-Bravo Worker to check stock on arrival before proceeding with Zone C brackets.",
     createdAt: new Date(Date.now() - 52 * 3600000).toISOString(),
     archived: true,
   },
@@ -467,7 +467,7 @@ const DEMO_JOB_NOTES: JobNote[] = [
     jobId: "dj-boiler-room-2",
     companyId: DEMO_COMPANY_ID,
     authorId: "du2",
-    authorName: "Alex Reid",
+    authorName: "Demo PM",
     content: "Site access restricted to loading bay entrance only. Security code is 4821. Must sign in at reception on arrival.",
     createdAt: new Date(Date.now() - 2 * 3600000).toISOString(),
   },
@@ -479,8 +479,8 @@ const DEMO_JOB_COMMUNICATIONS: JobCommunication[] = [
     jobId: "dj-pm-active-1",
     companyId: DEMO_COMPANY_ID,
     authorId: "du2",
-    authorName: "Alex Reid",
-    content: "Zone B completed ahead of schedule — good work team. Insulation crew confirmed for Monday 7am start. Marcus to brief them on access route.",
+    authorName: "Demo PM",
+    content: "Zone B completed ahead of schedule — good work team. Insulation crew confirmed for Monday 7am start. Demo-Bravo Worker to brief them on access route.",
     type: "pm-comment",
     createdAt: new Date(Date.now() - 4 * 3600000).toISOString(),
   },
@@ -489,7 +489,7 @@ const DEMO_JOB_COMMUNICATIONS: JobCommunication[] = [
     jobId: "dj-pm-active-1",
     companyId: DEMO_COMPANY_ID,
     authorId: "dw2",
-    authorName: "Marcus Cole",
+    authorName: "Demo-Bravo Worker",
     content: "Zone A and B fully ducted. Zone C prep started but paused on the legacy pipework find. Photos submitted for review. Awaiting guidance before proceeding.",
     type: "crew-update",
     createdAt: new Date(Date.now() - 5 * 3600000).toISOString(),
@@ -499,7 +499,7 @@ const DEMO_JOB_COMMUNICATIONS: JobCommunication[] = [
     jobId: "dj-pm-active-1",
     companyId: DEMO_COMPANY_ID,
     authorId: "du2",
-    authorName: "Alex Reid",
+    authorName: "Demo PM",
     content: "H&S note: all crew to wear full PPE in Zone C until asbestos survey completed. Zero exceptions. Flagged with CEO and escalated for sign-off.",
     type: "internal-update",
     createdAt: new Date(Date.now() - 26 * 3600000).toISOString(),
@@ -526,7 +526,7 @@ const DEMO_STOCK_ITEMS: StockItem[] = [
 const DEMO_ASSETS: Asset[] = [
   { id: "asset-1", name: "Van #12 (Ford Transit)", serialNumber: "VN-1234", type: "Vehicle", status: "Active", locationId: "loc-2", purchaseDate: "2020-01-15", lastServiceDate: "2023-01-05", nextServiceDate: "2024-01-05", assignedToJobId: "dj-kitchen-extract-1", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), companyId: DEMO_COMPANY_ID },
   { id: "asset-2", name: "Scissor Lift 19ft", serialNumber: "SL-5678", type: "Heavy Equipment", status: "In Service", locationId: "loc-1", purchaseDate: "2021-06-20", lastServiceDate: "2023-05-12", nextServiceDate: "2023-11-12", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), companyId: DEMO_COMPANY_ID },
-  { id: "asset-3", name: "Hilti SDS Drill", serialNumber: "HL-9012", type: "Power Tool", status: "Active", locationId: "loc-2", purchaseDate: "2022-03-10", lastServiceDate: "2023-08-20", nextServiceDate: "2024-02-20", assignedToJobId: "dj-showcase-maint-1", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), companyId: DEMO_COMPANY_ID },
+  { id: "asset-3", name: "SDS Drill", serialNumber: "HL-9012", type: "Power Tool", status: "Active", locationId: "loc-2", purchaseDate: "2022-03-10", lastServiceDate: "2023-08-20", nextServiceDate: "2024-02-20", assignedToJobId: "dj-showcase-maint-1", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), companyId: DEMO_COMPANY_ID },
   { id: "asset-4", name: "Portable Generator 5kVA", serialNumber: "PG-3456", type: "Power Equipment", status: "Needs Service", locationId: "loc-3", purchaseDate: "2019-11-05", lastServiceDate: "2022-09-10", nextServiceDate: "2023-09-10", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), companyId: DEMO_COMPANY_ID },
 ];
 
@@ -537,7 +537,7 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     id: "rev-1",
     type: "report",
     title: "Daily Progress Report",
-    submittedBy: "Sophie Taylor",
+    submittedBy: "Demo-Bravo Worker",
     submittedAt: new Date(Date.now() - 2 * 3600000).toISOString(), // 2 hours ago
     status: "pending",
     content: "Completed framing for sector A. Encountered some delays with material delivery but managed to stay on schedule.",
@@ -552,7 +552,7 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     id: "rev-2",
     type: "photo",
     title: "Sector A Framing Complete",
-    submittedBy: "Sophie Taylor",
+    submittedBy: "Demo-Bravo Worker",
     submittedAt: new Date(Date.now() - 2 * 3600000).toISOString(),
     status: "pending",
     url: "https://images.unsplash.com/photo-1541888086925-0c13d3c4db46?q=80&w=600&auto=format&fit=crop",
@@ -563,7 +563,7 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     id: "rev-3",
     type: "photo",
     title: "Material Delivery Issue",
-    submittedBy: "Sophie Taylor",
+    submittedBy: "Demo-Bravo Worker",
     submittedAt: new Date(Date.now() - 3 * 3600000).toISOString(),
     status: "pending",
     url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=600&auto=format&fit=crop",
@@ -575,7 +575,7 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     id: "rev-4",
     type: "log",
     title: "Safety Incident Near Miss",
-    submittedBy: "Ben Hughes",
+    submittedBy: "Demo-Charlie Worker",
     submittedAt: new Date(Date.now() - 24 * 3600000).toISOString(), // 1 day ago
     status: "approved",
     content: "Worker slipped on wet surface near entrance. No injuries but area needs better signage.",
@@ -588,7 +588,7 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     id: "rev-pm-1",
     type: "report",
     title: "End of Day Report — Day 5",
-    submittedBy: "Marcus Cole",
+    submittedBy: "Demo-Bravo Worker",
     submittedAt: new Date(Date.now() - 3 * 3600000).toISOString(),
     status: "pending" as const,
     content: "Completed duct installation in Zones A and B. Zone C requires additional fixings before insulation can proceed. All health & safety checks passed.",
@@ -600,7 +600,7 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     id: "rev-pm-2",
     type: "photo",
     title: "Zone B Duct Installation Complete",
-    submittedBy: "Marcus Cole",
+    submittedBy: "Demo-Bravo Worker",
     submittedAt: new Date(Date.now() - 52 * 3600000).toISOString(), // 52 hours ago → overdue
     status: "pending" as const,
     url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop",
@@ -613,7 +613,7 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     id: "rev-pm-3",
     type: "report",
     title: "Materials Request — Zone C Fixings",
-    submittedBy: "Jordan Reed",
+    submittedBy: "Demo Worker 5",
     submittedAt: new Date(Date.now() - 18 * 3600000).toISOString(),
     status: "needs-correction" as const,
     correctionNotes: "Please include exact part numbers and quantities for the additional fixings required. Reference the HVAC spec sheet section 4.2.",
@@ -626,7 +626,7 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     id: "rev-pm-4",
     type: "report",
     title: "Asbestos Survey — Legacy Pipework Area",
-    submittedBy: "Marcus Cole",
+    submittedBy: "Demo-Bravo Worker",
     submittedAt: new Date(Date.now() - 36 * 3600000).toISOString(),
     status: "escalated" as const,
     escalatedAt: new Date(Date.now() - 24 * 3600000).toISOString(),
@@ -640,7 +640,7 @@ const DEMO_REVIEW_ITEMS: ReviewItem[] = [
     id: "rev-pm-5",
     type: "report",
     title: "Site Preparation Report",
-    submittedBy: "Marcus Cole",
+    submittedBy: "Demo-Bravo Worker",
     submittedAt: new Date(Date.now() - 1 * 3600000).toISOString(),
     status: "pending" as const,
     content: "Boiler room site preparation complete. Area cleared and secured. Ready to begin pipework replacement.",
@@ -737,10 +737,10 @@ const DEMO_CLIENTS: Client[] = [
   {
     id: "dc1",
     clientId: "DEMO-CL-0001",
-    name: "HSS Limited",
-    email: "accounts@hsslimited.co.uk",
+    name: "Demo Client A Ltd",
+    email: "accounts@demo-client-a.example.com",
     phone: "0161 555 0101",
-    billingAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
+    billingAddress: "1 Demo Street, Demo City, DM1 1AA",
     notes: "Trading hours: 7am\u201311pm. Any shutdowns must be agreed 48hrs in advance.",
 
     status: "On Hold",
@@ -752,10 +752,10 @@ const DEMO_CLIENTS: Client[] = [
   {
     id: "dc2",
     clientId: "DEMO-CL-0002",
-    name: "Showcase Systems Ltd",
-    email: "finance@showcasesystems.co.uk",
+    name: "Demo Client B Ltd",
+    email: "finance@demo-client-b.example.com",
     phone: "020 555 0199",
-    billingAddress: "45 Kingsway, London, WC2B 6SR",
+    billingAddress: "2 Demo Street, Demo City, DM1 1AB",
     notes: "Standard 14-day payment terms.",
     companyId: DEMO_COMPANY_ID,
   },
@@ -767,9 +767,9 @@ const DEMO_CLIENTS: Client[] = [
 const DEMO_WORKERS: Worker[] = [
   {
     id: "dw1",
-    firstName: "Amir",
-    lastName: "Khan",
-    email: "amir.khan@example-business.com",
+    firstName: "Demo-Alpha",
+    lastName: "Manager",
+    email: "demo.manager1@example.com",
     phone: "0161 555 0201",
     roleIds: ["drole-pm"],
     status: "Active",
@@ -780,9 +780,9 @@ const DEMO_WORKERS: Worker[] = [
   },
   {
     id: "dw2",
-    firstName: "Sophie",
-    lastName: "Taylor",
-    email: "sophie.taylor@example-business.com",
+    firstName: "Demo-Bravo",
+    lastName: "Worker",
+    email: "demo.worker1@example.com",
     phone: "0161 555 0202",
     roleIds: ["drole-worker"],
     status: "Active",
@@ -793,9 +793,9 @@ const DEMO_WORKERS: Worker[] = [
   },
   {
     id: "dw3",
-    firstName: "Ben",
-    lastName: "Hughes",
-    email: "ben.hughes@example-business.com",
+    firstName: "Demo-Charlie",
+    lastName: "Worker",
+    email: "demo.worker2@example.com",
     phone: "0161 555 0203",
     roleIds: ["drole-worker"],
     status: "Active",
@@ -806,9 +806,9 @@ const DEMO_WORKERS: Worker[] = [
   },
   {
     id: "dw4",
-    firstName: "Priya",
-    lastName: "Patel",
-    email: "priya.patel@example-business.com",
+    firstName: "Demo-Delta",
+    lastName: "Worker",
+    email: "demo.worker3@example.com",
     phone: "020 555 0204",
     roleIds: ["drole-worker"],
     status: "Active",
@@ -831,7 +831,7 @@ const DEMO_EQUIPMENT: Equipment[] = [
     dayRate: 420,
     clientDayRate: 520,
     purchaseDate: "2023-05-12",
-    supplier: "Global Machinery Ltd",
+    supplier: "Demo Machinery Ltd",
     lastServiceDate: "2025-11-14",
     serviceInterval: "12 months",
     notes: "Used for canopy + duct sections handling.",
@@ -887,7 +887,7 @@ const DEMO_EQUIPMENT: Equipment[] = [
     dayRate: 360,
     clientDayRate: 450,
     purchaseDate: "2020-04-30",
-    supplier: "Global Machinery Ltd",
+    supplier: "Demo Machinery Ltd",
     lastServiceDate: "2025-08-12",
     serviceInterval: "12 months",
     notes: "Handling fan set + duct bundles.",
@@ -924,7 +924,7 @@ const DEMO_EQUIPMENT: Equipment[] = [
 ];
 
 const DEMO_JOBS: Job[] = [
-  // Showcase job (detailed) for Example Business
+  // Demo Client B job (detailed) for Demo Business
   {
     id: "dj-kitchen-extract-1",
     jobId: "DEMO-JOB-0201",
@@ -937,17 +937,17 @@ const DEMO_JOBS: Job[] = [
     priority: "High",
     startAt: new Date(Date.now() - 12 * 86400000).toISOString(),
     endAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-    locationAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
+    locationAddress: "1 Demo Street, Demo City, DM1 1AA",
     latitude: 53.477,
     longitude: -2.244,
-    accessInstructions: "Deliveries via Gate 2 (Riverside Way). Barrier code 4471#. Report to the goods-in office for a visitor pass before entering the plant room.",
+    accessInstructions: "Deliveries via Gate 2 (Demo Way). Barrier code 4471#. Report to the goods-in office for a visitor pass before entering the plant room.",
     siteContacts: [
-      { name: "Dawn Fletcher", role: "Facilities Manager", phone: "07700 900 214", email: "d.fletcher@riverside-fm.co.uk" },
-      { name: "Marcus Reid", role: "Site Supervisor", phone: "07700 900 337" },
+      { name: "Demo Facilities Contact", role: "Facilities Manager", phone: "07700 900 214", email: "facilities.contact@demo-fm.example.com" },
+      { name: "Demo Supervisor", role: "Site Supervisor", phone: "07700 900 337" },
     ],
     emergencyContacts: [
-      { name: "Riverside Estate Security", role: "24hr Gatehouse", phone: "0161 555 0142" },
-      { name: "Dawn Fletcher", role: "Facilities Manager", phone: "07700 900 214" },
+      { name: "Demo Estate Security", role: "24hr Gatehouse", phone: "0161 555 0142" },
+      { name: "Demo Facilities Contact", role: "Facilities Manager", phone: "07700 900 214" },
     ],
     assignedWorkerIds: ["dw2", "dw3", "du3"],
     assignedEquipmentIds: ["de1", "de3", "de4", "de5", "de8", "de11", "de12"],
@@ -1011,15 +1011,15 @@ const DEMO_JOBS: Job[] = [
     priority: "Medium",
     startAt: new Date(Date.now() + 2 * 86400000).toISOString(),
     endAt: new Date(Date.now() + 2 * 86400000 + 4 * 3600000).toISOString(),
-    locationAddress: "45 Kingsway, London, WC2B 6SR",
+    locationAddress: "2 Demo Street, Demo City, DM1 1AB",
     latitude: 51.515,
     longitude: -0.118,
     accessInstructions: "Front-of-house access only outside trading hours (before 09:00 / after 18:00). Sign in at reception; keys for the riser cupboard held by the duty manager.",
     siteContacts: [
-      { name: "Priya Anand", role: "Duty Manager", phone: "07700 900 508", email: "p.anand@showcaseretail.co.uk" },
+      { name: "Demo Duty Contact", role: "Duty Manager", phone: "07700 900 508", email: "duty.contact@demo-retail.example.com" },
     ],
     emergencyContacts: [
-      { name: "Showcase Retail Control Room", role: "Building Security", phone: "020 7555 0188" },
+      { name: "Demo Retail Control Room", role: "Building Security", phone: "020 7555 0188" },
     ],
     assignedWorkerIds: ["dw4", "du3"],
     assignedEquipmentIds: ["de11"],
@@ -1064,17 +1064,17 @@ const DEMO_JOBS: Job[] = [
     priority: "Medium",
     startAt: new Date(Date.now() - 5 * 86400000).toISOString(),
     endAt: new Date(Date.now() + 12 * 86400000).toISOString(),
-    locationAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
+    locationAddress: "1 Demo Street, Demo City, DM1 1AA",
     latitude: 53.477,
     longitude: -2.244,
     accessInstructions: "Enter via loading bay gate — code 4821. Park in bays marked B1–B6. Sign in at reception desk (Building C). Trading hours are 8am–6pm; night access must be pre-arranged with site manager.",
     siteContacts: [
-      { name: "Brian Walsh", role: "Site Manager", phone: "07700 900 123", email: "b.walsh@hsslimited.co.uk" },
-      { name: "Sandra Yip", role: "Operations Lead", phone: "07700 900 456" },
+      { name: "Demo Site Manager", role: "Site Manager", phone: "07700 900 123", email: "site.manager@demo-client-a.example.com" },
+      { name: "Demo Operations Contact", role: "Operations Lead", phone: "07700 900 456" },
     ],
     emergencyContacts: [
-      { name: "HSS Security Control", role: "On-site Security", phone: "0161 555 0199" },
-      { name: "Brian Walsh", role: "Site Manager", phone: "07700 900 123" },
+      { name: "Demo Client A Security Control", role: "On-site Security", phone: "0161 555 0199" },
+      { name: "Demo Site Manager", role: "Site Manager", phone: "07700 900 123" },
     ],
     specialRequirements: "Trading hours: 8am–11pm. All shutdowns must be agreed 48hrs in advance. Zone C pipework area contains potential ACM — work paused pending asbestos survey. Full PPE mandatory in Zone C.",
     assignedWorkerIds: ["dw2", "dw3"],
@@ -1086,7 +1086,7 @@ const DEMO_JOBS: Job[] = [
         url: "#",
         uploadedAt: new Date(Date.now() - 7 * 86400000).toISOString(),
         category: "site",
-        uploadedBy: "Alex Reid",
+        uploadedBy: "Demo PM",
       },
       {
         id: "doc-pm-2",
@@ -1094,7 +1094,7 @@ const DEMO_JOBS: Job[] = [
         url: "#",
         uploadedAt: new Date(Date.now() - 6 * 86400000).toISOString(),
         category: "compliance",
-        uploadedBy: "Alex Reid",
+        uploadedBy: "Demo PM",
       },
       {
         id: "doc-pm-3",
@@ -1102,7 +1102,7 @@ const DEMO_JOBS: Job[] = [
         url: "#",
         uploadedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
         category: "client",
-        uploadedBy: "Alex Reid",
+        uploadedBy: "Demo PM",
       },
     ],
     costs: { labour: 0, equipment: 0, materials: 0, other: 0 },
@@ -1121,17 +1121,17 @@ const DEMO_JOBS: Job[] = [
     priority: "Medium",
     startAt: new Date(Date.now() + 4 * 86400000).toISOString(),
     endAt: new Date(Date.now() + 18 * 86400000).toISOString(),
-    locationAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
+    locationAddress: "1 Demo Street, Demo City, DM1 1AA",
     latitude: 53.477,
     longitude: -2.244,
     accessInstructions: "Loading bay entrance, security code 4821. Boiler room is sub-basement level — access via service lift only. No passenger lift access to sub-basement.",
     siteContacts: [
-      { name: "Brian Walsh", role: "Site Manager", phone: "07700 900 123", email: "b.walsh@hsslimited.co.uk" },
+      { name: "Demo Site Manager", role: "Site Manager", phone: "07700 900 123", email: "site.manager@demo-client-a.example.com" },
     ],
     emergencyContacts: [
-      { name: "HSS Security Control", role: "On-site Security", phone: "0161 555 0199" },
+      { name: "Demo Client A Security Control", role: "On-site Security", phone: "0161 555 0199" },
     ],
-    specialRequirements: "All work restricted to off-peak hours (before 7am and after 7pm). Gas isolation must be signed off by Brian Walsh before any pipework begins.",
+    specialRequirements: "All work restricted to off-peak hours (before 7am and after 7pm). Gas isolation must be signed off by Demo Site Manager before any pipework begins.",
     assignedWorkerIds: ["dw2"],
     assignedEquipmentIds: [],
     documents: [
@@ -1141,7 +1141,7 @@ const DEMO_JOBS: Job[] = [
         url: "#",
         uploadedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
         category: "site",
-        uploadedBy: "Alex Reid",
+        uploadedBy: "Demo PM",
       },
     ],
     costs: { labour: 0, equipment: 0, materials: 0, other: 0 },
@@ -1160,16 +1160,16 @@ const DEMO_JOBS: Job[] = [
     priority: "High",
     startAt: new Date(Date.now() + 2 * 86400000).toISOString(),
     endAt: new Date(Date.now() + 8 * 86400000).toISOString(),
-    locationAddress: "45 Kingsway, London, WC2B 6SR",
+    locationAddress: "2 Demo Street, Demo City, DM1 1AB",
     latitude: 51.515,
     longitude: -0.118,
     accessInstructions: "Goods lift only for materials — passenger lifts are not to be used. Loading bay must be booked 24hrs ahead with building management.",
     siteContacts: [
-      { name: "Tom Bexley", role: "Building Manager", phone: "07700 900 663", email: "t.bexley@kingswaybm.co.uk" },
-      { name: "Helen Oduya", role: "Client Project Lead", phone: "07700 900 771" },
+      { name: "Demo Building Contact", role: "Building Manager", phone: "07700 900 663", email: "building.contact@demo-building.example.com" },
+      { name: "Demo Client Lead", role: "Client Project Lead", phone: "07700 900 771" },
     ],
     emergencyContacts: [
-      { name: "Kingsway Building Control", role: "Reception / Fire Marshal", phone: "020 7555 0121" },
+      { name: "Demo Building Control", role: "Reception / Fire Marshal", phone: "020 7555 0121" },
     ],
     assignedWorkerIds: [],
     assignedEquipmentIds: [],
@@ -1191,7 +1191,7 @@ const DEMO_JOBS: Job[] = [
     priority: "Low",
     startAt: new Date(Date.now() - 4 * 86400000).toISOString(),
     endAt: new Date(Date.now() - 4 * 86400000).toISOString(),
-    locationAddress: "Unit 14, Riverside Industrial Estate, Manchester, M15 4FN",
+    locationAddress: "1 Demo Street, Demo City, DM1 1AA",
     accessInstructions: "Site access suspended — job cancelled. Contact the client before attending.",
     siteContacts: [
       { name: "Client Contact", role: "Primary Contact", phone: "07700 900 900" },
@@ -1306,24 +1306,24 @@ const SEED_USERS: User[] = [
 ];
 
 const DEFAULT_SETTINGS: CompanySettings = {
-  companyLegalName: "Omnisoftware Operations Ltd",
+  companyLegalName: "Demo Operations Ltd",
   registrationNumber: "00000000",
   taxId: "GB 000 0000 00",
-  email: "accounts@omnisoftware.com",
+  email: "accounts@demo-company.example.com",
   phone: "020 7000 0000",
 
   bankName: "Commercial Bank",
   accountName: "OMNI LEDGER OPS",
   accountNumber: "88229911",
   sortCode: "20-11-99",
-  address: "123 Technology Way, London, EC1 2AA"
+  address: "3 Demo Street, Demo City, DM1 1AC"
 };
 
 const DEMO_SETTINGS: CompanySettings = {
-  companyLegalName: "Example Business Ltd",
+  companyLegalName: "Demo Business Ltd",
   registrationNumber: "12345678",
   taxId: "GB 123 4567 89",
-  email: "accounts@example-business.com",
+  email: "accounts@demo-business.example.com",
   phone: "0161 123 4567",
 
   bankName: "Demo Bank",
@@ -2670,12 +2670,12 @@ export const mockFinancialMutations: FinancialMutation[] = [];
 (function seedDemoFinancialRecords() {
   const JOB_ID = "dj-kitchen-extract-1";
   const APPROVED_AT = "2026-05-22T16:00:00Z";
-  const APPROVED_BY = "Amir Khan";
+  const APPROVED_BY = "Demo-Alpha Manager";
   const REPORT_ID = "seed-report-kex-1";
   const REVIEW_ID = "seed-review-kex-1";
 
   // ──────────────────────────────────────
-  // LABOUR — Sophie Taylor: 32h
+  // LABOUR — Demo-Bravo Worker: 32h
   // costRate £16/h, billableRate £55/h
   // ──────────────────────────────────────
   mockTimesheets.push({
@@ -2684,7 +2684,7 @@ export const mockFinancialMutations: FinancialMutation[] = [];
     reviewId: REVIEW_ID,
     jobId: JOB_ID,
     workerId: "dw2",
-    workerName: "Sophie Taylor",
+    workerName: "Demo-Bravo Worker",
     hours: 32,
     hourlyRate: 16,
     laborCost: 512,
@@ -2695,7 +2695,7 @@ export const mockFinancialMutations: FinancialMutation[] = [];
   });
 
   // ──────────────────────────────────────
-  // LABOUR — Ben Hughes: 24h
+  // LABOUR — Demo-Charlie Worker: 24h
   // costRate £16/h, billableRate £55/h
   // ──────────────────────────────────────
   mockTimesheets.push({
@@ -2704,7 +2704,7 @@ export const mockFinancialMutations: FinancialMutation[] = [];
     reviewId: REVIEW_ID,
     jobId: JOB_ID,
     workerId: "dw3",
-    workerName: "Ben Hughes",
+    workerName: "Demo-Charlie Worker",
     hours: 24,
     hourlyRate: 16,
     laborCost: 384,
@@ -2765,7 +2765,7 @@ export const mockFinancialMutations: FinancialMutation[] = [];
     amount: 185,
     markupPercent: 15,
     recoveryAmount: 212.75,
-    submittedBy: "Sophie Taylor",
+    submittedBy: "Demo-Bravo Worker",
     approvedAt: APPROVED_AT,
     approvedBy: APPROVED_BY,
   });
@@ -2793,8 +2793,8 @@ export const mockFinancialMutations: FinancialMutation[] = [];
   // INVOICE LINE ITEMS — mirror the above
   // ──────────────────────────────────────
   mockInvoiceLineItems.push(
-    { id: "seed-line-1", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour \u2013 Sophie Taylor (32h @ \u00a355/h)",          quantity: 32,   unitPrice: 55,     amount: 1760,   approvedAt: APPROVED_AT },
-    { id: "seed-line-2", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour \u2013 Ben Hughes (24h @ \u00a355/h)",            quantity: 24,   unitPrice: 55,     amount: 1320,   approvedAt: APPROVED_AT },
+    { id: "seed-line-1", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour \u2013 Demo-Bravo Worker (32h @ \u00a355/h)",          quantity: 32,   unitPrice: 55,     amount: 1760,   approvedAt: APPROVED_AT },
+    { id: "seed-line-2", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "labor",     description: "Labour \u2013 Demo-Charlie Worker (24h @ \u00a355/h)",            quantity: 24,   unitPrice: 55,     amount: 1320,   approvedAt: APPROVED_AT },
     { id: "seed-line-3", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment \u2013 Hiab support (canopy lift) (16h)",  quantity: 16,   unitPrice: 65,     amount: 1040,   approvedAt: APPROVED_AT },
     { id: "seed-line-4", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "equipment", description: "Equipment \u2013 Crew van (tools transport) (24h)",  quantity: 24,   unitPrice: 18.75,  amount: 450,    approvedAt: APPROVED_AT },
     { id: "seed-line-5", reportId: REPORT_ID, reviewId: REVIEW_ID, jobId: JOB_ID, type: "expense",   description: "Expense \u2013 Skip hire \u2014 waste removal (+15% markup)", quantity: 1,  unitPrice: 212.75, amount: 212.75, approvedAt: APPROVED_AT },
@@ -2838,8 +2838,8 @@ export const mockFinancialMutations: FinancialMutation[] = [];
   // data on first load without requiring a manual approval.
   // ────────────────────────────────────
   const seedDraftLines = [
-    { id: "seed-line-1", type: "labor"     as const, description: "Labour \u2013 Sophie Taylor (32h @ \u00a355/h)",             quantity: 32,  unitPrice: 55,     amount: 1760   },
-    { id: "seed-line-2", type: "labor"     as const, description: "Labour \u2013 Ben Hughes (24h @ \u00a355/h)",               quantity: 24,  unitPrice: 55,     amount: 1320   },
+    { id: "seed-line-1", type: "labor"     as const, description: "Labour \u2013 Demo-Bravo Worker (32h @ \u00a355/h)",             quantity: 32,  unitPrice: 55,     amount: 1760   },
+    { id: "seed-line-2", type: "labor"     as const, description: "Labour \u2013 Demo-Charlie Worker (24h @ \u00a355/h)",               quantity: 24,  unitPrice: 55,     amount: 1320   },
     { id: "seed-line-3", type: "equipment" as const, description: "Equipment \u2013 Hiab support (canopy lift) (16h)",   quantity: 16,  unitPrice: 65,     amount: 1040   },
     { id: "seed-line-4", type: "equipment" as const, description: "Equipment \u2013 Crew van (tools transport) (24h)",   quantity: 24,  unitPrice: 18.75,  amount: 450    },
     { id: "seed-line-5", type: "expense"   as const, description: "Expense \u2013 Skip hire \u2014 waste removal (+15% markup)", quantity: 1,  unitPrice: 212.75, amount: 212.75 },

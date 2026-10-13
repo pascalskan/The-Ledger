@@ -101,7 +101,7 @@ test.describe('Portal Financials — Quotes (CL-6)', () => {
   test('CPF-07: quotes are isolated per client', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
     await openFinanceTab(page, 'quotes');
-    // q-off-1 belongs to Showcase (dc2).
+    // q-off-1 belongs to Demo Client B (dc2).
     await expect(page.getByTestId('portal-quote-q-off-1')).toHaveCount(0);
   });
 

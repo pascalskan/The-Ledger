@@ -45,9 +45,9 @@ test('Payroll Staging page shows seeded worker payroll records', async ({ page }
   await page.goto('http://localhost:5000/finance?tab=payroll');
   await expect(page).toHaveURL(/finance/i);
 
-  // The Phase 4.5 seed data creates TimesheetEntry records for Sophie Taylor and Ben Hughes
+  // The Phase 4.5 seed data creates TimesheetEntry records for Demo-Bravo Worker and Demo-Charlie Worker
   // groupTimesheetsForPayroll() should surface them on this page
-  await expect(page.locator('body')).toContainText(/Sophie Taylor|Ben Hughes|hours|Hours/i);
+  await expect(page.locator('body')).toContainText(/Demo-Bravo Worker|Demo-Charlie Worker|hours|Hours/i);
 });
 
 test('Payroll Staging period filter renders All / Current / Previous options', async ({ page }) => {

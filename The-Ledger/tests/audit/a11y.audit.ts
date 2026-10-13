@@ -77,7 +77,7 @@ test('axe: Auth + Portal', async ({ page }) => {
   await page.evaluate(k => localStorage.removeItem(k), KEY);
   await scan(page, 'Anon', '/auth', rows);
   await scan(page, 'Anon', '/portal', rows);
-  await page.getByPlaceholder('name@example.com').fill('portal@hsslimited.co.uk');
+  await page.getByPlaceholder('name@example.com').fill('portal@demo-client-a.example.com');
   await page.getByRole('button', { name: /Sign In/i }).click();
   await page.waitForTimeout(1500);
   for (const u of ['/portal', '/portal/jobs', '/portal/jobs/dj-pm-active-1', '/portal/sites', '/portal/documents', '/portal/invoices', '/portal/invoices/dinv-kex-1', '/portal/requests', '/portal/messages', '/portal/notifications']) {
@@ -224,7 +224,7 @@ test('downloads', async ({ page }) => {
 
   await page.goto('/portal');
   await page.evaluate(k => localStorage.removeItem(k), KEY);
-  await page.getByPlaceholder('name@example.com').fill('portal@hsslimited.co.uk');
+  await page.getByPlaceholder('name@example.com').fill('portal@demo-client-a.example.com');
   await page.getByRole('button', { name: /Sign In/i }).click();
   await page.waitForTimeout(1500);
   await page.goto('/portal/invoices/dinv-kex-1');

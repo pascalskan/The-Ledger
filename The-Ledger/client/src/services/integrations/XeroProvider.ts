@@ -14,7 +14,7 @@ export class XeroProvider implements FinancialProvider {
 
   async fetchClients(): Promise<FinancialClient[]> {
     return new Promise(resolve => setTimeout(() => resolve([
-      { id: "xe-c-1", externalId: "XE-CONT-001", name: "Global Industries", sourceSystem: "xero" }
+      { id: "xe-c-1", externalId: "XE-CONT-001", name: "Demo Customer D", sourceSystem: "xero" }
     ]), 800));
   }
 

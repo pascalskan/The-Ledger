@@ -31,7 +31,7 @@ test.describe('Portal Communication — thread visibility (CL-5)', () => {
   test('CPC-02: threads are scoped to the signed-in client', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
     await portalNavTo(page, 'messages');
-    // th-off-1 belongs to Showcase (dc2) — never visible to HSS.
+    // th-off-1 belongs to Demo Client B (dc2) — never visible to Demo Client A.
     await expect(page.getByTestId('portal-thread-th-off-1')).toHaveCount(0);
   });
 

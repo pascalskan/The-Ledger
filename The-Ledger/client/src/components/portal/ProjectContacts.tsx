@@ -14,11 +14,11 @@ export function ProjectContacts() {
         <div className="space-y-2.5">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Project Manager</h2>
           <div>
-            <div className="text-sm font-medium text-foreground mb-1">Sarah Jenkins</div>
+            <div className="text-sm font-medium text-foreground mb-1">Demo Contact</div>
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> 
-                <a href="mailto:sarah@example.com" className="hover:text-foreground hover:underline truncate">sarah@theledger.app</a>
+                <a href="mailto:demo.contact@example.com" className="hover:text-foreground hover:underline truncate">demo.contact@example.com</a>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> 

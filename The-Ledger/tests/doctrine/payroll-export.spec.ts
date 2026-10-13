@@ -13,8 +13,8 @@
  *  9. Export engine doctrine — data sourced from approved timesheets only
  *
  * Data source: Phase 4.5 seed data in mockData.ts
- *   Sophie Taylor: 32h @ £16/h cost, £55/h revenue
- *   Ben Hughes:    24h @ £16/h cost, £55/h revenue
+ *   Demo-Bravo Worker: 32h @ £16/h cost, £55/h revenue
+ *   Demo-Charlie Worker:    24h @ £16/h cost, £55/h revenue
  *   Total: 56h, cost £896, revenue £3,080
  */
 
@@ -58,8 +58,8 @@ test("Payroll Export page shows seeded worker records in preview", async ({ page
   await loginAsCEO(page);
   await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
-  // Phase 4.5 seed data creates TimesheetEntry records for Sophie Taylor and Ben Hughes
-  await expect(page.locator("body")).toContainText(/Sophie Taylor|Ben Hughes/i);
+  // Phase 4.5 seed data creates TimesheetEntry records for Demo-Bravo Worker and Demo-Charlie Worker
+  await expect(page.locator("body")).toContainText(/Demo-Bravo Worker|Demo-Charlie Worker/i);
 
   // Preview table should be visible
   await expect(page.getByTestId("payroll-export-preview-table")).toBeVisible();
@@ -86,7 +86,7 @@ test("Payroll Export KPI strip shows seeded worker and hour totals", async ({ pa
 
   await expect(page.getByTestId("payroll-export-kpi-strip")).toBeVisible();
 
-  // Should show 2 workers (Sophie Taylor + Ben Hughes from seed data)
+  // Should show 2 workers (Demo-Bravo Worker + Demo-Charlie Worker from seed data)
   await expect(page.getByTestId("preview-worker-count")).toHaveText("2");
 
   // Should show 56.0 total hours (32 + 24)
@@ -179,14 +179,14 @@ test("Mark Exported button advances export status to Exported", async ({ page })
 // ─────────────────────────────────────────────────────────────────
 // TEST 9: Worker rows visible inside generated export breakdown
 // ─────────────────────────────────────────────────────────────────
-test("Generated export shows worker breakdown with Sophie Taylor and Ben Hughes", async ({ page }) => {
+test("Generated export shows worker breakdown with Demo-Bravo Worker and Demo-Charlie Worker", async ({ page }) => {
   await loginAsCEO(page);
   await page.goto("http://localhost:5000/finance?tab=payroll&sub=export");
 
   await page.getByTestId("btn-generate-export").click();
 
   // At least one of the seeded workers should appear in the export breakdown
-  await expect(page.locator("body")).toContainText(/Sophie Taylor|Ben Hughes/i);
+  await expect(page.locator("body")).toContainText(/Demo-Bravo Worker|Demo-Charlie Worker/i);
 });
 
 // ─────────────────────────────────────────────────────────────────

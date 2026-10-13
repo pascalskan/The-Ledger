@@ -38,7 +38,7 @@ test.describe('Client Requests — portal submission surface (CL-8)', () => {
   test('CR-02: requests are isolated per client', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
     await portalNavTo(page, 'requests');
-    // req-5 belongs to Showcase (dc2).
+    // req-5 belongs to Demo Client B (dc2).
     await expect(page.getByTestId('portal-request-req-5')).toHaveCount(0);
   });
 

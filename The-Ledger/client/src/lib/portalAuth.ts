@@ -50,7 +50,7 @@ const portalAccounts: PortalAccount[] = [
   {
     id: "pacc-dc1-1",
     clientId: "dc1",
-    email: "portal@hsslimited.co.uk",
+    email: "portal@demo-client-a.example.com",
     status: "Active",
     createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
     lastLoginAt: new Date(Date.now() - 2 * 86400000).toISOString(),
@@ -59,7 +59,7 @@ const portalAccounts: PortalAccount[] = [
   {
     id: "pacc-dc1-2",
     clientId: "dc1",
-    email: "sitemanager@hsslimited.co.uk",
+    email: "sitemanager@demo-client-a.example.com",
     status: "Pending",
     createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
     permissions: [...DEFAULT_PERMISSIONS],
@@ -67,7 +67,7 @@ const portalAccounts: PortalAccount[] = [
   {
     id: "pacc-dc2-1",
     clientId: "dc2",
-    email: "portal@showcasesystems.co.uk",
+    email: "portal@demo-client-b.example.com",
     status: "Active",
     createdAt: new Date(Date.now() - 21 * 86400000).toISOString(),
     lastLoginAt: new Date(Date.now() - 5 * 86400000).toISOString(),
@@ -76,7 +76,7 @@ const portalAccounts: PortalAccount[] = [
   {
     id: "pacc-dc2-2",
     clientId: "dc2",
-    email: "former@showcasesystems.co.uk",
+    email: "former@demo-client-b.example.com",
     status: "Disabled",
     createdAt: new Date(Date.now() - 60 * 86400000).toISOString(),
     permissions: [...DEFAULT_PERMISSIONS],

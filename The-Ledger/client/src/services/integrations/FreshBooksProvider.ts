@@ -14,7 +14,7 @@ export class FreshBooksProvider implements FinancialProvider {
 
   async fetchClients(): Promise<FinancialClient[]> {
     return new Promise(resolve => setTimeout(() => resolve([
-      { id: "fb-c-1", externalId: "FB-CL-001", name: "Startup Inc", sourceSystem: "freshbooks" }
+      { id: "fb-c-1", externalId: "FB-CL-001", name: "Demo Startup Inc", sourceSystem: "freshbooks" }
     ]), 800));
   }
 

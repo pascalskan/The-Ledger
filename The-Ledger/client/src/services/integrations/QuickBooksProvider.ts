@@ -14,7 +14,7 @@ export class QuickBooksProvider implements FinancialProvider {
 
   async fetchClients(): Promise<FinancialClient[]> {
     return new Promise(resolve => setTimeout(() => resolve([
-      { id: "qb-c-1", externalId: "QB-CUST-001", name: "Acme Corp", sourceSystem: "quickbooks" }
+      { id: "qb-c-1", externalId: "QB-CUST-001", name: "Demo Customer C", sourceSystem: "quickbooks" }
     ]), 800));
   }
 

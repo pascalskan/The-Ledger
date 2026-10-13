@@ -713,11 +713,11 @@ function AutomationBuilderDialog({
     if (hasForbiddenAction) { setErrors(["One or more selected actions are forbidden and cannot be used."]); return; }
     try {
       if (isEdit) {
-        const { rule } = updateRuleFromBuilder(editRule.id, form, "Marcus Webb");
+        const { rule } = updateRuleFromBuilder(editRule.id, form, "Demo Manager 2");
         onSaved(rule);
         toast({ title: "Automation Updated", description: `'${rule.name}' has been updated.` });
       } else {
-        const { rule } = createRuleFromBuilder(form, "Marcus Webb");
+        const { rule } = createRuleFromBuilder(form, "Demo Manager 2");
         onSaved(rule);
         toast({ title: "Automation Created", description: `'${rule.name}' is now active.` });
       }
@@ -1224,17 +1224,17 @@ export default function AutomationsPage() {
   const openEditBuilder = (rule: AutomationRule) => { setEditRule(rule); setBuilderOpen(true); setSelectedRule(null); };
   const handleBuilderSaved = (_rule: AutomationRule) => { setRules(getAllRules()); setBuilderOpen(false); setEditRule(null); };
   const handleDuplicate = (rule: AutomationRule) => {
-    try { duplicateRule(rule.id, "Marcus Webb"); setRules(getAllRules()); setSelectedRule(null); toast({ title: "Automation Duplicated", description: `'Copy of ${rule.name}' created as draft.` }); }
+    try { duplicateRule(rule.id, "Demo Manager 2"); setRules(getAllRules()); setSelectedRule(null); toast({ title: "Automation Duplicated", description: `'Copy of ${rule.name}' created as draft.` }); }
     catch (e: unknown) { toast({ title: "Error", description: (e as Error).message, variant: "destructive" }); }
   };
   const handleArchive = (rule: AutomationRule) => {
-    try { archiveRule(rule.id, "Marcus Webb"); setRules(getAllRules()); setSelectedRule(null); toast({ title: "Automation Archived", description: `'${rule.name}' has been archived.` }); }
+    try { archiveRule(rule.id, "Demo Manager 2"); setRules(getAllRules()); setSelectedRule(null); toast({ title: "Automation Archived", description: `'${rule.name}' has been archived.` }); }
     catch (e: unknown) { toast({ title: "Error", description: (e as Error).message, variant: "destructive" }); }
   };
 
   // Schedule actions
   const handlePauseSchedule = (s: AutomationSchedule) => {
-    const result = pauseSchedule(s.id, "Marcus Webb");
+    const result = pauseSchedule(s.id, "Demo Manager 2");
     if (result) {
       setSchedules(getAllSchedules());
       setSelectedSchedule(null);
@@ -1242,7 +1242,7 @@ export default function AutomationsPage() {
     }
   };
   const handleResumeSchedule = (s: AutomationSchedule) => {
-    const result = resumeSchedule(s.id, "Marcus Webb");
+    const result = resumeSchedule(s.id, "Demo Manager 2");
     if (result) {
       setSchedules(getAllSchedules());
       setSelectedSchedule(null);
@@ -1250,7 +1250,7 @@ export default function AutomationsPage() {
     }
   };
   const handleDisableSchedule = (s: AutomationSchedule) => {
-    const result = disableSchedule(s.id, "Marcus Webb");
+    const result = disableSchedule(s.id, "Demo Manager 2");
     if (result) {
       setSchedules(getAllSchedules());
       setSelectedSchedule(null);

@@ -412,10 +412,10 @@ test('AB-23: Updating a rule via engine generates Automation Updated audit entry
       triggerId: 'trigger-sync-failed',
       actionIds: ['action-send-notification'],
     };
-    const { rule } = createRuleFromBuilder(form, 'Marcus Webb');
+    const { rule } = createRuleFromBuilder(form, 'Demo Manager 2');
     const editForm = ruleToBuilderForm(rule);
     editForm.name = 'Updated Audit Test Rule';
-    const { auditEntry } = updateRuleFromBuilder(rule.id, editForm, 'Marcus Webb');
+    const { auditEntry } = updateRuleFromBuilder(rule.id, editForm, 'Demo Manager 2');
     return { auditAction: auditEntry.actionLabel };
   });
 
@@ -435,8 +435,8 @@ test('AB-24: Archiving a rule via engine generates Automation Archived audit ent
       triggerId: 'trigger-sync-failed',
       actionIds: ['action-send-notification'],
     };
-    const { rule } = createRuleFromBuilder(form, 'Marcus Webb');
-    const { rule: archived, auditEntry } = archiveRule(rule.id, 'Marcus Webb');
+    const { rule } = createRuleFromBuilder(form, 'Demo Manager 2');
+    const { rule: archived, auditEntry } = archiveRule(rule.id, 'Demo Manager 2');
     return { status: archived.status, auditAction: auditEntry.actionLabel };
   });
 

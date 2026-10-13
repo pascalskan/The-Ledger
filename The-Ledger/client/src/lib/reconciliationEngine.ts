@@ -99,7 +99,7 @@ export const SEED_RECONCILIATION_RECORDS: ReconciliationRecord[] = [
   {
     id: "recon-002",
     entityId: "client-001",
-    entityName: "Drummond Facilities Ltd",
+    entityName: "Demo Facilities Ltd",
     entityType: "customer",
     provider: "xero",
     ledgerReference: "CLIENT-001",
@@ -151,7 +151,7 @@ export const SEED_RECONCILIATION_RECORDS: ReconciliationRecord[] = [
   {
     id: "recon-006",
     entityId: "client-002",
-    entityName: "Balmoral Security Services",
+    entityName: "Demo Security Services",
     entityType: "customer",
     provider: "quickbooks",
     ledgerReference: "CLIENT-002",

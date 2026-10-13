@@ -18,7 +18,7 @@ test.describe('Client Portal — Authentication (CL-2)', () => {
   test('CP-01: active portal account signs in successfully', async ({ page }) => {
     await portalSignIn(page, PORTAL_ACCOUNTS.dc1Active);
     await expect(page.getByTestId('portal-dashboard')).toBeVisible();
-    await expect(page.getByTestId('portal-client-name')).toContainText('HSS Limited');
+    await expect(page.getByTestId('portal-client-name')).toContainText('Demo Client A Ltd');
   });
 
   // CP-02 — Disabled account is blocked
@@ -58,21 +58,21 @@ test.describe('Client Portal — Isolation / RBAC (CL-2)', () => {
   });
 
   // CP-06 — Client A sees only their own jobs
-  test('CP-06: client A (HSS) sees only its own jobs', async ({ page }) => {
+  test('CP-06: client A (Demo Client A) sees only its own jobs', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
     await portalNavTo(page, 'jobs');
-    // HSS (dc1) owns dj-kitchen-extract-1; it must be visible.
+    // Demo Client A (dc1) owns dj-kitchen-extract-1; it must be visible.
     await expect(page.getByTestId('portal-job-card-dj-kitchen-extract-1')).toBeVisible();
-    // Showcase (dc2) owns dj-office-fit-1; it must NOT be visible to HSS.
+    // Demo Client B (dc2) owns dj-office-fit-1; it must NOT be visible to Demo Client A.
     await expect(page.getByTestId('portal-job-card-dj-office-fit-1')).toHaveCount(0);
   });
 
   // CP-07 — Client B cannot see Client A's data
-  test('CP-07: client B (Showcase) cannot see client A jobs', async ({ page }) => {
+  test('CP-07: client B (Demo Client B) cannot see client A jobs', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc2Active);
-    await expect(page.getByTestId('portal-client-name')).toContainText('Showcase');
+    await expect(page.getByTestId('portal-client-name')).toContainText('Demo Client B');
     await portalNavTo(page, 'jobs');
-    // Showcase must NOT see any HSS job cards.
+    // Demo Client B must NOT see any Demo Client A job cards.
     await expect(page.getByTestId('portal-job-card-dj-kitchen-extract-1')).toHaveCount(0);
     await expect(page.getByTestId('portal-job-card-dj-pm-active-1')).toHaveCount(0);
   });
@@ -80,8 +80,8 @@ test.describe('Client Portal — Isolation / RBAC (CL-2)', () => {
   // CP-08 — Client name reflects the signed-in account, not a hardcoded demo
   test('CP-08: signed-in client identity matches the account', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc2Active);
-    await expect(page.getByTestId('portal-client-name')).toContainText('Showcase Systems');
-    await expect(page.getByTestId('portal-client-name')).not.toContainText('HSS');
+    await expect(page.getByTestId('portal-client-name')).toContainText('Demo Client B');
+    await expect(page.getByTestId('portal-client-name')).not.toContainText('Demo Client A');
   });
 });
 
@@ -96,9 +96,9 @@ test.describe('Client Portal — Crew Visibility Doctrine (CL-2)', () => {
     await portalNavTo(page, 'jobs');
     await page.getByTestId('portal-job-card-dj-kitchen-extract-1').click();
     await expect(page.getByTestId('portal-job-detail')).toBeVisible();
-    // dw2 = Sophie Taylor → first name shown
+    // dw2 = Demo-Bravo Worker → first name shown
     await expect(page.getByTestId('portal-crew-name').first()).toBeVisible();
-    await expect(page.getByTestId('portal-crew-name').filter({ hasText: 'Sophie' }).first()).toBeVisible();
+    await expect(page.getByTestId('portal-crew-name').filter({ hasText: 'Demo-Bravo' }).first()).toBeVisible();
   });
 
   // CP-10 — Crew surname is NEVER exposed
@@ -107,7 +107,7 @@ test.describe('Client Portal — Crew Visibility Doctrine (CL-2)', () => {
     await portalNavTo(page, 'jobs');
     await page.getByTestId('portal-job-card-dj-kitchen-extract-1').click();
     await expect(page.getByTestId('portal-job-detail')).toBeVisible();
-    // dw2 Sophie Taylor and dw3 Ben Hughes are on this job — surnames must not appear.
+    // dw2 Demo-Bravo Worker and dw3 Demo-Charlie Worker are on this job — surnames must not appear.
     const detail = page.getByTestId('portal-job-detail');
     await expect(detail).not.toContainText('Taylor');
     await expect(detail).not.toContainText('Hughes');

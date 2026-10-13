@@ -428,7 +428,7 @@ export default function JobsPage() {
                             <Input
                               value={createClientForm.name}
                               onChange={(e) => setCreateClientForm({ ...createClientForm, name: e.target.value })}
-                              placeholder="e.g. HSS Limited"
+                              placeholder="e.g. Demo Client A Ltd"
                               data-testid="input-client-name"
                             />
                           </div>

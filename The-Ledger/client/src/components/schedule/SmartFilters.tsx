@@ -39,8 +39,8 @@ export function SmartFilters({ filters, setFilters }: SmartFiltersProps) {
         <SelectContent>
           <SelectItem value="all">All Clients</SelectItem>
           {/* We would map clients here in real app */}
-          <SelectItem value="c1">HSS Limited</SelectItem>
-          <SelectItem value="c2">Acme Corp</SelectItem>
+          <SelectItem value="c1">Demo Client A Ltd</SelectItem>
+          <SelectItem value="c2">Demo Customer C</SelectItem>
         </SelectContent>
       </Select>
     </div>

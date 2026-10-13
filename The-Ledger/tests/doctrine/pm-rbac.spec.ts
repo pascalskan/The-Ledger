@@ -213,10 +213,10 @@ test('PM-RBAC-18: PM dashboard My Jobs card shows only assigned jobs', async ({ 
   const myJobsCard = page.getByTestId('pm-dashboard-my-jobs');
   await expect(myJobsCard).toBeVisible();
 
-  // Demo PM (du2 / Alex Reid) is assigned to dj-kitchen-extract-1, dj-pm-active-1,
+  // Demo PM (du2 / Demo PM) is assigned to dj-kitchen-extract-1, dj-pm-active-1,
   // dj-boiler-room-2, dj-office-fit-1. An unassigned job (dj-showcase-maint-1)
   // must NOT appear in the My Jobs card.
-  await expect(myJobsCard).not.toContainText('Showcase Maintenance');
+  await expect(myJobsCard).not.toContainText('Demo Client B Maintenance');
   // At least one assigned job title appears
   await expect(myJobsCard).toContainText('HVAC system replacement');
 });
@@ -230,10 +230,10 @@ test('PM-RBAC-19: PM Attention Required section does not expose unassigned job t
   await page.goto('/');
   await page.waitForSelector('[data-testid="pm-dashboard-page"]');
 
-  // Showcase Maintenance (dj-showcase-maint-1) is not managed by du2; must not appear
+  // Demo Client B Maintenance (dj-showcase-maint-1) is not managed by du2; must not appear
   const attentionCard = page.getByTestId('pm-dashboard-attention');
   await expect(attentionCard).toBeVisible();
-  await expect(attentionCard).not.toContainText('Showcase Maintenance');
+  await expect(attentionCard).not.toContainText('Demo Client B Maintenance');
 });
 
 // ────────────────────────────────────────────────────────────────

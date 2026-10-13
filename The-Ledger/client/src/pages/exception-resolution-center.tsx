@@ -178,7 +178,7 @@ export function ExceptionResolutionContent() {
     setControls((prev) =>
       prev.map((c) =>
         c.id === selectedControl.id
-          ? approveControl(c, "Marcus Webb", controlNotes)
+          ? approveControl(c, "Demo Manager 2", controlNotes)
           : c
       )
     );
@@ -190,7 +190,7 @@ export function ExceptionResolutionContent() {
     setControls((prev) =>
       prev.map((c) =>
         c.id === selectedControl.id
-          ? rejectControl(c, "Marcus Webb", controlNotes)
+          ? rejectControl(c, "Demo Manager 2", controlNotes)
           : c
       )
     );

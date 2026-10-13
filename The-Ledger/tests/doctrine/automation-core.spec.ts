@@ -228,7 +228,7 @@ test('Automation Rule Engine: FinanciallySensitive action is blocked when approv
       jobName: 'Kitchen extraction & ventilation install',
       approvalState: 'pending' as const,   // <— not approved
       eventData: {},
-      initiatedBy: 'Sarah Chen',
+      initiatedBy: 'Demo Executive',
       triggeredAt: '2026-05-31T10:00:00Z',
     };
     const res = evaluateRule(rule, context);
@@ -294,7 +294,7 @@ test('Automation Audit Engine: recordAutomationExecution appends an immutable en
       jobName: 'Test Facilities Job',
       approvalState: 'not_required' as const,
       eventData: {},
-      initiatedBy: 'Marcus Webb',
+      initiatedBy: 'Demo Manager 2',
       triggeredAt: '2026-05-31T11:00:00Z',
     };
 
@@ -315,7 +315,7 @@ test('Automation Audit Engine: recordAutomationExecution appends an immutable en
 
   expect(result.jobId).toBe('job-xyz');
   expect(result.jobName).toBe('Test Facilities Job');
-  expect(result.initiatedBy).toBe('Marcus Webb');
+  expect(result.initiatedBy).toBe('Demo Manager 2');
   expect(result.result).toBe('success');
   expect(result.historyLength).toBeGreaterThanOrEqual(1);
 });

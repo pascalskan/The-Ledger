@@ -87,10 +87,10 @@ export function PortalLogin({ branding, signIn }: PortalLoginProps) {
               <button
                 type="button"
                 className="font-mono text-foreground underline hover:text-foreground"
-                onClick={() => setEmail("portal@hsslimited.co.uk")}
+                onClick={() => setEmail("portal@demo-client-a.example.com")}
                 data-testid="portal-login-demo-fill"
               >
-                portal@hsslimited.co.uk
+                portal@demo-client-a.example.com
               </button>{" "}
               (any password).
             </div>

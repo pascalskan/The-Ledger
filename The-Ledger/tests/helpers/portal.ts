@@ -12,10 +12,10 @@ const PORTAL_SESSION_KEY = 'ledger-portal-session';
 
 // Seeded portal accounts (see client/src/lib/portalAuth.ts)
 export const PORTAL_ACCOUNTS = {
-  dc1Active: 'portal@hsslimited.co.uk',
-  dc1Pending: 'sitemanager@hsslimited.co.uk',
-  dc2Active: 'portal@showcasesystems.co.uk',
-  dc2Disabled: 'former@showcasesystems.co.uk',
+  dc1Active: 'portal@demo-client-a.example.com',
+  dc1Pending: 'sitemanager@demo-client-a.example.com',
+  dc2Active: 'portal@demo-client-b.example.com',
+  dc2Disabled: 'former@demo-client-b.example.com',
 };
 
 /** Navigate to the portal and clear any prior portal/internal session. */

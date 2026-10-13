@@ -144,7 +144,7 @@ test.describe('Portal Projects — Team visibility (CL-4)', () => {
   test('CPP-12: crew first names are visible', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
     await openJob(page, 'dj-kitchen-extract-1');
-    await expect(page.getByTestId('portal-crew-name').filter({ hasText: 'Sophie' }).first()).toBeVisible();
+    await expect(page.getByTestId('portal-crew-name').filter({ hasText: 'Demo-Bravo' }).first()).toBeVisible();
   });
 
   // CPP-13 — Crew surnames hidden
@@ -186,7 +186,7 @@ test.describe('Portal Projects — Timeline (CL-4)', () => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc2Active);
     await openJob(page, 'dj-office-fit-1');
     await expect(page.getByTestId('portal-milestone-ms-off-1')).toBeVisible();
-    // HSS (dc1) milestones must never appear for Showcase.
+    // Demo Client A (dc1) milestones must never appear for Demo Client B.
     await expect(page.getByTestId('portal-milestone-ms-kex-1')).toHaveCount(0);
   });
 });

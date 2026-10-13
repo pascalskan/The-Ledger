@@ -56,8 +56,8 @@ test('AUDC-04: Immutable audit notice present', async ({ page }) => {
 // ── Search ───────────────────────────────────────────────────
 
 test('AUDC-05: Search by user filters across sources', async ({ page }) => {
-  await page.getByTestId('aut-audc-search').fill('Sarah Chen');
-  // Cross-source match: Sarah Chen created rule-005 + rule-006 (Rule Created)
+  await page.getByTestId('aut-audc-search').fill('Demo Executive');
+  // Cross-source match: Demo Executive created rule-005 + rule-006 (Rule Created)
   // and initiated one execution (audit-seed-003) → 3 events from two sources.
   await expect(page.locator(ROW)).toHaveCount(3);
 });

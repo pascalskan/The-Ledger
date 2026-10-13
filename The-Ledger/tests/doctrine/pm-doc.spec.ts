@@ -41,7 +41,7 @@ test('PM-DOC-01: PM Job Workspace shows Site Information section with contacts',
   // Site contacts list renders
   await expect(page.getByTestId('pm-site-contacts')).toBeVisible();
   await expect(page.getByTestId('pm-site-contact-0')).toBeVisible();
-  await expect(page.getByTestId('pm-site-contact-0')).toContainText('Brian Walsh');
+  await expect(page.getByTestId('pm-site-contact-0')).toContainText('Demo Site Manager');
   await expect(page.getByTestId('pm-site-contact-0')).toContainText('Site Manager');
 
   // Emergency contacts render
@@ -74,7 +74,7 @@ test('PM-DOC-02: PM Job Workspace documents section shows categorised documents'
   await expect(page.getByTestId('pm-doc-item-doc-pm-1')).toContainText('HVAC Replacement Specification');
 
   // Document shows uploader metadata
-  await expect(page.getByTestId('pm-doc-item-doc-pm-1')).toContainText('Alex Reid');
+  await expect(page.getByTestId('pm-doc-item-doc-pm-1')).toContainText('Demo PM');
 
   // View button present
   await expect(page.getByTestId('button-job-doc-view-doc-pm-1')).toBeVisible();

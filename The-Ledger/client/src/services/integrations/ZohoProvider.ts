@@ -14,7 +14,7 @@ export class ZohoProvider implements FinancialProvider {
 
   async fetchClients(): Promise<FinancialClient[]> {
     return new Promise(resolve => setTimeout(() => resolve([
-      { id: "zh-c-1", externalId: "ZH-CONT-001", name: "Tech Solutions", sourceSystem: "zoho" }
+      { id: "zh-c-1", externalId: "ZH-CONT-001", name: "Demo Tech Solutions", sourceSystem: "zoho" }
     ]), 800));
   }
 

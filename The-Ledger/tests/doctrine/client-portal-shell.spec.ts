@@ -96,9 +96,9 @@ test.describe('Client Portal Shell — Sites (CL-3)', () => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc1Active);
     await portalNavTo(page, 'sites');
     await expect(page.getByTestId('portal-sites')).toBeVisible();
-    // HSS (dc1) has at least one site card, including its Riverside site.
+    // Demo Client A (dc1) has at least one site card, including its Demo Industrial Estate site.
     await expect(page.locator('[data-testid^="portal-site-card-"]').first()).toBeVisible();
-    await expect(page.getByTestId('portal-sites')).toContainText('Riverside');
+    await expect(page.getByTestId('portal-sites')).toContainText('Demo Industrial Estate');
   });
 
   // CPS-08 — Site cards never expose access/security notes
@@ -115,9 +115,9 @@ test.describe('Client Portal Shell — Sites (CL-3)', () => {
   test('CPS-09: client B sites are isolated from client A', async ({ page }) => {
     await portalLoginAsActive(page, PORTAL_ACCOUNTS.dc2Active);
     await portalNavTo(page, 'sites');
-    // Showcase (dc2) site is at Kingsway; HSS's Riverside site must not appear.
-    await expect(page.getByTestId('portal-sites')).toContainText('Kingsway');
-    await expect(page.getByTestId('portal-sites')).not.toContainText('Riverside');
+    // Demo Client B (dc2) site is at Demo Street; Demo Client A's Demo Industrial Estate site must not appear.
+    await expect(page.getByTestId('portal-sites')).toContainText('2 Demo Street');
+    await expect(page.getByTestId('portal-sites')).not.toContainText('Demo Industrial Estate');
   });
 });
 

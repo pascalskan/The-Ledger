@@ -45,7 +45,7 @@ export const SEED_SYNC_LOGS: SyncLogEntry[] = [
     status: "syncing",
     message: "Sync initiated for invoice inv-draft-001",
     externalId: null,
-    initiatedBy: "Sarah Chen (CEO)",
+    initiatedBy: "Demo Executive (CEO)",
   },
   {
     id: "log-sync-002",
@@ -57,7 +57,7 @@ export const SEED_SYNC_LOGS: SyncLogEntry[] = [
     status: "synced",
     message: "Invoice synced successfully. External ID: QB-INV-4421",
     externalId: "QB-INV-4421",
-    initiatedBy: "Sarah Chen (CEO)",
+    initiatedBy: "Demo Executive (CEO)",
   },
   {
     id: "log-sync-003",
@@ -69,7 +69,7 @@ export const SEED_SYNC_LOGS: SyncLogEntry[] = [
     status: "syncing",
     message: "Sync initiated for customer client-001",
     externalId: null,
-    initiatedBy: "Sarah Chen (CEO)",
+    initiatedBy: "Demo Executive (CEO)",
   },
   {
     id: "log-sync-004",
@@ -81,7 +81,7 @@ export const SEED_SYNC_LOGS: SyncLogEntry[] = [
     status: "synced",
     message: "Customer synced to Xero. External ID: XERO-CUST-7823",
     externalId: "XERO-CUST-7823",
-    initiatedBy: "Sarah Chen (CEO)",
+    initiatedBy: "Demo Executive (CEO)",
   },
   {
     id: "log-sync-005",
@@ -93,7 +93,7 @@ export const SEED_SYNC_LOGS: SyncLogEntry[] = [
     status: "syncing",
     message: "Sync initiated for payroll export payroll-export-001",
     externalId: null,
-    initiatedBy: "Sarah Chen (CEO)",
+    initiatedBy: "Demo Executive (CEO)",
   },
   {
     id: "log-sync-006",
@@ -105,7 +105,7 @@ export const SEED_SYNC_LOGS: SyncLogEntry[] = [
     status: "failed",
     message: "Sync failed: Payroll account mapping not configured for QuickBooks.",
     externalId: null,
-    initiatedBy: "Sarah Chen (CEO)",
+    initiatedBy: "Demo Executive (CEO)",
   },
 ];
 
