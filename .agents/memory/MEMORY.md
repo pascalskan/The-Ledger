@@ -1,0 +1,1 @@
+- [Nested npm imports](nested-npm-imports.md) — the package installer targets the workspace root, not a nested app named in the run command.

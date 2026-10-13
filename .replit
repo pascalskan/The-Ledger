@@ -8,9 +8,33 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "cd The-Ledger && npm install && npm run build"]
+build = ["sh", "-c", "cd The-Ledger && npm ci --no-audit --no-fund && npm run build"]
 run = ["sh", "-c", "cd The-Ledger && npm run start"]
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd The-Ledger && npm run start"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
