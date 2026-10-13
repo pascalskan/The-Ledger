@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import compression from "compression";
 
 const app = express();
 const httpServer = createServer(app);
@@ -9,6 +10,7 @@ const httpServer = createServer(app);
 // Behind Replit's proxy; also what makes req.secure / Secure cookies correct
 // if session cookies are ever added.
 app.set("trust proxy", 1);
+app.use(compression());
 
 // The demo is embedded in an iframe on the owner's portfolio. No
 // X-Frame-Options is sent; framing is restricted with CSP frame-ancestors to

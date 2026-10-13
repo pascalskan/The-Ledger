@@ -10,7 +10,17 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Vite fingerprints everything in /assets, so it can be cached for a year;
+// index.html must always be revalidated so new deploys are picked up.
+app.use(
+    express.static(distPath, {
+      setHeaders: (res, filePath) => {
+        if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      },
+    }),
+  );
 
   // fall through to index.html if the file doesn't exist
   app.use("/{*path}", (_req, res) => {
