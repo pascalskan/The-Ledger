@@ -3,14 +3,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { usePortalAuth } from "@/lib/portalAuth";
+import { PortalLoginCard } from "@/components/portal/PortalLogin";
 
-export default function AuthPage() {
+interface AuthPageProps {
+  /** Supplied by the portal page so its own session state updates on sign-in. */
+  portalSignIn?: ReturnType<typeof usePortalAuth>["signIn"];
+}
+
+export default function AuthPage({ portalSignIn: portalSignInProp }: AuthPageProps = {}) {
   const { login, seedUsers } = useAuth();
   const { allRoles } = useStore();
+  const { signIn: ownPortalSignIn } = usePortalAuth();
+  const portalSignIn = portalSignInProp ?? ownPortalSignIn;
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("demo.ceo@example.com");
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +50,8 @@ export default function AuthPage() {
 
   return (
     <main id="main-content" className="min-h-screen w-full flex items-center justify-center bg-muted dark:bg-slate-950 p-4">
-      <Card className="w-full max-w-md shadow-xl border-border dark:border-slate-800">
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      <Card className="w-full shadow-xl border-border dark:border-slate-800" data-testid="staff-login">
         <CardHeader className="space-y-1 text-center pb-8">
           <div className="mx-auto w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
             <span className="text-2xl font-bold text-primary-foreground">L</span>
@@ -59,7 +68,7 @@ export default function AuthPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-4">
-              <Label>Demo Accounts</Label>
+              <Label>Employee Demo Accounts</Label>
               <div className="grid grid-cols-1 gap-2">
                 {demoUsers.map(u => (
                   <Button 
@@ -85,15 +94,10 @@ export default function AuthPage() {
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
-          <Separator className="my-6" />
-          <div className="space-y-2 text-center">
-            <p className="text-xs text-muted-foreground">Want to see what your clients see?</p>
-            <Button type="button" variant="outline" className="w-full" onClick={() => setLocation("/portal")} data-testid="auth-client-portal-link">
-              Open Client Portal Demo
-            </Button>
-          </div>
         </CardContent>
       </Card>
+      <PortalLoginCard signIn={portalSignIn} headingLevel={2} onSuccess={() => setLocation("/portal")} />
+      </div>
     </main>
   );
 }

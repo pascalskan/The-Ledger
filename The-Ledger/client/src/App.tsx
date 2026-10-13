@@ -161,7 +161,7 @@ function Router() {
   return (
     <Suspense fallback={<RouteFallback />}>
     <Switch>
-      <Route path="/auth" component={AuthPage} />
+      <Route path="/auth">{() => <AuthPage />}</Route>
       {/* Client Portal — self-authenticating surface. The single page controller
           renders the portal shell + the active section from the URL. */}
       <Route path="/portal" component={PortalPage} />

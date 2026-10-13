@@ -32,7 +32,7 @@ import { getPortalBranding } from "@/lib/portalBranding";
 import { recordPortalAudit } from "@/lib/portalAudit";
 import { createThread, addClientMessage, recordThreadViewed, type ClientThreadTopic } from "@/lib/portalCommunication";
 import { PortalShell, PORTAL_NAV, type PortalSectionKey } from "@/components/portal/PortalShell";
-import { PortalLogin } from "@/components/portal/PortalLogin";
+import AuthPage from "@/pages/auth";
 import { PortalDashboard } from "@/pages/portal/dashboard";
 import { PortalSites } from "@/pages/portal/sites";
 import { PortalJobs } from "@/pages/portal/jobs";
@@ -207,7 +207,7 @@ export default function PortalPage() {
 
   // ── Unauthenticated → login (covers direct-URL access to any section) ──────
   if (!account) {
-    return <PortalLogin branding={branding} signIn={signIn} />;
+    return <AuthPage portalSignIn={signIn} />;
   }
 
   const handleOpenJob = (job: PortalJob) => setLocation(`/portal/jobs/${job.id}`);
