@@ -1176,7 +1176,9 @@ export default function ClientDetailPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => window.open(d.url || "#", "_blank")}
+                          onClick={() => (d.url && d.url !== "#"
+                            ? window.open(d.url, "_blank", "noopener,noreferrer")
+                            : toast({ title: "Demo document", description: "No file is attached to this sample document." }))}
                           data-testid={`button-client-doc-open-${d.id || idx}`}
                         >
                           <Link2 className="h-4 w-4 mr-2" /> Open

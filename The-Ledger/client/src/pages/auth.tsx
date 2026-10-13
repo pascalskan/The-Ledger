@@ -21,30 +21,26 @@ export default function AuthPage({ portalSignIn: portalSignInProp }: AuthPagePro
   const [, setLocation] = useLocation();
   // `staff:<email>` or `client:<email>` — one selection across both account types.
   const [selected, setSelected] = useState("staff:demo.ceo@example.com");
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      const [kind, ...rest] = selected.split(":");
-      const email = rest.join(":");
-      if (kind === "client") {
-        // Demo mode: picking a client signs straight into that client's portal.
-        portalSignIn(email);
-        setLocation("/portal");
-        return;
-      }
-      login(email);
-      let target = "/";
-      try {
-        const saved = sessionStorage.getItem("ledger-return-to");
-        sessionStorage.removeItem("ledger-return-to");
-        if (saved && saved.startsWith("/") && !saved.startsWith("//") && !saved.startsWith("/auth")) target = saved;
-      } catch { /* storage unavailable */ }
-      setLocation(target);
-    }, 800);
+  // One click on a demo account signs in directly.
+  const signInAs = (key: string) => {
+    setSelected(key);
+    const [kind, ...rest] = key.split(":");
+    const email = rest.join(":");
+    if (kind === "client") {
+      // Demo mode: picking a client signs straight into that client's portal.
+      portalSignIn(email);
+      setLocation("/portal");
+      return;
+    }
+    login(email);
+    let target = "/";
+    try {
+      const saved = sessionStorage.getItem("ledger-return-to");
+      sessionStorage.removeItem("ledger-return-to");
+      if (saved && saved.startsWith("/") && !saved.startsWith("//") && !saved.startsWith("/auth")) target = saved;
+    } catch { /* storage unavailable */ }
+    setLocation(target);
   };
 
   const demoUsers = seedUsers.filter(u => u.companyId === DEMO_COMPANY_ID);
@@ -62,7 +58,8 @@ export default function AuthPage({ portalSignIn: portalSignInProp }: AuthPagePro
 
   return (
     <main id="main-content" className="min-h-screen w-full flex items-center justify-center bg-muted dark:bg-slate-950 p-4">
-      <Card className="w-full max-w-md shadow-xl border-border dark:border-slate-800" data-testid="staff-login">
+      <div className="w-full max-w-md flex flex-col items-center">
+      <Card className="w-full shadow-xl border-border dark:border-slate-800" data-testid="staff-login">
         <CardHeader className="space-y-1 text-center pb-8">
           <div className="mx-auto w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4 shadow-lg shadow-primary/20">
             <span className="text-2xl font-bold text-primary-foreground">L</span>
@@ -77,9 +74,9 @@ export default function AuthPage({ portalSignIn: portalSignInProp }: AuthPagePro
           </p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
             <div className="space-y-4">
-              <Label>Demo Accounts</Label>
+              <Label>Choose a demo account</Label>
               <div className="grid grid-cols-1 gap-2">
                 {demoUsers.map(u => {
                   const key = `staff:${u.email}`;
@@ -89,7 +86,7 @@ export default function AuthPage({ portalSignIn: portalSignInProp }: AuthPagePro
                       type="button"
                       variant={selected === key ? "secondary" : "ghost"}
                       className="justify-start h-auto py-2 px-3 border border-dashed border-slate-300 dark:border-slate-700"
-                      onClick={() => setSelected(key)}
+                      onClick={() => signInAs(key)}
                     >
                       <div className="text-left w-full">
                         <div className="flex justify-between items-center">
@@ -109,7 +106,7 @@ export default function AuthPage({ portalSignIn: portalSignInProp }: AuthPagePro
                       type="button"
                       variant={selected === key ? "secondary" : "ghost"}
                       className="justify-start h-auto py-2 px-3 border border-dashed border-slate-300 dark:border-slate-700"
-                      onClick={() => setSelected(key)}
+                      onClick={() => signInAs(key)}
                       data-testid={`auth-client-${a.clientId}`}
                     >
                       <div className="text-left w-full">
@@ -124,13 +121,13 @@ export default function AuthPage({ portalSignIn: portalSignInProp }: AuthPagePro
                 })}
               </div>
             </div>
-            
-            <Button type="submit" className="w-full font-semibold mt-6" size="lg" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
-            </Button>
-          </form>
+          </div>
         </CardContent>
       </Card>
+      <p className="mt-4 text-center text-[11px] text-muted-foreground max-w-md" data-testid="demo-banner">
+        Demo with sample data. Ongoing project: front end complete, backend not yet implemented.
+      </p>
+      </div>
     </main>
   );
 }

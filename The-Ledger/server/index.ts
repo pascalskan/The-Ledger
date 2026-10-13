@@ -6,6 +6,28 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
+// Behind Replit's proxy; also what makes req.secure / Secure cookies correct
+// if session cookies are ever added.
+app.set("trust proxy", 1);
+
+// The demo is embedded in an iframe on the owner's portfolio. No
+// X-Frame-Options is sent; framing is restricted with CSP frame-ancestors to
+// this origin plus the origins listed in PORTFOLIO_ORIGINS (comma-separated,
+// e.g. "https://my-portfolio.example"). No wildcard.
+const frameAncestors = [
+  "'self'",
+  ...(process.env.PORTFOLIO_ORIGINS ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter((o) => /^https?:\/\/[^\s*;]+$/.test(o)),
+].join(" ");
+
+app.use((_req, res, next) => {
+  res.removeHeader("X-Frame-Options");
+  res.setHeader("Content-Security-Policy", `frame-ancestors ${frameAncestors}`);
+  next();
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
