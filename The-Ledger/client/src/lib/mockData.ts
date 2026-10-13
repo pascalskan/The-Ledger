@@ -1521,21 +1521,21 @@ let users = [...PUBLIC_USERS];
 
 // ──────────────────────────────────────────────────────────────
 // AUTH PERSISTENCE
-// Stores the logged-in user's email in localStorage so that a
+// Stores the logged-in user's email in sessionStorage so that a
 // full-page navigation (e.g. Playwright page.goto()) does not
 // reset currentUser to null and cause ProtectedRoute to redirect.
 //
-// clearBrowserState() in tests calls localStorage.clear() which
+// clearBrowserState() in tests calls sessionStorage.clear() which
 // removes the key — auth correctly resets between tests.
 // ──────────────────────────────────────────────────────────────
 const AUTH_STORAGE_KEY = "ledger-auth-email";
 
 function restoreAuthFromStorage(): User | null {
   try {
-    const email = typeof localStorage !== "undefined" ? localStorage.getItem(AUTH_STORAGE_KEY) : null;
+    const email = typeof sessionStorage !== "undefined" ? sessionStorage.getItem(AUTH_STORAGE_KEY) : null;
     if (email) return PUBLIC_USERS.find(u => u.email === email) ?? null;
   } catch {
-    // localStorage unavailable (SSR / locked storage) — fail silently
+    // sessionStorage unavailable (SSR / locked storage) — fail silently
   }
   return null;
 }
@@ -1544,42 +1544,10 @@ let currentUser: User | null = restoreAuthFromStorage();
 let companySettings = { ...DEFAULT_SETTINGS }; // This will be per-request simulated in useStore
 let demoSettings = { ...DEMO_SETTINGS };
 
-// ---------------------------------------------------------------------------
-// Standalone store mutator — safe to call outside React components.
-//
-// useStore() is a React hook and cannot be called from Zustand actions or
-// other non-component contexts. This function writes directly to the shared
-// module-level reviewItems array so the offline queue sync path can hand
-// off a replayed payload to the Review Centre without going through the hook.
-//
-// Deduplication: if a ReviewItem with the same sourceQueueId already exists
-// the call is a no-op. This prevents duplicate entries when a queue item is
-// replayed more than once (e.g. retry after a transient failure where the
-// first attempt actually succeeded but the status update was lost).
-//
-// Persistence: entries are also written to localStorage under
-// DIRECT_REVIEW_ITEMS_KEY so they survive full page reloads (which reset the
-// module-level array). On module init the key is read back and merged.
-// ---------------------------------------------------------------------------
-const DIRECT_REVIEW_ITEMS_KEY = "ledger-direct-review-items";
-
-function loadPersistedDirectItems(): ReviewItem[] {
-  try {
-    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(DIRECT_REVIEW_ITEMS_KEY) : null;
-    if (raw) return JSON.parse(raw) as ReviewItem[];
-  } catch { /* ignore */ }
-  return [];
-}
-
-// Merge any persisted direct items into the module array at startup.
-(function mergePersistedDirectItems() {
-  const persisted = loadPersistedDirectItems();
-  for (const item of persisted) {
-    if (!reviewItems.some(r => r.id === item.id)) {
-      reviewItems.push(item);
-    }
-  }
-})();
+// Demo build: direct review items live in memory only, like all other data,
+// so a page refresh returns to the original mock data.
+// Any copy left in sessionStorage by an earlier build is cleared.
+try { localStorage.removeItem("ledger-direct-review-items"); } catch { /* ignore */ }
 
 export function addReviewItemDirect(r: Omit<ReviewItem, "id" | "companyId">): void {
   const sourceId = (r as any).sourceQueueId as string | undefined;
@@ -1595,12 +1563,6 @@ export function addReviewItemDirect(r: Omit<ReviewItem, "id" | "companyId">): vo
   } as ReviewItem;
   reviewItems.push(entry);
 
-  // Persist to localStorage so the entry survives page reloads.
-  try {
-    const existing = loadPersistedDirectItems();
-    existing.push(entry);
-    localStorage.setItem(DIRECT_REVIEW_ITEMS_KEY, JSON.stringify(existing));
-  } catch { /* ignore */ }
 
   logs.unshift({
     id: Math.random().toString(36).substr(2, 9),
@@ -1619,13 +1581,13 @@ export const useAuth = () => {
   const login = (email: string) => {
     const found = PUBLIC_USERS.find(u => u.email === email) || PUBLIC_USERS[0];
     currentUser = found;
-    try { localStorage.setItem(AUTH_STORAGE_KEY, found.email); } catch { /* ignore */ }
+    try { sessionStorage.setItem(AUTH_STORAGE_KEY, found.email); } catch { /* ignore */ }
     setUser(found);
   };
 
   const logout = () => {
     currentUser = null;
-    try { localStorage.removeItem(AUTH_STORAGE_KEY); } catch { /* ignore */ }
+    try { sessionStorage.removeItem(AUTH_STORAGE_KEY); } catch { /* ignore */ }
     try { sessionStorage.removeItem("ledger-return-to"); sessionStorage.setItem("ledger-skip-return", "1"); } catch { /* ignore */ }
     setUser(null);
   };

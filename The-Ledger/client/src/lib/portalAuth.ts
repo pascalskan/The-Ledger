@@ -9,7 +9,7 @@
 //
 //   - The PortalAccount model + seed data (multi-tenant by clientId → company)
 //   - Provisioning mutators (CEO-only at the call site — gated in the UI)
-//   - The portal session (localStorage, distinct key from internal auth)
+//   - The portal session (sessionStorage, distinct key from internal auth)
 //   - usePortalAuth(): sign-in / sign-out with Disabled + Pending protection
 //
 // Frontend-only mock. No backend, no real credentials.
@@ -156,7 +156,7 @@ const PORTAL_SESSION_KEY = "ledger-portal-session";
 
 function restorePortalSession(): PortalAccount | null {
   try {
-    const id = typeof localStorage !== "undefined" ? localStorage.getItem(PORTAL_SESSION_KEY) : null;
+    const id = typeof sessionStorage !== "undefined" ? sessionStorage.getItem(PORTAL_SESSION_KEY) : null;
     if (!id) return null;
     const account = getPortalAccountById(id);
     // Only restore Active accounts — a session must never resurrect a
@@ -210,7 +210,7 @@ export const usePortalAuth = () => {
 
     currentPortalAccount = loggedIn;
     try {
-      localStorage.setItem(PORTAL_SESSION_KEY, loggedIn.id);
+      sessionStorage.setItem(PORTAL_SESSION_KEY, loggedIn.id);
     } catch {
       /* ignore */
     }
@@ -239,7 +239,7 @@ export const usePortalAuth = () => {
     }
     currentPortalAccount = null;
     try {
-      localStorage.removeItem(PORTAL_SESSION_KEY);
+      sessionStorage.removeItem(PORTAL_SESSION_KEY);
     } catch {
       /* ignore */
     }

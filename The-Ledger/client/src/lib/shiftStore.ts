@@ -147,7 +147,7 @@ export const useShiftStore = create<ShiftStore>()(
     }),
     {
       name: SHIFT_STORAGE_KEY,
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({ activeShift: state.activeShift }),
       onRehydrateStorage: () => (state) => {
         if (state) {

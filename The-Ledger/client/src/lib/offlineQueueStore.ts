@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { addReviewItemDirect } from "@/lib/mockData";
 import { logSyncEvent } from "@/lib/syncEventStore";
 
@@ -422,6 +422,7 @@ export const useOfflineQueueStore = create<OfflineQueueStore>()(
     }),
     {
       name: OFFLINE_QUEUE_STORAGE_KEY,
+      storage: createJSONStorage(() => sessionStorage),
       version: 1,
       partialize: (state) => ({ queue: state.queue, isOffline: state.isOffline }),
       migrate: (persistedState: any) => {

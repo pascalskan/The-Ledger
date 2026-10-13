@@ -302,7 +302,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   const { roles, reviewItems, jobs } = useStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
-    return localStorage.getItem("sidebar-collapsed") === "true";
+    return sessionStorage.getItem("sidebar-collapsed") === "true";
   });
   const [adminExpanded, setAdminExpanded] = useState(false);
 
@@ -317,7 +317,7 @@ function LayoutShell({ children }: { children: React.ReactNode }) {
   const toggleSidebar = () => {
     const newState = !collapsed;
     setCollapsed(newState);
-    localStorage.setItem("sidebar-collapsed", String(newState));
+    sessionStorage.setItem("sidebar-collapsed", String(newState));
   };
 
   const handleLogout = () => {

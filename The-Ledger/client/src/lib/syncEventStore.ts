@@ -48,7 +48,7 @@ export const useSyncEventStore = create<SyncEventStore>()(
     }),
     {
       name: SYNC_EVENT_STORAGE_KEY,
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => sessionStorage),
     }
   )
 );

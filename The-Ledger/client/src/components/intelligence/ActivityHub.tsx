@@ -175,7 +175,7 @@ function relativeTime(iso: string): string {
   return formatTime(iso);
 }
 
-// "Show Event Detail" localStorage key (spec §6.6 — namespaced; the
+// "Show Event Detail" sessionStorage key (spec §6.6 — namespaced; the
 // Switch is the only writer; ?detail=1 wins per visit without writing)
 const EVENT_DETAIL_LS_KEY = "ledger.intelligence.eventDetail";
 
@@ -269,7 +269,7 @@ export function ActivityHub() {
 
   // Toggle precedence (normative — spec §6.6, P1-D):
   // with ?detail= the URL param wins for the visit (no storage write);
-  // without it, defensive localStorage read (absent/invalid → OFF);
+  // without it, defensive sessionStorage read (absent/invalid → OFF);
   // param changes via in-app navigation re-evaluate.
   useEffect(() => {
     if (detailParam !== null) {
@@ -277,7 +277,7 @@ export function ActivityHub() {
     } else {
       let stored: string | null = null;
       try {
-        stored = localStorage.getItem(EVENT_DETAIL_LS_KEY);
+        stored = sessionStorage.getItem(EVENT_DETAIL_LS_KEY);
       } catch {
         stored = null;
       }
@@ -285,11 +285,11 @@ export function ActivityHub() {
     }
   }, [detailParam]);
 
-  // The Switch is the only localStorage writer (rule 4)
+  // The Switch is the only sessionStorage writer (rule 4)
   function handleDetailToggle(value: boolean) {
     setShowDetail(value);
     try {
-      localStorage.setItem(EVENT_DETAIL_LS_KEY, value ? "1" : "0");
+      sessionStorage.setItem(EVENT_DETAIL_LS_KEY, value ? "1" : "0");
     } catch {
       // storage unavailable — toggle still works for the session
     }
