@@ -12,7 +12,7 @@ export default function AuthPage() {
   const { login, seedUsers } = useAuth();
   const { allRoles } = useStore();
   const [, setLocation] = useLocation();
-  const [email, setEmail] = useState("ceo@ledger.com");
+  const [email, setEmail] = useState("demo.ceo@example.com");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,7 +31,6 @@ export default function AuthPage() {
     }, 800);
   };
 
-  const realUsers = seedUsers.filter(u => u.companyId !== DEMO_COMPANY_ID);
   const demoUsers = seedUsers.filter(u => u.companyId === DEMO_COMPANY_ID);
 
   const getRoleNames = (roleIds: string[]) => {
@@ -60,36 +59,7 @@ export default function AuthPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-4">
-              <Label>Real Business Accounts</Label>
-              <div className="grid grid-cols-1 gap-2">
-                {realUsers.map(u => (
-                  <Button 
-                    key={u.id} 
-                    type="button" 
-                    variant={email === u.email ? "default" : "outline"}
-                    className="justify-start h-auto py-2 px-3"
-                    onClick={() => setEmail(u.email)}
-                  >
-                    <div className="text-left w-full">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-xs">{getRoleNames(u.roleIds)}</span>
-                        {email === u.email && <Badge variant="secondary" className="text-[10px] h-4">Selected</Badge>}
-                      </div>
-                      <div className="text-[10px] opacity-90">{u.email}</div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or Demo Environment</span>
-                </div>
-              </div>
-
+              <Label>Demo Accounts</Label>
               <div className="grid grid-cols-1 gap-2">
                 {demoUsers.map(u => (
                   <Button 
@@ -115,6 +85,13 @@ export default function AuthPage() {
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
+          <Separator className="my-6" />
+          <div className="space-y-2 text-center">
+            <p className="text-xs text-muted-foreground">Want to see what your clients see?</p>
+            <Button type="button" variant="outline" className="w-full" onClick={() => setLocation("/portal")} data-testid="auth-client-portal-link">
+              Open Client Portal Demo
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </main>

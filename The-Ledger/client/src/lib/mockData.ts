@@ -1512,7 +1512,12 @@ let roles: Role[] = [
   },
 ];
 
-let users = [...SEED_USERS];
+// PUBLIC DEPLOY (deploy/replit-public): only demo accounts are signable-in.
+// The real business accounts stay in SEED_USERS but are unreachable from
+// login, session restore, or the sign-in page.
+const PUBLIC_USERS = SEED_USERS.filter(u => u.companyId === DEMO_COMPANY_ID);
+
+let users = [...PUBLIC_USERS];
 
 // ──────────────────────────────────────────────────────────────
 // AUTH PERSISTENCE
@@ -1528,7 +1533,7 @@ const AUTH_STORAGE_KEY = "ledger-auth-email";
 function restoreAuthFromStorage(): User | null {
   try {
     const email = typeof localStorage !== "undefined" ? localStorage.getItem(AUTH_STORAGE_KEY) : null;
-    if (email) return SEED_USERS.find(u => u.email === email) ?? null;
+    if (email) return PUBLIC_USERS.find(u => u.email === email) ?? null;
   } catch {
     // localStorage unavailable (SSR / locked storage) — fail silently
   }
@@ -1612,7 +1617,7 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(currentUser);
 
   const login = (email: string) => {
-    const found = SEED_USERS.find(u => u.email === email) || SEED_USERS[0];
+    const found = PUBLIC_USERS.find(u => u.email === email) || PUBLIC_USERS[0];
     currentUser = found;
     try { localStorage.setItem(AUTH_STORAGE_KEY, found.email); } catch { /* ignore */ }
     setUser(found);
