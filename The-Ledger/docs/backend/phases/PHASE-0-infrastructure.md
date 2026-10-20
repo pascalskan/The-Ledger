@@ -165,7 +165,7 @@ Append-only and permanent. **Every column is immutable**: the runtime roles can 
 | `source_object_id` | `uuid` | no | — | — | `source_object_id` |
 | `destination_object_type` | `text` | yes | — | `CHECK ((destination_object_type IS NULL) = (destination_object_id IS NULL))` | `destination_object_type` |
 | `destination_object_id` | `uuid` | yes | — | see above | `destination_object_id` |
-| `job_id` | `uuid` | yes | — | Required by the domain when the entry is financially relevant; enforced by the writing module (OQ-05) | `job_id` |
+| `job_id` | `uuid` | yes | — | Required by the domain when the entry is financially relevant; enforced by the audit catalogue: `append()` refuses a missing `jobId` for a `jobRequired` type (§4.4, R2-16) | `job_id` |
 | `site_id` | `uuid` | yes | — | — | `site_id` |
 | `client_id` | `uuid` | yes | — | — | `client_id` |
 | `previous_value` | `jsonb` | yes | — | — | `previous_value` |
@@ -337,6 +337,7 @@ REVOKE CONNECT, TEMPORARY ON DATABASE <database> FROM PUBLIC;
 GRANT  CONNECT            ON DATABASE <database> TO ledger_app, ledger_worker;
 ```
 
+- **Other roles lose PUBLIC's default `CONNECT`.** Revoking `CONNECT` from `PUBLIC` also cuts off any other existing role that relied on it, for example a hosting provider's monitoring role or a developer's personal role. Before running the `REVOKE`, the owner lists the existing roles (`\du`) and grants `CONNECT` explicitly to every other role that must still reach the database.
 - **Passwords.** Use the psql `\password` meta-command, or `ALTER ROLE … PASSWORD 'SCRAM-SHA-256$…'` with a verifier computed offline. Never type a plain-text password into a SQL statement.
 - **Roles are cluster-wide.** Production must therefore use its own database server or project, or distinct role names. Otherwise the production `ledger_app` would be the same role that can connect to the development and test databases.
 
@@ -479,8 +480,7 @@ type Actor =
   | { kind: 'system';      component: string };                            // worker, subscriber, script
 
 interface Causation {
-  readonly eventId: string;              // the event whose subscriber is running
-  readonly actorId: string | null;       // nearest human actor in the causal chain
+  readonly eventId: string;              // the event whose subscriber is running — all module code can see
 }
 
 interface TenantContext   { readonly companyId: CompanyId }
@@ -492,31 +492,89 @@ interface ExecutionContext extends TenantContext {
 }
 ```
 
-How contexts are created. `ExecutionContext` objects carry a private brand, so only platform factories can produce one; a module cannot build one from an object literal.
+**What makes a context genuine (R2-01).**
+- *Membership.* Every context a platform factory builds is added to a platform-private `WeakSet`. A context is genuine only if **that exact object** is a member. A copy made with spread, `Object.assign`, `structuredClone` or an object literal is not a member, even if every field matches.
+- *Frozen.* A genuine context is deep-frozen — the context, its `actor` and its `causation` — so it cannot be edited in place.
+- *Where it is checked.* `runInTransaction`, `tenantScope`, `tenantWhere`, `tenantValues` and every port wrapper check membership first. They throw `ForgedContextError` before any SQL runs.
+- *Cost.* A `WeakSet` lookup, with no cryptography.
 
-| Factory | Exported from `server/platform/index.ts` | Produces | `causation` |
+**Contexts expire (R2-01).**
+- *Request contexts* are marked dead when the response emits `finish` or `close`.
+- *Subscriber contexts* are marked dead when their Unit of Work closes.
+- *Effect.* `runInTransaction` refuses a dead context with `ContextExpiredError`. Work kept alive after its request — a timer, or an un-awaited promise — can therefore never open a transaction in that request's name.
+
+**Causation's hidden half (R2-02).**
+- *Visible to modules:* `causation.eventId` only.
+- *Platform-private:* the nearest human actor in the chain, `row.actor_id ?? row.causation_actor_id`. It is kept in a platform `WeakMap` keyed by the context, and only `AuditWriter` and `OutboxWriter` read it, to fill `causation_actor_id` (§3.2–§3.4).
+- *Effect:* module code cannot read that actor, so cannot mistake it for an authority.
+
+**Factories.** Modules receive contexts; only the platform and scripts make them.
+
+| Factory | Where it is available | Produces | `causation` |
 |---|---|---|---|
-| Platform-token middleware | — (runs on every `/api/v1` request) | `actor.kind = 'user'`, `companyId` from the token | `null` |
-| Portal-token middleware | — (runs on every `/portal/v1` request) | `actor.kind = 'portal_user'` | `null` |
-| `createSystemContext(companyId, component)` | yes — for scripts and, later, the scheduler | `actor.kind = 'system'` | `null` |
-| Worker subscriber context | **no** — internal to `server/platform/events/` | `actor.kind = 'system'`, `component` = subscriber name, `companyId` from the outbox row | `{ eventId: row.event_id, actorId: row.actor_id ?? row.causation_actor_id }` |
+| Platform-token middleware | internal (runs on every authenticated `/api/v1` request) | `actor.kind = 'user'`, `companyId` from the token | `null` |
+| Portal-token middleware | internal (runs on every authenticated `/portal/v1` request) | `actor.kind = 'portal_user'` | `null` |
+| `createSystemContext(companyId, component)` | **only** `server/platform/system/index.ts` — importable from `server/scripts/**`, platform code, the two entry points and test files; never from `server/modules/**` (import rule 11, R2-03) | `actor.kind = 'system'` | `null` |
+| Worker subscriber context | internal to `server/platform/events/` | `actor.kind = 'system'`, `component` = subscriber name, `companyId` from the outbox row | `{ eventId: row.event_id }`, plus the private human actor |
 
-So causation is recorded automatically and cannot be set, cleared or forged by module code: `AuditEntryInput` and `DomainEventInput` have no causation fields, and the only context with causation is the one the worker builds from the claimed row. `AuditWriter` and `OutboxWriter` copy `causation.eventId` and `causation.actorId` into `causation_event_id` and `causation_actor_id` (§3.2–§3.4). Following `causation_event_id` through `event_log` and the audit table leads from any subscriber-written record back to the human action that started the chain (BACKEND_OBSERVABILITY_ARCHITECTURE.md, How Platform-Wide Traceability Is Preserved).
+Causation is therefore recorded automatically, and module code cannot set, clear, forge or read its actor half:
+- `AuditEntryInput` and `DomainEventInput` have no causation fields.
+- The only context that carries causation is the one the worker builds from a claimed row.
+
+Following `causation_event_id` through `event_log` and the audit table leads from any subscriber-written record back to the human action that started the chain (BACKEND_OBSERVABILITY_ARCHITECTURE.md, How Platform-Wide Traceability Is Preserved).
 
 Rules:
 
-- A `CompanyId` is created only by `toCompanyId(value)`, which throws `MissingTenantContextError` unless the value is a UUID. The tenant middleware creates it from a verified token claim; the worker creates it from an outbox row. There is no default company and no way to construct an empty one.
-- Every use case takes an `ExecutionContext` (or at least a `TenantContext`) as a required parameter. Omitting it is a TypeScript error; passing `undefined` or a non-UUID from untyped code is a runtime `MissingTenantContextError` (BACKEND_LAYERING_ARCHITECTURE.md: "Missing `company_id` in any query is a runtime error, not a silent bypass").
-- The actor maps to the audit columns as: `user` → (`actor_id` = `userId`, `actor_role` = `role`); `portal_user` → (`portalAccountId`, `client`); `system` → (`NULL`, `system`).
-- Event subscribers always run with a `system` actor (`component` = the subscriber name). The platform provides `isHumanActor(actor)`; later phases use it to refuse system actors on every approval path (Approval Doctrine; Invariant 8). `causation.actorId` is a record of who started the chain, **never an authority**: no approval or authorisation check may treat it as the acting user. Phase 0 itself has no approval path.
-- **Platform types stop at the Application Layer.** Domain code uses plain `string` for company, user and object IDs. The Application Layer receives branded types from the platform (`CompanyId`, `ExecutionContext`) and passes their values into domain objects as strings; a `CompanyId` is assignable to `string`, so no conversion is needed. A shared types-only kernel that domain code could import was considered and not chosen. BACKEND_LAYERING_ARCHITECTURE.md, Layer 1 says "Domain Layer → nothing (it is the foundation)", and a kernel shared across modules would also couple every module's domain to one file (Module Boundary Rule 5: "The Domain Layer of a module is private to that module"). The cost is small: the brand guards use-case entry points and repository scoping, and both belong to the Application and Infrastructure Layers. Value objects a domain needs (for example a module's own `Money`) are defined in that module's `domain/`.
+- **Company IDs.** A `CompanyId` is created only by `toCompanyId(value)`, which throws `MissingTenantContextError` unless the value is a UUID.
+  - `toCompanyId` is exported only from `server/platform/system/index.ts` (R2-03).
+  - The tenant middleware creates a `CompanyId` from a verified token claim; the worker creates one from an outbox row.
+  - Module code never creates one: it only receives `ctx.companyId`.
+  - There is no default company and no way to construct an empty one.
+- **Every use case takes an `ExecutionContext`** (or at least a `TenantContext`) as a required parameter.
+  - Omitting it is a TypeScript error.
+  - From untyped code, passing `undefined`, a non-UUID or a copied context fails at run time with `MissingTenantContextError` or `ForgedContextError` (BACKEND_LAYERING_ARCHITECTURE.md: "Missing `company_id` in any query is a runtime error, not a silent bypass").
+- **Actor to audit columns.**
+
+  | Actor kind | `actor_id` | `actor_role` |
+  |---|---|---|
+  | `user` | `userId` | `role` |
+  | `portal_user` | `portalAccountId` | `client` |
+  | `system` | `NULL` | `system` |
+- **Subscribers are always `system`.** Event subscribers always run with a `system` actor whose `component` is the subscriber name.
+- **`isHumanActor` is never authority on its own.** It returns true for `user` and `portal_user`.
+  - An approval path must also call its module's `assertApproverAuthority` (role plus job scope; from Phase 2, re-loaded from the database rather than trusted from the token — §4.10).
+  - Portal users are human but **never approvers** (CLAUDE.md RBAC rules: "Clients never receive operational management permissions").
+  - Platform ports marked `humanOnly` accept only a `user` actor with no causation (PS-16).
+- **No domain field is filled from causation (R2-02).** `approved_by`, `rejected_by`, `reviewed_by`, `requested_by`, `created_by` and every other `*_by` field are filled only from `ctx.actor` of a `user` (or, where the domain says so, `portal_user`) context. Causation records who started a chain; it never stands in for the acting user.
+- **Platform types stop at the Application Layer.** Domain code uses plain `string` for company, user and object IDs. The Application Layer receives branded types from the platform (`CompanyId`, `ExecutionContext`) and passes their values into domain objects as strings; a `CompanyId` is assignable to `string`, so no conversion is needed.
+  - A shared types-only kernel that domain code could import was considered and not chosen. BACKEND_LAYERING_ARCHITECTURE.md, Layer 1 says "Domain Layer → nothing (it is the foundation)". A kernel shared across modules would also couple every module's domain to one file (Module Boundary Rule 5: "The Domain Layer of a module is private to that module").
+  - The cost is small: the brand guards use-case entry points and repository scoping, and both belong to the Application and Infrastructure Layers.
+  - Value objects a domain needs (for example a module's own `Money`) are defined in that module's `domain/`.
 
 ### 4.2 Tenant-scoped data access
 
-Source: BACKEND_MULTITENANCY_ARCHITECTURE.md, Layer 3 and the Enforcement Checklist.
+Source: BACKEND_MULTITENANCY_ARCHITECTURE.md, Layers 3–4 and the Enforcement Checklist.
 
-- `tenantScope(table, ctx)` returns the Drizzle condition `eq(table.companyId, ctx.companyId)`; `tenantWhere(table, ctx, ...conditions)` returns `and(tenantScope(table, ctx), ...conditions)`. Both only accept tables that have a `companyId` column (a type error otherwise) and call `toCompanyId` on the context value, so a missing tenant fails at runtime too.
-- Repositories in every later phase build their `WHERE` clauses with `tenantWhere`. The platform cannot make Drizzle reject a hand-written query without it; that remains a review item and a cross-tenant gate test in every phase that owns tenant data.
+**Reads.**
+- `tenantScope(table, ctx)` returns the Drizzle condition `eq(table.companyId, ctx.companyId)`.
+- `tenantWhere(table, ctx, ...conditions)` returns `and(tenantScope(table, ctx), ...conditions)`.
+
+**Writes (R2-08).** `tenantValues(table, ctx, row)` returns `row` with `companyId` set from `ctx`. If `row` already carries a different `companyId`, it throws `TenantMismatchError` before any SQL runs.
+- **Rule for every later phase:** every insert into a tenant table builds its values with `tenantValues`.
+- Every update and delete builds its `WHERE` with `tenantWhere`.
+
+**What all three helpers check.**
+- They accept only tables that have a `companyId` column; any other table is a type error.
+- They check the context is genuine and live (§4.1).
+- They call `toCompanyId` internally, so a missing tenant also fails at run time.
+
+**The tenant is also known to the database.** At the start of every transaction, `runInTransaction` runs `SELECT set_config('app.company_id', $1, true)`. The setting is transaction-local and cleared at commit or rollback. Phase 9's Row Level Security policies read it (`current_setting('app.company_id')`). Phase 0 defines no policies.
+
+**Limits.** The platform cannot make Drizzle reject a hand-written query that bypasses these helpers. That remains:
+- a review item;
+- a boundary-scanner rule — module files may not name platform tables or open connections (rule 10);
+- a cross-tenant gate test in every phase that owns tenant data;
+- and, from Phase 9, RLS.
 
 ### 4.3 JWT claims
 
@@ -572,30 +630,60 @@ Lifecycle and guarantees:
 
 | State | Entered when | Allowed |
 |---|---|---|
-| `active` | `runInTransaction` opens a database transaction (`READ COMMITTED`) | Repository calls with `uow.tx`, `uow.audit.append`, `uow.events.record` |
-| `poisoned` | Any `append` or `record` call fails (validation or database error) | Nothing that changes the outcome: when `work` returns, the transaction is rolled back and `runInTransaction` rejects with `AuditWriteFailedError` / `OutboxWriteFailedError`, **even if `work` caught the error and returned normally** |
+| `active` | `runInTransaction` opens a database transaction (`READ COMMITTED`) and sets `app.company_id` (§4.2) | Repository calls with `uow.tx`, `uow.audit.append`, `uow.events.record`, port calls (PS-16) |
+| `poisoned` | Any `append`, `record` or `humanOnly` port call fails — validation, catalogue, actor or database error | Nothing that changes the outcome. When `work` returns, the transaction is rolled back and `runInTransaction` rejects with `AuditWriteFailedError`, `OutboxWriteFailedError` or `HumanActorRequiredError` — **even if `work` caught the error and returned normally** |
 | `committed` | `work` resolved and the unit was not poisoned | — |
 | `rolled_back` | `work` threw, or the unit was poisoned | — |
 | closed (`committed` or `rolled_back`) | — | Any later `append`, `record` or `tx` use throws `UnitOfWorkClosedError` and writes nothing |
 
 Further rules:
 
-- `runInTransaction` validates `ctx.companyId` with `toCompanyId` before opening the transaction.
-- Nesting is refused: calling `runInTransaction` while a unit is active in the same async context throws `NestedUnitOfWorkError`. A use case that calls another module's public function in the same transaction (D-06's closure use case is the first) passes its `uow` to that function instead.
-- `AuditEntryInput` has no `companyId`, `actorId`, `actorRole`, `occurredAt`, `causationEventId` or `causationActorId` fields: `AuditWriter` takes the company, actor and causation from `uow.context` and the time from the database, so an entry can never be written for another tenant, another actor or a made-up cause. It contains `entryType`, `sourceObjectType`, `sourceObjectId`, and optionally `destinationObjectType`/`destinationObjectId` (both or neither), `jobId`, `siteId`, `clientId`, `previousValue`, `newValue`, `externalReference`, `metadata`. It is validated with Zod (formats as in T-1) before the insert.
-- `DomainEventInput` has `eventType`, `sourceModule`, `sourceObjectType`, `sourceObjectId`, `payload` (a JSON object). `OutboxWriter` adds `eventId`, `eventVersion` `'1.0'`, `companyId`, `actorId` and causation from the context, and `occurredAt` from the database.
+- **Checks before the transaction opens.** `runInTransaction` checks that `ctx` is a genuine, live context (§4.1) and validates `ctx.companyId`.
+- **No nesting, no savepoints (R2-06).**
+  - Calling `runInTransaction` while a unit is active in the same async context throws `NestedUnitOfWorkError`.
+  - `uow.tx` is a wrapper whose `.transaction()` method (Drizzle's savepoint API) also throws `NestedUnitOfWorkError`. A module therefore cannot roll back part of a unit and keep the rest, which would let it undo a failed audit write and commit without it.
+  - Raw `SAVEPOINT`, `ROLLBACK`, `COMMIT`, `BEGIN`, `SET ROLE` and `set_config` statements in module code are forbidden by import rule 10.
+  - A use case that calls another module's public function or port in the same transaction (D-06's closure, D-17's approval effects) passes its `uow` instead.
+- **What poisoning catches.** It catches a *failed* audit or outbox write. It cannot catch a *missing* one: a use case that never calls `append` commits normally. A missing audit entry therefore stays a per-phase gate test — every financially relevant action asserts its entry exists in the same transaction — and a doctrine-review item. The audit catalogue below makes required entries discoverable, but does not force them.
+- **`AuditEntryInput`.** The caller supplies:
+  - `entryType`, `sourceObjectType`, `sourceObjectId`;
+  - optionally `destinationObjectType` with `destinationObjectId` (both or neither), `jobId`, `siteId`, `clientId`, `previousValue`, `newValue`, `externalReference` and `metadata`.
+
+  It has no `companyId`, `actorId`, `actorRole`, `occurredAt` or causation field: `AuditWriter` takes the company, actor and causation from `uow.context`, and the time from the database. An entry can never be written for another tenant, another actor or a made-up cause. The input is validated with a **strict** Zod schema — unknown keys are refused — before the insert. `previousValue`, `newValue` and `metadata` are each limited to 64 KB once serialised.
+- **`DomainEventInput`.** The caller supplies `eventType`, `sourceModule`, `sourceObjectType`, `sourceObjectId`, `payload` (a JSON object, at most 64 KB) and optionally `jobId`. It uses the same strict schema rules. `OutboxWriter` adds `eventId`, `eventVersion` `'1.0'`, `companyId`, `actorId` and causation from the context, and `occurredAt` from the database.
+
+**Audit and event catalogues (R2-16; closes OQ-05).** Each module declares the audit entry types and event types it produces in its `ModuleRegistration` (§4.8):
+
+```ts
+auditEntryTypes?: readonly { type: string; jobRequired: boolean }[];   // e.g. { type: 'timesheet_approved', jobRequired: true }
+producesEvents?:  readonly { type: string; jobRequired: boolean }[];   // e.g. { type: 'TimesheetApproved',  jobRequired: true }
+```
+
+| Check | When | Error |
+|---|---|---|
+| Each audit entry type and each event type is registered once across all modules | Start-up | Start-up error naming the type |
+| `append()` refuses an unregistered `entryType`, and a missing `jobId` when the type is `jobRequired` | Each call | `AuditEntryTypeError` (poisons the unit) |
+| `record()` refuses an unregistered `eventType`, a missing `jobId` when the type is `jobRequired`, and a `sourceModule` that is not the registering module's name | Each call | `EventTypeError` (poisons the unit) |
+| A subscriber's `eventTypes` must all be registered event types, so a misspelt subscription fails | Start-up | Start-up error naming the subscriber and type |
+
+The rules behind the catalogues:
+- Each later specification lists its catalogue entries and their `jobRequired` flags from the frozen domains. For example, every financially relevant entry type is `jobRequired` (Job Attribution Doctrine; Invariant 6).
+- The `job_id` columns stay nullable, because non-financial entries and events may have no job.
+- Test registrations add `gate_test_probe` (audit) and `GateProbeRecorded` (event).
+- The catalogue does not say which module may *write* a given entry type. Some domains share types (for example `inventory_mutation_created` appears in both the Report and Stock domains). The owning module registers each type once.
 
 ### 4.5 Events: envelope, subscribers and the outbox record lifecycle
 
 Source: BACKEND_EVENT_ARCHITECTURE.md, Event Payload Standard, Event Lifecycle, Subscriber Registry; BACKEND_SERVICE_ARCHITECTURE.md, Event Bus Guarantee; BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Outbox Delivery Worker, Worker Resilience.
 
-**Envelope** (what a subscriber receives), exactly the documented standard:
+**Envelope** — what a subscriber receives. It follows the documented standard, plus the optional `jobId` (§10.3):
 
 ```ts
 interface EventEnvelope {
   eventId: string; eventType: string; eventVersion: string; occurredAt: string; // ISO 8601 UTC
   companyId: CompanyId; actorId: string | null;
   sourceObjectId: string; sourceObjectType: string;
+  jobId: string | null;
   payload: Record<string, unknown>;
 }
 ```
@@ -610,33 +698,44 @@ interface Subscriber {
 }
 ```
 
-- The registry is built once at process start from `server/modules/registry.ts` (§4.8). Registering two subscribers with the same name, or a subscriber with no event types, throws at start-up.
-- The worker calls each subscriber for an event in **its own Unit of Work** (tenant = the event's `companyId`, actor = `system`/subscriber name, causation from the outbox row — §4.1). A failing subscriber therefore never undoes another subscriber's work, and everything it writes is traceable to the event and the human behind it.
-- The envelope a subscriber receives is unchanged from the documented standard. Causation reaches it through `uow.context.causation`, not through new envelope fields.
-- In that same transaction the worker appends the subscriber's name to `delivered_subscribers`, guarded by `locked_by` (§5). A retried or redelivered event skips subscribers already listed, and a worker that has lost its claim cannot commit a subscriber's work.
-- Delivery is at least once (BACKEND_EVENT_ARCHITECTURE.md). The `delivered_subscribers` record narrows duplicates but cannot remove them (for example a manual requeue, or a subscriber with effects outside the database), so **every subscriber must still be idempotent**, keyed on `eventId` or on its own natural key (e.g. submission ID in Phase 5). Gate test G0 for redelivery proves the platform delivers correctly to such a subscriber.
-- Events are claimed in `created_at` order, but there is **no ordering guarantee** across retries or worker instances; subscribers must not depend on order (OQ-06).
-- Subscribers are informational and evaluative only (Event Bus Doctrine). Their system actor can never satisfy a human-approval check.
+- **Registry.** The worker builds it once at start-up by calling every module's `subscribers(deps)` factory (§4.8). The API process never calls these factories. A duplicate subscriber name, a subscriber with no event types, or a subscription to an unregistered event type throws at start-up.
+- **One Unit of Work per subscriber.** The worker calls each subscriber for an event in its own Unit of Work. The tenant is the event's `companyId`; the actor is `system`, named after the subscriber; causation comes from the outbox row (§4.1). A failing subscriber therefore never undoes another subscriber's work, and everything it writes is traceable to the event and the human behind it.
+- **No human-only ports in subscribers (R2-B2).** The `deps` passed to `subscribers(deps)` cannot return a `humanOnly` port: `deps.ports.get` throws at start-up for one. The port wrapper also refuses any system or subscriber context at run time (PS-16).
+- **Causation stays off the envelope.** The envelope has no causation fields; causation reaches the subscriber only through `uow.context.causation.eventId`.
+- **Delivered subscribers are recorded atomically.** In the subscriber's own transaction, the worker appends the subscriber's name to `delivered_subscribers`, guarded by `locked_by` (§5). A retried event skips subscribers already listed. A worker that has lost its claim cannot commit a subscriber's work.
+- **Every subscriber must be idempotent.** Delivery is at least once (BACKEND_EVENT_ARCHITECTURE.md). `delivered_subscribers` narrows duplicates but cannot remove them, for example when a subscriber has effects outside the database. Each subscriber is keyed on `eventId` or on its own natural key (for example a submission ID).
+- **No ordering guarantee.** Events are claimed in `created_at` order, but nothing guarantees order across retries or worker instances. Subscribers must not depend on order (OQ-06).
+- **Informational only.** Subscribers are informational and evaluative (Event Bus Doctrine). Their system actor can never satisfy a human-approval check.
 
-**Outbox record state machine** (T-2 `status`). Interpretation of the sources: BACKEND_EVENT_ARCHITECTURE.md lists `pending → delivered → failed`; BACKEND_INFRASTRUCTURE_ARCHITECTURE.md adds the `processing` claim state and `dead_lettered`. Phase 0 uses all five, with `failed` meaning "last attempt failed, waiting for the next attempt" (OQ-08).
+**Outbox record state machine** (T-2 `status`). Interpretation of the sources: BACKEND_EVENT_ARCHITECTURE.md lists `pending → delivered → failed`; BACKEND_INFRASTRUCTURE_ARCHITECTURE.md adds the `processing` claim state and `dead_lettered`. Phase 0 uses all five, with `failed` meaning "the last attempt failed; waiting for the next one" (OQ-08).
 
 | From | To | Triggered by | Condition | Side effects (same transaction) |
 |---|---|---|---|---|
-| — | `pending` | `OutboxWriter.record` inside the writing use case's Unit of Work | The use case's transaction commits | — (row disappears if it rolls back) |
-| `pending`, `failed` | `processing` | Worker claim | `next_attempt_at <= now()`, row not locked by another claimer (`FOR UPDATE SKIP LOCKED`) | `locked_at = now()`, `locked_by = <worker id>` |
-| `processing` | `processing` | Worker, after one subscriber succeeds | `locked_by` still matches | subscriber's own writes; name appended to `delivered_subscribers` |
-| `processing` | `delivered` | Worker, after every subscribed handler has succeeded (immediately if none) | `locked_by` still matches | `intelligence.event_log` row inserted (`ON CONFLICT (event_id) DO NOTHING`); `delivered_at = now()`; lock cleared |
-| `processing` | `failed` | Worker, a subscriber threw | `retry_count + 1 < OUTBOX_MAX_ATTEMPTS` and `locked_by` matches | `retry_count += 1`; `next_attempt_at = now() + backoff`; `last_error` set; lock cleared |
-| `processing` | `dead_lettered` | Worker, a subscriber threw | `retry_count + 1 = OUTBOX_MAX_ATTEMPTS` and `locked_by` matches | `retry_count += 1`; `dead_lettered_at = now()`; `last_error` set; lock cleared; ERROR log line (§4.7) |
-| `processing` | `pending` | Worker stale-lock recovery | `locked_at < now() - OUTBOX_STALE_LOCK_MS` | lock cleared; `retry_count` unchanged (OQ-09) |
-| `delivered` | — | terminal | | |
-| `dead_lettered` | — | terminal in Phase 0 (no requeue tool, OQ-10) | | |
+| — | `pending` | `OutboxWriter.record`, inside the writing use case's Unit of Work | The use case's transaction commits | — (the row disappears if it rolls back) |
+| `pending`, `failed` | `processing` | Worker claim | `next_attempt_at <= now()`, and the row is not locked by another claimer (`FOR UPDATE SKIP LOCKED`) | `locked_at = now()`, `locked_by = <worker id>` |
+| `processing` | `processing` | Worker, after one subscriber succeeds | `locked_by` still matches | The subscriber's own writes; its name appended to `delivered_subscribers` |
+| `processing` | `delivered` | Worker, once every subscribed handler has succeeded (immediately if there are none) | `locked_by` still matches | `intelligence.event_log` row inserted (`ON CONFLICT (event_id) DO NOTHING`); `delivered_at = now()`; lock cleared |
+| `processing` | `failed` | Worker, when a subscriber threw **or the lock went stale** | `retry_count + 1 < OUTBOX_MAX_ATTEMPTS` (and, for a thrown error, `locked_by` matches) | `retry_count += 1`; `next_attempt_at = now() + backoff`; `last_error` set; lock cleared |
+| `processing` | `dead_lettered` | Same as the row above | `retry_count + 1 = OUTBOX_MAX_ATTEMPTS` | `retry_count += 1`; `dead_lettered_at = now()`; `last_error` set; lock cleared; `ERROR` log line (§4.7) |
+| `delivered` | — | terminal — **never requeued** | | |
+| `dead_lettered` | — | terminal in Phase 0 (no requeue tool) | | |
+
+**Stale-lock recovery counts as a failed attempt** (OQ-09 — PM ruling, October 20, 2026). A row whose lock is older than `OUTBOX_STALE_LOCK_MS` is treated exactly like a failed attempt (PS-20). An event whose subscriber crashes the worker process every time therefore dead-letters after five crashes, instead of looping for ever.
 
 Only the worker process changes `status`, and the database enforces it: only `ledger_worker` holds `UPDATE` on the delivery-state columns (§3.5). The API process (`ledger_app`) only inserts.
 
-Retry schedule (BACKEND_INFRASTRUCTURE_ARCHITECTURE.md: "exponential backoff … (1s, 2s, 4s, 8s, max 5 retries); After 5 failures: marks event as `dead_lettered`"): read as **five attempts in total**, waiting 1 s, 2 s, 4 s and 8 s between them, and dead-lettered on the fifth failure — the four listed delays fit five attempts. Backoff after the n-th failure is `OUTBOX_BASE_BACKOFF_MS × 2^(n-1)`, where n is `retry_count` after that failure has been counted (PS-19). Defaults: `OUTBOX_MAX_ATTEMPTS = 5`, `OUTBOX_BASE_BACKOFF_MS = 1000`, `OUTBOX_POLL_INTERVAL_MS = 1000`, `OUTBOX_BATCH_SIZE = 10`, `OUTBOX_STALE_LOCK_MS = 300000` (5 minutes). All are configurable so tests run in milliseconds.
+**Requeue and archival safety (R2-17)** — rules for the Phase 9 tooling (OQ-10), stated now so that nothing in Phase 0 contradicts them:
+- Only `dead_lettered` rows can ever be requeued. A requeue moves the row to `failed` with `next_attempt_at = now()`, resets nothing else, and writes an audit entry naming the operator.
+- A requeue **never clears `delivered_subscribers`**. Subscribers that already handled the event are never called again by a requeue; only the ones that failed run.
+- `delivered` rows are never requeued.
+- Archival removes only `delivered` rows older than the retention period. It runs as a maintenance role that has no other privilege, and never touches `dead_lettered`, `failed`, `pending` or `processing` rows.
 
-**Audit entries and the event log have no lifecycle**: rows are inserted once and never change.
+**Retry schedule** (BACKEND_INFRASTRUCTURE_ARCHITECTURE.md: "exponential backoff … (1s, 2s, 4s, 8s, max 5 retries); After 5 failures: marks event as `dead_lettered`"). This is read as **five attempts in total**, with waits of 1 s, 2 s, 4 s and 8 s between them, and the event dead-lettered on the fifth failure; the four listed delays fit five attempts.
+- The backoff after the n-th failure is `OUTBOX_BASE_BACKOFF_MS × 2^(n-1)`, where n is `retry_count` after that failure has been counted (PS-19).
+- Defaults: `OUTBOX_MAX_ATTEMPTS = 5`, `OUTBOX_BASE_BACKOFF_MS = 1000`, `OUTBOX_POLL_INTERVAL_MS = 1000`, `OUTBOX_BATCH_SIZE = 10`, `OUTBOX_STALE_LOCK_MS = 300000` (5 minutes).
+- All are configurable, so tests run in milliseconds.
+
+**Audit entries and the event log have no lifecycle.** Rows are inserted once and never change.
 
 ### 4.6 Configuration
 
@@ -762,6 +861,7 @@ server/
   static.ts, vite.ts      frontend serving (kept, §10)
   platform/
     index.ts              the only file modules may import from the platform
+    system/index.ts       createSystemContext, toCompanyId — scripts and platform only (rule 11)
     config/  logging/  context/  errors/  http/  auth/  db/  db/schema/  audit/  events/
     storage/              reserved for FileStorage (Phase 4, PM ruling)
     testing/index.ts      test-only surface: guard, test database rebuild, role clients (rule 1a)
@@ -769,34 +869,67 @@ server/
     registry.ts           the list of registered modules (empty in Phase 0)
     <module>/
       domain/  application/  infrastructure/  api/  index.ts
+  scripts/                runtime scripts, e.g. Phase 1's D-15 provisioning script (none in Phase 0)
   tests/
     gate/phase-0-infrastructure/   gate tests (test engineer)
     support/                       harness, fixtures, helpers (test engineer)
 migrations/
 ```
 
-**Registry** (`server/modules/registry.ts`, created by the platform engineer; each module engineer adds one line):
+**Registry** (`server/modules/registry.ts`). The platform engineer creates it; each module engineer adds one line.
 
 ```ts
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+interface PublicRoute {                           // R2-04: public routes are declared, not routed freely
+  surface: 'api' | 'portal';                      // /api/v1 or /portal/v1
+  method: Method;
+  path: string;                                   // exact, e.g. '/auth/login'; inside one of the module's namespaces
+  handler: (deps: ModuleDeps) => RequestHandler;
+}
 interface ModuleRegistration {
-  name: string;                                   // the module's schema/namespace, e.g. 'tenant'
-  apiRouter?: (deps: ModuleDeps) => Router;       // mounted at /api/v1, behind platform-token auth
-  publicApiRouter?: (deps: ModuleDeps) => Router; // mounted at /api/v1 before auth; each public
-                                                  //   route must be listed in that phase's spec
-  portalRouter?: (deps: ModuleDeps) => Router;    // mounted at /portal/v1, behind portal-token auth
-  subscribers?: (deps: ModuleDeps) => readonly Subscriber[];
+  name: string;                                   // the module's schema name, e.g. 'review_centre'
+  apiRouters?: Readonly<Record<string, (deps: ModuleDeps) => Router>>;
+                                                  // key = an /api/v1 namespace it owns, e.g. '/jobs';
+                                                  //   mounted at /api/v1<key>, behind platform-token auth
+  portalRouters?: Readonly<Record<string, (deps: ModuleDeps) => Router>>;
+                                                  // key = a /portal/v1 namespace; behind portal-token auth
+  publicRoutes?: readonly PublicRoute[];          // each must be listed in that phase's specification
+  subscribers?: (deps: ModuleDeps) => readonly Subscriber[];   // built by the worker only
+  auditEntryTypes?: readonly { type: string; jobRequired: boolean }[];   // §4.4 catalogue
+  producesEvents?:  readonly { type: string; jobRequired: boolean }[];   // §4.4 catalogue
   requiresPorts?: readonly PortToken<unknown>[];  // ports this module calls (it defines them)
   providesPorts?: readonly PortBinding<unknown>[];// ports this module implements (defined elsewhere)
 }
 export const modules: readonly ModuleRegistration[] = [];
 ```
 
-`ModuleDeps` gives a module's factories what they need from the platform without exposing its internals: `runInTransaction`, `contextOf`, `logger`, configuration, and `ports` (`Ports.get`, PS-16). Both processes read the same registry and build the same port wiring. The API mounts the routers; the worker registers the subscribers.
+**Namespaces (R2-04).** Each key of `apiRouters` or `portalRouters` is one namespace from BACKEND_API_ARCHITECTURE.md, Domain-Driven API Boundaries, for example `/jobs`, `/sites`, `/clients`, `/workers` and `/schedule` for the Operational module. A key is a single lower-case path segment (`^/[a-z][a-z-]*$`). At start-up the platform refuses:
+- a namespace claimed by two modules;
+- a namespace that is a prefix of another;
+- a public route outside its own module's namespaces;
+- two public routes with the same `surface`, `method` and `path`.
+
+The platform mounts each router only at its own namespace. A module's router-level middleware therefore never runs on another module's paths. Public routes are mounted at their exact paths before token middleware, and nowhere else.
+
+**`ModuleDeps` (R2-04, R2-07).** This is everything a module's factories receive from the platform:
+- `runInTransaction`;
+- `contextOf(req)`;
+- `logger`;
+- `ports` (`Ports.get`, PS-16);
+- `nodeEnv`.
+
+It carries **no** connection string, pool, database handle, key or secret, and no other configuration value. A later phase that needs a non-secret setting adds it here by name in its specification.
+
+`contextOf(req)` reads the execution context from a per-request store, a platform-private `WeakMap` keyed by the request object, filled by PS-10/PS-11. It throws `MissingRequestContextError` (a 500 programming error) on any request that has no authenticated context, for example inside a public route. The request's `AsyncLocalStorage` scope is entered only with `run()`, never `enterWith()`, so a context can never leak into later, unrelated async work. `contextOf` does not depend on that storage.
+
+**Process wiring.** Both processes read the same registry, check the catalogues and wire the ports:
+- The API builds routers and public routes, and never calls `subscribers` factories.
+- The worker builds subscribers, never builds routers, and its `deps.ports` refuses `humanOnly` ports (PS-16).
 
 **Import rules** (each becomes a gate check, §9):
 
 1. A file under `server/modules/<m>/` may import from the platform only via `server/platform/index.ts`.
-   1a. Test files (`*.test.ts` anywhere, and everything under `server/tests/`) may also import `server/platform/testing/index.ts`. Production code never does.
+   - 1a. Test files (`*.test.ts` anywhere, and everything under `server/tests/`) may also import `server/platform/testing/index.ts`. **No non-test file** imports `server/platform/testing/` or anything under `server/tests/` (R2-18).
 2. A file may import another module only via `server/modules/<other>/index.ts`.
 3. `domain/` imports only files inside its own module's `domain/` folder. That excludes every other layer, all platform code (types included — §4.1), other modules, Node built-in modules, and any package unless a phase specification allowlists it as pure and I/O-free. Platform-branded values reach the domain as plain strings (§4.1).
 4. `application/` imports `domain/` and the platform's public surface. It does not import `infrastructure/` internals, `api/`, `express`, `drizzle-orm` or `pg`.
@@ -805,6 +938,14 @@ export const modules: readonly ModuleRegistration[] = [];
 7. `index.ts` exports DTOs, public functions and port tokens/types, never domain entities. This is checked in review; it cannot be machine-checked in Phase 0.
 8. Nothing under `server/platform/` imports from `server/modules/`. Only the two process entry points (`server/index.ts`, `server/worker.ts`) import `server/modules/registry.ts`, and they pass the registrations into the platform.
 9. Imports between modules form no cycle. If module A imports `server/modules/B/index.ts`, nothing reachable from B imports A. The intended dependency direction (BACKEND_DOMAIN_ARCHITECTURE.md, Domain Dependency Direction) is applied in review. A cycle is the machine-checkable symptom of an upward import, so it fails the gate.
+10. **No module opens its own way into the database or around the platform (R2-07).** No file under `server/modules/**` may:
+    - import `pg`, `pg-*`, `postgres`, `drizzle-orm/node-postgres`, `drizzle-orm/postgres-js` or any other driver;
+    - mention `process.env`;
+    - name a platform table or schema: the strings `audit_entries`, `event_outbox`, `event_log`, `pgSchema('audit')`, or `pgSchema('intelligence')` outside the Intelligence & Automation module;
+    - contain the SQL keywords `SAVEPOINT`, `ROLLBACK`, `COMMIT`, `BEGIN`, `SET ROLE`, `SET SESSION AUTHORIZATION` or `set_config`.
+
+    The Intelligence & Automation module (Phase 7) may declare its own tables in `pgSchema('intelligence')` through the handle from the platform index (§3.1.2), but still may not name `event_outbox` or `event_log`.
+11. `server/platform/system/index.ts` (`createSystemContext`, `toCompanyId`) may be imported only from `server/scripts/**`, `server/platform/**`, the two entry points and test files — never from `server/modules/**` (R2-03).
 
 Rules 4 and 5 read the layering document's dependency directions literally (Application → Domain; Infrastructure → Domain). The Application Layer reaches its repository implementations through the interfaces it is given (dependency injection at the module's `index.ts`), which BACKEND_LAYERING_ARCHITECTURE.md allows ("May call infrastructure implementations through injected interfaces").
 
@@ -833,6 +974,7 @@ How the Phase 0 port design (PS-16) meets each part of D-17:
 | One transaction | Each handler takes the caller's `uow` as its first argument and writes through `uow.tx`, `uow.audit` and `uow.events`. It cannot open its own unit (nesting is refused, §4.4). If it throws, the whole approval rolls back |
 | Records are attributed to the human approver | The handler runs in the approval request's execution context, so its audit entries and outbox events carry the approving user as actor, with `causation_*` `NULL` — they are not system work (§4.1 writer table) |
 | No missing implementation at run time | If `review_centre.approvalEffects` has no provider, or two, **both processes refuse to start** and name the port (PS-16; G0-41). An approval can therefore never run against a missing handler |
+| Only a human approver can trigger it (R2-B2) | The port is defined `humanOnly`. The platform wrapper refuses any context that is not a live, genuine `user` context with no causation, before the handler runs. The worker cannot obtain the port at all (PS-16) |
 
 Phase 0 builds the generic mechanism only. `ApprovalEffectsPort`'s handlers, signatures and idempotency rules belong to the Phase 4 and Phase 5 specifications.
 
@@ -845,6 +987,12 @@ Some of what Phase 0 guarantees holds only if later specifications respect it. E
 | Every phase | Grant table privileges to the narrowest role that needs them. Never grant a `financial.*` privilege, or `UPDATE` on an approval-state column, to `ledger_runtime` or `ledger_worker` | §3.1.8a (R2-B1) |
 | Every phase | Runtime code, scripts included, connects as a runtime role and never uses the owner URL | §3.5 (R2-09) |
 | Phase 5 | Gate attack: as `ledger_worker`, an `INSERT` into each `financial.*` table must be refused with 42501 | §3.1.8a (R2-B1) |
+| Every phase | Every insert into a tenant table builds its values with `tenantValues`; every read, update and delete uses `tenantWhere` | §4.2 (R2-08) |
+| Every phase | No `*_by` field (`approved_by`, `rejected_by`, `requested_by`, …) is ever filled from causation. It is filled only from `ctx.actor` of a `user` context (or `portal_user`, where the domain says so). `isHumanActor` is never authority on its own | §4.1 (R2-02) |
+| Every phase | List the module's audit entry types and event types, with their `jobRequired` flags, in its registration (catalogue); every financially relevant type is `jobRequired` | §4.4 (R2-16) |
+| Every phase | Gate-test that each financially relevant action writes its audit entry: a missing `append` is not caught by poisoning | §4.4, PS-12 |
+| Phase 4 | `review_centre.approvalEffects` is defined `humanOnly`; gate attack: calling it from a system or subscriber context is refused and writes nothing | PS-16 (R2-B2) |
+| Phases 4 and 5 | Each approval-effects handler checks, inside `uow.tx`, that the approval reference is for a submission that is `approved` in this transaction with `approved_by` equal to the acting user, before creating anything | PS-16 (R2-B2) |
 
 ---
 
@@ -897,7 +1045,7 @@ Order in `server/index.ts`:
 
 1. Run PS-01 `loadApiConfig`. Exit on `ConfigError`.
 2. Create the logger (`service: 'api'`).
-3. In full mode: create the `ledger_app` pool (`pg.Pool` with `DATABASE_URL` and driver defaults; no connection is made yet). Then build the subscriber and port registries from `server/modules/registry.ts` (PS-15, PS-16). If any declared port does not have exactly one provider, the API refuses to start.
+3. In full mode: create the `ledger_app` pool (`pg.Pool` with `DATABASE_URL` and driver defaults; no connection is made yet). Then read `server/modules/registry.ts`: check the namespaces, public routes and catalogues (§4.4, §4.8), and wire the ports (PS-16). The API does not call `subscribers` factories. Any registry error stops the API with one `FATAL` line before it listens.
 4. Call `createApiApp({ config, logger, db, modules })` (PS-04).
 5. Mount frontend serving, unchanged: Vite middleware in development (`setupVite`), static files in production (`serveStatic`). It is mounted last, so the frontend catch-all can never shadow `/health`, `/api` or `/portal/v1`.
 6. Listen on `PORT` (default 5000).
@@ -910,7 +1058,7 @@ Order in `server/worker.ts`:
 
 1. Run `loadWorkerConfig`. Exit on `ConfigError`.
 2. Create the logger (`service: 'worker'`) and the `ledger_worker` pool (`DATABASE_WORKER_URL`).
-3. Build the subscriber registry (PS-15) and the port registry (PS-16) from `server/modules/registry.ts`. The worker needs both, because subscribers may call ports.
+3. Read `server/modules/registry.ts`: check the catalogues, wire the ports (PS-16; `humanOnly` ports are not available to subscribers), and build the subscriber registry (PS-15). The worker builds no routers. Any registry error stops the worker with one `FATAL` line before it claims an event.
 4. Create the outbox worker with an instance ID of the form `<hostname>:<pid>:<8 random hex>`, and `start()` it.
 5. On `SIGINT` or `SIGTERM`: `stop()` (finish the event in hand and claim no more), close the pool, exit 0. Full graceful shutdown with timeouts is Phase 9.
 
@@ -928,9 +1076,9 @@ The outbox worker exposes three methods:
 | 1 | all | PS-05 request ID and context | same |
 | 2 | all | PS-06 request logger (logs only `/api/`, `/portal/v1/`, `/health`) | same |
 | 3 | `GET /health` | PS-08 | `200 {"status":"ok","mode":"frontend_only"}` |
-| 4 | `/api/v1` | `express.json({ limit: '1mb' })` → each module's `publicApiRouter` → PS-10 → each module's `apiRouter` → not-found → PS-07 | — |
+| 4 | `/api/v1` | `express.json({ limit: '1mb' })` → public routes with `surface: 'api'`, each at its exact method and path → PS-10 → each module's router at `/api/v1<namespace>` → not-found → PS-07 | — |
 | 5 | `/api` (anything not matched above, e.g. `/api/v2/x`, `/api/foo`) | not-found → PS-07 | `503 BACKEND_NOT_CONFIGURED` for every `/api/*` path |
-| 6 | `/portal/v1` | `express.json({ limit: '1mb' })` → PS-11 → each module's `portalRouter` → not-found → PS-07 | `503 BACKEND_NOT_CONFIGURED` |
+| 6 | `/portal/v1` | `express.json({ limit: '1mb' })` → public routes with `surface: 'portal'` → PS-11 → each module's portal router at `/portal/v1<namespace>` → not-found → PS-07 | `503 BACKEND_NOT_CONFIGURED` |
 | 7 | everything else | passes on to frontend serving (PS-02 step 5) | same |
 
 Rules:
@@ -992,8 +1140,12 @@ Rules:
 - **Header missing, or scheme not `Bearer`:** `401 UNAUTHENTICATED` "Authentication is required.", with `WWW-Authenticate: Bearer`.
 - **`TokenExpiredError`:** `401 TOKEN_EXPIRED` "Your session has expired.", with `WWW-Authenticate: Bearer error="invalid_token"`. The separate code lets the frontend refresh from Phase 2 on.
 - **`TokenInvalidError`:** `401 UNAUTHENTICATED`, with the same header.
-- **Success:** builds the execution context `{ companyId: toCompanyId(claims.company_id), actor: { kind: 'user', userId: claims.sub, role: claims.role }, causation: null, requestId }` and runs the remaining handlers inside it.
-  - Routers read the context with `contextOf(req)` from `ModuleDeps`. There is no other way for a handler to get a company ID.
+- **Success:** builds a genuine, frozen execution context, `{ companyId: toCompanyId(claims.company_id), actor: { kind: 'user', userId: claims.sub, role: claims.role }, causation: null, requestId }`, and:
+  - registers it to die when the response finishes or closes (§4.1);
+  - stores it in the per-request `WeakMap` that `contextOf(req)` reads (§4.8);
+  - runs the remaining handlers inside `AsyncLocalStorage.run()`, which serves logging only.
+
+  Routers read the context only through `contextOf(req)`; there is no other way for a handler to get a company ID. A public route has no context, and `contextOf` throws there.
 - **Not done in Phase 0:**
   - role checks (`requireRole`, Phase 2);
   - the tenant-active check (OQ-12);
@@ -1012,11 +1164,13 @@ The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
   - an `ExecutionContext` (§4.1);
   - the work function;
   - the pool, bound when the Unit of Work is constructed — the API's `ledger_app` pool or the worker's `ledger_worker` pool.
-- **Checks, before the transaction opens:**
+- **Checks, before the transaction opens** (no SQL runs if any fails):
+  - the context is genuine (`ForgedContextError`) and live (`ContextExpiredError`) — §4.1;
   - `toCompanyId(ctx.companyId)` succeeds;
-  - the context was built by the platform;
-  - no unit is already active in this async context (otherwise `NestedUnitOfWorkError`).
-- **Transaction:** `BEGIN` (READ COMMITTED) → `work(uow)` → `COMMIT`. If `work` throws or the unit is poisoned (§4.4), it runs `ROLLBACK` instead. Either way, the unit is then closed.
+  - no unit is already active in this async context (`NestedUnitOfWorkError`).
+- **Transaction:** `BEGIN` (READ COMMITTED) → `SELECT set_config('app.company_id', $companyId, true)` → `work(uow)` → `COMMIT`. If `work` throws or the unit is poisoned (§4.4), `ROLLBACK` runs instead. Either way, the unit is then closed.
+  - `uow.tx` refuses `.transaction()`, which would create a savepoint (R2-06).
+- **What it cannot catch:** a use case that never calls `append`. A *failed* audit write poisons the unit; a *missing* one does not. Each phase's gate asserts that every financially relevant action writes its entry (§4.4).
 - **Records written:** only what `work` writes, plus T-1 and T-2 rows through PS-13 and PS-14.
 - **Errors:** an error thrown by `work` is rethrown unchanged. If the unit was poisoned but `work` returned normally, it throws `AuditWriteFailedError` or `OutboxWriteFailedError`, with the first failure as `cause`.
 
@@ -1025,10 +1179,10 @@ The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
 - **Input:** `AuditEntryInput` (§4.4).
 - **Checks:**
   - the unit is `active`;
-  - Zod validation of the input against T-1's formats, including destination type and ID being given both or neither;
-  - JSON values are serialisable.
-- **Writes:** one row in `audit.audit_entries`, inside the caller's transaction.
-  - From the context: `company_id`, `actor_id`, `actor_role`, `causation_*`, and `metadata.requestId` / `metadata.runId`.
+  - strict Zod validation of the input against T-1's formats: unknown keys are refused; destination type and ID are both given or both omitted; `previousValue`, `newValue` and `metadata` are each at most 64 KB once serialised;
+  - `entryType` is in the audit catalogue, and `jobId` is present if that type is `jobRequired` (§4.4).
+- **Writes:** one row in `audit.audit_entries`, inside the caller's transaction, with an explicit-column insert (§3.5).
+  - From the context: `company_id`, `actor_id`, `actor_role`, `causation_event_id`, `causation_actor_id` (from the platform-private slot, §4.1), and `metadata.requestId` / `metadata.runId`.
   - From the database: `occurred_at` and `sequence_no`.
 - **Returns:** `audit_id`.
 - **On failure** (validation or database): marks the unit poisoned, then throws. The caller's transaction cannot commit (§4.4).
@@ -1039,9 +1193,10 @@ The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
 - **Input:** `DomainEventInput` (§4.4).
 - **Checks:**
   - the unit is `active`;
-  - `eventType` matches the PascalCase format, and `sourceModule` matches T-2's format;
+  - strict Zod validation (unknown keys refused);
+  - `eventType` is in the event catalogue, `sourceModule` is the module that registered it, and `jobId` is present if that type is `jobRequired` (§4.4);
   - `payload` is a plain JSON object of at most 64 KB once serialised — events carry identifiers, not documents (§3.4).
-- **Writes:** one row in `intelligence.event_outbox` with `status = 'pending'`, inside the caller's transaction. `event_id` is generated; `company_id`, `actor_id` and `causation_*` come from the context.
+- **Writes:** one row in `intelligence.event_outbox`, inside the caller's transaction, with an explicit-column insert of the envelope columns only (§3.5). The database supplies `status = 'pending'` and the timestamps. `event_id` is generated; `company_id`, `actor_id`, `job_id` and `causation_*` come from the context and input.
 - **Returns:** `event_id`.
 - **On failure:** marks the unit poisoned, then throws.
 - **Delivery** never happens in the writing process. The worker can see the row only once the caller's transaction commits, so a rolled-back transaction leaves no row and its event can never be delivered (gate item 3).
@@ -1049,8 +1204,9 @@ The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
 
 ### 5.16 PS-15 — Subscriber registry
 
-- Built at start-up by calling every `ModuleRegistration.subscribers(deps)` factory (§4.8).
+- Built at start-up **by the worker only**, by calling every `ModuleRegistration.subscribers(deps)` factory (§4.8).
 - **Checks:**
+  - every subscribed event type is in the event catalogue (§4.4);
   - subscriber names are unique and match `^[a-z][a-z_]*\.[a-zA-Z][a-zA-Z0-9]*$`;
   - every subscriber lists at least one event type, each in PascalCase;
   - no subscriber lists the same event type twice.
@@ -1063,7 +1219,8 @@ A port lets a lower module call into a higher one without importing it. The lowe
 
 ```ts
 interface PortToken<T> { readonly name: string; readonly __type?: T }   // phantom type carrier
-function definePort<T>(name: string): PortToken<T>;   // called in the DEFINING (lower) module's application
+function definePort<T>(name: string, options?: { humanOnly?: boolean }): PortToken<T>;
+                                                      // called in the DEFINING (lower) module's application
                                                       //   layer; token + interface type exported from its index.ts
 interface PortBinding<T> { readonly token: PortToken<T>; readonly create: (deps: ModuleDeps) => T }
 function bind<T>(token: PortToken<T>, create: (deps: ModuleDeps) => T): PortBinding<T>;
@@ -1075,10 +1232,14 @@ The registration fields are `requiresPorts` and `providesPorts` on `ModuleRegist
 
 - **Port names** are `<defining module>.<port>`, for example `review_centre.approvalEffects`, and must be unique.
 - **Calling convention.** The first argument of every port method is the caller's `uow`. The implementation works only through `uow.tx`, `uow.audit` and `uow.events`, inside the caller's transaction. It cannot start its own transaction (`NestedUnitOfWorkError`, §4.4). Its audit entries and events therefore carry the caller's actor — the human approver, in D-17's case — with causation `NULL`.
+- **Human-only ports (R2-B2).** A port defined with `{ humanOnly: true }` is wrapped by the platform. Before the implementation runs, every method checks that its `uow` is active and that `uow.context` is genuine, live, has `actor.kind === 'user'` and has `causation === null`. If any check fails, the method throws `HumanActorRequiredError` **before the implementation runs**, so nothing is written. It also poisons the unit, so the caller cannot commit around the refusal.
+  - Defence in depth: in the worker, `deps.ports.get` refuses a `humanOnly` token at start-up, so no subscriber can even hold one.
+  - **Binding obligation on Phase 4 (§4.10):** `review_centre.approvalEffects` (D-17) must be `humanOnly`.
+  - **Binding obligation on Phases 4 and 5 (§4.10):** before creating anything, each handler checks inside `uow.tx` that the approval reference it receives belongs to a submission in the `approved` state within this same transaction, and that its `approved_by` equals `uow.context.actor.userId`.
 - **Wiring order at start-up** (both processes, inside the platform, from the `modules` list the entry points pass in):
   1. Collect every binding. A required port with no binding, a port with two bindings, or a binding for a port no module requires is a start-up error that names the ports.
   2. Create every implementation with `binding.create(deps)`. In this step `deps.ports.get` throws, so implementations cannot depend on other ports and no wiring cycle is possible.
-  3. Build every module's routers and subscribers. In this step `deps.ports.get(token)` returns the implementation, but only for tokens listed in that module's own `requiresPorts`; any other token throws.
+  3. Build every module's routers (API) or subscribers (worker). In this step `deps.ports.get(token)` returns the implementation only for tokens listed in that module's own `requiresPorts`, and in the worker never for a `humanOnly` token. Any other token throws.
   4. After start-up `ports.get` throws, so a port can never be resolved lazily or swapped at run time.
 - **Failure at start-up**: either process exits with code 1 and one `FATAL` line naming the port, before it listens (API) or claims an event (worker). There is no "missing handler" state at run time.
 - **No transaction** of its own.
@@ -1138,12 +1299,18 @@ At the start of every cycle:
 
 ```sql
 UPDATE intelligence.event_outbox
-   SET status = 'pending', locked_at = NULL, locked_by = NULL
+   SET retry_count      = retry_count + 1,
+       status           = CASE WHEN retry_count + 1 >= $maxAttempts THEN 'dead_lettered' ELSE 'failed' END,
+       next_attempt_at  = now() + make_interval(secs => $baseMs / 1000.0 * power(2, retry_count)),
+       dead_lettered_at = CASE WHEN retry_count + 1 >= $maxAttempts THEN now() ELSE NULL END,
+       last_error       = 'stale lock: ' || locked_by || ' did not finish within the lock timeout',
+       locked_at = NULL, locked_by = NULL
  WHERE status = 'processing' AND locked_at < now() - make_interval(secs => $staleMs / 1000.0);
 ```
 
-- Each recovered row is logged at `WARN` with its event ID.
-- `retry_count` is not changed (OQ-09).
+- **A recovery counts as a failed attempt** (OQ-09, PM ruling). It uses the same count, backoff and dead-letter rule as PS-19. An event whose subscriber crashes the worker every time is therefore dead-lettered after `OUTBOX_MAX_ATTEMPTS` crashes.
+- `delivered_subscribers` is left unchanged, so subscribers that committed before the crash are not called again.
+- Each recovered row is logged at `WARN` with its event ID, or at `ERROR` if it is dead-lettered.
 - A worker that lost its lock this way is fenced by the `locked_by` guards in PS-18 and PS-19.
 
 **Worker loop:**
@@ -1297,7 +1464,7 @@ The gate tests use a test-only entry type, `gate_test_probe`. Only test code wri
 | `metadata.requestId` / `metadata.runId` | `uow.context` | No — merged over the caller's metadata, which cannot override them |
 | `entry_type`, `source_object_type`, `source_object_id` | `AuditEntryInput` | Yes — required |
 | `destination_object_type`, `destination_object_id` | `AuditEntryInput` | Yes — both or neither |
-| `job_id`, `site_id`, `client_id` | `AuditEntryInput` | Yes — the domain requires `job_id` for financially relevant entries (OQ-05) |
+| `job_id`, `site_id`, `client_id` | `AuditEntryInput` | Yes — required when the entry type is `jobRequired` in the catalogue (§4.4) |
 | `previous_value`, `new_value` | `AuditEntryInput` | Yes — the audit log is where financial values belong (BACKEND_OBSERVABILITY_ARCHITECTURE.md, What Is NOT Logged); they are never copied into the application log |
 | `external_reference` | `AuditEntryInput` | Yes |
 | `metadata` (other keys) | `AuditEntryInput` | Yes |
@@ -1549,11 +1716,11 @@ Any change the engineer finds necessary outside this plan or this specification 
 | OQ-02 | Portal token algorithm. The sources give "a separate key" (D-14) and name it `PORTAL_JWT_SECRET`; this specification reads that as HS256 | §4.3 | Confirm HS256 with `PORTAL_JWT_SECRET`. If you prefer asymmetric portal keys, the change is ES256 with `PORTAL_JWT_PRIVATE_KEY` / `PORTAL_JWT_PUBLIC_KEY`, contained in `server/platform/auth/` |
 | OQ-03 | Three database roles and four variables not named in D-12 (`DATABASE_MIGRATION_URL`, `DATABASE_MIGRATION_URL_TEST`, `DATABASE_WORKER_URL`, `DATABASE_WORKER_URL_TEST`), plus a one-off owner SQL step on each database | §3.5, §4.6 | Approve. Without separate roles, gate item 5 and outbox integrity hold only in application code |
 | OQ-04 | Who adds the `company_id` foreign keys to the three platform tables once `tenant.companies` exists | §3.1.7 | Make it a platform-engineer job inside Phase 1 (the tables are platform-owned), merged after the tenant schema |
-| OQ-05 | `job_id` is required "when financially relevant", but the platform cannot know which entry types are | §3.2, §8.2 | Each module declares its audit entry types with a `jobRequired` flag and enforces it in its use cases; the doctrine reviewer checks it every phase. If wanted, a later platform change can add a typed `defineAuditCatalogue` that enforces the flag in `append()` |
+| OQ-05 | Who enforces `job_id` on financially relevant audit entries? | §4.4 | **Closed — PM review round 2 (R2-16).** Modules declare their audit entry and event types with a `jobRequired` flag; `append()` and `record()` refuse an unregistered type or a missing `jobId` |
 | OQ-06 | No event ordering guarantee across retries or workers | §4.5 | Confirm. Subscribers must not rely on order; any phase that needs ordering states it in its specification |
 | OQ-07 | Event payloads carry identifiers and operational metadata, never financial amounts, because payloads are copied into the event log, which holds no sensitive fields | §3.4, §7.3 | Confirm as a rule for every later specification |
 | OQ-08 | Outbox status names (`pending`, `processing`, `failed`, `delivered`, `dead_lettered`), and "max 5 retries" read as five attempts in total with delays of 1, 2, 4 and 8 s | §4.5 | Confirm |
-| OQ-09 | Stale-lock recovery returns the row to `pending` without counting an attempt (as the source says). An event whose subscriber crashes the worker process would then be retried for ever | §4.5, PS-20 | Count a stale-lock recovery as a failed attempt, so such an event dead-letters after five crashes. This changes PS-20 by one assignment |
+| OQ-09 | Should stale-lock recovery count as a failed attempt? | §4.5, PS-20 | **Closed — PM ruling, October 20, 2026: yes.** A recovery counts as a failed attempt (same count, backoff and dead letter), so an event that crashes the worker dead-letters after five crashes |
 | OQ-10 | No phase builds the requeue of dead-lettered events or the outbox archival after 7 days (BACKEND_DATA_ARCHITECTURE.md, Event Outbox Table) | §1.2 | Add both to Phase 9: an audited command-line requeue and an archival job run by a maintenance role. Until then, dead letters stay visible in the table |
 | OQ-11 | No phase lists the audit query service or `/api/v1/audit/` | §1.2, §3.2 | Assign it to Phase 7 (alongside the Event Monitor), with the actor and entry-type indexes added then |
 | OQ-12 | A token stays valid for up to 15 minutes after its tenant is suspended, because the middleware does not check tenant status | §5.11 | Phase 1 adds a per-request tenant-status check to the token middleware, through a tenant port, cached for a few seconds. Phase 2's session revocation then covers refresh |
