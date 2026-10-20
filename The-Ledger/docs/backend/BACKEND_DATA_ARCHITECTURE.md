@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND DATA ARCHITECTURE
 
-Version: 2.0
+Version: 2.1
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -12,7 +12,8 @@ Authority: Backend Architecture Refinement Pass
 | Version | Date | Changes |
 |---|---|---|
 | 1.0 | June 4, 2026 | Initial data architecture — 10 schemas |
-| 2.0 | June 4, 2026 | Refinement pass: `tenant` schema added (Company extracted from `identity`); `financial_intelligence` schema added; `notification` schema extracted from `intelligence`; aggregate ownership table updated; total 12 schemas |
+| 2.0 | June 4, 2026 | Refinement pass: `tenant` schema added (Company extracted from `identity`); `financial_intelligence` schema added; `notification` schema extracted from `intelligence`; aggregate ownership table updated; total 13 schemas |
+| 2.1 | October 20, 2026 | Reconciliation pass: change log schema count corrected to 13; notification source of truth points at `notification.notification_records` |
 
 ---
 
@@ -149,7 +150,7 @@ Each aggregate root is persisted in the schema owned by its module. No other mod
 | Sync state | accounting.sync_records | Accounting Integration Module only |
 | Reconciliation state | accounting.reconciliation_records | Accounting Integration Module only |
 | Automation rules | intelligence.automation_rules | Intelligence & Automation Module only |
-| Notifications | intelligence.notifications | Intelligence & Automation Module only |
+| Notifications | notification.notification_records | Intelligence & Automation Module (Notification Centre sub-domain) only |
 | Reports and exports | reporting.* | Reporting Module only |
 | Audit trail | audit.audit_entries | Any module (Application Layer only; append-only) |
 

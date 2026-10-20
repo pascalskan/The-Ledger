@@ -1,9 +1,18 @@
 # THE LEDGER — BACKEND INFRASTRUCTURE ARCHITECTURE
 
-Version: 1.0
+Version: 1.1
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Definition Phase
+
+---
+
+## CHANGE LOG
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.0 | June 4, 2026 | Initial definition |
+| 1.1 | October 20, 2026 | Reconciliation pass: notification queue and records moved to the `notification` schema; sync pipeline trigger names the events Accounting Integration consumes |
 
 ---
 
@@ -66,8 +75,8 @@ Background workers process jobs from the queue. The worker process runs continuo
 - Handles rate limits from accounting providers (respects Retry-After headers)
 
 **3. Notification Delivery Worker**
-- Polls `intelligence.notification_queue` for pending notifications
-- Delivers in-platform notifications (database write to notification_records)
+- Polls `notification.notification_queue` for pending notifications
+- Delivers in-platform notifications (database write to `notification.notification_records`)
 - Future: delivers email notifications via email service adapter
 
 **4. Scheduled Evaluation Worker**
@@ -112,7 +121,7 @@ The Ledger uses a **database-backed queue** in v1 (PostgreSQL as the queue store
 |---|---|---|
 | Event Outbox | `intelligence.event_outbox` | Domain events awaiting delivery |
 | Sync Queue | `accounting.sync_queue` | Financial records awaiting sync |
-| Notification Queue | `intelligence.notification_queue` | Notifications awaiting delivery |
+| Notification Queue | `notification.notification_queue` | Notifications awaiting delivery |
 | Distribution Queue | `reporting.distribution_queue` | Report exports awaiting distribution |
 | Scheduled Jobs | `intelligence.scheduled_job_executions` | Scheduled evaluations due for processing |
 
@@ -159,7 +168,7 @@ The Ledger integrates with downstream accounting providers as an outbound-only i
 ### Integration Processing Pipeline
 
 ```
-1. Financial record approved → FinancialMutationCreated event
+1. Financial record created → `TimesheetEntryCreated`, `ExpenseEntryCreated`, `InvoiceLineItemCreated`, `VoidRecordCreated` or `AdjustmentRecordCreated` event
 2. Accounting Integration Module consumes event
 3. SyncQueue record created (status: pending)
 4. Sync Worker picks up pending record
@@ -200,7 +209,7 @@ Notifications are created by the Intelligence & Automation Module and delivered 
 
 ```
 1. Event consumed by Intelligence Module (warning or critical priority)
-2. Notification record created (intelligence.notification_records, status: unread)
+2. Notification record created (notification.notification_records, status: unread)
 3. User retrieves notifications via GET /api/v1/notifications
 4. Notification interactions (read, dismiss) recorded as audit entries
 ```

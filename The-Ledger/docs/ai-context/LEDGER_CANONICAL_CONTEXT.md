@@ -1425,7 +1425,7 @@ Backend Architecture Refinement: Complete (8 documents updated to v2.0)
 
 ## Next Development Target
 
-Phase 6.1 — Notification Centre (backend implementation)
+Backend Phase 0 — Infrastructure Foundation, once the decisions it depends on in docs/backend/BACKEND_OPEN_DECISIONS.md are approved. Sequence: docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md (v2.0).
 
 ---
 

@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND DOMAIN ARCHITECTURE
 
-Version: 2.0
+Version: 2.1
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -13,6 +13,7 @@ Authority: Backend Architecture Refinement Pass
 |---|---|---|
 | 1.0 | June 4, 2026 | Initial architecture definition — 9 bounded contexts |
 | 2.0 | June 4, 2026 | Refinement pass: Tenant Context extracted from Identity; Financial Intelligence Context added; Notification Centre promoted to defined sub-domain; total 11 bounded contexts |
+| 2.1 | October 20, 2026 | Reconciliation pass: produced-event lists aligned with the event catalogue (per-type withdrawal events, correction events, sync retry, workflow blocked, governance, scheduler, report viewed) |
 
 ---
 
@@ -159,7 +160,7 @@ Company (Tenant) has a distinct lifecycle (active/suspended/terminated), subscri
 - `ReportSubmitted`, `ReportApproved`, `ReportRejected`, `ReportResubmitted`
 - `ExpenseSubmitted`, `ExpenseApproved`, `ExpenseRejected`, `ExpenseResubmitted`
 - `IssueSubmitted`, `IssueAcknowledged`, `IssueInProgress`, `IssueResolved`, `IssueClosed`
-- `SubmissionWithdrawn`
+- `TimesheetWithdrawn`, `ReportWithdrawn`, `ExpenseWithdrawn`
 
 **Consumes Events:**
 - `JobClosed` (from Operational Core) — to close correction windows
@@ -201,6 +202,8 @@ Company (Tenant) has a distinct lifecycle (active/suspended/terminated), subscri
 - `VoidRecordCreated`
 - `AdjustmentRecordCreated`
 - `PayrollRecordContributed`
+- `CorrectionRequestCreated`
+- `CorrectionApproved`
 
 **Consumes Events:**
 - `TimesheetApproved`, `ReportApproved`, `ExpenseApproved` (from Submission & Review)
@@ -333,7 +336,7 @@ Financial Normalization transforms operational events into financial records —
 **Source of Truth for:** Sync state — what has been exported to accounting systems; what reconciliation discrepancies exist
 
 **Produces Events:**
-- `AccountingSyncRequested`, `AccountingSyncSucceeded`, `AccountingSyncFailed`
+- `AccountingSyncRequested`, `AccountingSyncSucceeded`, `AccountingSyncFailed`, `AccountingSyncRetryQueued`
 - `ReconciliationRunCompleted`, `ReconciliationExceptionDetected`
 - `ExceptionResolved`, `ExceptionRejected`
 - `FinancialControlApproved`, `FinancialControlRejected`
@@ -368,7 +371,8 @@ Financial Normalization transforms operational events into financial records —
 
 **Produces Events:**
 - `AutomationTriggered`, `AutomationExecutionAudited`
-- `WorkflowStarted`, `WorkflowCompleted`, `WorkflowFailed`
+- `WorkflowStarted`, `WorkflowCompleted`, `WorkflowFailed`, `WorkflowBlocked`
+- `GovernanceStatusChanged`, `ScheduledEvaluationTriggered`
 - `ActivityFeedEventPublished`
 
 **Consumes Events:** All domain events from all contexts (for evaluation, activity feed population)
@@ -454,7 +458,7 @@ Operational/governance/workflow analytics live here. Financial analytics (margin
 **Source of Truth for:** Report and export state (informational artifacts); operational health scoring
 
 **Produces Events:**
-- `ReportGenerated`, `ReportArchived`
+- `ReportGenerated`, `ReportViewed`, `ReportArchived`
 - `ExportGenerated`, `ExportDownloaded`, `ExportArchived`
 - `DistributionCreated`, `DistributionDelivered`, `DistributionFailed`
 

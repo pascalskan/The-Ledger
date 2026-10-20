@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND AUTHENTICATION & AUTHORIZATION ARCHITECTURE
 
-Version: 2.0
+Version: 2.1
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -13,6 +13,7 @@ Authority: Backend Architecture Refinement Pass
 |---|---|---|
 | 1.0 | June 4, 2026 | Initial auth architecture |
 | 2.0 | June 4, 2026 | Refinement pass: Company ownership moved to Tenant Context; Identity Context owns Users/Auth/Roles/Permissions only; authentication flow updated to validate tenant active status via Tenant Module before issuing tokens |
+| 2.1 | October 20, 2026 | Reconciliation pass: routes given their `/api/v1` and `/portal/v1` prefixes; approval example uses `POST`; worker example uses an expense submission (timesheets are created from shifts, never submitted directly) |
 
 ---
 
@@ -46,7 +47,7 @@ The Ledger has four distinct user types. Each has different authentication paths
 **Flow:**
 
 ```
-1. User submits email + password to POST /auth/login
+1. User submits email + password to POST /api/v1/auth/login
 2. Server validates credentials against identity.users table (bcrypt hash comparison)
 2a. Server validates tenant status via Tenant Module: getTenantContext(companyId).status must be 'active'
 2b. If tenant is suspended or terminated: return 403 (account suspended)
@@ -54,7 +55,7 @@ The Ledger has four distinct user types. Each has different authentication paths
 4. Access Token: short-lived (15 minutes), signed with private key, contains identity claims
 5. Refresh Token: long-lived (7 days), stored in identity.refresh_tokens table, sent as HTTP-only cookie
 6. Client sends Access Token in Authorization: Bearer header on every request
-7. On token expiry: client sends Refresh Token to POST /auth/refresh → new Access Token issued
+7. On token expiry: client sends Refresh Token to POST /api/v1/auth/refresh → new Access Token issued
 8. Logout: Refresh Token revoked (deleted from identity.refresh_tokens)
 ```
 
@@ -89,7 +90,7 @@ The Ledger has four distinct user types. Each has different authentication paths
 **Flow:**
 
 ```
-1. Portal user submits email + password to POST /portal/auth/login
+1. Portal user submits email + password to POST /portal/v1/auth/login
 2. Server validates against portal.portal_accounts table
 3. On success: issue Portal Access Token (short-lived, 15 minutes)
 4. Portal Access Token contains: portal_id, client_id, company_id (of the company they are a client of)
@@ -140,10 +141,10 @@ If checks fail: return 403 Forbidden
 Route-level RBAC is a coarse filter. It rejects requests from roles that have no possibility of accessing a resource.
 
 Examples:
-- `DELETE /financial-controls/:id/approve` → requires `ceo` role
-- `GET /review-centre/submissions` → requires `ceo` or `pm` role
-- `POST /submissions/timesheet` → requires `worker` role
-- `GET /portal/jobs` → requires `client` role (portal token)
+- `POST /api/v1/financial-controls/:id/approve` → requires `ceo` role
+- `GET /api/v1/review-centre/submissions` → requires `ceo` or `pm` role
+- `POST /api/v1/review-centre/submissions/expenses` → requires `worker` role
+- `GET /portal/v1/jobs` → requires `client` role (portal token)
 
 ### Level 2 — Fine-Grained Authorization (Application Layer)
 
@@ -279,7 +280,7 @@ These rules are enforced in `ReviewCentreModule.ApprovalService.assertApproverAu
 
 Approval actions are gated at both the route level and application level:
 
-- Route: `POST /review-centre/submissions/:id/approve` requires `ceo` or `pm` role
+- Route: `POST /api/v1/review-centre/submissions/:id/approve` requires `ceo` or `pm` role
 - Application: `ApproveSubmissionUseCase` calls `assertApproverAuthority(actorId, submissionId)` which checks:
   - Actor has the required role for this submission type
   - If PM: actor is assigned to the job the submission belongs to
@@ -332,10 +333,10 @@ Evaluation (read-only trigger assessment) is a system operation requiring no use
 
 ## PASSWORD RESET FLOW
 
-1. User requests reset: POST /auth/password-reset (email provided)
+1. User requests reset: POST /api/v1/auth/password-reset (email provided)
 2. System generates a time-limited reset token (1 hour expiry)
 3. Token sent to registered email address
-4. User submits new password with token: POST /auth/password-reset/confirm
+4. User submits new password with token: POST /api/v1/auth/password-reset/confirm
 5. Token validated, password updated, all existing sessions revoked
 6. Audit entry: `password_reset_completed`
 

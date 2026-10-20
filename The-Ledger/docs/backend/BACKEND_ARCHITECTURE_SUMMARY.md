@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND ARCHITECTURE SUMMARY
 
-Version: 2.0
+Version: 2.1
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -13,6 +13,7 @@ Authority: Backend Architecture Refinement Pass
 |---|---|---|
 | 1.0 | June 4, 2026 | Initial architecture summary — 9 bounded contexts, 10 schemas |
 | 2.0 | June 4, 2026 | Refinement pass: Tenant Context extracted from Identity; Financial Intelligence Context added; Notification Centre formally defined as sub-domain; AI Limitations Covenant established; total 11 bounded contexts, 13 schemas |
+| 2.1 | October 20, 2026 | Reconciliation pass: background worker count corrected to 6; implementation sequence aligned with roadmap v2.0 (Phase 4a, Track F); document index versions updated; BACKEND_OPEN_DECISIONS.md added |
 
 ---
 
@@ -383,7 +384,7 @@ The Review Centre is the mandatory gateway. AI is an assistant to the reviewer, 
 | Runtime | Node.js + Express + TypeScript |
 | Database | PostgreSQL with Drizzle ORM, 13 schemas |
 | Queue | Database-backed queue (PostgreSQL) in v1; extractable to broker |
-| Background workers | 5 worker types: outbox delivery, sync, notification delivery, scheduled evaluation, reconciliation |
+| Background workers | 6 worker types: outbox delivery, accounting sync, notification delivery, scheduled evaluation, report distribution, reconciliation |
 | Scheduler | Cron-within-process in v1; distributed lock for multi-instance future |
 | File storage | Cloud object storage (S3-compatible); signed URLs; tenant-namespaced paths |
 | Caching | Redis (rate limiting; optional read model caching for Financial Intelligence) |
@@ -440,7 +441,7 @@ Phase 2   Identity Module                 (auth, JWT, RBAC, user management)
 Phase 3   Operational Module              (clients, sites, jobs, workers, shifts, scheduling)
   ↓
 Phase 4   Review Centre Module            (submissions, approvals, rejections, corrections)
-  ↕ Phase 5a parallel: Inventory & Asset Module
+  ↕ Phase 4a parallel: Inventory & Asset Module
 Phase 5   Financial Normalization Module  (financial records, corrections, mini-ledger, payroll)
   ↓
 Phase 6   Accounting Integration Module   (sync, reconciliation, exceptions, controls)
@@ -451,7 +452,11 @@ Phase 7   Intelligence & Automation Module (automation, workflows, notification 
 Phase 8   Reporting & Analytics Module    (reports, exports, operational analytics)
   ↓
 Phase 9   Production Hardening            (RLS, security audit, performance testing, OpenAPI docs)
+
+Track F   Frontend Integration            (after the Phase 5 gate; one page group at a time)
 ```
+
+Open decisions that gate individual phases are listed in BACKEND_OPEN_DECISIONS.md.
 
 **Detail:** BACKEND_IMPLEMENTATION_ROADMAP.md
 
@@ -461,16 +466,17 @@ Phase 9   Production Hardening            (RLS, security audit, performance test
 
 | Document | Version | Contents |
 |---|---|---|
-| **BACKEND_ARCHITECTURE_SUMMARY.md** | **2.0** | This document — master summary |
-| BACKEND_DOMAIN_ARCHITECTURE.md | 2.0 | 11 bounded contexts, context map, aggregate ownership, dependency direction |
+| **BACKEND_ARCHITECTURE_SUMMARY.md** | **2.1** | This document — master summary |
+| BACKEND_DOMAIN_ARCHITECTURE.md | 2.1 | 11 bounded contexts, context map, aggregate ownership, dependency direction |
 | BACKEND_LAYERING_ARCHITECTURE.md | 1.0 | Four-layer model, responsibilities, forbidden interactions |
 | BACKEND_SERVICE_ARCHITECTURE.md | 2.0 | Modular monolith, 11 module definitions, Notification Centre sub-module |
 | BACKEND_EVENT_ARCHITECTURE.md | 2.0 | Event strategy, full catalogue (incl. Tenant + Financial Intelligence events), subscriber registry |
-| BACKEND_DATA_ARCHITECTURE.md | 2.0 | 13 schemas, aggregate ownership, write/read models, transaction boundaries |
-| BACKEND_AUTH_ARCHITECTURE.md | 2.0 | JWT auth, tenant status check on login, RBAC, permission matrix |
+| BACKEND_DATA_ARCHITECTURE.md | 2.1 | 13 schemas, aggregate ownership, write/read models, transaction boundaries |
+| BACKEND_AUTH_ARCHITECTURE.md | 2.1 | JWT auth, tenant status check on login, RBAC, permission matrix |
 | BACKEND_MULTITENANCY_ARCHITECTURE.md | 2.0 | Tenant Context ownership, row-level isolation, tenant lifecycle |
-| BACKEND_API_ARCHITECTURE.md | 1.0 | Domain-driven routes, versioning, validation, pagination, rate limiting |
-| BACKEND_INFRASTRUCTURE_ARCHITECTURE.md | 1.0 | Workers, queues, scheduler, integration pipeline, file processing |
+| BACKEND_API_ARCHITECTURE.md | 1.1 | Domain-driven routes, versioning, validation, pagination, rate limiting |
+| BACKEND_INFRASTRUCTURE_ARCHITECTURE.md | 1.1 | Workers, queues, scheduler, integration pipeline, file processing |
 | **BACKEND_DOCUMENT_INTELLIGENCE_ARCHITECTURE.md** | **2.0** | AI Limitations Covenant, processing pipeline stages, security boundaries |
 | BACKEND_OBSERVABILITY_ARCHITECTURE.md | 1.0 | Audit, logging, telemetry, financial mutation monitoring |
-| BACKEND_IMPLEMENTATION_ROADMAP.md | 1.0 | Dependency-ordered implementation sequence |
+| BACKEND_IMPLEMENTATION_ROADMAP.md | 2.0 | Dependency-ordered implementation sequence, phase gates, Track F |
+| BACKEND_OPEN_DECISIONS.md | 1.0 | Open owner decisions with recommendations; reconciliation log |

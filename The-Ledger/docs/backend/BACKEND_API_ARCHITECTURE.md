@@ -1,9 +1,18 @@
 # THE LEDGER — BACKEND API ARCHITECTURE
 
-Version: 1.0
+Version: 1.1
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Definition Phase
+
+---
+
+## CHANGE LOG
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.0 | June 4, 2026 | Initial definition |
+| 1.1 | October 20, 2026 | Reconciliation pass: `/api/v1/tenant/` and `/api/v1/financial-intelligence/` namespaces added (already listed in the architecture summary) |
 
 ---
 
@@ -83,6 +92,7 @@ Each bounded context has a dedicated API namespace:
 
 | Context | API Namespace |
 |---|---|
+| Tenant (signed-in CEO's own company configuration; tenant lifecycle is admin-only — see BACKEND_OPEN_DECISIONS.md D-15) | `/api/v1/tenant/` |
 | Identity & Access | `/api/v1/auth/` |
 | Operational Core — Jobs | `/api/v1/jobs/` |
 | Operational Core — Sites | `/api/v1/sites/` |
@@ -91,6 +101,7 @@ Each bounded context has a dedicated API namespace:
 | Operational Core — Scheduling | `/api/v1/schedule/` |
 | Review Centre | `/api/v1/review-centre/` |
 | Financial Normalization | `/api/v1/financial/` |
+| Financial Intelligence | `/api/v1/financial-intelligence/` |
 | Inventory — Stock | `/api/v1/stock/` |
 | Inventory — Assets | `/api/v1/assets/` |
 | Client Portal (portal auth) | `/portal/v1/auth/` |

@@ -1,7 +1,23 @@
 # THE LEDGER
 ## Current Development State
 
-Last Updated: July 19, 2026
+Last Updated: October 20, 2026
+
+---
+
+## BACKEND PROGRAMME — DOCUMENTATION RECONCILIATION (October 2026)
+
+Status: **AWAITING OWNER DECISIONS**
+Branch: `docs/backend-roadmap-v2`
+
+Before the backend build starts, the backend documents were reconciled with each other, with the
+frozen domains and with the frontend prototype.
+
+- `docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md` rewritten as **v2.0** (Tenant and Financial
+  Intelligence phases, phase gates, Track F frontend integration).
+- `docs/backend/BACKEND_OPEN_DECISIONS.md` lists 16 owner decisions (D-01 … D-16) with
+  recommendations, plus the log of mechanical fixes applied.
+- Backend Phase 0 starts once the decisions it depends on (D-10, D-12, D-14, D-16) are approved.
 
 ---
 
@@ -381,7 +397,7 @@ Eight documents updated and committed to branch `feature/backend-architecture-re
 
 Backend implementation: Not started
 Architecture documents: Frozen at v2.0
-Branch: feature/backend-architecture-refinement (pending PR merge)
+Branch: feature/backend-architecture-refinement (merged to main)
 
 ---
 
@@ -389,7 +405,7 @@ Branch: feature/backend-architecture-refinement (pending PR merge)
 
 **Backend Architecture Specification — COMPLETE**
 
-**Next Development Target: Phase 6.1 — Notification Centre (backend implementation)**
+**Next Development Target: Backend Phase 0 — Infrastructure Foundation** (see BACKEND_IMPLEMENTATION_ROADMAP.md v2.0; gated on BACKEND_OPEN_DECISIONS.md)
 
 All architecture documents serve as the authoritative foundation for backend implementation.
 The frozen domain model (docs/domain/) and frozen architecture (docs/backend/) are the two authoritative inputs for all future backend development sessions.
