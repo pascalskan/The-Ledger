@@ -1,15 +1,24 @@
 # THE LEDGER — BACKEND AGENT ROSTER
 
-Version: 1.0
-Status: DRAFT — awaiting owner approval
+Version: 1.1
+Status: ACTIVE — owner direction, October 20, 2026
 Date: October 20, 2026
 Authority: Backend Programme Planning
 
 ---
 
+## CHANGE LOG
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.0 | October 20, 2026 | Draft roster, phase pipeline, folder ownership, shared rules |
+| 1.1 | October 20, 2026 | Owner direction: the main session is the Project Manager and the "theoretical GitHub"; every agent works on its own branch and runs each commit through the PM; minimum three review rounds per job; related agents are notified after each merge; all real work lives on the GitHub branch `backend` |
+
+---
+
 ## PURPOSE
 
-This document defines the team of Claude subagents that builds The Ledger backend, the order they work in for each roadmap phase, what each one may touch, and the rules they all follow.
+This document defines the team of Claude subagents that builds The Ledger backend, how their work is reviewed and merged, what each one may touch, and the rules they all follow.
 
 It implements `BACKEND_IMPLEMENTATION_ROADMAP.md` (v2.1) under the approved decisions in `BACKEND_OPEN_DECISIONS.md`. It adds no architecture and no doctrine.
 
@@ -17,76 +26,155 @@ It implements `BACKEND_IMPLEMENTATION_ROADMAP.md` (v2.1) under the approved deci
 
 ## HOW IT RUNS
 
-Subagents cannot start other subagents. The **main Claude session is the Backend Lead**: it follows the `ledger-backend-lead` skill (`.claude/skills/ledger-backend-lead/SKILL.md`), calls the subagents below in order, checks their output, and is the only one that talks to the owner, commits, pushes or opens pull requests.
+### The Project Manager
 
-The agent definitions live in `.claude/agents/`. Claude Code loads them from the folder a session is started in, so backend sessions are started in the app folder (the one that contains `CLAUDE.md`).
+Subagents cannot start other subagents. The **main Claude session is the Project Manager (PM)**. It follows the `ledger-backend-lead` skill, and it is three things at once:
 
-One roadmap phase = one branch = one pull request. The Lead stops after opening the pull request (CLAUDE.md Git Workflow); the next phase starts after the owner merges it.
+1. **Project manager** — assigns every job, checks every piece of work, and decides when a job is complete.
+2. **The theoretical GitHub** — owns the integration branch, every agent branch, every review and every merge. No agent's work reaches the integration branch except through the PM.
+3. **The only link to the owner and to the real GitHub** — the only one who talks to the owner, pushes, or opens pull requests.
+
+### Real GitHub
+
+All backend work lives on one real branch: **`backend`** on GitHub (created October 20, 2026 from `main`). The PM pushes `backend` after each completed phase and at every context-safety stop. `main` and `deploy/replit-public` are never touched.
+
+### The theoretical GitHub
+
+The theoretical GitHub is local git, run by the PM. Nothing in it is pushed except `backend` itself.
+
+| Theoretical GitHub | Real thing |
+|---|---|
+| "main" | the local `backend` branch, checked out in the PM's integration worktree |
+| an agent's branch | a local branch `agent/<agent>/<job>` in its own worktree under `worktrees/agents/` |
+| a commit | a real local commit the agent makes on its own branch |
+| a review | the PM reading the commit (`git show`) and replying to the agent |
+| a merge | the PM merging the agent branch into local `backend` with `--no-ff` |
+| a release note | the PM's entry in `docs/backend/BACKEND_MERGE_LOG.md` plus messages to related agents |
 
 ---
 
 ## THE ROSTER
 
-| Agent | Role | Writes to | Model |
+| Agent | Role | Writes to (on its own branch) | Model |
 |---|---|---|---|
-| Backend Lead (main session) | Orchestrates a phase, owner checkpoints, verification runs, handoff, git | `docs/handoffs/`, `docs/ai-context/CURRENT_DEVELOPMENT_STATE.md` | session model |
-| `backend-architect` | Turns the roadmap phase and frozen domains into a phase specification | `docs/backend/phases/` | opus |
-| `backend-platform-engineer` | Builds Phase 0 and Phase 9 and any cross-cutting platform change | `server/platform/`, `server/index.ts`, `server/worker.ts`, root config files, `migrations/` (platform tables) | session model |
-| `backend-module-engineer` | Builds one module end to end (domain, application, infrastructure, API) | `server/modules/<module>/`, `migrations/` (its own schema), one line in `server/modules/registry.ts` | session model |
-| `backend-test-engineer` | Writes the phase gate tests from the specification, independently of the implementation | `server/tests/` | session model |
-| `backend-doctrine-reviewer` | Read-only review for Approval, Audit, Job Attribution, Financial Integrity, Review Centre, automation and AI doctrine | nothing (report only) | opus |
-| `backend-security-reviewer` | Read-only review for tenant isolation, RBAC, authentication, portal projections and sensitive data in logs | nothing (report only) | opus |
-| `frontend-integration-engineer` | Track F: switches one frontend page group from mock data to the API | `client/` | session model |
+| Project Manager (main session) | Assigns jobs, reviews every commit, runs the review rounds, merges, notifies, talks to the owner, pushes | merge log, handoffs, development state | session model |
+| `backend-architect` | Turns a roadmap phase and the frozen domains into a phase specification | `docs/backend/phases/` | opus |
+| `backend-platform-engineer` | Phase 0, Phase 9 and any cross-cutting platform change | `server/platform/`, `server/index.ts`, `server/worker.ts`, `server/modules/registry.ts`, root config, platform migrations | session model |
+| `backend-module-engineer` | One module end to end (domain, application, infrastructure, API); one instance per module | `server/modules/<module>/`, its migrations, one registry line | session model |
+| `backend-test-engineer` | Gate tests from the specification, independently of the implementation | `server/tests/` | session model |
+| `backend-doctrine-reviewer` | Read-only doctrine review the PM uses in review round 2 | nothing | opus |
+| `backend-security-reviewer` | Read-only security review the PM uses in review round 2 | nothing | opus |
+| `frontend-integration-engineer` | Track F: one frontend page group from mock data to the API | `client/` | session model |
 
-Not in the roster: the commercial documents domain session needed for D-07. Defining a domain is an owner conversation, so the Lead runs it directly with the owner and produces `docs/domain/COMMERCIAL_DOCUMENTS_DOMAIN.md` for approval.
+The commercial documents domain session (D-07) is not an agent job. Defining a domain is an owner conversation; the PM runs it with the owner.
+
+---
+
+## THE JOB LIFECYCLE
+
+Every job — a specification, a module, a set of gate tests, a Track F page group — follows the same lifecycle.
+
+```
+1. ASSIGN     PM creates agent/<agent>/<job> from the latest local backend,
+              in worktrees/agents/<agent>-<job>/, installs dependencies,
+              and briefs the agent (job, branch, worktree, specification,
+              merge-log entries it must know about)
+     ↓
+2. COMMIT     Agent makes ONE focused commit, then stops and reports
+     ↓
+3. CHECK      PM reviews that commit (git show, runs the relevant checks)
+              → "changes requested" (agent fixes in a new commit) or
+              → "accepted, continue" (agent makes the next commit)
+              ...repeat 2–3 until the agent reports the job is finished
+     ↓
+4. REVIEW     At least THREE full review rounds on the whole branch
+   ROUNDS     (see below). The job is not complete until all three have
+              run and no finding is open.
+     ↓
+5. MERGE      PM merges the branch into local backend (--no-ff), reruns
+              the full verification on backend, writes the merge-log entry
+     ↓
+6. NOTIFY     PM tells every related agent what was merged and what it
+              means for them (Notification Map); they pull backend into
+              their branch when told
+```
+
+### Commits
+
+- One commit is one coherent step (for example "tenant schema and migration", "provision tenant use case and tests"). Agents keep commits small enough to review in one sitting.
+- Agents commit only on their own branch, in their own worktree. They never push, merge into `backend`, rebase, reset shared history, switch branches or touch another agent's branch.
+- Commit messages: `<area>: <what changed>` on the first line, then why, then `Spec: <spec path> §<section>`.
+- After each commit the agent stops and reports the SHA, what it did, and the checks it ran. It continues only when the PM says "accepted, continue".
+- "Pull from main" means `git merge backend` inside the agent's own worktree, done only when the PM asks.
+
+### The three review rounds (minimum)
+
+Each round is a real exchange: the PM reviews the latest state of the branch, sends specific findings or specific verification questions, and the agent answers with fix commits or evidence. A round with no findings still sends the agent targeted questions to answer — a round is never just "looks good".
+
+| Round | Focus | What the PM does |
+|---|---|---|
+| 1 — Correctness | Bugs, edge cases, conformance to the specification and the frozen domain | Reads the full branch diff against `backend`; runs `npm run check`, `npm run build`, unit tests and gate tests; checks every specification item is implemented and every gate test passes for the right reason |
+| 2 — Security and doctrine | Tenant isolation, RBAC and PM scope, auth, sensitive data, approval and audit doctrine, immutability | Runs `backend-doctrine-reviewer` and `backend-security-reviewer` in parallel on the branch and checks their findings itself; adds its own findings; sends all of them to the agent |
+| 3 — Efficiency and quality | Query efficiency (N+1 queries, missing indexes, long transactions, unbounded lists), layering and module boundaries, duplication, error handling, test quality | Reads the code for performance and maintainability; checks the tests would fail if the code were wrong |
+
+Further rounds follow until there are no open findings. The PM confirms a job complete only when:
+- at least three rounds have run,
+- every finding is fixed or explicitly accepted by the PM with a written reason,
+- `npm run check`, `npm run build`, all unit tests and all gate tests (this phase and every earlier one) pass on the branch after merging the latest `backend`.
+
+Every round, finding and answer is recorded in the job's merge-log entry.
+
+### Gate tests are protected
+
+The implementer never edits gate tests. If a gate test looks wrong, the PM asks `backend-architect` for a ruling; a specification change goes to the owner.
 
 ---
 
 ## PHASE PIPELINE
 
+A roadmap phase is a sequence of jobs:
+
 ```
-1. Lead        Preflight: previous phase merged, decisions approved, branch from main
-       ↓
-2. Architect   Phase specification  →  docs/backend/phases/PHASE-<n>-<module>.md
-       ↓
-3. Lead        OWNER CHECKPOINT — owner approves the specification
-       ↓
-4. ┌ Test engineer      Gate tests from the specification (expected to fail at first)
-   └ Platform or module engineer   Implementation          (in parallel, separate folders)
-       ↓
-5. Lead        Verify: build, typecheck, unit tests, gate tests
-               Failures → back to the implementer (gate tests are not edited to pass)
-       ↓
-6. ┌ Doctrine reviewer
-   └ Security reviewer   (in parallel, on the phase diff)
-               Findings → implementer fixes → step 5 again
-       ↓
-7. Lead        Handoff document, development-state update, commit, push, pull request, STOP
+1. PM          Preflight: previous phase complete, decisions approved
+2. Architect   Job: phase specification          → lifecycle → merged
+3. PM          OWNER CHECKPOINT: owner approves the specification
+4. ┌ Test engineer      Job: gate tests          → lifecycle → merged
+   └ Implementer        Job: implementation      → lifecycle → merged
+     (in parallel, each on its own branch; the implementer's review
+      rounds run against the merged gate tests)
+5. PM          Phase verification on backend; handoff; development state;
+               push backend to GitHub; report to the owner; STOP until the
+               owner says to start the next phase
 ```
 
-### Step details
+Parallel phases (4 with 4a; 6 with 6a and 6b) run as parallel jobs on separate branches. They share no folders except `server/modules/registry.ts` (one line each) and `migrations/` (migrations are regenerated after pulling `backend`, never hand-merged).
 
-**1. Preflight (Lead).** Confirms the previous phase's pull request is merged into `main`, every decision the phase needs (roadmap phase table) is APPROVED, and for invoice-document work that `COMMERCIAL_DOCUMENTS_DOMAIN.md` is frozen. Creates `backend/phase-<n>-<module>` from `main`.
+Track F (after the Phase 5 gate): architect job (integration specification for the page group) → owner checkpoint → `frontend-integration-engineer` job, verified with the Playwright specs for the page group in both `mock` and `api` modes.
 
-**2. Specification (Architect).** Produces the phase specification using the template below. The specification is the contract between the implementer and the test engineer.
+---
 
-**3. Owner checkpoint (Lead).** CLAUDE.md requires analysis before implementation. The Lead summarises the specification for the owner, including every open question and every place the design differs from the prototype engines, and waits for approval.
+## NOTIFICATION MAP
 
-**4. Build and tests in parallel.** The implementer and the test engineer both work from the approved specification and never from each other's code, so the tests check the specification rather than echo the implementation.
+After each merge the PM notifies every agent whose work relates to what was merged — any agent currently on a job is messaged directly, and every later agent learns it from the merge log, which each agent reads at the start of a job.
 
-**5. Verification (Lead).** Runs `npm run check`, `npm run build`, the unit tests and the phase's gate tests, plus all earlier phases' gate tests. If a gate test looks wrong, the Lead decides with the architect (or the owner) whether the test or the specification changes; the implementer never edits gate tests.
+| When this merges | Notify |
+|---|---|
+| A phase specification | the implementer and test engineer for that phase |
+| Gate tests | the implementer for that phase |
+| Platform (Phase 0, Phase 9, platform changes) | every module engineer, the test engineer, the integration engineer |
+| Tenant | every module engineer (company foreign key, tenant context) |
+| Identity | every module engineer (user context, roles), the integration engineer |
+| Operational | Review Centre, Inventory & Asset, Client Portal, Financial Intelligence |
+| Review Centre | Financial Normalization, Intelligence & Automation |
+| Inventory & Asset | Financial Normalization |
+| Financial Normalization | Inventory & Asset, Accounting Integration, Financial Intelligence, Client Portal, Intelligence & Automation, Reporting |
+| Accounting Integration | Intelligence & Automation, Reporting |
+| Client Portal | Intelligence & Automation, the integration engineer |
+| Financial Intelligence | Intelligence & Automation, Reporting |
+| Intelligence & Automation | Reporting |
+| Any change to an API route or response | the integration engineer (from Track F onward) and the test engineer |
 
-**6. Review.** Both reviewers read the diff against `main`, the specification and the doctrine. Findings are rated **Blocking**, **Should fix** or **Note**. All Blocking findings are fixed before step 7.
-
-**7. Close-out (Lead).** Writes the phase handoff (CLAUDE.md Handoff Requirements plus the roadmap's extra items), updates `CURRENT_DEVELOPMENT_STATE.md`, commits, pushes, opens the pull request and stops.
-
-### Parallel phases
-
-Phases 4 and 4a, and later 6, 6a and 6b, may be built at the same time. Each runs as its own session in its own worktree and branch, with its own run of this pipeline. They share no folders except `server/modules/registry.ts` (one line each) and `migrations/` (migration files are regenerated after rebasing on `main`, never hand-merged).
-
-### Track F
-
-After the Phase 5 gate, the Lead runs Track F one page group at a time: architect (integration specification for the page group) → owner checkpoint → `frontend-integration-engineer` → Playwright suite in both `mock` and `api` modes → reviewers → pull request.
+A notification says: what merged (merge SHA), the public surface that changed (module `index.ts` exports, events, routes, tables), anything the recipient must now do, and the merge-log entry to read.
 
 ---
 
@@ -94,17 +182,17 @@ After the Phase 5 gate, the Lead runs Track F one page group at a time: architec
 
 | Path | Owner | Others |
 |---|---|---|
-| `server/platform/**` | platform engineer | module engineers import only from `server/platform/index.ts` |
-| `server/modules/<module>/**` | module engineer for that module | other modules import only from `server/modules/<module>/index.ts` |
+| `server/platform/**` | platform engineer | modules import only from `server/platform/index.ts` |
+| `server/modules/<module>/**` | module engineer for that module | others import only from `server/modules/<module>/index.ts` |
 | `server/modules/registry.ts` | platform engineer (creates it) | each module engineer adds one registration line |
 | `server/index.ts`, `server/worker.ts` | platform engineer | — |
 | `server/tests/gate/**`, `server/tests/support/**` | test engineer | implementers read only |
-| `server/**/*.test.ts` next to source | the implementer of that source (unit tests) | — |
+| `server/**/*.test.ts` next to source | the implementer of that source | — |
 | `migrations/**` | whoever owns the schema being migrated | generated with `drizzle-kit generate`, never hand-edited after commit |
 | `docs/backend/phases/**` | architect | — |
-| `docs/handoffs/**`, `docs/ai-context/CURRENT_DEVELOPMENT_STATE.md` | Lead | — |
-| `client/**` | frontend integration engineer (Track F only) | — |
-| `docs/domain/**`, `docs/ai-context/LEDGER_CANONICAL_CONTEXT.md`, `docs/backend/BACKEND_*.md`, `CLAUDE.md` | owner (changed only by the Lead, with owner approval) | agents read only |
+| `docs/backend/BACKEND_MERGE_LOG.md`, `docs/handoffs/**`, `docs/ai-context/CURRENT_DEVELOPMENT_STATE.md` | PM | — |
+| `client/**` | integration engineer (Track F only) | — |
+| `docs/domain/**`, `docs/ai-context/LEDGER_CANONICAL_CONTEXT.md`, `docs/backend/BACKEND_*.md`, `CLAUDE.md` | owner (changed only by the PM, with owner approval) | agents read only |
 
 Backend tests live under `server/`, not `tests/`, because Playwright collects every `*.test.ts` under `tests/`.
 
@@ -119,8 +207,9 @@ Every agent follows these rules. Each agent definition points here.
 2. `docs/ai-context/LEDGER_CANONICAL_CONTEXT.md` — doctrine
 3. `docs/backend/BACKEND_OPEN_DECISIONS.md` — approved decisions D-01 … D-16
 4. `docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md` — the phase being built
-5. The phase specification in `docs/backend/phases/` (every agent except the architect)
-6. Only the domain and architecture documents the specification cites
+5. `docs/backend/BACKEND_MERGE_LOG.md` — everything merged so far, and any entries the PM pointed you to
+6. The phase specification in `docs/backend/phases/` (every agent except the architect)
+7. Only the domain and architecture documents the specification cites
 
 ### Precedence
 Canonical context → frozen domain documents → backend architecture documents → prototype engines. Prototype engines are reference behaviour only. Any difference between the build and an engine is listed in the agent's report with the rule that caused it.
@@ -134,20 +223,28 @@ Canonical context → frozen domain documents → backend architecture documents
 - No hard deletes (D-05). No request or response bodies, tokens, passwords or financial amounts in logs.
 
 ### Working rules
-- Stay inside your folders (Folder Ownership). If a change is needed elsewhere, stop and report it.
+- Work only in the worktree and on the branch the PM gave you. Stay inside your folders (Folder Ownership). If a change is needed elsewhere, stop and report it.
+- Commit as described in The Job Lifecycle: one focused commit, then stop and report. Never push, merge into `backend`, rebase, switch branches or touch `main` or `deploy/replit-public`.
 - Never edit frozen documents, the canonical context, the architecture documents or `CLAUDE.md`.
-- Never commit, push, create branches, open pull requests or touch `deploy/replit-public`. The Lead does all git work.
 - Follow the four-layer rules in BACKEND_LAYERING_ARCHITECTURE.md and the module boundary rules in BACKEND_SERVICE_ARCHITECTURE.md.
 - User-readable strings use British English and the platform lexicon (canonical context). Identifiers, routes and test IDs are unaffected.
 - Never invent doctrine or resolve an ambiguity silently. Put it under **Open questions** in your report.
+- Answer every PM review question directly, with evidence (file and line, test name, command output).
 
 ### Report format
-Every agent ends with a report to the Lead:
-1. **Done** — what was produced, with file paths
+After each commit:
+1. **Commit** — SHA and message
+2. **What and why** — the step this commit completes
+3. **Checks run** — commands and results
+4. **Next** — the commit you plan next, or "job finished"
+
+At the end of the job, and in reply to each review round:
+1. **Done** — what was produced, with file paths and commit SHAs
 2. **Verification** — commands run and their results (or "not run" and why)
-3. **Differences from the prototype** — with the rule that caused each
-4. **Open questions** — anything the Lead or owner must decide
-5. **Out of scope noticed** — problems seen outside the agent's folders
+3. **Review answers** — each PM finding or question, and the fix commit or evidence
+4. **Differences from the prototype** — with the rule that caused each
+5. **Open questions** — anything the PM or owner must decide
+6. **Out of scope noticed** — problems seen outside your folders
 
 ---
 
@@ -165,10 +262,5 @@ The architect fills in every section; "None" is a valid answer, an empty section
 8. **Audit entries** — every entry type and its fields
 9. **Gate tests** — numbered list (`G<phase>-01` …) mapping each roadmap gate item and invariant to a test, including the attack each test tries
 10. **Prototype differences** — where the prototype engines behave differently, and why the build follows the domain
-11. **Open questions** — for the owner checkpoint
-
----
-
-## APPROVAL OF THIS ROSTER
-
-This roster is a draft. Once the owner approves it, the Lead may start Phase 0 with the `ledger-backend-lead` skill.
+11. **Commit plan** — the expected sequence of focused commits for the implementation job
+12. **Open questions** — for the owner checkpoint

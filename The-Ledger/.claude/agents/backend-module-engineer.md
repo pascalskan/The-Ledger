@@ -36,13 +36,18 @@ server/modules/<module>/
 - No hard deletes (D-05); lifecycle exits only.
 - Worker-facing responses contain no financial fields; portal responses come only from projections with explicit field whitelists.
 
+## Branch and commits
+
+Work only in the worktree and on the branch the PM gave you (`agent/backend-module-engineer-<module>/<job>`). Follow the specification's commit plan — typically schema and migration, domain model, each use case with its unit tests, API routes — one focused commit at a time. After each commit, run the checks it affects, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull (for example after the gate tests or another module merge), run `git merge backend` in your worktree, resolve conflicts, regenerate your migration if needed, rerun your checks and commit.
+
 ## How to work
 
 1. Follow the specification. When the prototype engine named in the roadmap does something different, follow the specification and note the difference in your report.
 2. Write unit tests next to the code (`*.test.ts`). Do not edit `server/tests/gate/**`.
-3. Before reporting, run `npm run check`, `npm run build`, the unit tests and the gate tests for this phase, and paste the results. Failing gate tests are expected only where the test engineer's work is ahead of yours; say which.
+3. Before reporting a commit, run `npm run check`, `npm run build` and the tests it affects, and paste the results. Once the gate tests are merged into `backend` and pulled, run them too; say which still fail and why.
 4. If the specification is wrong or incomplete, stop and report it under Open questions rather than guessing.
+5. Answer every PM review round (correctness; security and doctrine; efficiency and quality) with fix commits or evidence.
 
 ## Report
 
-End with the report format from the roster.
+Use the roster's report formats: the short one after each commit, the full one at the end of the job and in reply to each review round.

@@ -23,7 +23,8 @@ One file: `docs/backend/phases/PHASE-<n>-<module>.md` (Track F: `docs/backend/ph
 4. For each use case, state the transaction boundary and what is written inside it (state change, audit entry, outbox event), following BACKEND_DATA_ARCHITECTURE.md Transaction Boundaries.
 5. Read the prototype engines the roadmap names for the phase (`client/src/lib/…`). Record every place the specification deliberately behaves differently, with the domain rule that requires it.
 6. Write gate tests as attacks: each one names the invariant or doctrine it protects and the specific way it tries to break it (wrong tenant, wrong role, automation actor, concurrent request, replayed event, direct repository call, and so on). Every roadmap gate item and every invariant the phase owns must map to at least one test.
-7. Use Bash only to read (for example `git log`, `git diff main --stat`). Never change files with it.
+7. Work only in the worktree and on the branch the PM gave you. Commit the specification in focused steps (for example data model; use cases and API; events, audit and gate tests), one commit at a time, stopping after each to report to the PM and continuing only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. Use Bash only for reading and for committing on your own branch.
+8. Answer every PM review round with fix commits or evidence.
 
 ## When asked for a ruling
 
@@ -31,4 +32,4 @@ If the Lead brings a dispute between a gate test and the implementation, answer 
 
 ## Report
 
-End with the report format from the roster. Under Open questions, list every ambiguity you could not resolve from the sources — never resolve one by invention.
+Use the roster's report formats: the short one after each commit, the full one at the end of the job and in reply to each review round. Under Open questions, list every ambiguity you could not resolve from the sources — never resolve one by invention.

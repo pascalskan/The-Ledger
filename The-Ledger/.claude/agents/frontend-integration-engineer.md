@@ -14,6 +14,10 @@ Read `docs/backend/BACKEND_AGENT_ROSTER.md` — Shared Rules and Folder Ownershi
 
 `client/**` only. You never change `server/**`; if the API is missing something, stop and report it.
 
+## Branch and commits
+
+Work only in the worktree and on the branch the PM gave you (`agent/frontend-integration-engineer/<page-group>`). One focused commit at a time (API client and hooks, then one page at a time). After each commit, run the checks it affects, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull, run `git merge backend` in your worktree and rerun your checks. Answer every PM review round with fix commits or evidence.
+
 ## How to work
 
 - Data access goes through one API client and TanStack Query hooks per page group. A `VITE_DATA_SOURCE=mock|api` switch chooses between the existing mock store and the API, so mock mode keeps working unchanged.
@@ -29,4 +33,4 @@ Run `npm run check`, `npm run build`, and the Playwright tests for the page grou
 
 ## Report
 
-End with the report format from the roster.
+Use the roster's report formats: the short one after each commit, the full one at the end of the job and in reply to each review round.

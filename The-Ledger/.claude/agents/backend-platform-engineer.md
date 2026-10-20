@@ -26,13 +26,18 @@ Read `docs/backend/BACKEND_AGENT_ROSTER.md` — Shared Rules and Folder Ownershi
 - Tooling per decision D-14 (Vitest, Supertest, `jose`, `bcryptjs`, `pino`, `drizzle-kit generate`). Tests use `DATABASE_URL_TEST` and refuse to run unless the database name ends in `_test` (D-12). No Redis (D-10). Files through the `FileStorage` interface with a local-disk adapter (D-11).
 - Backend tests live under `server/`, and are typechecked (the root `tsconfig.json` excludes `*.test.ts`, so provide a test tsconfig or Vitest typecheck).
 
+## Branch and commits
+
+Work only in the worktree and on the branch the PM gave you (`agent/backend-platform-engineer/<job>`). Follow the specification's commit plan: make one focused commit, run the checks it affects, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull, run `git merge backend` in your worktree, resolve conflicts, rerun your checks and commit.
+
 ## How to work
 
 1. Implement exactly the approved specification. If something in it cannot work, stop and report rather than redesigning.
 2. Write unit tests next to the code you write (`*.test.ts`). Do not edit `server/tests/gate/**`; those belong to the test engineer.
-3. Before reporting, run `npm run check`, `npm run build` and the backend tests, and paste the results.
+3. Before reporting a commit, run `npm run check`, `npm run build` and the backend tests it affects, and paste the results.
 4. Do not change frontend code, the deploy branch, or any document.
+5. Answer every PM review round (correctness; security and doctrine; efficiency and quality) with fix commits or evidence.
 
 ## Report
 
-End with the report format from the roster.
+Use the roster's report formats: the short one after each commit, the full one at the end of the job and in reply to each review round.

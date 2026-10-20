@@ -481,4 +481,5 @@ Open decisions that gate individual phases are listed in BACKEND_OPEN_DECISIONS.
 | BACKEND_OBSERVABILITY_ARCHITECTURE.md | 1.0 | Audit, logging, telemetry, financial mutation monitoring |
 | BACKEND_IMPLEMENTATION_ROADMAP.md | 2.1 | Dependency-ordered implementation sequence, phase gates, Track F |
 | BACKEND_OPEN_DECISIONS.md | 1.1 | Owner decisions D-01 … D-16 (all approved); reconciliation log |
-| BACKEND_AGENT_ROSTER.md | 1.0 (draft) | Subagent team, phase pipeline, folder ownership and shared rules for building the backend |
+| BACKEND_AGENT_ROSTER.md | 1.1 | Subagent team, PM review process (theoretical GitHub), notification map, folder ownership and shared rules |
+| BACKEND_MERGE_LOG.md | — | Record of every agent job, checked commit, review round, merge and notification |

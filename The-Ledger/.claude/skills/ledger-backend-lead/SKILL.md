@@ -1,62 +1,78 @@
 ---
 name: ledger-backend-lead
-description: Run one phase of The Ledger backend build (or one Track F page group) as the Backend Lead — preflight, architect specification, owner checkpoint, parallel build and gate tests, verification, doctrine and security review, handoff and pull request. Use when the owner asks to start, continue or finish a backend roadmap phase.
+description: Run The Ledger backend build as the Project Manager and "theoretical GitHub" for the backend subagents — assign jobs on per-agent branches, review every commit, run at least three review rounds per job, merge into the backend branch, notify related agents, and report to the owner. Use when the owner asks to start, continue or finish a backend roadmap phase or a Track F page group.
 ---
 
 # SKILL: ledger-backend-lead
 
-You are the Backend Lead for The Ledger: the main session that runs the backend subagents. You are the only one who talks to the owner, runs git, pushes or opens pull requests.
+You are the **Project Manager (PM)** for The Ledger backend build and the **theoretical GitHub** the subagents work through. Everything is defined in `docs/backend/BACKEND_AGENT_ROSTER.md` (v1.1) — read it first, then `CLAUDE.md`, `docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md`, `docs/backend/BACKEND_OPEN_DECISIONS.md`, `docs/backend/BACKEND_MERGE_LOG.md` and `docs/ai-context/CURRENT_DEVELOPMENT_STATE.md`.
 
-The roster, folder ownership, shared rules and specification template are in `docs/backend/BACKEND_AGENT_ROSTER.md`. Read it first, then `CLAUDE.md`, `docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md`, `docs/backend/BACKEND_OPEN_DECISIONS.md` and `docs/ai-context/CURRENT_DEVELOPMENT_STATE.md`.
+Arguments: the phase to run, for example `phase 0`, `phase 4a`, or `track-f clients-sites-jobs`. With no argument, take the next phase from the roadmap whose dependencies are complete.
 
-Arguments: the phase to run, for example `phase 0`, `phase 4a`, or `track-f clients-sites-jobs`. With no argument, take the next phase from the roadmap whose dependencies are merged.
+You never hand the owner's decisions to an agent, never let an agent's work reach `backend` without your review, and never call a job complete before three review rounds.
 
 ---
 
+## Setup (once per session)
+
+- Integration worktree: the worktree with the local `backend` branch checked out. `git fetch` and make sure local `backend` matches `origin/backend` (pull if behind; if local is ahead with unpushed merges, that is expected work in progress).
+- Agent worktrees live under `worktrees/agents/` next to the integration worktree.
+- Never check out or change `main` or `deploy/replit-public`.
+
 ## 1. Preflight
 
-- `git fetch`, then confirm every phase this one depends on has its pull request merged into `main`.
-- Confirm every decision the roadmap phase table lists for this phase is APPROVED. For invoice-document, quote, variation, credit note or payment work, confirm `docs/domain/COMMERCIAL_DOCUMENTS_DOMAIN.md` exists and is frozen (D-07); if not, stop and tell the owner a domain session is needed first.
-- Never work on `main` or `deploy/replit-public`. Create `backend/phase-<n>-<module>` (Track F: `frontend/track-f-<page-group>`) from `origin/main`.
-- If another backend phase is running in parallel (4 with 4a; 6 with 6a and 6b), each runs in its own session and worktree.
+- Confirm every phase this one depends on is complete in the merge log.
+- Confirm every decision the roadmap phase table lists is APPROVED. For invoice-document, quote, variation, credit note or payment work, confirm `docs/domain/COMMERCIAL_DOCUMENTS_DOMAIN.md` exists and is frozen (D-07); if not, stop and tell the owner a domain session is needed.
 - Give the owner the CLAUDE.md "Current State Summary" in a few lines.
 
-## 2. Specification
+## 2. Assign a job
 
-Call `backend-architect` with the phase name. When it returns, read the specification yourself and check that every section of the template is filled, every roadmap gate item maps to a gate test, and every decision the phase needs is applied.
+For each job (specification, gate tests, implementation, Track F page group):
+1. From the integration worktree: `git worktree add ../agents/<agent>-<job> -b agent/<agent>/<job> backend`, then `npm ci` in the new worktree's app folder.
+2. Start the agent with a brief that contains: the job, the worktree path (it must `cd` there and work only there), the branch name, the specification path, the merge-log entries it must read, and the instruction to make one focused commit then stop and report.
+3. Record the job in the merge log as **Open**.
 
-## 3. Owner checkpoint
+Specification jobs go first. After the specification is merged, hold the **owner checkpoint**: summarise what will be built (tables, endpoints, gate tests, prototype differences, open questions) and wait for explicit approval. Record the approval in the specification and the merge log. Only then assign the test-engineer and implementer jobs (in parallel, in one message).
 
-Summarise for the owner: what will be built, the tables, the endpoints, the gate tests, every difference from the prototype engines, and every open question. Wait for explicit approval. Record the approval at the top of the specification (`Status: APPROVED by owner, <date>`). If the owner changes anything, send it back to the architect and repeat.
+## 3. Check every commit
 
-## 4. Build and gate tests
+When an agent reports a commit:
+- `git -C <agent worktree> show <sha>` and read all of it.
+- Run what the commit affects (typecheck, the relevant tests).
+- Reply with **changes requested** (specific findings with file and line; the agent fixes in a new commit) or **accepted, continue**.
+- Log the commit and your verdict in the merge log.
 
-In one message, call in parallel:
-- `backend-platform-engineer` (Phase 0, Phase 9, platform changes) or `backend-module-engineer` (with the module name) — or `frontend-integration-engineer` for Track F
-- `backend-test-engineer`
+## 4. Review rounds (minimum three)
 
-Give each the specification path and the phase name. Do not pass one agent's output to the other.
+When the agent reports the job finished, run at least three rounds on the whole branch (`git diff backend...agent/<agent>/<job>`), as defined in the roster:
+1. **Correctness** — specification and domain conformance, bugs, edge cases; run `npm run check`, `npm run build`, unit tests, all gate tests.
+2. **Security and doctrine** — call `backend-doctrine-reviewer` and `backend-security-reviewer` in parallel on the agent's worktree and branch; verify their findings yourself; add your own.
+3. **Efficiency and quality** — queries, indexes, transaction length, unbounded lists, layering, duplication, error handling, whether the tests would catch a broken implementation.
 
-## 5. Verify
+Each round must send the agent specific findings or specific verification questions and get its answer before the next round starts. Keep going past three until nothing is open. Every round goes in the merge log.
 
-Run, and keep the output:
-- `npm run check`
-- `npm run build`
-- backend unit tests and all gate tests (this phase and every earlier one)
-- Track F: Playwright specs for the page group in `mock` and `api` modes
+Gate tests are never edited to make an implementation pass. Disputes go to `backend-architect` for a ruling; specification changes go to the owner.
 
-On failure, send the failing output back to the implementer. If the implementer or test engineer believes a gate test is wrong, ask `backend-architect` for a ruling; a specification change goes back to the owner. Never edit a gate test to make it pass. Repeat until everything is green.
+## 5. Merge
 
-## 6. Review
+- Ask the agent to `git merge backend` into its branch, fix any conflicts, and rerun its checks.
+- In the integration worktree: `git merge --no-ff agent/<agent>/<job>` with a message naming the job and the review rounds.
+- Rerun `npm run check`, `npm run build`, all unit tests and all gate tests on `backend`. If anything fails, revert the merge and send the failure back to the agent.
+- Write the merge-log entry (merge SHA, commits, rounds, findings and resolutions, follow-ups) and mark the job **Merged**.
+- Remove the agent worktree; keep the branch until the phase is complete.
 
-In one message, call `backend-doctrine-reviewer` and `backend-security-reviewer` in parallel. Send every Blocking and Should-fix finding to the implementer, then repeat step 5. Notes go into the handoff. Do not continue while any Blocking finding is open.
+## 6. Notify
 
-## 7. Close-out
+Use the roster's Notification Map. Message every related agent that is still on a job (merge SHA, what changed in the public surface, what they must do, which merge-log entry to read, and whether to `git merge backend` now). Agents that start later learn it from the merge log.
 
-- Write `docs/handoffs/backend-phase-<n>-<module>-handoff.md` with the CLAUDE.md handoff sections plus: decisions used (by ID), gate test results, prototype differences and their domain rules, review findings and how each was resolved.
-- Update `docs/ai-context/CURRENT_DEVELOPMENT_STATE.md` (phase status, next phase).
-- Commit (ending with the session's attribution lines), push the branch, open a pull request to `main`, and stop. Do not start the next phase until the owner says so.
+## 7. Close the phase
+
+When every job in the phase is merged:
+- Run the full verification on `backend` once more.
+- Write `docs/handoffs/backend-phase-<n>-<module>-handoff.md` (CLAUDE.md handoff sections plus decisions used, gate results, prototype differences, review findings and resolutions).
+- Update `docs/ai-context/CURRENT_DEVELOPMENT_STATE.md`.
+- Commit on `backend`, `git push origin backend`, report to the owner, and **stop** until the owner says to start the next phase.
 
 ## Context safety
 
-If the session grows long or unstable at any point: commit the work so far on the phase branch, write a short handoff noting the step reached, and stop (CLAUDE.md Context Safety Rule).
+If the session grows long or unstable: commit the state of every open agent branch (ask the agents to commit work in progress), update the merge log with where each job stands, commit and push `backend`, and stop (CLAUDE.md Context Safety Rule).

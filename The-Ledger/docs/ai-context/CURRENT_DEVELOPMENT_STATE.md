@@ -8,7 +8,7 @@ Last Updated: October 20, 2026
 ## BACKEND PROGRAMME — DOCUMENTATION RECONCILIATION (October 2026)
 
 Status: **DECISIONS APPROVED** (October 20, 2026)
-Branch: `docs/backend-roadmap-v2`
+Branch: `backend` (GitHub; all backend work lives here)
 
 Before the backend build starts, the backend documents were reconciled with each other, with the
 frozen domains and with the frontend prototype.
@@ -18,8 +18,11 @@ frozen domains and with the frontend prototype.
 - `docs/backend/BACKEND_OPEN_DECISIONS.md` lists 16 owner decisions (D-01 … D-16) with
   recommendations, plus the log of mechanical fixes applied.
 - All 16 decisions approved by the owner and applied to the backend docs, the canonical context, LEDGER_FRONTEND_ARCHITECTURE.md and CLAUDE.md.
-- Subagent team drafted: `docs/backend/BACKEND_AGENT_ROSTER.md`, agents in `.claude/agents/`, Lead playbook in
-  `.claude/skills/ledger-backend-lead/` (draft, awaiting owner approval).
+- Subagent team active (roster v1.1): the main session is the Project Manager and the "theoretical
+  GitHub" — every agent works on its own local branch, each commit is checked by the PM, every job gets
+  at least three review rounds before merging into `backend`, and related agents are notified after
+  each merge. Roster: `docs/backend/BACKEND_AGENT_ROSTER.md`; agents: `.claude/agents/`; PM playbook:
+  `.claude/skills/ledger-backend-lead/`; record: `docs/backend/BACKEND_MERGE_LOG.md`.
 - Backend Phase 0 may start. D-07 still needs a commercial documents domain session
   (`COMMERCIAL_DOCUMENTS_DOMAIN.md`) before any invoice-document, quote, variation, credit note or
   payment work.
