@@ -7,7 +7,7 @@ Last Updated: October 20, 2026
 
 ## BACKEND PROGRAMME — DOCUMENTATION RECONCILIATION (October 2026)
 
-Status: **AWAITING OWNER DECISIONS**
+Status: **DECISIONS APPROVED** (October 20, 2026)
 Branch: `docs/backend-roadmap-v2`
 
 Before the backend build starts, the backend documents were reconciled with each other, with the
@@ -17,7 +17,10 @@ frozen domains and with the frontend prototype.
   Intelligence phases, phase gates, Track F frontend integration).
 - `docs/backend/BACKEND_OPEN_DECISIONS.md` lists 16 owner decisions (D-01 … D-16) with
   recommendations, plus the log of mechanical fixes applied.
-- Backend Phase 0 starts once the decisions it depends on (D-10, D-12, D-14, D-16) are approved.
+- All 16 decisions approved by the owner and applied to the backend docs, the canonical context, LEDGER_FRONTEND_ARCHITECTURE.md and CLAUDE.md.
+- Backend Phase 0 may start. D-07 still needs a commercial documents domain session
+  (`COMMERCIAL_DOCUMENTS_DOMAIN.md`) before any invoice-document, quote, variation, credit note or
+  payment work.
 
 ---
 
@@ -405,7 +408,7 @@ Branch: feature/backend-architecture-refinement (merged to main)
 
 **Backend Architecture Specification — COMPLETE**
 
-**Next Development Target: Backend Phase 0 — Infrastructure Foundation** (see BACKEND_IMPLEMENTATION_ROADMAP.md v2.0; gated on BACKEND_OPEN_DECISIONS.md)
+**Next Development Target: Backend Phase 0 — Infrastructure Foundation** (see BACKEND_IMPLEMENTATION_ROADMAP.md v2.1; decisions D-01 … D-16 approved)
 
 All architecture documents serve as the authoritative foundation for backend implementation.
 The frozen domain model (docs/domain/) and frozen architecture (docs/backend/) are the two authoritative inputs for all future backend development sessions.

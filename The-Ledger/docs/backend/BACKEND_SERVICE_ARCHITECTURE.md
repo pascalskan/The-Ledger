@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND SERVICE ARCHITECTURE
 
-Version: 2.0
+Version: 2.1
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -13,6 +13,7 @@ Authority: Backend Architecture Refinement Pass
 |---|---|---|
 | 1.0 | June 4, 2026 | Initial architecture — 9 modules |
 | 2.0 | June 4, 2026 | Refinement pass: Tenant Module extracted from Identity; Financial Intelligence Module added; Notification Centre formally defined as sub-module of Intelligence; total 11 modules |
+| 2.1 | October 20, 2026 | Owner-approved decisions applied (BACKEND_OPEN_DECISIONS.md, October 20, 2026): worker outcome notices (D-01), Review Centre closure use case (D-06), commercial documents pending (D-07), portal conversations, document revocation and job milestones/deliverables (D-08) |
 
 ---
 
@@ -101,12 +102,13 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 
 **Maps to:** Operational Core Context
 
-**Owns:** Client, Site, Job, Shift, WorkerProfile, PMProfile, WorkerAssignment, ScheduleRecord
+**Owns:** Client, Site, Job, Shift, WorkerProfile, PMProfile, WorkerAssignment, ScheduleRecord, JobMilestone, JobDeliverable (D-08)
 
 **Public API Surface:**
 - `createClient()`, `updateClient()`
 - `createSite()`, `updateSiteStatus()`, `archiveSite()`
-- `createJob()`, `transitionJobStatus()`, `assignWorkerToJob()`
+- `createJob()`, `transitionJobStatus()`, `assignWorkerToJob()` — `transitionJobStatus(→ closed)` is reachable only from the Review Centre's closure use case (D-06)
+- `addJobMilestone()`, `updateJobMilestone()`, `addJobDeliverable()`, `updateJobDeliverable()` (D-08)
 - `startShift()`, `endShift()`
 - `resolveSchedulingConflict()`
 - `getJobContext(jobId, companyId)` → JobContext (used by submission module)
@@ -134,6 +136,7 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 - `withdrawSubmission(submissionId, workerId)`
 - `listPendingSubmissions(reviewerId, companyId)`
 - `resubmitAfterRejection(originalId, correctedData, workerId)`
+- `confirmJobFinancialClosure(jobId, ceoId)` → CEO only; locks the job row, refuses (audit `job_closure_blocked`) while any submission for the job is pending, otherwise calls `OperationalModule.transitionJobStatus(jobId, 'closed')` in the same transaction, which writes `job_closed` and the `JobClosed` outbox event (D-06)
 
 **Internal Services:**
 - `SubmissionIntakeService` — validates, creates pending_review record
@@ -144,6 +147,8 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 **Enforcement:**
 - `assertAutomationCannotApprove()` — throws if automation actor attempts approval
 - `assertWithdrawalWindow()` — only before reviewer opens
+- `assertNoPendingSubmissions()` — financial closure blocked while any submission for the job is pending (D-06)
+- Submission intake takes the same job row lock as closure, so no submission can be created while a job is being closed (D-06)
 
 **Dependencies:** Identity Module (UserContext), Operational Module (JobContext)
 
@@ -174,6 +179,8 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 - `assertApprovalReference()` — no financial record created without `approved_by` + `approved_at`
 - `assertFinancialRecordImmutability()` — content fields cannot be updated after creation
 - `assertCEOOnlyCorrection()` — void/adjustment approval requires CEO role
+
+**Not yet owned (D-07):** invoice documents, quotes, variations, credit notes and payments. Owners are assigned once `COMMERCIAL_DOCUMENTS_DOMAIN.md` is frozen. This module already creates `InvoiceLineItem` records from approved billable expenses.
 
 **Dependencies:** Identity Module (UserContext), Review Centre Module (receives approval events)
 
@@ -239,7 +246,7 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 
 **Maps to:** Client Portal Context
 
-**Owns:** ClientPortalAccount, ClientPortalSession, DocumentShareRecord, ClientRequest
+**Owns:** ClientPortalAccount, ClientPortalSession, DocumentShareRecord, ClientRequest, ConversationThread, ConversationMessage (D-08)
 
 **Public API Surface:**
 - `provisionPortalAccount(clientId, ceoId)` → ClientPortalAccount
@@ -249,6 +256,8 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 - `submitClientRequest(clientId, requestData)` → ClientRequest
 - `shareDocument(documentId, clientId, ceoOrPmId)` → DocumentShareRecord
 - `acknowledgeClientRequest()`, `declineClientRequest()`, `resolveClientRequest()`
+- `createThread()`, `addMessage()` (portal user); `addStaffReply()` (PM/CEO, via `/api/v1/client-requests/`) (D-08)
+- `revokeDocumentShare(shareId, ceoOrPmId)` → share status `revoked`, audited, never deleted (D-08)
 
 **Internal Services:**
 - `PortalAuthService` — separate credential model for portal users
@@ -258,6 +267,7 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 **Enforcement:**
 - `assertAccessNotesHidden()` — access notes never in portal data projection
 - `assertDocumentExplicitShare()` — no auto-exposure
+- Portal audit catalogue: the 15 portal audit event types in the canonical context plus the 7 client request audit types (D-08)
 
 **Dependencies:** Identity Module, Operational Module (job/site/client data)
 
@@ -365,6 +375,8 @@ The Notification Routing Service subscribes to the following events and creates 
 | `ClientRequestSubmitted` | `client_portal_event` | PM (relevant job), CEO |
 | `SchedulingConflictDetected` | `scheduling_conflict` | PM (relevant job), CEO |
 | `StockLowAlertTriggered` | `stock_alert` | PM (relevant job), CEO |
+
+Worker recipients (D-01) receive only `review_approved` and `review_rejected` notices for their own submissions. These carry submission type, job name, outcome and the rejection reason, never financial values, and workers have no access to the Notification Centre itself.
 
 **Enforcement:**
 - `assertForbiddenActionsBlocked()` — `approve_report`, `bypass_review_centre`, etc. throw at evaluation time

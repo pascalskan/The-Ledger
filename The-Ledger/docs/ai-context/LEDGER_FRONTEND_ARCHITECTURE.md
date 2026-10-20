@@ -9,7 +9,7 @@ Financial Logic Validation
 UX Validation
 Approval Validation
 Integration Validation
-Backend implementation is intentionally deferred.
+Backend implementation is authorised (October 2026, decision D-16) and follows docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md; this document describes the frontend, which stays mock-driven until Track F.
 CURRENT STACK
 Frontend:
 React

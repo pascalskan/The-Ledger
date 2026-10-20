@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND INFRASTRUCTURE ARCHITECTURE
 
-Version: 1.1
+Version: 1.2
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Definition Phase
@@ -13,6 +13,7 @@ Authority: Backend Architecture Definition Phase
 |---|---|---|
 | 1.0 | June 4, 2026 | Initial definition |
 | 1.1 | October 20, 2026 | Reconciliation pass: notification queue and records moved to the `notification` schema; sync pipeline trigger names the events Accounting Integration consumes |
+| 1.2 | October 20, 2026 | Owner-approved decisions applied (BACKEND_OPEN_DECISIONS.md, October 20, 2026): worker outcome notices (D-01), no Redis in v1 (D-10), FileStorage interface (D-11), test database (D-12), libraries and tooling (D-14) |
 
 ---
 
@@ -29,6 +30,19 @@ This document defines The Ledger's infrastructure architecture: application runt
 **Framework:** Express.js
 **Language:** TypeScript (compiled to JavaScript)
 **Runtime:** Node.js (LTS version)
+
+### Libraries and Tooling (D-14)
+
+- Tests: Vitest for unit tests; Vitest + Supertest for API integration tests against the test database. Playwright remains the UI test tool.
+- JWT: `jose`, ES256 keys for the platform token and a separate key for the portal token.
+- Passwords: `bcryptjs`, cost factor 12.
+- Logging: `pino` structured JSON with `requestId`; request and response bodies are never logged.
+- Migrations: `drizzle-kit generate` with committed SQL migrations; `drizzle-kit push` only on throwaway local databases.
+- `passport`, `passport-local`, `express-session`, `memorystore` and `connect-pg-simple` are removed once JWT authentication lands.
+
+### Database Hosting (D-12)
+
+Development and test databases are a hosted PostgreSQL project with separate `dev` and `test` databases. Only synthetic seed data is stored in them.
 
 ### Process Model
 
@@ -51,7 +65,9 @@ All configuration is injected via environment variables. No configuration is har
 - `ACCOUNTING_*_API_KEY` — Per-provider API keys
 - `EMAIL_*` — Email service credentials
 - `FILE_STORAGE_*` — File storage configuration
-- `REDIS_URL` — Redis connection (for rate limiting and optional caching)
+- `DATABASE_URL_TEST` — test database for integration tests; tests refuse to run unless the database name ends in `_test` (D-12)
+
+No Redis in v1 (D-10): rate limiting is in-process and nothing is cached until measured. A shared store is added only with horizontal scaling.
 
 ---
 
@@ -227,7 +243,7 @@ Notifications are created by the Intelligence & Automation Module and delivered 
 
 - CEO: receives notifications for all company events
 - PM: receives notifications scoped to assigned jobs only
-- Worker: no notification access
+- Worker: own submission outcome notices only (`review_approved` / `review_rejected`, no financial values, no Notification Centre access — D-01)
 - Client Portal User: no notification access
 
 ---
@@ -237,6 +253,8 @@ Notifications are created by the Intelligence & Automation Module and delivered 
 Workers upload photos and documents as part of reports and expense submissions.
 
 ### File Storage
+
+All file access goes through a `FileStorage` infrastructure interface: signed upload, signed download URL, tenant-prefixed keys (D-11). Development and tests use a local-disk adapter; the production adapter (any S3-compatible service) is selected in Phase 9.
 
 Files are stored in a **cloud object storage** service (e.g. AWS S3 or compatible):
 - Upload endpoint returns a pre-signed upload URL

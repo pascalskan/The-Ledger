@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND DOMAIN ARCHITECTURE
 
-Version: 2.1
+Version: 2.2
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -14,6 +14,7 @@ Authority: Backend Architecture Refinement Pass
 | 1.0 | June 4, 2026 | Initial architecture definition — 9 bounded contexts |
 | 2.0 | June 4, 2026 | Refinement pass: Tenant Context extracted from Identity; Financial Intelligence Context added; Notification Centre promoted to defined sub-domain; total 11 bounded contexts |
 | 2.1 | October 20, 2026 | Reconciliation pass: produced-event lists aligned with the event catalogue (per-type withdrawal events, correction events, sync retry, workflow blocked, governance, scheduler, report viewed) |
+| 2.2 | October 20, 2026 | Owner-approved decisions applied (BACKEND_OPEN_DECISIONS.md, October 20, 2026): worker outcome notices (D-01), job closure via the Review Centre (D-06), portal conversations and job milestones/deliverables (D-08) |
 
 ---
 
@@ -110,6 +111,7 @@ Company (Tenant) has a distinct lifecycle (active/suspended/terminated), subscri
 - PM Profile
 - Worker Assignment
 - Scheduling Record
+- Job Milestone and Job Deliverable (shown to clients only through portal projections — D-08)
 
 **Responsibilities:**
 - Manage the Client → Site → Job hierarchy
@@ -117,7 +119,7 @@ Company (Tenant) has a distinct lifecycle (active/suspended/terminated), subscri
 - Manage shift start/end lifecycle
 - Enforce worker assignment and scheduling conflict detection
 - Enforce: closed jobs accept no new submissions
-- Enforce: job cannot close financially with pending submissions
+- Enforce: job cannot close financially with pending submissions (checked by the Review Centre's `ConfirmJobFinancialClosure` use case under a job row lock — D-06)
 
 **Source of Truth for:** Operational reality — what jobs exist, who is assigned, what sites exist, what clients exist
 
@@ -129,8 +131,7 @@ Company (Tenant) has a distinct lifecycle (active/suspended/terminated), subscri
 - `SiteCreated`, `SiteStatusChanged`, `SiteArchived`
 - `ClientCreated`
 
-**Consumes Events:**
-- `SubmissionApproved` (from Review Centre) — to check pending submission count before financial closure
+**Consumes Events:** None. Financial closure (`pending_closure → closed`, CEO only) is confirmed by the Review Centre's `ConfirmJobFinancialClosure` use case, which calls this context's public `transitionJobStatus()` in the same transaction (D-06).
 
 ---
 
@@ -290,6 +291,7 @@ Financial Normalization transforms operational events into financial records —
 - Client Portal Session
 - Document Share Record
 - Client Request
+- Conversation Thread and Conversation Message (D-08)
 
 **Responsibilities:**
 - Provision and manage client portal accounts (CEO-only)
@@ -298,6 +300,7 @@ Financial Normalization transforms operational events into financial records —
 - Process client request submissions and route to PM
 - Enforce: access notes never visible to portal users
 - Enforce: documents shared explicitly (no automatic exposure)
+- Enforce: document share revocation is a status change (`active → revoked`), audited, never a delete (D-08)
 - Enforce: client requests never enter Review Centre
 
 **Source of Truth for:** Client-facing access state and client-initiated requests
@@ -413,7 +416,7 @@ created (unread) → dismissed (terminal, without reading)
 **Notification RBAC:**
 - CEO: all notification types, all jobs
 - PM: notifications scoped to assigned jobs only
-- Worker: no notification access
+- Worker: own submission outcome notices only — `review_approved` / `review_rejected` for their own submissions, carrying submission type, job name, outcome and (for rejections) the reason; never amounts or other financial values; no Notification Centre access (D-01)
 - Client Portal User: no notification access
 
 **Delivery Channels (v1):** In-platform only (Notification Centre inbox)

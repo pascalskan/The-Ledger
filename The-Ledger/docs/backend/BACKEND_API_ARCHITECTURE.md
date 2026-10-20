@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND API ARCHITECTURE
 
-Version: 1.1
+Version: 1.2
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Definition Phase
@@ -13,6 +13,7 @@ Authority: Backend Architecture Definition Phase
 |---|---|---|
 | 1.0 | June 4, 2026 | Initial definition |
 | 1.1 | October 20, 2026 | Reconciliation pass: `/api/v1/tenant/` and `/api/v1/financial-intelligence/` namespaces added (already listed in the architecture summary) |
+| 1.2 | October 20, 2026 | Owner-approved decisions applied (BACKEND_OPEN_DECISIONS.md, October 20, 2026): unified review queue (D-04), no hard deletes (D-05), in-process rate limiting (D-10) |
 
 ---
 
@@ -285,6 +286,18 @@ List endpoints that are always bounded (e.g. active jobs for a PM, which is a kn
 
 ---
 
+## UNIFIED REVIEW QUEUE (D-04)
+
+Submissions are stored as four typed aggregates (timesheet, report, expense, issue). For the Review Centre screens, `GET /api/v1/review-centre/queue` returns every pending submission the caller may review in one cursor-paginated list with a common summary shape (submission ID, type, job, submitter, submitted at, status, whether CEO authority is required). Detail and actions use the typed submission routes. Mixed payloads from the prototype's offline queue are split into typed submissions at intake.
+
+---
+
+## NO HARD DELETES (D-05)
+
+API v1 has no hard delete endpoints. Every removal is the entity's lifecycle exit — archive, deactivate, discontinue, cancel or retire — and is audited. The only exception: a `DELETE` may discard a **draft** record that nothing references (for example a draft job with no assignments), and that discard is audited too.
+
+---
+
 ## RATE LIMITING STRATEGY
 
 Rate limiting is applied per authenticated user (by `user_id` from JWT).
@@ -310,7 +323,7 @@ X-RateLimit-Remaining: 0
 X-RateLimit-Reset: 1717521600
 ```
 
-**Implementation:** In-memory token bucket per user ID (Redis-backed for multi-instance deployments).
+**Implementation (D-10):** In-process token bucket per user ID behind a `RateLimiter` interface. No Redis in v1; a shared store is introduced only with horizontal scaling.
 
 ---
 

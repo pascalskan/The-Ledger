@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND MULTI-TENANCY ARCHITECTURE
 
-Version: 2.0
+Version: 2.1
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -13,6 +13,7 @@ Authority: Backend Architecture Refinement Pass
 |---|---|---|
 | 1.0 | June 4, 2026 | Initial multi-tenancy architecture |
 | 2.0 | June 4, 2026 | Refinement pass: Company (Tenant) moved to dedicated Tenant Context/Module; provisioning routed through Tenant Module; tenant suspension triggers Identity Module session revocation; TenantContext is the primary tenancy source-of-truth |
+| 2.1 | October 20, 2026 | Owner-approved decisions applied (BACKEND_OPEN_DECISIONS.md, October 20, 2026): v1 provisioning runs through an audited command-line script with no HTTP surface (D-15) |
 
 ---
 
@@ -72,7 +73,7 @@ The Identity Module owns `identity.users` — the users who belong to a tenant. 
 Tenants are provisioned through the Tenant Module:
 
 ```
-1. Admin calls TenantModule.provisionTenant(companyData)
+1. Platform admin runs the provisioning script (`npm run tenant -- provision …`, audited, no HTTP surface in v1 — D-15), which calls TenantModule.provisionTenant(companyData)
    → Creates tenant.companies record (status: active)
    → Creates tenant.configurations record (default configuration)
    → Publishes TenantProvisioned event

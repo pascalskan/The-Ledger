@@ -1,7 +1,7 @@
 # THE LEDGER — BACKEND OPEN DECISIONS
 
-Version: 1.0
-Status: PROPOSED — awaiting owner approval
+Version: 1.1
+Status: APPROVED — all 16 decisions approved by the owner on October 20, 2026
 Date: October 20, 2026
 Authority: Backend Documentation Reconciliation Pass
 
@@ -11,7 +11,7 @@ Authority: Backend Documentation Reconciliation Pass
 
 The backend documents, the frozen domain documents, the canonical context and the frontend prototype disagree in a number of places. Some disagreements are mechanical (wrong schema name, stale phase number) and have been corrected directly — see the Reconciliation Log at the end of this document. The rest need an owner decision. This document lists each one with a recommended answer.
 
-Until a decision is marked **APPROVED**, no backend phase that depends on it may begin. On approval, the "Docs changed on approval" list for that decision is applied and this document is updated.
+All 16 decisions were approved as written on October 20, 2026, and their "Docs changed on approval" lists have been applied. Changing an approved decision needs a new owner decision recorded here.
 
 ---
 
@@ -32,22 +32,22 @@ The frontend engines are reference behaviour, not specification. Where an engine
 
 | ID | Topic | Blocks | Status |
 |---|---|---|---|
-| D-01 | Worker notifications | Phase 7 | PROPOSED |
-| D-02 | Role model in the backend | Phase 2 | PROPOSED |
-| D-03 | Site as an entity | Phase 3 | PROPOSED |
-| D-04 | Typed submissions vs the generic review item | Phase 4 | PROPOSED |
-| D-05 | Hard deletes | Phase 3 onward | PROPOSED |
-| D-06 | Where the job-closure check lives | Phase 4 | PROPOSED |
-| D-07 | Commercial documents (invoices, quotes, variations, credit notes, payments) | Invoice parts of Phase 5, Phase 6a financial views | PROPOSED |
-| D-08 | Client Portal additions (conversations, milestones, deliverables, revocation) | Phase 6a | PROPOSED |
-| D-09 | Payroll export format | Payroll export in Phase 5 | PROPOSED |
-| D-10 | Redis | Phase 0, Phase 9 | PROPOSED |
-| D-11 | File storage | Phase 4 (uploads) | PROPOSED |
-| D-12 | Database hosting for development and tests | Phase 0 | PROPOSED |
-| D-13 | Frontend integration strategy | Track F | PROPOSED |
-| D-14 | Backend tooling | Phase 0 | PROPOSED |
-| D-15 | Tenant provisioning surface | Phase 1 | PROPOSED |
-| D-16 | CLAUDE.md backend instruction | Phase 0 | PROPOSED |
+| D-01 | Worker notifications | Phase 7 | APPROVED |
+| D-02 | Role model in the backend | Phase 2 | APPROVED |
+| D-03 | Site as an entity | Phase 3 | APPROVED |
+| D-04 | Typed submissions vs the generic review item | Phase 4 | APPROVED |
+| D-05 | Hard deletes | Phase 3 onward | APPROVED |
+| D-06 | Where the job-closure check lives | Phase 4 | APPROVED |
+| D-07 | Commercial documents (invoices, quotes, variations, credit notes, payments) | Invoice parts of Phase 5, Phase 6a financial views | APPROVED |
+| D-08 | Client Portal additions (conversations, milestones, deliverables, revocation) | Phase 6a | APPROVED |
+| D-09 | Payroll export format | Payroll export in Phase 5 | APPROVED |
+| D-10 | Redis | Phase 0, Phase 9 | APPROVED |
+| D-11 | File storage | Phase 4 (uploads) | APPROVED |
+| D-12 | Database hosting for development and tests | Phase 0 | APPROVED |
+| D-13 | Frontend integration strategy | Track F | APPROVED |
+| D-14 | Backend tooling | Phase 0 | APPROVED |
+| D-15 | Tenant provisioning surface | Phase 1 | APPROVED |
+| D-16 | CLAUDE.md backend instruction | Phase 0 | APPROVED |
 
 ---
 

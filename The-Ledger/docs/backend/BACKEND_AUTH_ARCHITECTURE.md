@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND AUTHENTICATION & AUTHORIZATION ARCHITECTURE
 
-Version: 2.1
+Version: 2.2
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -14,6 +14,7 @@ Authority: Backend Architecture Refinement Pass
 | 1.0 | June 4, 2026 | Initial auth architecture |
 | 2.0 | June 4, 2026 | Refinement pass: Company ownership moved to Tenant Context; Identity Context owns Users/Auth/Roles/Permissions only; authentication flow updated to validate tenant active status via Tenant Module before issuing tokens |
 | 2.1 | October 20, 2026 | Reconciliation pass: routes given their `/api/v1` and `/portal/v1` prefixes; approval example uses `POST`; worker example uses an expense submission (timesheets are created from shifts, never submitted directly) |
+| 2.2 | October 20, 2026 | Owner-approved decisions applied (BACKEND_OPEN_DECISIONS.md, October 20, 2026): doctrine roles stored as a relation; custom roles stored but not enforced (D-02) |
 
 ---
 
@@ -177,16 +178,20 @@ These checks occur in the Application Layer, not the API Layer. They involve que
 
 Roles are not hierarchical in a simple inheritance model. Each role has a distinct access profile. There is no "role A inherits all of role B" relationship.
 
-### Role Assignment
+### Role Assignment (D-02)
 
-- A user has exactly one role at a time
-- Role is stored on the user record (`identity.users.role`)
+- The backend enforces exactly four doctrine roles: `ceo`, `pm` and `worker` on the platform, and `client` through the portal (separate identity store)
+- Role is stored as a relation (`identity.user_roles`, user → doctrine role). In v1 a user holds exactly one doctrine role; the relation allows multi-role later without a schema migration
 - Only the CEO may change a user's role
 - Role changes generate an audit entry (`user_role_changed`)
+- Display labels such as Owner, Supervisor or Driver are profile labels, not authorisation
 
-### Multi-Role (Future Consideration)
+### Custom Roles and Permission Keys (D-02)
 
-The architecture does not preclude a user holding multiple roles in v1. However, the frozen domain model does not specify multi-role scenarios. The implementation should treat role as a single enum for v1 but the data model should represent it as a relation (user → role) to allow multi-role in future without schema migration.
+- The prototype's role editor (custom roles with keys such as `view_jobs` or `manage_invoicing`) is persisted in `identity.custom_roles` and `identity.user_custom_roles` so nothing is lost
+- Custom roles and permission keys are **not enforced** in v1. Authorisation uses only the doctrine role, job assignment and the resource being accessed (Permission Model below)
+- Enforcement of custom permissions is designed in the roles and permissions redesign. That redesign must keep the doctrine guarantees: workers never receive financial visibility, clients never receive management permissions
+- PM scope is unchanged: own jobs and assigned sites
 
 ---
 

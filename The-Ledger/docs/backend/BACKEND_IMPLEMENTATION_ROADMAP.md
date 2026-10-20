@@ -1,7 +1,7 @@
 # THE LEDGER — BACKEND IMPLEMENTATION ROADMAP
 
-Version: 2.0
-Status: AUTHORITATIVE (phases that depend on a PROPOSED decision in BACKEND_OPEN_DECISIONS.md may not start until it is approved)
+Version: 2.1
+Status: AUTHORITATIVE — all decisions in BACKEND_OPEN_DECISIONS.md approved (October 20, 2026)
 Date: October 20, 2026
 Authority: Backend Documentation Reconciliation Pass
 
@@ -13,6 +13,7 @@ Authority: Backend Documentation Reconciliation Pass
 |---|---|---|
 | 1.0 | June 4, 2026 | Initial dependency-ordered sequence — 10 phases, 9 modules |
 | 2.0 | October 20, 2026 | Aligned with the v2.0 architecture: Tenant phase added before Identity; Financial Intelligence phase added; `notification` schema separated from `intelligence`; phase numbers now match BACKEND_ARCHITECTURE_SUMMARY.md; phase gates, decision dependencies, frontend reference engines and Track F (frontend integration) added |
+| 2.1 | October 20, 2026 | All 16 decisions approved by the owner; D-07 still requires COMMERCIAL_DOCUMENTS_DOMAIN.md before invoice-document work |
 
 ---
 

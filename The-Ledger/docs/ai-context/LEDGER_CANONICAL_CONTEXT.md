@@ -2,9 +2,9 @@
 
 ## Canonical Context Document
 
-Version: 7.2
+Version: 7.3
 Status: Active Source of Truth
-Last Updated: July 19, 2026
+Last Updated: October 20, 2026
 
 Repository Baseline:
 main (Phase 6.8 merged; Domain Definition Program complete)
@@ -312,7 +312,7 @@ No silent state changes.
 RBAC:
 - CEO: full notification visibility (all types, all jobs)
 - PM: notifications scoped to assigned jobs only
-- Worker: no access
+- Worker: own submission outcome notices only — approval and rejection of their own submissions, with the rejection reason; never financial values; no Notification Centre access (owner decision D-01, October 2026, required by REJECTION_DOMAIN.md)
 - Client: no access
 
 Notification status lifecycle:
@@ -773,7 +773,7 @@ Purpose:
 - Approval pipeline validation
 - Integration architecture validation
 
-Backend implementation is intentionally deferred.
+Backend implementation is authorised (October 2026, decision D-16) and follows docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md. Until Track F switches each page group to the API, the frontend continues to rely on the items below.
 
 Current architecture relies heavily on:
 
@@ -1425,7 +1425,7 @@ Backend Architecture Refinement: Complete (8 documents updated to v2.0)
 
 ## Next Development Target
 
-Backend Phase 0 — Infrastructure Foundation, once the decisions it depends on in docs/backend/BACKEND_OPEN_DECISIONS.md are approved. Sequence: docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md (v2.0).
+Backend Phase 0 — Infrastructure Foundation. Owner decisions D-01 … D-16 approved October 20, 2026 (docs/backend/BACKEND_OPEN_DECISIONS.md). Sequence: docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md (v2.0).
 
 ---
 

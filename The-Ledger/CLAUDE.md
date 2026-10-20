@@ -4,9 +4,9 @@
 
 Repository AI Operating Instructions
 
-Version: 1.0
+Version: 1.1
 Status: Active
-Last Updated: June 2026
+Last Updated: October 2026
 
 ---
 
@@ -283,9 +283,7 @@ Current architecture:
 * No database
 * No production authentication
 
-Backend implementation is intentionally deferred.
-
-Do not introduce backend architecture unless explicitly requested.
+Backend implementation is authorised (October 2026) and follows `docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md`. Backend work happens only on branches from `main`. The frontend stays mock-driven until Track F switches each page group; `deploy/replit-public` stays mock-only.
 
 ---
 

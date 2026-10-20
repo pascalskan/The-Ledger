@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND ARCHITECTURE SUMMARY
 
-Version: 2.1
+Version: 2.2
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -14,6 +14,7 @@ Authority: Backend Architecture Refinement Pass
 | 1.0 | June 4, 2026 | Initial architecture summary — 9 bounded contexts, 10 schemas |
 | 2.0 | June 4, 2026 | Refinement pass: Tenant Context extracted from Identity; Financial Intelligence Context added; Notification Centre formally defined as sub-domain; AI Limitations Covenant established; total 11 bounded contexts, 13 schemas |
 | 2.1 | October 20, 2026 | Reconciliation pass: background worker count corrected to 6; implementation sequence aligned with roadmap v2.0 (Phase 4a, Track F); document index versions updated; BACKEND_OPEN_DECISIONS.md added |
+| 2.2 | October 20, 2026 | Owner-approved decisions applied (BACKEND_OPEN_DECISIONS.md, October 20, 2026): notification RBAC (D-01), provisioning surface (D-15), rate limiting, caching and file storage (D-10, D-11); index versions updated |
 
 ---
 
@@ -238,7 +239,7 @@ Tenant Context (Context 1) is the authoritative owner of company existence and l
 | Tenancy unit | Company — owned by Tenant Context |
 | Lifecycle states | `active` / `suspended` / `terminated` |
 | Suspension effect | `TenantSuspended` event → Identity Module revokes all active sessions |
-| Provisioning | Admin calls Tenant Module → publishes `TenantProvisioned` → Identity Module creates initial CEO user |
+| Provisioning | Admin provisioning script (no HTTP surface in v1 — D-15) calls Tenant Module → publishes `TenantProvisioned` → Identity Module creates initial CEO user |
 | Configuration | Per-tenant: default currency, notification preferences, feature flags |
 | Isolation strategy | Row-level (`company_id` on all rows in all schemas) |
 | Enforcement layers | JWT claims → Application Layer → Repository WHERE clause → PostgreSQL Row Level Security |
@@ -262,7 +263,7 @@ Notification Centre is formally defined as a sub-domain within Intelligence & Au
 | Lifecycle | `created (unread)` → `read` → `dismissed` |
 | Delivery v1 | In-platform inbox only |
 | Delivery future | Email, mobile push (via delivery adapter interface) |
-| RBAC | CEO: all types, all jobs; PM: own jobs only; Worker: none; Client: none |
+| RBAC | CEO: all types, all jobs; PM: own jobs only; Worker: own submission outcome notices only, no financial values (D-01); Client: none |
 | Doctrine | Informational only — never creates financial mutations, never approves submissions, never bypasses the Review Centre |
 
 **Supported notification types:**
@@ -368,10 +369,10 @@ The Review Centre is the mandatory gateway. AI is an assistant to the reviewer, 
 | Error format | Consistent JSON envelope with domain-specific error codes |
 | Pagination | Cursor-based (all variable-length lists) |
 | Idempotency | `Idempotency-Key` header for state-changing operations |
-| Rate limiting | Per user, token bucket, Redis-backed |
+| Rate limiting | Per user, token bucket, in-process in v1 (D-10) |
 | Documentation | OpenAPI 3.1 |
 
-**API namespaces added in v2.0:** `/api/v1/tenant/` (admin provisioning), `/api/v1/financial-intelligence/`, `/api/v1/notifications/` (dedicated surface)
+**API namespaces added in v2.0:** `/api/v1/tenant/` (CEO's own company configuration; provisioning is script-only — D-15), `/api/v1/financial-intelligence/`, `/api/v1/notifications/` (dedicated surface)
 
 **Detail:** BACKEND_API_ARCHITECTURE.md
 
@@ -386,8 +387,8 @@ The Review Centre is the mandatory gateway. AI is an assistant to the reviewer, 
 | Queue | Database-backed queue (PostgreSQL) in v1; extractable to broker |
 | Background workers | 6 worker types: outbox delivery, accounting sync, notification delivery, scheduled evaluation, report distribution, reconciliation |
 | Scheduler | Cron-within-process in v1; distributed lock for multi-instance future |
-| File storage | Cloud object storage (S3-compatible); signed URLs; tenant-namespaced paths |
-| Caching | Redis (rate limiting; optional read model caching for Financial Intelligence) |
+| File storage | `FileStorage` interface; signed URLs; tenant-namespaced paths; local-disk adapter in development, S3-compatible provider chosen in Phase 9 (D-11) |
+| Caching | None in v1; added only when measured; a shared store (e.g. Redis) only with horizontal scaling (D-10) |
 | Event delivery | Transactional outbox; at-least-once delivery; idempotent consumers |
 
 **Detail:** BACKEND_INFRASTRUCTURE_ARCHITECTURE.md
@@ -466,17 +467,17 @@ Open decisions that gate individual phases are listed in BACKEND_OPEN_DECISIONS.
 
 | Document | Version | Contents |
 |---|---|---|
-| **BACKEND_ARCHITECTURE_SUMMARY.md** | **2.1** | This document — master summary |
-| BACKEND_DOMAIN_ARCHITECTURE.md | 2.1 | 11 bounded contexts, context map, aggregate ownership, dependency direction |
+| **BACKEND_ARCHITECTURE_SUMMARY.md** | **2.2** | This document — master summary |
+| BACKEND_DOMAIN_ARCHITECTURE.md | 2.2 | 11 bounded contexts, context map, aggregate ownership, dependency direction |
 | BACKEND_LAYERING_ARCHITECTURE.md | 1.0 | Four-layer model, responsibilities, forbidden interactions |
-| BACKEND_SERVICE_ARCHITECTURE.md | 2.0 | Modular monolith, 11 module definitions, Notification Centre sub-module |
+| BACKEND_SERVICE_ARCHITECTURE.md | 2.1 | Modular monolith, 11 module definitions, Notification Centre sub-module |
 | BACKEND_EVENT_ARCHITECTURE.md | 2.0 | Event strategy, full catalogue (incl. Tenant + Financial Intelligence events), subscriber registry |
-| BACKEND_DATA_ARCHITECTURE.md | 2.1 | 13 schemas, aggregate ownership, write/read models, transaction boundaries |
-| BACKEND_AUTH_ARCHITECTURE.md | 2.1 | JWT auth, tenant status check on login, RBAC, permission matrix |
-| BACKEND_MULTITENANCY_ARCHITECTURE.md | 2.0 | Tenant Context ownership, row-level isolation, tenant lifecycle |
-| BACKEND_API_ARCHITECTURE.md | 1.1 | Domain-driven routes, versioning, validation, pagination, rate limiting |
-| BACKEND_INFRASTRUCTURE_ARCHITECTURE.md | 1.1 | Workers, queues, scheduler, integration pipeline, file processing |
+| BACKEND_DATA_ARCHITECTURE.md | 2.2 | 13 schemas, aggregate ownership, write/read models, transaction boundaries |
+| BACKEND_AUTH_ARCHITECTURE.md | 2.2 | JWT auth, tenant status check on login, RBAC, permission matrix |
+| BACKEND_MULTITENANCY_ARCHITECTURE.md | 2.1 | Tenant Context ownership, row-level isolation, tenant lifecycle |
+| BACKEND_API_ARCHITECTURE.md | 1.2 | Domain-driven routes, versioning, validation, pagination, rate limiting |
+| BACKEND_INFRASTRUCTURE_ARCHITECTURE.md | 1.2 | Workers, queues, scheduler, integration pipeline, file processing |
 | **BACKEND_DOCUMENT_INTELLIGENCE_ARCHITECTURE.md** | **2.0** | AI Limitations Covenant, processing pipeline stages, security boundaries |
 | BACKEND_OBSERVABILITY_ARCHITECTURE.md | 1.0 | Audit, logging, telemetry, financial mutation monitoring |
-| BACKEND_IMPLEMENTATION_ROADMAP.md | 2.0 | Dependency-ordered implementation sequence, phase gates, Track F |
-| BACKEND_OPEN_DECISIONS.md | 1.0 | Open owner decisions with recommendations; reconciliation log |
+| BACKEND_IMPLEMENTATION_ROADMAP.md | 2.1 | Dependency-ordered implementation sequence, phase gates, Track F |
+| BACKEND_OPEN_DECISIONS.md | 1.1 | Owner decisions D-01 … D-16 (all approved); reconciliation log |

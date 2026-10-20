@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND DATA ARCHITECTURE
 
-Version: 2.1
+Version: 2.2
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -14,6 +14,7 @@ Authority: Backend Architecture Refinement Pass
 | 1.0 | June 4, 2026 | Initial data architecture — 10 schemas |
 | 2.0 | June 4, 2026 | Refinement pass: `tenant` schema added (Company extracted from `identity`); `financial_intelligence` schema added; `notification` schema extracted from `intelligence`; aggregate ownership table updated; total 13 schemas |
 | 2.1 | October 20, 2026 | Reconciliation pass: change log schema count corrected to 13; notification source of truth points at `notification.notification_records` |
+| 2.2 | October 20, 2026 | Owner-approved decisions applied (BACKEND_OPEN_DECISIONS.md, October 20, 2026): identity role aggregates (D-02), no hard deletes (D-05), closure transaction (D-06), commercial documents pending (D-07), portal conversations and job milestones/deliverables (D-08) |
 
 ---
 
@@ -33,12 +34,12 @@ The Ledger uses a single **PostgreSQL** database with a modular schema layout. E
 PostgreSQL (single instance)
   ├── tenant schema               — companies, subscriptions, plans, tenant configuration
   ├── identity schema             — users, roles, sessions, refresh tokens
-  ├── operational schema          — clients, sites, jobs, shifts, workers, assignments
+  ├── operational schema          — clients, sites, jobs, shifts, workers, assignments, milestones, deliverables
   ├── review schema               — submissions (timesheet, report, expense, issue), rejections
   ├── financial schema            — financial records (entries, mutations, corrections, payroll)
   ├── financial_intelligence schema — margin snapshots, forecasts, exposure records, KPI snapshots
   ├── inventory schema            — stock items, locations, levels, assets, assignments
-  ├── portal schema               — portal accounts, sessions, document shares, client requests
+  ├── portal schema               — portal accounts, sessions, document shares, client requests, conversations
   ├── accounting schema           — provider configs, sync records, reconciliation, exceptions
   ├── intelligence schema         — automation rules, schedules, workflows, activity events
   ├── notification schema         — notification records, delivery records, preferences
@@ -68,7 +69,8 @@ Each aggregate root is persisted in the schema owned by its module. No other mod
 | Subscription | **tenant** | **Tenant Module** |
 | TenantConfiguration | **tenant** | **Tenant Module** |
 | User | identity | Identity Module |
-| Role, Permission | identity | Identity Module |
+| UserRole (doctrine role relation) | identity | Identity Module |
+| CustomRole (stored, not enforced — D-02) | identity | Identity Module |
 | RefreshToken | identity | Identity Module |
 | Client | operational | Operational Module |
 | Site | operational | Operational Module |
@@ -76,6 +78,7 @@ Each aggregate root is persisted in the schema owned by its module. No other mod
 | Shift | operational | Operational Module |
 | WorkerProfile | operational | Operational Module |
 | WorkerAssignment | operational | Operational Module |
+| JobMilestone, JobDeliverable | operational | Operational Module (D-08) |
 | TimesheetSubmission | review | Review Centre Module |
 | ReportSubmission | review | Review Centre Module |
 | ExpenseSubmission | review | Review Centre Module |
@@ -103,6 +106,7 @@ Each aggregate root is persisted in the schema owned by its module. No other mod
 | ClientPortalAccount | portal | Client Portal Module |
 | ClientRequest | portal | Client Portal Module |
 | DocumentShareRecord | portal | Client Portal Module |
+| ConversationThread, ConversationMessage | portal | Client Portal Module (D-08) |
 | AccountingProviderConfig | accounting | Accounting Integration Module |
 | SyncRecord | accounting | Accounting Integration Module |
 | ReconciliationRecord | accounting | Accounting Integration Module |
@@ -123,6 +127,7 @@ Each aggregate root is persisted in the schema owned by its module. No other mod
 | ReportExport | reporting | Reporting Module |
 | ReportDistribution | reporting | Reporting Module |
 | AuditEntry | audit | Shared (written by Application Layer of any module) |
+| Invoice, Quote, Variation, CreditNote, Payment | not yet assigned | Assigned once COMMERCIAL_DOCUMENTS_DOMAIN.md is frozen (D-07) |
 
 ---
 
@@ -132,7 +137,7 @@ Each aggregate root is persisted in the schema owned by its module. No other mod
 |---|---|---|
 | Tenant lifecycle and configuration | **tenant.companies**, tenant.subscriptions, tenant.configurations | **Tenant Module only** |
 | User identity and credentials | identity.users | Identity Module only |
-| Roles and permissions | identity.roles, identity.permissions | Identity Module only |
+| Roles and permissions | identity.user_roles (enforced); identity.custom_roles (stored, not enforced — D-02) | Identity Module only |
 | Advisory financial intelligence | **financial_intelligence.*** | **Financial Intelligence Module only** |
 | Notification records and delivery | **notification.*** | **Intelligence & Automation Module only** |
 | Client and site hierarchy | operational.clients, operational.sites | Operational Module only |
@@ -168,6 +173,7 @@ Write models are normalized relational records. Each write is a state change on 
 - Financial record content fields are write-once (enforced by repository implementation)
 - Rejected submissions are write-once after rejection (no content modification allowed)
 - Audit entries are write-once (no update or delete permitted)
+- No hard deletes (D-05): every removal is the entity's lifecycle exit (archive, deactivate, discontinue, cancel or retire), audited. Only an unreferenced draft may be discarded, and that is audited too
 
 ### Write consistency requirements
 
@@ -247,6 +253,7 @@ Each of the following operations must complete as a single ACID transaction:
 5. **Approve correction (CEO)**: Correction record status update + financial record status update + audit entry + outbox event
 6. **Start/end shift**: Shift state update + audit entry [+ timesheet creation on shift end]
 7. **Job status transition**: Job status update + audit entry
+   - Financial closure (D-06): job row lock + pending-submission check in `review` + job status update + audit entries + `JobClosed` outbox event, one transaction run by the Review Centre's closure use case
 8. **Worker assignment**: Assignment record + conflict check + audit entry
 9. **Portal provisioning (CEO)**: Portal account creation + audit entry
 10. **Sync record creation**: Sync record + queued record reference + audit entry
