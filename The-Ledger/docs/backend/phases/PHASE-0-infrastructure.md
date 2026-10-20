@@ -697,5 +697,465 @@ The documents have the same precedence, so the owner must choose. It is raised a
 If the owner prefers the subscriber pattern, Phase 0's causation columns keep it traceable. The Phase 4/5 specifications would then need a monitored "approved but not normalised" check to cover dead letters.
 
 ---
+## 5. USE CASES (PLATFORM SERVICES)
 
-*Sections 5–12 follow in the next commits of this job.*
+Phase 0 has no business use cases, so no role or PM-scope authorisation applies here. For each platform service this section gives the template's columns: inputs, who calls it, the invariants it checks, the records it writes, its audit entry, its events and its transaction boundary. The transaction rules come from BACKEND_DATA_ARCHITECTURE.md, Transaction Boundaries and Write Consistency Requirements: a state change, its audit entry and its outbox event commit together in one transaction, or not at all.
+
+### 5.1 Summary
+
+| ID | Service | Called by | Writes | Transaction |
+|---|---|---|---|---|
+| PS-01 | Configuration and start-up mode | Both process entry points | — | none |
+| PS-02 | API process start-up (`server/index.ts`) | `npm run dev`, `npm start` | — | none |
+| PS-03 | Worker process start-up (`server/worker.ts`) | `npm run dev:worker`, `npm run start:worker` | — | none |
+| PS-04 | Request pipeline (`createApiApp`) | PS-02; gate tests | — | none |
+| PS-05 | Request ID and request context | every request | response header | none |
+| PS-06 | Request logger | API, portal and health requests | one log line | none |
+| PS-07 | API error handler and not-found handler | API, portal and health routers | one log line, error response | none |
+| PS-08 | Health check | `GET /health` | — | none (one read) |
+| PS-09 | JWT utilities | PS-10, PS-11; Phase 2 and 6a login | — | none |
+| PS-10 | Platform-token middleware | every `/api/v1` request except listed public routes | request context | none |
+| PS-11 | Portal-token middleware | every `/portal/v1` request | request context | none |
+| PS-12 | `runInTransaction` (Unit of Work) | every Application Layer use case; the worker | whatever the work writes | **opens and owns** one transaction |
+| PS-13 | `AuditWriter.append` | use cases and subscribers, through `uow.audit` | T-1 row | the caller's (PS-12) |
+| PS-14 | `OutboxWriter.record` | use cases and subscribers, through `uow.events` | T-2 row | the caller's (PS-12) |
+| PS-15 | Subscriber registry | both entry points at start-up | — | none |
+| PS-16 | Port registry (typed cross-module ports) | both entry points at start-up | — | none |
+| PS-17 | Outbox worker — claim | worker loop | T-2 status | one short transaction |
+| PS-18 | Outbox worker — deliver one event | worker loop | subscriber writes, T-2, T-3 | one per subscriber, plus one to finish |
+| PS-19 | Outbox worker — record a failed attempt | PS-18 | T-2 | one short transaction |
+| PS-20 | Outbox worker — stale-lock recovery | worker loop | T-2 | one statement |
+| PS-21 | Migration runner | `npm run db:migrate`, test harness | schemas, tables, grants | one per migration (Drizzle migrator) |
+| PS-22 | Test-database guard | test harness, test clients | — | none |
+
+None of these services writes an audit entry of its own (§8), and none emits a domain event of its own (§7).
+
+### 5.2 PS-01 — Configuration and start-up mode
+
+- **Input:** `process.env`, after the optional `.env` load (§4.6).
+- **Checks:**
+  - the variable rules in §4.6, and the API mode table;
+  - for the API in full mode, both JWT keys are imported with `jose` (`importPKCS8`, `importSPKI`, algorithm `ES256`);
+  - a test signature made with the private key must verify with the public key, which proves the two keys are a pair.
+- **Output:** a frozen `ApiConfig` (`mode: 'full' | 'frontend_only'`) or `WorkerConfig`.
+- **Failure:** `ConfigError` naming the variables. The entry point writes one `FATAL` log line with the names (never values) and exits with code 1 before listening or connecting.
+
+### 5.3 PS-02 — API process start-up
+
+Order in `server/index.ts`:
+
+1. Run PS-01 `loadApiConfig`. Exit on `ConfigError`.
+2. Create the logger (`service: 'api'`).
+3. In full mode: create the `ledger_app` pool (`pg.Pool` with `DATABASE_URL` and driver defaults; no connection is made yet). Then build the subscriber and port registries from `server/modules/registry.ts` (PS-15, PS-16). If any declared port does not have exactly one provider, the API refuses to start.
+4. Call `createApiApp({ config, logger, db, modules })` (PS-04).
+5. Mount frontend serving, unchanged: Vite middleware in development (`setupVite`), static files in production (`serveStatic`). It is mounted last, so the frontend catch-all can never shadow `/health`, `/api` or `/portal/v1`.
+6. Listen on `PORT` (default 5000).
+
+The API does not connect to the database at start-up; `/health` reports whether the database is reachable (BACKEND_OBSERVABILITY_ARCHITECTURE.md, Health Check Endpoint). The API process never runs the outbox worker.
+
+### 5.4 PS-03 — Worker process start-up
+
+Order in `server/worker.ts`:
+
+1. Run `loadWorkerConfig`. Exit on `ConfigError`.
+2. Create the logger (`service: 'worker'`) and the `ledger_worker` pool (`DATABASE_WORKER_URL`).
+3. Build the subscriber registry (PS-15) and the port registry (PS-16) from `server/modules/registry.ts`. The worker needs both, because subscribers may call ports.
+4. Create the outbox worker with an instance ID of the form `<hostname>:<pid>:<8 random hex>`, and `start()` it.
+5. On `SIGINT` or `SIGTERM`: `stop()` (finish the event in hand and claim no more), close the pool, exit 0. Full graceful shutdown with timeouts is Phase 9.
+
+The outbox worker exposes three methods:
+- `runOnce()` runs one cycle (recover, claim, deliver) and resolves when it is done. Gate tests use it, so no test depends on timing.
+- `start()` begins the loop.
+- `stop()` ends it.
+
+### 5.5 PS-04 — Request pipeline
+
+`createApiApp` builds the Express app in the order below. It is a function so that gate tests can build the same app with their own module registrations.
+
+| # | Path | Full mode | Frontend-only mode |
+|---|---|---|---|
+| 1 | all | PS-05 request ID and context | same |
+| 2 | all | PS-06 request logger (logs only `/api/`, `/portal/v1/`, `/health`) | same |
+| 3 | `GET /health` | PS-08 | `200 {"status":"ok","mode":"frontend_only"}` |
+| 4 | `/api/v1` | `express.json({ limit: '1mb' })` → each module's `publicApiRouter` → PS-10 → each module's `apiRouter` → not-found → PS-07 | — |
+| 5 | `/api` (anything not matched above, e.g. `/api/v2/x`, `/api/foo`) | not-found → PS-07 | `503 BACKEND_NOT_CONFIGURED` for every `/api/*` path |
+| 6 | `/portal/v1` | `express.json({ limit: '1mb' })` → PS-11 → each module's `portalRouter` → not-found → PS-07 | `503 BACKEND_NOT_CONFIGURED` |
+| 7 | everything else | passes on to frontend serving (PS-02 step 5) | same |
+
+Rules:
+- The body parser is mounted only on the API and portal routers, and parses only JSON. SPA and Vite paths never pass through a parser.
+- PS-07 is attached only to the API, portal and health routers. Errors raised by Vite or static serving keep today's behaviour (Express's default handler).
+- Step 6 never matches `/portal` without `/v1`, so the frontend's `/portal`, `/portal/:section` and `/portal/:section/:id` routes are unaffected.
+
+### 5.6 PS-05 — Request ID and request context
+
+- Generates a `crypto.randomUUID()` for every request. Any inbound `X-Request-Id` is ignored, so a client cannot inject values into logs.
+- Sets the `X-Request-Id` response header.
+- Runs the rest of the request inside the `AsyncLocalStorage` request context `{ requestId }`. PS-10 and PS-11 later run the remaining handlers in a nested context that adds the execution context.
+- Through the mixin (§4.7), every log line written while handling the request carries `requestId`, plus `companyId` and `userId` once the request is authenticated.
+
+### 5.7 PS-06 — Request logger
+
+- Writes one line per logged request, on the response `finish` event, with exactly the fields in §4.7.
+- Reads only `req.method`, `req.path`, `res.statusCode`, a monotonic duration and the request context. Nothing else from the request or response is read, and `res.json` / `res.send` are not patched.
+- Level is `INFO`, except `DEBUG` for `/health`.
+- A request that ends in a 5xx is also logged by PS-07, at `ERROR`, with the error.
+
+### 5.8 PS-07 — Error handler and not-found handler
+
+| Error | Status | Code | Message (British English, fixed text) | Logged |
+|---|---|---|---|---|
+| `AppError` | its status | its code | its `safeMessage` | `DEBUG` for 4xx, `ERROR` for 5xx |
+| `ZodError` | 400 | `VALIDATION_ERROR` | "Request validation failed." — `details` is `{ "<path>": ["<issue message>", …] }`, path joined with `.`, root-level issues under `"_root"` | `DEBUG`, code and issue count only |
+| JSON parse failure (`entity.parse.failed`) | 400 | `MALFORMED_JSON` | "Request body is not valid JSON." | `DEBUG`, code only |
+| Body too large (`entity.too.large`) | 413 | `PAYLOAD_TOO_LARGE` | "Request body is too large." | `DEBUG`, code only |
+| No route matched | 404 | `NOT_FOUND` | "The requested resource was not found." | `DEBUG` |
+| Anything else | 500 | `INTERNAL_ERROR` | "An unexpected error occurred." | `ERROR` through the error serializer (§4.7), with `requestId`, `method`, `path` |
+
+- Every response uses the envelope `{ "error": { "code", "message", "details", "requestId" } }`. `details` is always present (`{}` when empty).
+- A response never contains a stack trace, any database text, or an error's own message — the only message passed through is an `AppError`'s `safeMessage`. The current Replit handler returns `err.message` to the client; this one does not (§10).
+- If headers have already been sent, the handler only logs and ends the response.
+
+### 5.9 PS-08 — Health check
+
+- **Full mode:** acquires a pool connection and runs `SELECT 1`; the whole check has a 2-second timeout.
+  - Success returns `200 {"status":"ok","mode":"full"}`.
+  - Any failure or timeout returns `503 {"status":"unavailable","mode":"full"}`, and the failure is logged at `WARN` through the error serializer.
+- **Headers:** `Cache-Control: no-store`.
+- **No authentication.** The response body contains only the status and mode — no version, host, database name or error text.
+- **No transaction.** It is read-only and needs no tenant context, because it touches no tenant data.
+
+### 5.10 PS-09 — JWT utilities
+
+- **`signPlatformToken(claims, keys)` / `signPortalToken(claims, secret)`.** The input is the typed claim set from §4.3, without `iss`, `aud`, `iat` and `exp`; the function sets those, with a 15-minute lifetime. The claims are validated with the same Zod schemas the verifiers use, so the platform can never sign a token it would then refuse.
+- **`verifyPlatformToken(token, keys)` / `verifyPortalToken(token, secret)`.** These apply the four rules in §4.3. Each returns typed claims, or throws:
+  - `TokenExpiredError` for an expired token;
+  - `TokenInvalidError` for every other failure — signature, algorithm, issuer, audience, claim shape, malformed token.
+
+  Apart from expiry, the error never says which check failed.
+- No I/O, no transaction, nothing logged.
+
+### 5.11 PS-10 — Platform-token middleware (tenant context)
+
+- **Input:** the `Authorization` header. The only accepted form is `Bearer <token>`, with the scheme case-insensitive. Tokens are never read from a cookie or a query parameter.
+- **Header missing, or scheme not `Bearer`:** `401 UNAUTHENTICATED` "Authentication is required.", with `WWW-Authenticate: Bearer`.
+- **`TokenExpiredError`:** `401 TOKEN_EXPIRED` "Your session has expired.", with `WWW-Authenticate: Bearer error="invalid_token"`. The separate code lets the frontend refresh from Phase 2 on.
+- **`TokenInvalidError`:** `401 UNAUTHENTICATED`, with the same header.
+- **Success:** builds the execution context `{ companyId: toCompanyId(claims.company_id), actor: { kind: 'user', userId: claims.sub, role: claims.role }, causation: null, requestId }` and runs the remaining handlers inside it.
+  - Routers read the context with `contextOf(req)` from `ModuleDeps`. There is no other way for a handler to get a company ID.
+- **Not done in Phase 0:**
+  - role checks (`requireRole`, Phase 2);
+  - the tenant-active check (OQ-12);
+  - checking that the user still exists and is active (Phase 2).
+- **Records written:** none. Authentication failures are logged only by PS-06 (as status 401), never with the token.
+
+### 5.12 PS-11 — Portal-token middleware
+
+The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
+- On success the actor is `{ kind: 'portal_user', portalAccountId: claims.sub, clientId: claims.client_id, role: 'client' }`.
+- A platform token on `/portal/v1`, or a portal token on `/api/v1`, fails verification and gets `401`, because the two token types use different algorithms, keys and audiences. This is part of roadmap Phase 6a's gate; the platform makes it true from Phase 0.
+
+### 5.13 PS-12 — `runInTransaction` (Unit of Work)
+
+- **Inputs:**
+  - an `ExecutionContext` (§4.1);
+  - the work function;
+  - the pool, bound when the Unit of Work is constructed — the API's `ledger_app` pool or the worker's `ledger_worker` pool.
+- **Checks, before the transaction opens:**
+  - `toCompanyId(ctx.companyId)` succeeds;
+  - the context was built by the platform;
+  - no unit is already active in this async context (otherwise `NestedUnitOfWorkError`).
+- **Transaction:** `BEGIN` (READ COMMITTED) → `work(uow)` → `COMMIT`. If `work` throws or the unit is poisoned (§4.4), it runs `ROLLBACK` instead. Either way, the unit is then closed.
+- **Records written:** only what `work` writes, plus T-1 and T-2 rows through PS-13 and PS-14.
+- **Errors:** an error thrown by `work` is rethrown unchanged. If the unit was poisoned but `work` returned normally, it throws `AuditWriteFailedError` or `OutboxWriteFailedError`, with the first failure as `cause`.
+
+### 5.14 PS-13 — `AuditWriter.append`
+
+- **Input:** `AuditEntryInput` (§4.4).
+- **Checks:**
+  - the unit is `active`;
+  - Zod validation of the input against T-1's formats, including destination type and ID being given both or neither;
+  - JSON values are serialisable.
+- **Writes:** one row in `audit.audit_entries`, inside the caller's transaction.
+  - From the context: `company_id`, `actor_id`, `actor_role`, `causation_*`, and `metadata.requestId` / `metadata.runId`.
+  - From the database: `occurred_at` and `sequence_no`.
+- **Returns:** `audit_id`.
+- **On failure** (validation or database): marks the unit poisoned, then throws. The caller's transaction cannot commit (§4.4).
+- **Never** updates, deletes or reads audit rows. `AuditWriter` exposes only `append()` (BACKEND_DATA_ARCHITECTURE.md, Audit Immutability Enforcement), and the Drizzle table object for T-1 is not exported from `server/platform/index.ts`.
+
+### 5.15 PS-14 — `OutboxWriter.record`
+
+- **Input:** `DomainEventInput` (§4.4).
+- **Checks:**
+  - the unit is `active`;
+  - `eventType` matches the PascalCase format, and `sourceModule` matches T-2's format;
+  - `payload` is a plain JSON object of at most 64 KB once serialised — events carry identifiers, not documents (§3.4).
+- **Writes:** one row in `intelligence.event_outbox` with `status = 'pending'`, inside the caller's transaction. `event_id` is generated; `company_id`, `actor_id` and `causation_*` come from the context.
+- **Returns:** `event_id`.
+- **On failure:** marks the unit poisoned, then throws.
+- **Delivery** never happens in the writing process. The worker can see the row only once the caller's transaction commits, so a rolled-back transaction leaves no row and its event can never be delivered (gate item 3).
+- The Drizzle table objects for T-2 and T-3 are not exported from the platform index.
+
+### 5.16 PS-15 — Subscriber registry
+
+- Built at start-up from every `ModuleRegistration.subscribers` (§4.8).
+- **Checks:**
+  - subscriber names are unique and match `^[a-z][a-z_]*\.[a-zA-Z][a-zA-Z0-9]*$`;
+  - every subscriber lists at least one event type, each in PascalCase;
+  - no subscriber lists the same event type twice.
+- **Lookup:** `subscribersFor(eventType)` returns subscribers in registration order.
+- Immutable after start-up.
+
+### 5.17 PS-16 — Port registry (typed cross-module ports)
+
+A port lets a lower module call into a higher one without importing it. The lower module defines the interface, the higher module implements it, and the process entry point wires them together. Every compile-time import therefore still points downward, as the dependency direction requires (BACKEND_LAYERING_ARCHITECTURE.md, Application Layer — cross-context calls only through "well-defined contracts"; BACKEND_SERVICE_ARCHITECTURE.md, Module Boundary Rules 1–2). This is the platform piece needed for the same-transaction option in §4.9 and OQ-16. Phase 0 defines no ports.
+
+```ts
+interface PortToken<T> { readonly name: string; readonly __type?: T }
+function definePort<T>(name: string): PortToken<T>;       // in the defining module's application layer,
+                                                          //   exported from its index.ts
+interface ModuleRegistration {                            // additions to §4.8
+  requiresPorts?: readonly PortToken<unknown>[];
+  providesPorts?: readonly PortBinding<unknown>[];        // bind(token, (deps) => implementation)
+}
+interface Ports { get<T>(token: PortToken<T>): T }        // passed to the defining module's factory
+```
+
+- **Calling convention:** a port's methods take the caller's `uow` as their first argument. The implementation therefore works inside the caller's transaction, and its audit entries carry the caller's human actor.
+- **Start-up checks** (both processes): every port in any `requiresPorts` has exactly one provider; no port has two providers; port names are unique. Any failure stops the process at start-up, naming the ports.
+- **Resolution timing:** `Ports.get` works only while module factories are being built at start-up, not during a request. A dependency can therefore never be resolved lazily or swapped at run time.
+- **No transaction** of its own.
+
+### 5.18 PS-17 — Outbox worker: claim
+
+```sql
+UPDATE intelligence.event_outbox
+   SET status = 'processing', locked_at = now(), locked_by = $workerId
+ WHERE outbox_id IN (
+         SELECT outbox_id FROM intelligence.event_outbox
+          WHERE status IN ('pending', 'failed') AND next_attempt_at <= now()
+          ORDER BY created_at
+          LIMIT $batchSize
+          FOR UPDATE SKIP LOCKED)
+RETURNING *;
+```
+
+- One statement in its own short transaction, run as `ledger_worker`. `SKIP LOCKED` ensures two workers never claim the same row.
+- The claim commits before any subscriber runs, so a slow subscriber never holds a row lock on the outbox.
+- **No tenant context.** The claim spans all companies by design. It is the only cross-tenant query in Phase 0, and it reads no business data. Every later step runs in the claimed event's own tenant context.
+
+### 5.19 PS-18 — Outbox worker: deliver one event
+
+The worker handles each claimed row in claim order, under a new `runId`:
+
+1. **Prepare.** Build the envelope from the row (§4.5). The subscriber list is `subscribersFor(event_type)` minus `delivered_subscribers`.
+2. **Call each subscriber.** Each one runs in its own `runInTransaction`, with the worker subscriber context (system actor, the row's company, causation from the row). Inside that transaction:
+   1. `await subscriber.handle(envelope, uow)`;
+   2. `UPDATE intelligence.event_outbox SET delivered_subscribers = array_append(delivered_subscribers, $name) WHERE outbox_id = $id AND status = 'processing' AND locked_by = $workerId AND NOT ($name = ANY(delivered_subscribers))`. If no row is updated, it throws `LockLostError`, which rolls back the subscriber's writes.
+
+   If a subscriber throws, the worker logs at `WARN` and **carries on with the remaining subscribers**, so independent subscribers are not held back by a failing one. On `LockLostError`, the worker stops handling this event at once and records nothing more, because another worker now owns it.
+3. **Finish.** If every listed subscriber succeeded (including when there were none), the worker finishes in one transaction:
+   - `INSERT INTO intelligence.event_log (…) VALUES (… copied from the row …) ON CONFLICT (event_id) DO NOTHING`;
+   - `UPDATE intelligence.event_outbox SET status = 'delivered', delivered_at = now(), locked_at = NULL, locked_by = NULL WHERE outbox_id = $id AND status = 'processing' AND locked_by = $workerId`.
+
+   If no row is updated, the finish transaction rolls back with `LockLostError`. This is logged at `WARN` and not counted as an attempt.
+4. **Failure.** If any subscriber failed, the worker runs PS-19.
+
+**Transaction boundaries.** There is one transaction per subscriber, holding its work, its audit entries and events, and its `delivered_subscribers` mark. Then one transaction finishes the event (`event_log` row plus `delivered`). This keeps the documented lifecycle order — subscribers handle the event, then it is written to the event log, then the outbox row is marked delivered (BACKEND_EVENT_ARCHITECTURE.md, Event Lifecycle) — and makes each step atomic.
+
+### 5.20 PS-19 — Outbox worker: record a failed attempt
+
+This is one statement in its own transaction, guarded by `locked_by = $workerId AND status = 'processing'`. It sets:
+- `retry_count = retry_count + 1`;
+- `status = 'dead_lettered'` if the new count has reached `OUTBOX_MAX_ATTEMPTS`, otherwise `'failed'`;
+- `next_attempt_at = now() + OUTBOX_BASE_BACKOFF_MS × 2^(retry_count − 1)`, computed with the old count — 1 s, 2 s, 4 s, 8 s by default;
+- `dead_lettered_at = now()` when dead-lettered;
+- `last_error` = for each failed subscriber, `<subscriber name>: ` plus the error serializer's safe summary (name, code, and message only where §4.7 allows), joined and truncated to 1 000 characters;
+- the lock cleared.
+
+It is logged at `WARN`, or at `ERROR` when dead-lettered (§4.7). Subscribers that succeeded stay in `delivered_subscribers`, so the next attempt runs only the ones that failed.
+
+### 5.21 PS-20 — Outbox worker: stale-lock recovery
+
+At the start of every cycle:
+
+```sql
+UPDATE intelligence.event_outbox
+   SET status = 'pending', locked_at = NULL, locked_by = NULL
+ WHERE status = 'processing' AND locked_at < now() - make_interval(secs => $staleMs / 1000.0);
+```
+
+- Each recovered row is logged at `WARN` with its event ID.
+- `retry_count` is not changed (OQ-09).
+- A worker that lost its lock this way is fenced by the `locked_by` guards in PS-18 and PS-19.
+
+**Worker loop:**
+1. Recover stale locks (PS-20).
+2. Claim a batch (PS-17).
+3. Deliver each claimed row (PS-18, and PS-19 on failure).
+4. If the batch was full, start the next cycle immediately; otherwise wait `OUTBOX_POLL_INTERVAL_MS`.
+
+If the loop itself hits an unexpected error (for example, the database is unreachable), it logs at `ERROR`, waits one poll interval and carries on. The process does not exit.
+
+### 5.22 PS-21 — Migration runner
+
+`server/platform/db/migrate.ts`, run as `npm run db:migrate`, applies `migrations/` with Drizzle's node-postgres migrator using `DATABASE_MIGRATION_URL`, and exits non-zero on failure. The test harness calls the same function with `DATABASE_MIGRATION_URL_TEST`, after PS-22. The API and the worker never apply migrations at start-up.
+
+### 5.23 PS-22 — Test-database guard
+
+Specified in §4.6. It is a pure function. On failure it throws `TestDatabaseGuardError` naming the rule that failed and the variable — never the full URL, which contains a password.
+
+### 5.24 Tenant-scoping helpers
+
+`toCompanyId`, `tenantScope` and `tenantWhere` (§4.1, §4.2) are pure functions and open no transaction. They throw `MissingTenantContextError` when the company ID is missing or is not a UUID.
+
+---
+
+## 6. API
+
+### 6.1 Routes
+
+Phase 0 adds exactly one route. Everything else under the two API prefixes answers with the error envelope.
+
+| Method | Path | Auth | Roles | Request | Responses |
+|---|---|---|---|---|---|
+| `GET` | `/health` | none | — | none | `200 {"status":"ok","mode":"full"}` · `503 {"status":"unavailable","mode":"full"}` · `200 {"status":"ok","mode":"frontend_only"}` |
+| any | `/api/v1/*` (no module route) | platform token | — | — | without a valid token: `401 UNAUTHENTICATED` or `401 TOKEN_EXPIRED`; with one: `404 NOT_FOUND` |
+| any | `/api/*` outside `/api/v1` | none | — | — | `404 NOT_FOUND` |
+| any | `/portal/v1/*` (no module route) | portal token | — | — | without a valid portal token: `401`; with one: `404 NOT_FOUND` |
+| any | `/api/*`, `/portal/v1/*` in frontend-only mode | none | — | — | `503 BACKEND_NOT_CONFIGURED` |
+| `GET` | any other path | none | — | — | the frontend, exactly as today (Vite in development, `dist/public` in production) |
+
+`/health` sits outside `/api/v1` because it is infrastructure, not part of the versioned API (BACKEND_OBSERVABILITY_ARCHITECTURE.md, Health Check Endpoint). It does not use the error envelope; its body is always the status object.
+
+### 6.2 Headers
+
+| Header | When | Value |
+|---|---|---|
+| `X-Request-Id` | every response | the request's UUID (PS-05) |
+| `WWW-Authenticate` | every 401 | `Bearer`, or `Bearer error="invalid_token"` for invalid and expired tokens |
+| `Cache-Control` | `/health` | `no-store` |
+| `Content-Type` | every API, portal and health response | `application/json; charset=utf-8` |
+
+Request bodies are accepted only on `/api/v1` and `/portal/v1`, must be JSON, and are limited to 1 MB (BACKEND_API_ARCHITECTURE.md, API Security Standards).
+
+### 6.3 Error envelope and platform error codes
+
+Every error response under `/api/` and `/portal/v1/` uses this envelope (BACKEND_API_ARCHITECTURE.md, Error Handling Strategy):
+
+```json
+{ "error": { "code": "NOT_FOUND", "message": "The requested resource was not found.", "details": {}, "requestId": "4f6c…" } }
+```
+
+| Code | Status | Meaning | Raised by |
+|---|---|---|---|
+| `VALIDATION_ERROR` | 400 | Zod validation failed; `details` maps field paths to messages | PS-07, for any `ZodError` |
+| `MALFORMED_JSON` | 400 | The body is not valid JSON | PS-07 |
+| `UNAUTHENTICATED` | 401 | No token, wrong scheme, or invalid token | PS-10, PS-11 |
+| `TOKEN_EXPIRED` | 401 | The token has expired | PS-10, PS-11 |
+| `FORBIDDEN` | 403 | Authenticated but not allowed (`ForbiddenError`; first used in Phase 2) | modules |
+| `NOT_FOUND` | 404 | No route; or the resource does not exist or belongs to another tenant (`NotFoundError`) | PS-07; modules |
+| `CONFLICT` | 409 | State conflict (`ConflictError`; modules may use more specific codes) | modules |
+| `PAYLOAD_TOO_LARGE` | 413 | Body over 1 MB | PS-07 |
+| `BUSINESS_RULE_VIOLATION` | 422 | A business rule refused the request (`BusinessRuleError`; modules use specific codes such as those in BACKEND_API_ARCHITECTURE.md, Error Codes) | modules |
+| `INTERNAL_ERROR` | 500 | Anything unexpected | PS-07 |
+| `BACKEND_NOT_CONFIGURED` | 503 | Frontend-only mode (§4.6) | PS-04 |
+
+Modules define their own codes as `AppError`s (for example `SUBMISSION_ALREADY_APPROVED`). Codes are `UPPER_SNAKE_CASE`. Messages are British English, written for the user, and contain no input values.
+
+Status 413, and 503 for `BACKEND_NOT_CONFIGURED`, are not in BACKEND_API_ARCHITECTURE.md's status table; this specification adds them (§10). Status 429 (rate limiting) arrives in Phase 9.
+
+### 6.4 Validation
+
+Modules validate request bodies, path parameters and query parameters with Zod in their API layer (BACKEND_API_ARCHITECTURE.md, Validation Strategy). PS-07 turns any thrown `ZodError` into `400 VALIDATION_ERROR`. Zod checks shape only; business rules live in the Application Layer. Beyond this error mapping, Phase 0 provides no Zod helpers.
+
+### 6.5 Pagination
+
+BACKEND_API_ARCHITECTURE.md, Pagination Strategy fixes the convention every list endpoint follows:
+- cursor-based, with `limit` defaulting to 50 and capped at 200;
+- the cursor is base64-encoded JSON;
+- the response shape is `{ "data": [...], "pagination": { "nextCursor", "hasMore", "limit" } }`.
+
+Phase 0 has no list endpoint, and a shared pagination helper is not in the roadmap's Phase 0 list, so none is specified here. Whether the platform should provide one is OQ-17.
+
+---
+
+## 7. EVENTS
+
+### 7.1 Produced and consumed
+
+**None.** Phase 0 defines no domain event type and registers no subscriber; `server/modules/registry.ts` is empty. The first events arrive with Phase 1's tenant events (BACKEND_EVENT_ARCHITECTURE.md, Tenant Module Events).
+
+Gate tests use test-only event types (for example `GateProbeRecorded`) and test subscribers. These are registered only in the test app built by `server/tests/support/`, never in `server/modules/registry.ts`.
+
+### 7.2 What Phase 0 guarantees for every later event
+
+| Guarantee | Mechanism |
+|---|---|
+| Written in the same transaction as the state change | PS-14 inside PS-12; there is no other write path |
+| Never delivered if that transaction rolls back | The row does not exist until commit, and only the worker delivers (PS-17) |
+| Delivered at least once to every subscriber of its type | PS-17 to PS-20: claim, retry with backoff, stale-lock recovery |
+| Not passed again, by normal retries, to a subscriber that has already handled it | `delivered_subscribers`, written atomically with the subscriber's work and fenced by `locked_by` (PS-18) |
+| Written once to the permanent event log, after every subscriber has handled it | PS-18 step 3, `ON CONFLICT (event_id) DO NOTHING` |
+| Never lost after five failed attempts | The `dead_lettered` row is kept, with `last_error` (PS-19) |
+| Carries `companyId` and is handled in that tenant's context | T-2 `company_id NOT NULL`; the subscriber context is built from it (BACKEND_EVENT_ARCHITECTURE.md: "No event may be processed without a valid `companyId`") |
+| Traceable to its cause | `causation_event_id`, `causation_actor_id` (§4.1) |
+| No ordering guarantee | §4.5, OQ-06 |
+
+### 7.3 Payload and envelope rules for later specifications
+
+- **Envelope:** §4.5, exactly as BACKEND_EVENT_ARCHITECTURE.md, Event Payload Standard. `eventVersion` is `"1.0"` for every event in v1.
+- **Name:** `{Noun}{PastTenseVerb}`, in PascalCase.
+- **Payload:** a JSON object of at most 64 KB, carrying identifiers and operational metadata and no financial amounts (§3.4, OQ-07).
+- **Idempotency key:** `eventId` is unique for each event (`UNIQUE` on T-2 and T-3) and is the default idempotency key. A subscriber may instead use a natural key that is unique for each effect, such as the submission ID for Phase 5's normalisation subscribers. Each later specification names the key for every subscriber it defines.
+
+---
+
+## 8. AUDIT ENTRIES
+
+### 8.1 Entry types defined in Phase 0
+
+**None.** The platform takes no financially relevant action: it changes no financial record, approval state, job lifecycle, role, classification, automation or portal account (BACKEND_OBSERVABILITY_ARCHITECTURE.md, What Triggers an Audit Entry). Each later specification lists its own entry types from the frozen domains (DOMAIN_MODEL_SUMMARY.md, Audit Entry Types by Domain).
+
+These Phase 0 occurrences are deliberately **not** audit entries. They are recorded in the application log, or for dead letters in the outbox row:
+
+| Occurrence | Recorded as | Why not audit |
+|---|---|---|
+| Authentication failure (401) | PS-06 request log line | No state changes. Session audit entries (`SessionStarted`, `SessionRevoked`, revocations) are Phase 2 |
+| Event delivery failure or dead letter | T-2 `status`, `retry_count`, `last_error`; `WARN` / `ERROR` log | Delivery state is operational, not a financially relevant action; the row itself is the permanent record |
+| Stale-lock recovery | `WARN` log | Operational |
+| Configuration failure | `FATAL` log | No tenant, no database |
+| Migrations and grants | The Drizzle migration journal | Platform administration outside any tenant |
+
+The gate tests use a test-only entry type, `gate_test_probe`. Only test code writes it, through `uow.audit.append`, and only in the test database.
+
+### 8.2 How each audit field is filled (for every later entry type)
+
+| Field (T-1) | Filled from | Can the caller set it? |
+|---|---|---|
+| `audit_id`, `sequence_no`, `occurred_at` | Database | No |
+| `company_id` | `uow.context.companyId` | No |
+| `actor_id`, `actor_role` | `uow.context.actor` (mapping in §4.1) | No |
+| `causation_event_id`, `causation_actor_id` | `uow.context.causation` (worker subscriber context only) | No |
+| `metadata.requestId` / `metadata.runId` | `uow.context` | No — merged over the caller's metadata, which cannot override them |
+| `entry_type`, `source_object_type`, `source_object_id` | `AuditEntryInput` | Yes — required |
+| `destination_object_type`, `destination_object_id` | `AuditEntryInput` | Yes — both or neither |
+| `job_id`, `site_id`, `client_id` | `AuditEntryInput` | Yes — the domain requires `job_id` for financially relevant entries (OQ-05) |
+| `previous_value`, `new_value` | `AuditEntryInput` | Yes — the audit log is where financial values belong (BACKEND_OBSERVABILITY_ARCHITECTURE.md, What Is NOT Logged); they are never copied into the application log |
+| `external_reference` | `AuditEntryInput` | Yes |
+| `metadata` (other keys) | `AuditEntryInput` | Yes |
+
+Together these cover every field the Audit Doctrine requires:
+
+| Audit Doctrine field | Column(s) |
+|---|---|
+| Who | `actor_*` |
+| What | `entry_type` |
+| When | `occurred_at` |
+| Previous value / new value | `previous_value`, `new_value` |
+| Source object / destination object | `source_object_*`, `destination_object_*` |
+| External reference | `external_reference`, plus `job_id`, `site_id`, `client_id` for attribution |
+
+---
+
+*Sections 9–12 follow in the next commit of this job.*
