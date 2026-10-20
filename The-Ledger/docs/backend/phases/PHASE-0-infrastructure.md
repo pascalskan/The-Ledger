@@ -1,6 +1,6 @@
 # THE LEDGER — PHASE 0 SPECIFICATION — INFRASTRUCTURE FOUNDATION
 
-Version: 0.2 (draft) — 0.2 applies PM review of 33d9b6b, findings A–G
+Version: 0.3 (draft) — 0.2 applied PM review of 33d9b6b (A–G); 0.3 applies review round 1 (R1-01 to R1-05)
 Status: DRAFT — awaiting PM review and the owner checkpoint
 Date: October 20, 2026
 Author: `backend-architect`
@@ -117,6 +117,7 @@ Doctrines verified at this gate (roadmap, Doctrine Verification by Phase): audit
 | **D-12** Hosted PostgreSQL for dev and test | `DATABASE_URL` (development) and `DATABASE_URL_TEST` (tests) point at separate databases on a hosted PostgreSQL project. Tests refuse to run unless the database name in every test URL ends in `_test` (§4.6). Only synthetic data is written. Phase 0 adds variables the decision does not name — the migration-owner URLs and the worker-role URLs — because the grant guarantees need separate database roles (§3.5, OQ-03). Nothing in the design depends on a particular hosting provider |
 | **D-14** Tooling | `vitest` and `supertest` (tests), `jose` (JWT, ES256 platform key pair and a separate portal key — §4.3, OQ-02), `pino` (logging), `drizzle-kit generate` with committed SQL migrations; `drizzle-kit push` is removed from the scripts. `bcryptjs` is not installed in Phase 0 because nothing hashes a password until Phase 2. `passport`, `passport-local`, `express-session`, `memorystore`, `connect-pg-simple` stay until Phase 2 |
 | **D-16** CLAUDE.md backend instruction | Already applied: `CLAUDE.md` "CURRENT PLATFORM STATE" carries the approved paragraph. Phase 0 is backend work on a branch from `main` (via `backend`); the frontend stays mock-driven. Phase 0 changes no frontend behaviour (§10) |
+| **D-17** Approval → financial record in one transaction (decided after this specification raised it as OQ-16) | Phase 0 builds no approval, but it provides the mechanism D-17 relies on: passing the caller's Unit of Work across modules (§4.4) and typed ports wired at the composition root (PS-16, §4.8 `requiresPorts` / `providesPorts`). §4.9 maps every D-17 requirement to it |
 
 ### 2.4 Code read
 
@@ -530,7 +531,7 @@ interface Subscriber {
 
 Only the worker process changes `status`, and the database enforces it: only `ledger_worker` holds `UPDATE` on the delivery-state columns (§3.5). The API process (`ledger_app`) only inserts.
 
-Retry schedule (BACKEND_INFRASTRUCTURE_ARCHITECTURE.md: "exponential backoff … (1s, 2s, 4s, 8s, max 5 retries); After 5 failures: marks event as `dead_lettered`"): read as **five attempts in total**, waiting 1 s, 2 s, 4 s and 8 s between them, and dead-lettered on the fifth failure — the four listed delays fit five attempts. Backoff after the n-th failure is `OUTBOX_BASE_BACKOFF_MS × 2^(n-1)`. Defaults: `OUTBOX_MAX_ATTEMPTS = 5`, `OUTBOX_BASE_BACKOFF_MS = 1000`, `OUTBOX_POLL_INTERVAL_MS = 1000`, `OUTBOX_BATCH_SIZE = 10`, `OUTBOX_STALE_LOCK_MS = 300000` (5 minutes). All are configurable so tests run in milliseconds.
+Retry schedule (BACKEND_INFRASTRUCTURE_ARCHITECTURE.md: "exponential backoff … (1s, 2s, 4s, 8s, max 5 retries); After 5 failures: marks event as `dead_lettered`"): read as **five attempts in total**, waiting 1 s, 2 s, 4 s and 8 s between them, and dead-lettered on the fifth failure — the four listed delays fit five attempts. Backoff after the n-th failure is `OUTBOX_BASE_BACKOFF_MS × 2^(n-1)`, where n is `retry_count` after that failure has been counted (PS-19). Defaults: `OUTBOX_MAX_ATTEMPTS = 5`, `OUTBOX_BASE_BACKOFF_MS = 1000`, `OUTBOX_POLL_INTERVAL_MS = 1000`, `OUTBOX_BATCH_SIZE = 10`, `OUTBOX_STALE_LOCK_MS = 300000` (5 minutes). All are configurable so tests run in milliseconds.
 
 **Audit entries and the event log have no lifecycle**: rows are inserted once and never change.
 
@@ -579,6 +580,22 @@ So `npm run dev` with no `.env` behaves as it does today for the frontend and th
 
 **Local `.env` file.** Outside production, the loader reads `.env` from the app folder if it exists (`process.loadEnvFile`), and variables already set in the environment win. `.env` is added to `.gitignore`; `.env.example` (names and placeholder values only) is committed. On a hosted deployment the variables come from the host's secret store.
 
+**Built bundles are always production.** `script/build.ts` passes esbuild `define: { "process.env.NODE_ENV": '"production"' }` (kept from the Replit starter). esbuild replaces that exact expression in the bundled code with the literal `"production"`. The loader is therefore required to resolve the environment name like this:
+
+```ts
+const nodeEnv = process.env.NODE_ENV === 'production'   // literal expression: replaced at build time
+  ? 'production'
+  : (env.NODE_ENV ?? 'development');                    // env = the object passed to the loader
+```
+
+The rule must be written with the literal `process.env.NODE_ENV`; reading it through a variable or a destructured copy would escape the replacement. Consequences:
+- `dist/index.cjs` and `dist/worker.cjs` always run as production, whatever `NODE_ENV` is set to at run time.
+- A built API never enters frontend-only mode, and fails fast unless all four backend variables are set.
+- A built bundle never reads `.env`. To run a production build locally, the variables must be in the real environment.
+- In development and tests (`tsx`, Vitest) the expression is evaluated at run time, so the mode table applies as written. Tests choose a mode by passing an `env` object to the loader.
+
+G0-01 relies on this, and checks it. No other part of §4.6 or §9 assumes a bundle can run in development or frontend-only mode: G0-02 runs `npm run dev` (tsx), and G0-36 and G0-37 call the loader and `createApiApp` inside Vitest.
+
 **Test-database guard (D-12).** `assertTestDatabase(urls)` in `server/platform/config/test-database.ts` runs before any connection is opened. It refuses if:
 - any of the three test URLs is missing;
 - a test URL's database name (the URL path, percent-decoded, case-sensitive) does not end in `_test`;
@@ -587,7 +604,16 @@ So `npm run dev` with no `.env` behaves as it does today for the frontend and th
 
 The Vitest global setup and every test database client call it.
 
-**Test database lifecycle.** At the start of each gate-test run the harness rebuilds the test database. Connected as the owner, it drops `audit`, `intelligence` and `drizzle` (`CASCADE`) and re-runs every migration. This is the only way audit rows are ever removed, and it happens only in a database that passed the guard. Gate tests then connect as `ledger_app` for API behaviour and as `ledger_worker` for worker behaviour, never as the owner, except to prove a database-level guarantee or to set up a failure on purpose. Gate test files run one at a time (`fileParallelism: false` for the gate project) because some tests change grants or fail the database on purpose.
+**Test database lifecycle.** At the start of each `db` or `gate` test run, the platform's global setup (`server/platform/testing/global-setup.ts`, §9.1) rebuilds the test database:
+1. It runs the guard.
+2. Connected as the owner, it drops every schema the owner role owns except `public`, with `CASCADE`. This includes `audit`, `intelligence`, `drizzle`, any test-only schema such as `gate_test`, and every later module schema, so the rule never needs updating.
+3. It re-runs every migration.
+
+This rebuild is the only way audit rows are ever removed, and it happens only in a database that has passed the guard.
+
+Tests then connect as `ledger_app` for API behaviour and as `ledger_worker` for worker behaviour. They connect as the owner only to prove a database-level guarantee or to set up a failure on purpose.
+
+Test files in the `db` and `gate` projects run one at a time (`fileParallelism: false`), because some tests change grants or fail the database on purpose. `npm test` runs `unit`, `db` and `gate` in that order, never at the same time, because `db` and `gate` share the test database.
 
 ### 4.7 Logging and errors
 
@@ -654,49 +680,57 @@ interface ModuleRegistration {
   publicApiRouter?: (deps: ModuleDeps) => Router; // mounted at /api/v1 before auth; each public
                                                   //   route must be listed in that phase's spec
   portalRouter?: (deps: ModuleDeps) => Router;    // mounted at /portal/v1, behind portal-token auth
-  subscribers?: readonly Subscriber[];
+  subscribers?: (deps: ModuleDeps) => readonly Subscriber[];
+  requiresPorts?: readonly PortToken<unknown>[];  // ports this module calls (it defines them)
+  providesPorts?: readonly PortBinding<unknown>[];// ports this module implements (defined elsewhere)
 }
 export const modules: readonly ModuleRegistration[] = [];
 ```
 
-`ModuleDeps` gives a router what it needs from the platform (`runInTransaction`, `logger`, configuration) without exposing internals. Both processes read the same registry: the API mounts routers, the worker registers subscribers.
+`ModuleDeps` gives a module's factories what they need from the platform without exposing its internals: `runInTransaction`, `contextOf`, `logger`, configuration, and `ports` (`Ports.get`, PS-16). Both processes read the same registry and build the same port wiring. The API mounts the routers; the worker registers the subscribers.
 
 **Import rules** (each becomes a gate check, §9):
 
 1. A file under `server/modules/<m>/` may import from the platform only via `server/platform/index.ts`.
    1a. Test files (`*.test.ts` anywhere, and everything under `server/tests/`) may also import `server/platform/testing/index.ts`. Production code never does.
-2. It may import another module only via `server/modules/<other>/index.ts`.
-3. `domain/` imports only files inside its own module's `domain/` folder: no other layer, no platform code (not even types — §4.1), no other module, no Node built-in module, and no package unless a phase specification allowlists it as pure and I/O-free. Platform-branded values reach the domain as plain strings (§4.1).
-4. `application/` imports `domain/` and the platform's public surface; not `infrastructure/` internals, `api/`, `express`, `drizzle-orm` or `pg`.
+2. A file may import another module only via `server/modules/<other>/index.ts`.
+3. `domain/` imports only files inside its own module's `domain/` folder. That excludes every other layer, all platform code (types included — §4.1), other modules, Node built-in modules, and any package unless a phase specification allowlists it as pure and I/O-free. Platform-branded values reach the domain as plain strings (§4.1).
+4. `application/` imports `domain/` and the platform's public surface. It does not import `infrastructure/` internals, `api/`, `express`, `drizzle-orm` or `pg`.
 5. `infrastructure/` does not import `application/` or `api/`.
 6. `api/` does not import `domain/` or `infrastructure/` directly.
-7. `index.ts` exports DTOs and public functions, never domain entities (checked in review; not machine-checkable in Phase 0).
+7. `index.ts` exports DTOs, public functions and port tokens/types, never domain entities. This is checked in review; it cannot be machine-checked in Phase 0.
 8. Nothing under `server/platform/` imports from `server/modules/`. Only the two process entry points (`server/index.ts`, `server/worker.ts`) import `server/modules/registry.ts`, and they pass the registrations into the platform.
+9. Imports between modules form no cycle. If module A imports `server/modules/B/index.ts`, nothing reachable from B imports A. The intended dependency direction (BACKEND_DOMAIN_ARCHITECTURE.md, Domain Dependency Direction) is applied in review. A cycle is the machine-checkable symptom of an upward import, so it fails the gate.
 
-Rule 4 and rule 5 read the layering document's dependency directions literally (Application → Domain; Infrastructure → Domain). The Application Layer reaches its repository implementations through the interfaces it is given (dependency injection at the module's `index.ts`), which BACKEND_LAYERING_ARCHITECTURE.md allows ("May call infrastructure implementations through injected interfaces").
+Rules 4 and 5 read the layering document's dependency directions literally (Application → Domain; Infrastructure → Domain). The Application Layer reaches its repository implementations through the interfaces it is given (dependency injection at the module's `index.ts`), which BACKEND_LAYERING_ARCHITECTURE.md allows ("May call infrastructure implementations through injected interfaces").
 
-### 4.9 Cross-module work: the two patterns the platform supports
+### 4.9 Cross-module work: the patterns the platform supports
 
-The platform supports two ways for one module's state change to cause another module's work:
+A state change in one module can cause work in another in three ways:
 
-| Pattern | How | Consistency | Traceability |
-|---|---|---|---|
-| **Same transaction** | The caller's use case calls the other module's public function from its `index.ts` and passes its own `uow` (nesting is refused, so the work joins the caller's transaction, §4.4) | Atomic: both modules' writes, every audit entry and every outbox event commit or roll back together | The human actor is the actor on every entry; no causation needed |
-| **Event subscriber** | The caller records an event; a subscriber in the other module handles it in the worker (§4.5) | Eventual: the second module's work commits later, separately, and can fail and be retried or dead-lettered | System actor plus `causation_event_id` / `causation_actor_id` (§4.1) |
+| Pattern | Direction | How | Consistency | Traceability |
+|---|---|---|---|---|
+| **Direct call, same transaction** | Downward only (caller is higher) | The caller's use case calls the lower module's public function from that module's `index.ts` and passes its own `uow`. Nesting is refused, so the work joins the caller's transaction (§4.4). Example: D-06's closure use case calling Operational Core's `transitionJobStatus` | Atomic | The caller's human actor is the actor on every entry; causation is `NULL` |
+| **Port, same transaction** | Lower module calls a higher one, with every compile-time import still pointing downward | The lower module defines a port and calls it with its `uow`; the higher module implements it; the composition root wires the two (PS-16) | Atomic | As for a direct call |
+| **Event subscriber** | Any | The caller records an event; a subscriber in the other module handles it in the worker (§4.5) | Eventual: the second module's work commits later, separately, and can fail, be retried or be dead-lettered | System actor plus `causation_event_id` / `causation_actor_id` (§4.1) |
 
-**Recorded architecture conflict (for the owner; not resolved here).** The two patterns meet at the most important step on the platform: approval becoming a financial record.
-- BACKEND_DATA_ARCHITECTURE.md, Write Consistency Requirements ("Approve submission → create financial record: ACID transaction: approval status + financial record + audit entry in single commit"), Transaction Boundary 2 ("Submission status update + financial record(s) creation + audit entry + outbox event") and "How Operational Truth Becomes Financial Truth" step 4 ("All in one ACID transaction") require the **same-transaction** pattern.
-- BACKEND_EVENT_ARCHITECTURE.md, Subscriber Registry ("Financial Normalization — `TimesheetApproved`, `ReportApproved`, `ExpenseApproved` — Create financial records"), BACKEND_SERVICE_ARCHITECTURE.md, Inter-Module Communication (the `TimesheetApproved` example) and roadmap Phase 5 ("Subscribers: `TimesheetApproved`, `ReportApproved`, `ExpenseApproved`, all idempotent by submission ID") describe the **subscriber** pattern.
+**Approval → financial record: decided by D-17** (BACKEND_OPEN_DECISIONS.md, merged into `backend` @ 9500bca). The decision resolves the conflict this specification raised as OQ-16. On one side was BACKEND_DATA_ARCHITECTURE.md (Write Consistency Requirements, Transaction Boundary 2, "How Operational Truth Becomes Financial Truth" step 4). On the other were the earlier subscriber designs in BACKEND_EVENT_ARCHITECTURE.md and BACKEND_SERVICE_ARCHITECTURE.md. D-17 decides:
+- Approving a submission and creating its financial records happen in one transaction.
+- Review Centre is *lower* than Financial Normalization in the dependency direction (Financial Normalization depends on Submission & Review), so a direct Review Centre → Financial Normalization call would point upward and is forbidden. D-17 uses the **port** pattern instead. Review Centre's public surface defines an `ApprovalEffectsPort`: one handler per submission type, each called with the approval's Unit of Work and approval reference. Financial Normalization implements it. The process entry points wire it in through the module registry. Review Centre never imports Financial Normalization.
+- The approval events are still written to the outbox in the same transaction for notifications, the activity feed and reporting. Financial Normalization no longer subscribes to them.
 
-The documents have the same precedence, so the owner must choose. It is raised as OQ-16 for the checkpoint, because it decides Phase 4's approval use case and Phase 5's normalization design. Phase 0 needs no change either way.
+How the Phase 0 port design (PS-16) meets each part of D-17:
 
-**Recommendation: the same-transaction pattern for approval → financial record.** Review Centre's approval use case calls Financial Normalization's public `normalizeApproved…(uow, …)` in the same transaction, and still records `TimesheetApproved` and the other approval events for notification, activity feed and reporting subscribers. Reasons:
-1. It is the only option that meets the data architecture's explicit consistency requirement and transaction boundary.
-2. With a subscriber, an approved submission can exist with no financial record — for as long as delivery takes, or for ever if the subscriber dead-letters. The mini-ledger is then wrong, and nothing shows that a human-approved item never became financially real. That is a silent financial gap (BACKEND_OBSERVABILITY_ARCHITECTURE.md, Principle 3: "No silent failures").
-3. Phase 5's gate — "a financial record with no approval reference cannot be written" — is simplest to prove when the approval reference and the record are created together.
-4. The cost is a synchronous dependency, Review Centre → Financial Normalization, through Financial Normalization's public surface. That is a "well-defined contract" (BACKEND_LAYERING_ARCHITECTURE.md, Application Layer forbidden interactions), the same shape D-06 already approved for closure. The approval transaction gets longer, but it is still bounded by one submission's lines.
+| D-17 requirement | Phase 0 mechanism |
+|---|---|
+| The port belongs to the lower module (Review Centre) | Review Centre's application layer calls `definePort<ApprovalEffectsPort>('review_centre.approvalEffects')` and exports the token and the port's TypeScript interface from `server/modules/review_centre/index.ts`. It lists the token in its `requiresPorts` |
+| The higher module (Financial Normalization) implements it without Review Centre importing Financial Normalization | Financial Normalization imports only the token and the interface type from Review Centre's `index.ts` — a downward import (rules 2 and 9). It registers `providesPorts: [bind(approvalEffectsPort, deps => implementation)]`. Nothing in Review Centre names Financial Normalization, so the boundary check would catch it if it did (rule 9) |
+| The composition root wires it | `server/index.ts` and `server/worker.ts` pass `modules` to the platform. The port registry matches `requiresPorts` to `providesPorts` and gives Review Centre's factories the implementation through `deps.ports.get(token)` at start-up |
+| One transaction | Each handler takes the caller's `uow` as its first argument and writes through `uow.tx`, `uow.audit` and `uow.events`. It cannot open its own unit (nesting is refused, §4.4). If it throws, the whole approval rolls back |
+| Records are attributed to the human approver | The handler runs in the approval request's execution context, so its audit entries and outbox events carry the approving user as actor, with `causation_*` `NULL` — they are not system work (§4.1 writer table) |
+| No missing implementation at run time | If `review_centre.approvalEffects` has no provider, or two, **both processes refuse to start** and name the port (PS-16; G0-41). An approval can therefore never run against a missing handler |
 
-If the owner prefers the subscriber pattern, Phase 0's causation columns keep it traceable. The Phase 4/5 specifications would then need a monitored "approved but not normalised" check to cover dead letters.
+Phase 0 builds the generic mechanism only. `ApprovalEffectsPort`'s handlers, signatures and idempotency rules belong to the Phase 4 and Phase 5 specifications.
 
 ---
 ## 5. USE CASES (PLATFORM SERVICES)
@@ -900,7 +934,7 @@ The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
 
 ### 5.16 PS-15 — Subscriber registry
 
-- Built at start-up from every `ModuleRegistration.subscribers` (§4.8).
+- Built at start-up by calling every `ModuleRegistration.subscribers(deps)` factory (§4.8).
 - **Checks:**
   - subscriber names are unique and match `^[a-z][a-z_]*\.[a-zA-Z][a-zA-Z0-9]*$`;
   - every subscriber lists at least one event type, each in PascalCase;
@@ -910,22 +944,28 @@ The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
 
 ### 5.17 PS-16 — Port registry (typed cross-module ports)
 
-A port lets a lower module call into a higher one without importing it. The lower module defines the interface, the higher module implements it, and the process entry point wires them together. Every compile-time import therefore still points downward, as the dependency direction requires (BACKEND_LAYERING_ARCHITECTURE.md, Application Layer — cross-context calls only through "well-defined contracts"; BACKEND_SERVICE_ARCHITECTURE.md, Module Boundary Rules 1–2). This is the platform piece needed for the same-transaction option in §4.9 and OQ-16. Phase 0 defines no ports.
+A port lets a lower module call into a higher one without importing it. The lower module defines the interface, the higher module implements it, and the process entry points wire the two together, so every compile-time import still points downward (BACKEND_LAYERING_ARCHITECTURE.md, Application Layer — cross-context calls only through "well-defined contracts"; BACKEND_SERVICE_ARCHITECTURE.md, Module Boundary Rules 1–2). The **first user is D-17's `ApprovalEffectsPort`** (Review Centre defines it, Financial Normalization implements it; Phases 4 and 5) — §4.9 maps each D-17 requirement to this mechanism. Phase 0 defines no ports.
 
 ```ts
-interface PortToken<T> { readonly name: string; readonly __type?: T }
-function definePort<T>(name: string): PortToken<T>;       // in the defining module's application layer,
-                                                          //   exported from its index.ts
-interface ModuleRegistration {                            // additions to §4.8
-  requiresPorts?: readonly PortToken<unknown>[];
-  providesPorts?: readonly PortBinding<unknown>[];        // bind(token, (deps) => implementation)
-}
-interface Ports { get<T>(token: PortToken<T>): T }        // passed to the defining module's factory
+interface PortToken<T> { readonly name: string; readonly __type?: T }   // phantom type carrier
+function definePort<T>(name: string): PortToken<T>;   // called in the DEFINING (lower) module's application
+                                                      //   layer; token + interface type exported from its index.ts
+interface PortBinding<T> { readonly token: PortToken<T>; readonly create: (deps: ModuleDeps) => T }
+function bind<T>(token: PortToken<T>, create: (deps: ModuleDeps) => T): PortBinding<T>;
+                                                      // used by the IMPLEMENTING (higher) module
+interface Ports { get<T>(token: PortToken<T>): T }    // deps.ports, see below
 ```
 
-- **Calling convention:** a port's methods take the caller's `uow` as their first argument. The implementation therefore works inside the caller's transaction, and its audit entries carry the caller's human actor.
-- **Start-up checks** (both processes): every port in any `requiresPorts` has exactly one provider; no port has two providers; port names are unique. Any failure stops the process at start-up, naming the ports.
-- **Resolution timing:** `Ports.get` works only while module factories are being built at start-up, not during a request. A dependency can therefore never be resolved lazily or swapped at run time.
+The registration fields are `requiresPorts` and `providesPorts` on `ModuleRegistration` (§4.8).
+
+- **Port names** are `<defining module>.<port>`, for example `review_centre.approvalEffects`, and must be unique.
+- **Calling convention.** The first argument of every port method is the caller's `uow`. The implementation works only through `uow.tx`, `uow.audit` and `uow.events`, inside the caller's transaction. It cannot start its own transaction (`NestedUnitOfWorkError`, §4.4). Its audit entries and events therefore carry the caller's actor — the human approver, in D-17's case — with causation `NULL`.
+- **Wiring order at start-up** (both processes, inside the platform, from the `modules` list the entry points pass in):
+  1. Collect every binding. A required port with no binding, a port with two bindings, or a binding for a port no module requires is a start-up error that names the ports.
+  2. Create every implementation with `binding.create(deps)`. In this step `deps.ports.get` throws, so implementations cannot depend on other ports and no wiring cycle is possible.
+  3. Build every module's routers and subscribers. In this step `deps.ports.get(token)` returns the implementation, but only for tokens listed in that module's own `requiresPorts`; any other token throws.
+  4. After start-up `ports.get` throws, so a port can never be resolved lazily or swapped at run time.
+- **Failure at start-up**: either process exits with code 1 and one `FATAL` line naming the port, before it listens (API) or claims an event (worker). There is no "missing handler" state at run time.
 - **No transaction** of its own.
 
 ### 5.18 PS-17 — Outbox worker: claim
@@ -970,7 +1010,7 @@ The worker handles each claimed row in claim order, under a new `runId`:
 This is one statement in its own transaction, guarded by `locked_by = $workerId AND status = 'processing'`. It sets:
 - `retry_count = retry_count + 1`;
 - `status = 'dead_lettered'` if the new count has reached `OUTBOX_MAX_ATTEMPTS`, otherwise `'failed'`;
-- `next_attempt_at = now() + OUTBOX_BASE_BACKOFF_MS × 2^(retry_count − 1)`, computed with the old count — 1 s, 2 s, 4 s, 8 s by default;
+- `next_attempt_at = now() + OUTBOX_BASE_BACKOFF_MS × 2^(n − 1)`, where `n` is the **new** `retry_count` (the number of failures so far, including this one). That is the same as `2^(old retry_count)`. After failures 1, 2, 3 and 4 this gives 1 s, 2 s, 4 s and 8 s by default — the same formula as §4.5 and G0-15. In SQL: `now() + make_interval(secs => $baseMs / 1000.0 * power(2, retry_count))`, evaluated against the pre-update `retry_count`. PostgreSQL evaluates every `SET` expression against the old row, so `retry_count` there is the old count;
 - `dead_lettered_at = now()` when dead-lettered;
 - `last_error` = for each failed subscriber, `<subscriber name>: ` plus the error serializer's safe summary (name, code, and message only where §4.7 allows), joined and truncated to 1 000 characters;
 - the lock cleared.
@@ -1164,18 +1204,19 @@ Together these cover every field the Audit Doctrine requires:
 
 ### 9.1 How the gate is run
 
-- **Location.** Gate tests live in `server/tests/gate/phase-0-infrastructure/` and are written by `backend-test-engineer` from this section, not from the implementation. Shared harness code lives in `server/tests/support/`. They use Vitest and Supertest against the test database (D-12, D-14).
+- **Location.** Gate tests live in `server/tests/gate/phase-0-infrastructure/`. `backend-test-engineer` writes them from this section, not from the implementation. They use Vitest and Supertest against the test database (D-12, D-14).
 - **Two kinds of test.** Tests marked **Command** are verification commands the PM runs. Every other test is a Vitest test in the `gate` project.
-- **Harness duties** (`server/tests/support/`):
-  1. call the guard (PS-22) before anything connects;
-  2. rebuild the test database as the owner (§4.6), using `server/platform/testing/`;
-  3. create a test-only schema `gate_test`, granted to `ledger_app`, with the two probe tables the tests need:
-     - `gate_test.probe_state (id uuid primary key, company_id uuid not null, value text)`;
-     - `gate_test.subscriber_effects (subscriber text, effect_key uuid, primary key (subscriber, effect_key))`;
-  4. provide one database client per role: owner, `ledger_app`, `ledger_worker`;
-  5. build test apps and workers with test-only module registrations (probe routes, probe subscribers, probe ports);
-  6. generate a fresh ES256 key pair and portal secret per run;
-  7. capture log output in memory at level `debug`, so even debug lines are checked.
+- **Who builds the harness.** Nothing the implementer's branch needs may live in the test engineer's folders, because those files do not exist on that branch until the gate-test job merges (roster, Folder Ownership).
+
+  | Created by | File | Does |
+  |---|---|---|
+  | platform engineer | `vitest.config.ts` | Three projects: `unit` (`server/**/*.test.ts` except `*.db.test.ts` and `server/tests/**`; no database); `db` (`server/**/*.db.test.ts` except `server/tests/**`); `gate` (`server/tests/gate/**/*.test.ts`). `db` and `gate` use `fileParallelism: false` and the platform global setup below. All three use `passWithNoTests`. The config references **no** file under `server/tests/` |
+  | platform engineer | `server/platform/testing/global-setup.ts` | Runs the guard (PS-22), then rebuilds the test database (§4.6). Runs once per `db` or `gate` invocation |
+  | platform engineer | `server/platform/testing/index.ts` | The test-only surface (rule 1a): `assertTestDatabase`, `rebuildTestDatabase`; the owner, `ledger_app` and `ledger_worker` clients for the test database; and re-exports of what tests build processes from — `loadApiConfig`, `loadWorkerConfig`, `createLogger` (with an injectable output stream), `createApiApp`, `createOutboxWorker`, `buildRegistries` |
+  | test engineer | `server/tests/support/gate-fixtures.ts` | `ensureGateFixtures()` — idempotent, called in each gate file's `beforeAll` through the owner client. It creates the test-only schema `gate_test`, granted to `ledger_app`, with `gate_test.probe_state (id uuid primary key, company_id uuid not null, value text)` and `gate_test.subscriber_effects (subscriber text, effect_key uuid, primary key (subscriber, effect_key))` |
+  | test engineer | `server/tests/support/` (other files) | Probe module registrations (probe routes, subscribers, ports); test app and worker builders; an ES256 key pair and portal secret generated per run, plus a token factory; in-memory log capture at level `debug`, so even debug lines are checked; the boundary scanner and `fixtures/boundaries/` |
+  | test engineer | `server/tests/gate/phase-0-infrastructure/*.test.ts` | The G0 tests |
+
 - **Rules.**
   - "Refused with 42501" means PostgreSQL `insufficient_privilege`; "23514" means `check_violation`.
   - Tests that change grants restore them in `finally`.
@@ -1209,7 +1250,7 @@ Together these cover every field the Audit Doctrine requires:
 
 | ID | Protects | Attack / check | Pass when |
 |---|---|---|---|
-| G0-01 **Command** | Gate item 1 | `npm run check` (both `tsc` passes, including the test tsconfig) and `npm run build` | Both exit 0. `dist/index.cjs`, `dist/worker.cjs` and `dist/public/index.html` exist. `node -e "require('./dist/worker.cjs')"` with no environment exits 1 with a `ConfigError` naming `DATABASE_WORKER_URL` — this proves the CJS bundle loads, including the bundled `jose` |
+| G0-01 **Command** | Gate item 1 | `npm run check` (both `tsc` passes, including the test tsconfig) and `npm run build` | Both exit 0. `dist/index.cjs`, `dist/worker.cjs` and `dist/public/index.html` exist. Then, from the app folder **with a `.env` file present** that sets every variable, run each bundle with an emptied environment (`env -i PATH="$PATH" node dist/index.cjs`, then the same for `dist/worker.cjs`). The API exits 1 with a `ConfigError` naming the four backend variables; the worker exits 1 naming `DATABASE_WORKER_URL`. This proves three things: both CommonJS bundles load (including the bundled `jose`); a built bundle is always production, so it never enters frontend-only mode; and a bundle never reads `.env` (§4.6, R1-04) |
 | G0-02 **Command** | Frontend unchanged (D-13) | With **no** `.env` and no backend variables, start `npm run dev` and run the full Playwright suite (`npx playwright test`) | The same pass count as `backend` before Phase 0, with no new failures. The server log shows the single frontend-only `WARN` line |
 
 ### 9.4 Audit atomicity — gate item 2
@@ -1230,10 +1271,10 @@ Together these cover every field the Audit Doctrine requires:
 | G0-09 | Gate item 3 | Record a probe event in a unit whose work then throws. Run `worker.runOnce()` twice | The probe subscriber is never called. No outbox row and no `event_log` row exist for that event |
 | G0-10 | Gate item 3, combined with item 2 | Record a probe event, then make the audit write fail (as G0-03) and swallow it (as G0-04). Run the worker | As G0-09 |
 | G0-11 | Delivery happy path; tenant context; envelope | Commit a probe event for company A as U1, with two subscribers registered. Run the worker | Each subscriber is called once and receives the documented envelope (§4.5: `eventId`, `eventType`, `eventVersion "1.0"`, ISO `occurredAt`, `companyId` A, `actorId` U1, source fields, payload). The outbox row becomes `delivered` with `delivered_at` set, lock cleared and both names in `delivered_subscribers`. Exactly one `event_log` row, matching the envelope |
-| G0-12 | Gate item 4 | (a) After G0-11 delivers, the owner resets the row to `pending` with `delivered_subscribers = '{}'` — a full redelivery, as after a manual requeue. Run the worker again. The probe subscriber is idempotent: it inserts into `subscriber_effects` keyed on `eventId` with `ON CONFLICT DO NOTHING`. (b) Two subscribers, where B throws on its first call only | (a) The subscriber was called twice but `subscriber_effects` has one row; still exactly one `event_log` row; status `delivered`. (b) After two cycles: A was called **once** (skipped on retry), B twice, one effect each; `retry_count = 1`; `delivered` |
+| G0-12 | Gate item 4 | (a) After G0-11 delivers, the owner resets the row to `pending` with `delivered_subscribers = '{}'` — a full redelivery, as after a manual requeue. Run the worker again. The probe subscriber is idempotent: it inserts into `subscriber_effects` keyed on `eventId` with `ON CONFLICT DO NOTHING`. (b) Two subscribers, A and B, each writing its effect row. B counts its calls in an in-memory counter local to the test. On its first call it writes its effect row and *then* throws, so its rollback is observable | (a) The subscriber was called twice, but `subscriber_effects` has one row; still exactly one `event_log` row; status `delivered`. (b) After the first cycle, B's effect row is absent (its transaction rolled back) and A's is present. After the second cycle, A has been called **once** (skipped on the retry) and B twice, there is one effect row each, `retry_count = 1` and the status is `delivered` |
 | G0-13 | Claim exclusivity | Commit 30 probe events. Run two worker instances' `runOnce()` concurrently, on separate `ledger_worker` connections | Every event is delivered; each subscriber was called exactly once per event, since no event was claimed by both workers (call log keyed by event, plus the `locked_by` history in logs). 30 `event_log` rows |
-| G0-14 | Fencing after stale-lock recovery | Worker W1 claims an event whose subscriber blocks on a latch. The owner moves `locked_at` back beyond `OUTBOX_STALE_LOCK_MS`. W2 runs: it recovers the row, claims it and delivers it. Then release W1's latch | W1's subscriber transaction fails with `LockLostError` and its `subscriber_effects` insert is rolled back. W1 writes no failure, no `delivered` and no `event_log` row. Final state: one effect, one `event_log` row, `delivered` by W2 |
-| G0-15 | Retry, backoff, dead letter (§4.5) | `OUTBOX_MAX_ATTEMPTS = 5`, `OUTBOX_BASE_BACKOFF_MS = 20`. The subscriber always throws `new Error('boom')`. The payload contains a marker string `PAYLOAD-MARKER-15`. Run cycles, advancing past `next_attempt_at` each time | After failures 1–4: status `failed`, `retry_count` = n, and `next_attempt_at − failure time` ≈ 20, 40, 80, 160 ms. After failure 5: `dead_lettered`, `dead_lettered_at` set, never claimed again by further cycles, no `event_log` row. `last_error` names the subscriber and contains no marker. Exactly one `ERROR` log line for the dead letter, and no log line contains the marker |
+| G0-14 | Fencing after stale-lock recovery | (a) W1 and W2 are worker instances on separate `ledger_worker` pools. The probe subscriber's **first statement is `await latch`**: it waits before any write, so W1's open subscriber transaction holds no row or key lock while it waits. Only after the latch does it insert a `probe_state` row tagged with the calling worker's ID and its `subscriber_effects` row (`ON CONFLICT DO NOTHING`).<br>Steps:<br>1. Start `W1.runOnce()` without awaiting it, and wait for the subscriber's "reached latch" signal.<br>2. The owner moves `locked_at` back 10 minutes.<br>3. `await W2.runOnce()`. The latch holds only the first invocation (W1's), so W2's call runs straight through: it recovers, claims and delivers.<br>4. Release W1's latch and await W1.<br>(b) Simulate a finish that lost its lock after every subscriber committed: the owner sets a row to `pending`, clears the lock and leaves every subscriber name in `delivered_subscribers`. Run one worker | (a) W1's subscriber transaction ends with `LockLostError`, and no `probe_state` row tagged W1 exists (rolled back). W1 writes no failure, no `delivered` and no `event_log` row. Final state: one effect row, one `probe_state` row tagged W2, one `event_log` row, `delivered` by W2. The test has a 30-second timeout, and each await in it is bounded at 10 seconds, so a lock wait fails the test rather than hanging it. (b) No subscriber is called; the row becomes `delivered`; exactly one `event_log` row |
+| G0-15 | Retry, backoff, dead letter (§4.5) | `OUTBOX_MAX_ATTEMPTS = 5`, `OUTBOX_BASE_BACKOFF_MS = 20`. The subscriber always throws `new Error('boom')`. The payload contains a marker string `PAYLOAD-MARKER-15`. Run cycles, waiting past `next_attempt_at` each time. Around each `runOnce()` read the database clock, giving `t_before` and `t_after` | After failure n (1–4): status `failed`, `retry_count` = n, and `next_attempt_at` lies between `t_before + d` and `t_after + d`, where `d = 20 × 2^(n−1)` ms — that is 20, 40, 80 and 160 ms, the §4.5/PS-19 formula. After failure 5: `dead_lettered`, `dead_lettered_at` set, never claimed again by further cycles, no `event_log` row. `last_error` names the subscriber and contains no marker. Exactly one `ERROR` log line for the dead letter, and no log line contains the marker |
 | G0-16 | Backoff is respected | After failure 1 (base backoff 10 s), run `runOnce()` immediately | The row is not claimed; the subscriber is not called |
 | G0-17 | Every event is handled in its own tenant's context | Commit events for companies A and B. The subscriber writes an audit entry and a `probe_state` row, using `uow.context.companyId` | Each subscriber's context company equals its event's company. The audit entries carry the matching `company_id`, `actor_role = 'system'` and `actor_id IS NULL` |
 
@@ -1292,8 +1333,8 @@ Each request in these tests uses a unique marker string (`MARK-<test>-<random>`)
 
 | ID | Protects | Attack | Pass when |
 |---|---|---|---|
-| G0-40 | Import rules 1–6, 1a and 8 (§4.8) | Run the boundary scanner (test support) over the real `server/` tree, then over a fixture tree (`server/tests/support/fixtures/boundaries/`) that contains one deliberate violation of each rule: a module importing `server/platform/db/client.ts`; importing another module's `application/`; `domain/` importing `drizzle-orm`, the platform's `index.ts` and a Node built-in; `application/` importing `express`; `infrastructure/` importing `application/`; `api/` importing `domain/`; production code importing `server/platform/testing/`; `server/platform/` importing `server/modules/` | The real tree reports no violations. The fixture tree reports exactly one violation per planted file, with the rule number |
-| G0-41 | Registries fail at start-up, not at run time (PS-15, PS-16) | Build both processes' registries with: two subscribers sharing a name; a subscriber with no event types; a `requiresPorts` with no provider; two providers for one port; then call `Ports.get` after start-up | Each misconfiguration throws at build time, naming the subscriber or port. The late `Ports.get` throws |
+| G0-40 | Import rules 1–6, 1a, 8 and 9 (§4.8) | Run the boundary scanner (test support) over the real `server/` tree, then over a fixture tree (`server/tests/support/fixtures/boundaries/`) that contains one deliberate violation of each rule: a module importing `server/platform/db/client.ts`; importing another module's `application/`; `domain/` importing `drizzle-orm`, the platform's `index.ts` and a Node built-in; `application/` importing `express`; `infrastructure/` importing `application/`; `api/` importing `domain/`; production code importing `server/platform/testing/`; `server/platform/` importing `server/modules/`; two fixture modules each importing the other's `index.ts` (a cycle, rule 9 — the shape a direct "upward" call such as Review Centre → Financial Normalization would make once Financial Normalization imports Review Centre's port token) | The real tree reports no violations. The fixture tree reports exactly one violation per planted file, with the rule number |
+| G0-41 | Registries fail at start-up, not at run time (PS-15, PS-16) | Build both processes' registries with each of:<br>(a) two subscribers sharing a name;<br>(b) a subscriber with no event types;<br>(c) a `requiresPorts` with no provider;<br>(d) two providers for one port;<br>(e) a provider for a port no module requires;<br>(f) a provider's `create` calling `deps.ports.get`;<br>(g) a module calling `deps.ports.get` for a token it did not list in `requiresPorts`;<br>(h) a call to `Ports.get` after start-up.<br>Also (i) start the API and the worker entry points with case (c) | (a)–(g) each throw at build time, naming the subscriber or port. (h) throws. (i) Both processes exit 1 with one `FATAL` line naming the port: the API before listening, the worker before claiming. A correct wiring passes a probe port's implementation to the requiring module, and calling it with a human context's `uow` writes an audit row with that human actor and causation `NULL` |
 | G0-42 | No Redis (D-10) | Read `package.json` `dependencies`, `devDependencies` and `optionalDependencies` | None of `redis`, `ioredis`, `@redis/*`, `bull`, `bullmq`, `connect-redis`, `rate-limit-redis` is present |
 | G0-43 | Only `append()` writes audit rows (BACKEND_DATA_ARCHITECTURE.md, Audit Immutability Enforcement) | Import `server/platform/index.ts` and list its exports. Inspect `uow.audit` and `uow.events` | No export is a Drizzle table for T-1, T-2 or T-3, nor a raw pool or `db` handle. `uow.audit` has exactly one method, `append`; `uow.events` has exactly one, `record` |
 
@@ -1320,12 +1361,12 @@ Phase 0 replaces no prototype engine. The client's `eventBusEngine.ts` and `acti
 | `server/storage.ts` | In-memory `MemStorage` of `users` | Deleted. Unused, and users belong to the Identity module (Phase 2) | BACKEND_DATA_ARCHITECTURE.md, Aggregate Roots |
 | `shared/schema.ts` | `public.users` table (username, plaintext `password` column) | Deleted, so no migration can ever create it. The `@shared` alias stays in `tsconfig.json` and `vite.config.ts`, which is harmless and may hold shared DTOs in Track F | §3.1.1 (nothing in `public`); D-02 identity model |
 | `drizzle.config.ts` | `DATABASE_URL`, `shared/schema.ts` | `DATABASE_MIGRATION_URL`; platform and module schema files; `schemaFilter` | §3.5, §3.6 |
-| `package.json` scripts | `db:push` | `db:push` removed. Added: `db:generate`, `db:migrate`, `dev:worker`, `start:worker`, `test`, `test:unit`, `test:gate`. `check` becomes `tsc && tsc -p tsconfig.test.json`. `dev`, `dev:client`, `build`, `start` are unchanged | D-14 |
+| `package.json` scripts | `db:push` | `db:push` removed. Added: `db:generate`, `db:migrate`, `dev:worker`, `start:worker`, `test` (runs `test:unit`, `test:db`, `test:gate` in that order), `test:unit`, `test:db`, `test:gate`. `check` becomes `tsc && tsc -p tsconfig.test.json`. `dev`, `dev:client`, `build`, `start` are unchanged | D-14 |
 | `package.json` dependencies | — | Added `jose`, `pino`; dev: `vitest`, `supertest`, `@types/supertest`, `@types/pg`. Unchanged: `passport`, `passport-local`, `express-session`, `memorystore`, `connect-pg-simple` and their types (removed in Phase 2), and `drizzle-zod` (unused after `shared/schema.ts` goes; removal is not needed for Phase 0) | D-14 |
 | `script/build.ts` | One esbuild entry, `server/index.ts` → `dist/index.cjs` | Adds `server/worker.ts` → `dist/worker.cjs`. Adds `jose` to the bundle allowlist, because `jose` v6 is ESM-only and the output is CommonJS; bundling avoids depending on the host Node's `require(esm)` support. `pino` stays external | S-14; D-14 |
 | `server/static.ts`, `server/vite.ts` | Frontend serving | Unchanged; mounted last (PS-02 step 5) | D-13 |
 | `.gitignore` | — | Adds `.env` | §4.6 |
-| New files | — | `.env.example`, `vitest.config.ts` (explicit `include: ['server/**/*.test.ts']`, so Playwright specs under `tests/` are never collected), `tsconfig.test.json`, `server/worker.ts`, `server/platform/**`, `server/modules/registry.ts`, `migrations/**` | §4.8, §11 |
+| New files | — | `.env.example`, `vitest.config.ts` (projects `unit`, `db`, `gate` with explicit includes under `server/` only, so Playwright specs under `tests/` are never collected; §9.1), `tsconfig.test.json`, `server/worker.ts`, `server/platform/**`, `server/modules/registry.ts`, `migrations/**` | §4.8, §11 |
 
 ### 10.3 Deliberate differences from the architecture documents
 
@@ -1365,17 +1406,19 @@ Phase 0 replaces no prototype engine. The client's `eventBusEngine.ts` and `acti
 
 Commits 1–3 need no database.
 
-After **every** commit the engineer runs `npm run check`, `npm run build`, and the unit tests that commit adds or touches, and reports. Commits that change what the frontend sees (3 and 9) also run the Playwright suite with no `.env` (G0-02). The gate tests are written in parallel by the test engineer and are run by the implementer once merged and pulled.
+After **every** commit the engineer runs `npm run check`, `npm run build` and `npm test`, and reports. Commits that change what the frontend sees (3 and 9) also run the Playwright suite with no `.env` (G0-02).
+
+The test engineer writes the gate tests in parallel. The implementer runs them only once they are merged into `backend` and pulled. Every implementation commit must pass `npm run check` and `npm test` with **no** file from `server/tests/` present: `vitest.config.ts` references nothing there, the `gate` project passes with no tests, and the global setup lives in `server/platform/testing/` (§9.1). If something on the implementer's branch would need a test-engineer file, the plan is wrong — report it.
 
 | # | Commit | Contents | Unit tests next to the code |
 |---|---|---|---|
-| 1 | `platform: tooling, scripts and test configuration` | Dependencies and scripts (§10.2); `vitest.config.ts` with `unit` and `gate` projects. The gate project uses `fileParallelism: false` and global setup `server/tests/support/global-setup.ts` (written by the test engineer). The unit project uses `server/platform/testing/global-setup.ts`. `npm test` runs the unit project, then the gate project, never both at once, because they share the test database. Also `tsconfig.test.json`, `.env.example`, `.gitignore`, and `drizzle-kit push` removed | Vitest runs with `passWithNoTests` |
+| 1 | `platform: tooling, scripts and test configuration` | Dependencies and scripts (§10.2). `vitest.config.ts` with the `unit` project only; `db` and `gate` are added in commit 4, when their global setup exists. Also `tsconfig.test.json`, `.env.example`, `.gitignore`, and the removal of `drizzle-kit push` | Vitest runs with `passWithNoTests` |
 | 2 | `platform: configuration, modes, logger and error serializer` | `config/env.ts` (§4.6 modes and rules); `config/test-database.ts` (PS-22); `context/request-context.ts`; `logging/logger.ts`; `logging/error-serializer.ts` (the §4.7 allowlist table) | Every row of the serializer table, including a real `22P02` error object and a wrapped error carrying `params`; every mode-table row; every guard rule |
 | 3 | `platform: HTTP pipeline, errors and frontend-only mode` | `errors/*`; `http/request-id.ts`, `http/request-logger.ts`, `http/not-found.ts`, `http/app.ts` (`createApiApp`, both modes), `http/health.ts` (frontend-only branch); `server/index.ts` rewritten (Replit logger removed); `server/routes.ts`, `server/storage.ts` and `shared/schema.ts` deleted; `server/modules/registry.ts` (empty) | Supertest: the pipeline order, envelope shapes, frontend-only responses, marker-free logs for the PS-07 cases. **Plus Playwright with no `.env`** |
-| 4 | `platform: database client, platform tables and grant migration` | `db/client.ts` (one pool per role); `db/schema/audit.ts`, `db/schema/intelligence.ts` (T-1 to T-3, exactly §3.2–§3.4); `drizzle.config.ts`; `migrations/0000_platform_tables.sql` (generated) and `migrations/0001_platform_grants.sql` (custom); `db/migrate.ts`; `testing/` (guard-first rebuild, per-role clients) | Migrate on the test database; a smoke test inserting as `ledger_app`; generated SQL reviewed against §3 |
+| 4 | `platform: database client, platform tables and grant migration` | `db/client.ts` (one pool per role); `db/schema/audit.ts`, `db/schema/intelligence.ts` (T-1 to T-3, exactly §3.2–§3.4); `drizzle.config.ts`; `migrations/0000_platform_tables.sql` (generated) and `migrations/0001_platform_grants.sql` (custom); `db/migrate.ts`. `testing/global-setup.ts` and `testing/index.ts` (guard, then rebuild; per-role clients). `vitest.config.ts` gains the `db` and `gate` projects (§9.1) | `*.db.test.ts`: migrate on the test database; a smoke insert as `ledger_app`; the generated SQL reviewed against §3. `npm test` passes with `server/tests/` absent |
 | 5 | `platform: unit of work, audit writer, outbox writer, tenant scoping` | `db/unit-of-work.ts`; `audit/audit-writer.ts`; `events/outbox-writer.ts`; `db/tenant-scope.ts`; execution-context factories with the private brand (§4.1) | Poisoning, closed-unit and nesting rules; strict input schemas; that context values win over caller values |
 | 6 | `platform: JWT utilities and token middleware` | `auth/keys.ts`, `auth/jwt.ts`, `auth/tenant-context.ts` (PS-10, PS-11); `/api/v1` and `/portal/v1` mounted in full mode; health full-mode branch | Every case in G0-32 and G0-33 at unit level; sign/verify round trip; refusal to sign invalid claims |
-| 7 | `platform: module registry, subscriber registry and port registry` | `ModuleRegistration` (§4.8, plus the PS-16 fields); `events/subscriber-registry.ts`; port registry with start-up validation; `ModuleDeps` with `contextOf`, `runInTransaction`, `logger` | Every check in PS-15 and PS-16 |
+| 7 | `platform: module registry, subscriber registry and port registry` | `ModuleRegistration` (§4.8, including `requiresPorts` / `providesPorts`); `events/subscriber-registry.ts`; port registry with start-up validation; `ModuleDeps` with `contextOf`, `runInTransaction`, `logger` | Every check in PS-15 and PS-16 |
 | 8 | `platform: outbox worker and worker process` | `events/outbox-worker.ts` (PS-17 to PS-20, with `runOnce`, `start`, `stop`); `server/worker.ts`; second esbuild entry and the `jose` allowlist entry; `dev:worker`, `start:worker` | Claim, per-subscriber fencing, finish, failure and backoff arithmetic, stale recovery, two concurrent workers |
 | 9 | `platform: public surface and final verification` | `server/platform/index.ts` reviewed against §4 (no table objects, no pool; `testing/` not exported); dead code removed; nothing else | Full `npm test`, `npm run check`, `npm run build`, G0-01's bundle check, **Playwright with no `.env`** |
 
@@ -1402,6 +1445,6 @@ Any change the engineer finds necessary outside this plan or this specification 
 | OQ-13 | Frontend-only mode: outside production, with no backend variables, the API serves the frontend and answers `/api` and `/portal/v1` with 503. Production and partial configurations fail fast | §4.6 | Approve. It keeps D-13's promise that frontend work and the Playwright suite need no database |
 | OQ-14 | Actor role for the D-15 provisioning script (a platform administrator outside the tenant model) | §3.2 | Decide in the Phase 1 specification. Until then it writes as `system` with no causation |
 | OQ-15 | Worker log correlation field named `runId` rather than the document's `jobId` | §4.7 | Confirm `runId` |
-| OQ-16 | Approval → financial record: one transaction or a subscriber | §4.9 | **Decided as D-17** (merged into `backend` @ 9500bca): one transaction, with dependency inversion through an `ApprovalEffectsPort`. §4.9 and PS-16 are brought in line with D-17 in review round 1 (R1-01) |
+| OQ-16 | Approval → financial record: one transaction or a subscriber | §4.9 | **Decided as D-17** (merged into `backend` @ 9500bca): one transaction, with dependency inversion through an `ApprovalEffectsPort`. §4.9 and PS-16 now cite it and map each of its requirements to the port mechanism (review round 1, R1-01). Removed from the open list |
 | OQ-17 | A shared pagination helper (cursor encode/decode, `limit` 1–200 default 50, response shape) is not in the roadmap's Phase 0 list | §6.5 | Add it to the platform — by PM ruling in Phase 0, or as a platform change before the first list endpoint (Phase 1) — so every module paginates the same way |
 | OQ-18 | BACKEND_DATA_ARCHITECTURE.md says "Row-level security prevents any write except INSERT" on the audit table; RLS is Phase 9 | §1.2, §3.5 | Confirm that column and table grants satisfy the guarantee until Phase 9 |
