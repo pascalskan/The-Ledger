@@ -23,7 +23,7 @@ Read `docs/backend/BACKEND_AGENT_ROSTER.md` — Shared Rules and Folder Ownershi
 - The outbox worker claims rows with a lock, retries with backoff, dead-letters after the configured limit, writes `event_log` after delivery, and calls subscribers that must be idempotent.
 - Logs are structured JSON with `requestId` and never contain request or response bodies, tokens, passwords or financial amounts. Remove the old Replit request logger that prints response bodies.
 - Errors use the envelope in BACKEND_API_ARCHITECTURE.md.
-- Tooling per decision D-14 (Vitest, Supertest, `jose`, `bcryptjs`, `pino`, `drizzle-kit generate`). Tests use `DATABASE_URL_TEST` and refuse to run unless the database name ends in `_test` (D-12). No Redis (D-10). Files through the `FileStorage` interface with a local-disk adapter (D-11).
+- Tooling per decision D-14 (Vitest, Supertest, `jose`, `bcryptjs`, `pino`, `drizzle-kit generate`). Tests use `DATABASE_URL_TEST` and refuse to run unless the database name ends in `_test` (D-12). No Redis (D-10). The `FileStorage` interface and local-disk adapter (D-11) are built when the roadmap calls for them (Phase 4), not in Phase 0.
 - Backend tests live under `server/`, and are typechecked (the root `tsconfig.json` excludes `*.test.ts`, so provide a test tsconfig or Vitest typecheck).
 
 ## Branch and commits
