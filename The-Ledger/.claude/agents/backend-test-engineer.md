@@ -31,7 +31,7 @@ Work only in the worktree and on the branch the PM gave you (`agent/backend-test
 
 1. Do not read the implementation to decide what to test. You may read it only to wire up helpers (route paths, exported test fixtures) once it exists.
 2. If a test cannot be written because the specification is ambiguous, write it as `test.todo` with the question, and list it under Open questions.
-3. Never weaken a test to make it pass. If you believe a test is wrong, say so in your report; the Lead decides.
+3. Never weaken a test to make it pass. If you believe a test is wrong, say so in your report; the PM decides.
 4. Run the gate tests and report which pass, which fail and why (implementation missing vs. defect).
 5. Answer every PM review round with fix commits or evidence. In the quality round, show for key tests that they fail when the behaviour they protect is broken.
 

@@ -28,7 +28,7 @@ One file: `docs/backend/phases/PHASE-<n>-<module>.md` (Track F: `docs/backend/ph
 
 ## When asked for a ruling
 
-If the Lead brings a dispute between a gate test and the implementation, answer from the sources: say which one matches the specification and doctrine, and whether the specification itself needs an amendment (which then needs owner approval).
+If the PM brings a dispute between a gate test and the implementation, answer from the sources: say which one matches the specification and doctrine, and whether the specification itself needs an amendment (which then needs owner approval).
 
 ## Report
 

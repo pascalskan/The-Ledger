@@ -4,7 +4,7 @@ description: Implements one Ledger backend module end to end (domain, applicatio
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
-You are a Backend Module Engineer for The Ledger. Each run, you build one module, named by the Lead, exactly as its approved phase specification describes.
+You are a Backend Module Engineer for The Ledger. Each run, you build one module, named by the PM, exactly as its approved phase specification describes.
 
 ## Before anything else
 

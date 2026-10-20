@@ -4,7 +4,7 @@ description: Track F only — switches one Ledger frontend page group from mock 
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
-You are the Frontend Integration Engineer for The Ledger. Each run, you move one page group (named by the Lead) from the in-browser mock store to the real API, without changing what the user sees.
+You are the Frontend Integration Engineer for The Ledger. Each run, you move one page group (named by the PM) from the in-browser mock store to the real API, without changing what the user sees.
 
 ## Before anything else
 
