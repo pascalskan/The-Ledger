@@ -634,6 +634,7 @@ server/
     index.ts              the only file modules may import from the platform
     config/  logging/  context/  errors/  http/  auth/  db/  db/schema/  audit/  events/
     storage/              reserved for FileStorage (Phase 4, PM ruling)
+    testing/index.ts      test-only surface: guard, test database rebuild, role clients (rule 1a)
   modules/
     registry.ts           the list of registered modules (empty in Phase 0)
     <module>/
@@ -663,6 +664,7 @@ export const modules: readonly ModuleRegistration[] = [];
 **Import rules** (each becomes a gate check, §9):
 
 1. A file under `server/modules/<m>/` may import from the platform only via `server/platform/index.ts`.
+   1a. Test files (`*.test.ts` anywhere, and everything under `server/tests/`) may also import `server/platform/testing/index.ts`. Production code never does.
 2. It may import another module only via `server/modules/<other>/index.ts`.
 3. `domain/` imports only files inside its own module's `domain/` folder: no other layer, no platform code (not even types — §4.1), no other module, no Node built-in module, and no package unless a phase specification allowlists it as pure and I/O-free. Platform-branded values reach the domain as plain strings (§4.1).
 4. `application/` imports `domain/` and the platform's public surface; not `infrastructure/` internals, `api/`, `express`, `drizzle-orm` or `pg`.
@@ -1158,4 +1160,248 @@ Together these cover every field the Audit Doctrine requires:
 
 ---
 
-*Sections 9–12 follow in the next commit of this job.*
+## 9. GATE TESTS
+
+### 9.1 How the gate is run
+
+- **Location.** Gate tests live in `server/tests/gate/phase-0-infrastructure/` and are written by `backend-test-engineer` from this section, not from the implementation. Shared harness code lives in `server/tests/support/`. They use Vitest and Supertest against the test database (D-12, D-14).
+- **Two kinds of test.** Tests marked **Command** are verification commands the PM runs. Every other test is a Vitest test in the `gate` project.
+- **Harness duties** (`server/tests/support/`):
+  1. call the guard (PS-22) before anything connects;
+  2. rebuild the test database as the owner (§4.6), using `server/platform/testing/`;
+  3. create a test-only schema `gate_test`, granted to `ledger_app`, with the two probe tables the tests need:
+     - `gate_test.probe_state (id uuid primary key, company_id uuid not null, value text)`;
+     - `gate_test.subscriber_effects (subscriber text, effect_key uuid, primary key (subscriber, effect_key))`;
+  4. provide one database client per role: owner, `ledger_app`, `ledger_worker`;
+  5. build test apps and workers with test-only module registrations (probe routes, probe subscribers, probe ports);
+  6. generate a fresh ES256 key pair and portal secret per run;
+  7. capture log output in memory at level `debug`, so even debug lines are checked.
+- **Rules.**
+  - "Refused with 42501" means PostgreSQL `insufficient_privilege`; "23514" means `check_violation`.
+  - Tests that change grants restore them in `finally`.
+  - Two companies (A and B) and a probe human actor (`ceo` user U1) are used throughout. All data is synthetic.
+
+### 9.2 Gate item map
+
+| Roadmap gate item / doctrine | Tests |
+|---|---|
+| 1. Build and typecheck pass | G0-01 |
+| 2. An audit write that fails rolls back its whole transaction | G0-03, G0-04, G0-05, G0-06 |
+| 3. An event written in a rolled-back transaction is never delivered | G0-09, G0-10 |
+| 4. A redelivered event is handled once by an idempotent subscriber | G0-12, G0-13, G0-14 |
+| 5. Application role cannot UPDATE or DELETE audit entries | G0-20, G0-21, G0-25, G0-26 |
+| 6. No log line contains a request or response body | G0-27, G0-28 |
+| Doctrine: audit immutability | G0-20, G0-21, G0-26, G0-43 |
+| Doctrine: transactional outbox integrity | G0-09 – G0-16, G0-22, G0-23, G0-24 |
+| Doctrine: no sensitive data in logs | G0-27, G0-28, G0-36 |
+| Tenant context required (S-10; Shared Rules) | G0-07, G0-08, G0-17, G0-31 |
+| Causation recorded and unforgeable (§4.1) | G0-18, G0-19 |
+| Frontend unchanged (§10; D-13) | G0-02, G0-37 |
+| Test database isolation (D-12) | G0-39 |
+| No Redis (D-10) | G0-42 |
+| Module layout and boundaries (S-01) | G0-40, G0-41 |
+| Token handling (S-09, S-10) | G0-31 – G0-35 |
+| Configuration (S-02) | G0-36, G0-37 |
+| Health (S-08) | G0-38 |
+| Error envelope (S-06) | G0-29, G0-30 |
+
+### 9.3 Build and frontend
+
+| ID | Protects | Attack / check | Pass when |
+|---|---|---|---|
+| G0-01 **Command** | Gate item 1 | `npm run check` (both `tsc` passes, including the test tsconfig) and `npm run build` | Both exit 0. `dist/index.cjs`, `dist/worker.cjs` and `dist/public/index.html` exist. `node -e "require('./dist/worker.cjs')"` with no environment exits 1 with a `ConfigError` naming `DATABASE_WORKER_URL` — this proves the CJS bundle loads, including the bundled `jose` |
+| G0-02 **Command** | Frontend unchanged (D-13) | With **no** `.env` and no backend variables, start `npm run dev` and run the full Playwright suite (`npx playwright test`) | The same pass count as `backend` before Phase 0, with no new failures. The server log shows the single frontend-only `WARN` line |
+
+### 9.4 Audit atomicity — gate item 2
+
+| ID | Protects | Attack | Pass when |
+|---|---|---|---|
+| G0-03 | Audit Doctrine; BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Audit Write Path ("If the audit write fails, the entire transaction rolls back") | Inside `runInTransaction` (company A, actor U1): insert a `probe_state` row, `uow.events.record` a probe event, then `uow.audit.append` while the owner has temporarily revoked `INSERT` on `audit.audit_entries` from `ledger_app`. This is a real database-level failure | `runInTransaction` rejects. No `probe_state` row, no outbox row and no audit row exist afterwards |
+| G0-04 | Unit of Work poisoning (§4.4) | Same set-up, but the work function **catches** the audit error and returns normally — a careless use case trying to commit without its audit entry | `runInTransaction` rejects with `AuditWriteFailedError` (cause: the 42501). No `probe_state` row and no outbox row |
+| G0-05 | Same, for validation failures | `append` with (a) `entry_type: 'Timesheet Approved'`, (b) a destination type without an ID, (c) a non-serialisable value — each time after a `probe_state` insert, and each time also with the error swallowed | Each rejects; no `probe_state` row survives |
+| G0-06 | No write outside a transaction | Keep a reference to `uow` and call `uow.audit.append` and `uow.events.record` after `runInTransaction` has resolved, and again after it has rejected | Both throw `UnitOfWorkClosedError`; no rows are written |
+| G0-07 | One transaction per use case | Call `runInTransaction` inside another unit's work function | Throws `NestedUnitOfWorkError`; the outer unit rolls back if the error propagates |
+| G0-08 | "Missing `company_id` in any query is a runtime error" (BACKEND_LAYERING_ARCHITECTURE.md) | From untyped code (`as any`), call `runInTransaction` and `tenantWhere` with a company ID that is `undefined`, `''`, `'not-a-uuid'`, or a context object literal (not platform-built) | Each throws `MissingTenantContextError` (or the context-brand error) **before** any SQL runs — checked by a query counter on the `ledger_app` client |
+
+### 9.5 Outbox integrity — gate items 3 and 4
+
+| ID | Protects | Attack | Pass when |
+|---|---|---|---|
+| G0-09 | Gate item 3 | Record a probe event in a unit whose work then throws. Run `worker.runOnce()` twice | The probe subscriber is never called. No outbox row and no `event_log` row exist for that event |
+| G0-10 | Gate item 3, combined with item 2 | Record a probe event, then make the audit write fail (as G0-03) and swallow it (as G0-04). Run the worker | As G0-09 |
+| G0-11 | Delivery happy path; tenant context; envelope | Commit a probe event for company A as U1, with two subscribers registered. Run the worker | Each subscriber is called once and receives the documented envelope (§4.5: `eventId`, `eventType`, `eventVersion "1.0"`, ISO `occurredAt`, `companyId` A, `actorId` U1, source fields, payload). The outbox row becomes `delivered` with `delivered_at` set, lock cleared and both names in `delivered_subscribers`. Exactly one `event_log` row, matching the envelope |
+| G0-12 | Gate item 4 | (a) After G0-11 delivers, the owner resets the row to `pending` with `delivered_subscribers = '{}'` — a full redelivery, as after a manual requeue. Run the worker again. The probe subscriber is idempotent: it inserts into `subscriber_effects` keyed on `eventId` with `ON CONFLICT DO NOTHING`. (b) Two subscribers, where B throws on its first call only | (a) The subscriber was called twice but `subscriber_effects` has one row; still exactly one `event_log` row; status `delivered`. (b) After two cycles: A was called **once** (skipped on retry), B twice, one effect each; `retry_count = 1`; `delivered` |
+| G0-13 | Claim exclusivity | Commit 30 probe events. Run two worker instances' `runOnce()` concurrently, on separate `ledger_worker` connections | Every event is delivered; each subscriber was called exactly once per event, since no event was claimed by both workers (call log keyed by event, plus the `locked_by` history in logs). 30 `event_log` rows |
+| G0-14 | Fencing after stale-lock recovery | Worker W1 claims an event whose subscriber blocks on a latch. The owner moves `locked_at` back beyond `OUTBOX_STALE_LOCK_MS`. W2 runs: it recovers the row, claims it and delivers it. Then release W1's latch | W1's subscriber transaction fails with `LockLostError` and its `subscriber_effects` insert is rolled back. W1 writes no failure, no `delivered` and no `event_log` row. Final state: one effect, one `event_log` row, `delivered` by W2 |
+| G0-15 | Retry, backoff, dead letter (§4.5) | `OUTBOX_MAX_ATTEMPTS = 5`, `OUTBOX_BASE_BACKOFF_MS = 20`. The subscriber always throws `new Error('boom')`. The payload contains a marker string `PAYLOAD-MARKER-15`. Run cycles, advancing past `next_attempt_at` each time | After failures 1–4: status `failed`, `retry_count` = n, and `next_attempt_at − failure time` ≈ 20, 40, 80, 160 ms. After failure 5: `dead_lettered`, `dead_lettered_at` set, never claimed again by further cycles, no `event_log` row. `last_error` names the subscriber and contains no marker. Exactly one `ERROR` log line for the dead letter, and no log line contains the marker |
+| G0-16 | Backoff is respected | After failure 1 (base backoff 10 s), run `runOnce()` immediately | The row is not claimed; the subscriber is not called |
+| G0-17 | Every event is handled in its own tenant's context | Commit events for companies A and B. The subscriber writes an audit entry and a `probe_state` row, using `uow.context.companyId` | Each subscriber's context company equals its event's company. The audit entries carry the matching `company_id`, `actor_role = 'system'` and `actor_id IS NULL` |
+
+### 9.6 Causation
+
+| ID | Protects | Attack | Pass when |
+|---|---|---|---|
+| G0-18 | Traceability (§4.1; BACKEND_OBSERVABILITY_ARCHITECTURE.md) | U1 commits event E1 through a probe route. Subscriber S1 handles E1, writes an audit entry and records event E2. Subscriber S2 handles E2 and writes an audit entry | S1's audit row has `causation_event_id = E1`, `causation_actor_id = U1`. E2's outbox and `event_log` rows have `actor_id NULL`, `causation_event_id = E1`, `causation_actor_id = U1`. S2's audit row has `causation_event_id = E2` and `causation_actor_id = U1` — the human is carried through the chain. U1's own audit row (from the route) has both causation columns `NULL` |
+| G0-19 | Causation cannot be forged by module code | (a) `append` and `record` with extra keys `causationEventId`, `causationActorId`, `companyId`, `actorId`, `actorRole`, `occurredAt`; (b) caller `metadata` with `requestId` / `runId` keys; (c) `runInTransaction` with an object-literal context that includes `causation`; (d) `createSystemContext(A, 'script')`, then write; (e) as `ledger_app`, raw SQL inserts: an audit row with `causation_event_id` set and `actor_role = 'ceo'`; one with `causation_actor_id` but no `causation_event_id`; an outbox row with `causation_event_id` and a non-null `actor_id` | (a) rejected by the strict input schemas, nothing written; (b) the context's values win; (c) refused (not a platform context); (d) the row has causation `NULL`; (e) each refused with 23514 |
+
+### 9.7 Database roles and grants — gate item 5
+
+All tests in this group connect as the named role, run the statement, and expect the stated result. Each "refused" case is also checked with `has_table_privilege` / `has_column_privilege`, so a test cannot pass by accident (for example, because a row did not exist).
+
+| ID | Role and table | Attack | Pass when |
+|---|---|---|---|
+| G0-20 | `ledger_app` on `audit.audit_entries` | `UPDATE … SET entry_type = 'x'`; `DELETE`; `TRUNCATE`; `ALTER TABLE … DISABLE TRIGGER ALL`; `DROP TABLE`; `CREATE TABLE audit.x (…)`; `INSERT` and `SELECT` of a valid row | All refused (42501, or "must be owner"), except `INSERT` and `SELECT`, which succeed — this also proves no sequence grant is missing for `sequence_no` |
+| G0-21 | `ledger_worker` on `audit.audit_entries` | The same statements | The same results: membership of `ledger_app` adds nothing |
+| G0-22 | `ledger_app` on `intelligence.event_outbox` | `UPDATE … SET status = 'delivered'`; the same for each delivery-state column; `DELETE`; `TRUNCATE`; `INSERT`; `SELECT` | Every `UPDATE`, `DELETE` and `TRUNCATE` refused — **the API role cannot change delivery state**. `INSERT` and `SELECT` succeed |
+| G0-23 | `ledger_worker` on `intelligence.event_outbox` | `UPDATE` of each delivery-state column; `UPDATE` of each envelope column (`payload`, `company_id`, `event_type`, `actor_id`, `causation_event_id`, `causation_actor_id`, `occurred_at`, `source_object_id`); `DELETE`; `TRUNCATE` | Delivery-state updates succeed; every envelope update, `DELETE` and `TRUNCATE` refused |
+| G0-24 | `intelligence.event_log` | As `ledger_app`: `INSERT`, `UPDATE`, `DELETE`. As `ledger_worker`: `INSERT`, `INSERT … ON CONFLICT (event_id) DO NOTHING` of a duplicate, `UPDATE`, `DELETE`, `TRUNCATE` | `ledger_app` can only `SELECT`. `ledger_worker` can `INSERT`, and the duplicate is silently skipped; everything else refused |
+| G0-25 | Role attributes and memberships (§3.5) | Query `pg_roles`, `pg_auth_members`, `pg_class` / `pg_namespace` ownership, `has_schema_privilege` and `aclexplode` on the three tables | Neither role is superuser, `CREATEDB`, `CREATEROLE`, `REPLICATION` or `BYPASSRLS`. `ledger_app` is a member of no role. `ledger_worker` is a member of `ledger_app` only. Neither owns any object in `audit`, `intelligence` or `drizzle`. Neither has `USAGE` on schema `drizzle` or `CREATE` on `audit` / `intelligence`. `PUBLIC` holds no privilege on the three tables |
+| G0-26 | Database constraints hold against direct SQL | As `ledger_app`, insert an audit row with `actor_role = 'system'` and a non-null `actor_id`; with `actor_role = 'ceo'` and a null `actor_id`; with an `entry_type` of `'X'`; with a destination type but no ID. Insert outbox rows with an array `payload` and with `status = 'done'` | Each refused with 23514 |
+
+### 9.8 Logging — gate item 6
+
+Each request in these tests uses a unique marker string (`MARK-<test>-<random>`). After the test, **every** captured log line — at level `debug` — is searched for every marker.
+
+| ID | Protects | Attack | Pass when |
+|---|---|---|---|
+| G0-27 | Gate item 6; roster doctrine | Against the full-mode test app with a probe route `POST /api/v1/__probe/echo` (test registration only; it returns the body it received):<br>(a) a JSON body with a marker, echoed in the response;<br>(b) a marker in the query string;<br>(c) a marker in a `Cookie` header and as an extra `X-Request-Id`;<br>(d) a malformed JSON body starting with a marker (V8 quotes it);<br>(e) a body failing Zod validation with a marker as the invalid enum value;<br>(f) a body over 1 MB that contains a marker;<br>(g) a probe route that passes a marker into a query that fails: `SELECT $1::uuid` → 22P02, whose message quotes the value;<br>(h) a probe route that runs a failing insert through Drizzle with a marker as a bound parameter;<br>(i) a probe route that throws `new Error('internal')` after reading a marker-bearing body;<br>(j) a valid platform token whose claims carry a marker in `email` | No log line contains any marker or any token. Responses: (d) `400 MALFORMED_JSON`, (e) `400 VALIDATION_ERROR`, (f) `413`, (g)–(i) `500 INTERNAL_ERROR` with the generic message — and the responses to (d) and (g)–(i) contain no marker either. Exactly one request line per request |
+| G0-28 | Worker logs carry no payloads | Commit an event whose payload has a marker. The subscriber fails once, then succeeds | No worker log line contains the marker. Lines name `eventId`, `eventType`, `companyId`, subscriber and attempt |
+| G0-29 | Log structure and correlation (BACKEND_OBSERVABILITY_ARCHITECTURE.md, Log Structure) | Send requests to `/health`, an unknown `/api/v1` path with a valid token, and a probe route that writes its own log line | Every request line has `level` (upper-case label), ISO `timestamp`, `requestId`, `method`, `path` (no query string), `statusCode`, `durationMs`; authenticated lines have `companyId` and `userId`. The probe route's own line carries the same `requestId`. The `X-Request-Id` response header equals the logged `requestId` and is never the client's value. `/health` lines are at `DEBUG` |
+| G0-30 | Error envelope (BACKEND_API_ARCHITECTURE.md) | Trigger 400, 401, 404, 413, 500 and frontend-only 503 | Each body is exactly `{ error: { code, message, details, requestId } }`, with `details` an object, `requestId` equal to the header, and no `stack`. A 500 message is "An unexpected error occurred." even when the thrown error's message differs |
+
+### 9.9 Tokens and tenant context
+
+| ID | Protects | Attack | Pass when |
+|---|---|---|---|
+| G0-31 | Tenant context from the token (S-10) | A valid platform token for company A, user U1, role `pm`, calling a probe route that returns `contextOf(req)` | The context is company A, actor `{ kind: 'user', userId: U1, role: 'pm' }`, `causation: null` |
+| G0-32 | Token verification rules (§4.3) | On the probe route, send each of:<br>(a) no `Authorization` header;<br>(b) a `Basic` scheme;<br>(c) an expired token;<br>(d) a valid token with one signature byte changed;<br>(e) `alg: none`;<br>(f) an HS256 token signed with `PORTAL_JWT_SECRET` carrying platform claims (algorithm confusion);<br>(g) an ES256 token signed by a different key pair;<br>(h) a wrong `aud`;<br>(i) a wrong `iss`;<br>(j) a missing `company_id`;<br>(k) `company_id: 'not-a-uuid'`;<br>(l) `role: 'client'` in a platform token;<br>(m) a valid token in the query string only | (c) gets `401 TOKEN_EXPIRED`; every other case gets `401 UNAUTHENTICATED`. Every 401 has `WWW-Authenticate`, and the probe handler never runs |
+| G0-33 | Token types cannot be swapped (roadmap Phase 6a gate) | A valid **portal** token on `/api/v1/__probe`; a valid **platform** token on `/portal/v1/__probe` | Both `401`; the handlers never run |
+| G0-34 | Portal middleware | A valid portal token on `/portal/v1/__probe` | The context actor is `{ kind: 'portal_user', portalAccountId, clientId, role: 'client' }` with the token's company |
+| G0-35 | Unmatched API paths never reach the frontend | Send `GET /api/v1/nothing` with a valid token, and without one; `GET /api/foo`; `GET /portal/v1/nothing` with a valid portal token | `404 NOT_FOUND` envelope, `401`, `404`, `404` respectively. None returns HTML |
+
+### 9.10 Configuration, modes, health and the test-database guard
+
+| ID | Protects | Attack | Pass when |
+|---|---|---|---|
+| G0-36 | Fail fast without leaking values (S-02) | `loadApiConfig` with:<br>(a) three of the four backend variables, each set to a marker;<br>(b) `NODE_ENV=production` and none of them;<br>(c) a mismatched key pair;<br>(d) `PORTAL_JWT_SECRET` of 10 bytes.<br>`loadWorkerConfig` with no `DATABASE_WORKER_URL` | Each throws `ConfigError` whose message and captured `FATAL` line name the right variables and contain no marker or key material. For (a), exactly the missing variable is named |
+| G0-37 | Frontend-only mode (§4.6; D-13) | `NODE_ENV=development` and none of the four variables. Build the app with a sentinel frontend handler and a spy on the pool factory. Request `/api/v1/x`, `/api/foo`, `/portal/v1/x`, `/health`, `/`, `/portal/projects` | The mode is `frontend_only`. The `/api` and `/portal/v1` paths get `503 BACKEND_NOT_CONFIGURED` envelopes. `/health` gets `200 {"status":"ok","mode":"frontend_only"}`. `/` and `/portal/projects` reach the sentinel. The pool factory is never called and no socket is opened. Exactly one start-up `WARN` line |
+| G0-38 | Health (S-08) | Full mode with a reachable test database; then full mode with `DATABASE_URL` pointing at a closed local port | `200 {"status":"ok","mode":"full"}` and `503 {"status":"unavailable","mode":"full"}`. The 503 arrives within 3 seconds. Both have `Cache-Control: no-store`, and the bodies have no other keys |
+| G0-39 | Test database isolation (D-12) | Call the guard with test URLs whose database is:<br>(a) `ledger_dev`;<br>(b) `ledger_test_backup`;<br>(c) `ledger_TEST`;<br>(d) missing;<br>(e) three URLs naming two different databases;<br>(f) a test database equal to `DATABASE_URL`'s.<br>The URLs point at an unroutable host, and the pg client and pool constructors are spied | Each throws `TestDatabaseGuardError` without the password; no pg client or pool is constructed. A valid set (`ledger_test` in all three) passes |
+
+### 9.11 Structure and dependencies
+
+| ID | Protects | Attack | Pass when |
+|---|---|---|---|
+| G0-40 | Import rules 1–6, 1a and 8 (§4.8) | Run the boundary scanner (test support) over the real `server/` tree, then over a fixture tree (`server/tests/support/fixtures/boundaries/`) that contains one deliberate violation of each rule: a module importing `server/platform/db/client.ts`; importing another module's `application/`; `domain/` importing `drizzle-orm`, the platform's `index.ts` and a Node built-in; `application/` importing `express`; `infrastructure/` importing `application/`; `api/` importing `domain/`; production code importing `server/platform/testing/`; `server/platform/` importing `server/modules/` | The real tree reports no violations. The fixture tree reports exactly one violation per planted file, with the rule number |
+| G0-41 | Registries fail at start-up, not at run time (PS-15, PS-16) | Build both processes' registries with: two subscribers sharing a name; a subscriber with no event types; a `requiresPorts` with no provider; two providers for one port; then call `Ports.get` after start-up | Each misconfiguration throws at build time, naming the subscriber or port. The late `Ports.get` throws |
+| G0-42 | No Redis (D-10) | Read `package.json` `dependencies`, `devDependencies` and `optionalDependencies` | None of `redis`, `ioredis`, `@redis/*`, `bull`, `bullmq`, `connect-redis`, `rate-limit-redis` is present |
+| G0-43 | Only `append()` writes audit rows (BACKEND_DATA_ARCHITECTURE.md, Audit Immutability Enforcement) | Import `server/platform/index.ts` and list its exports. Inspect `uow.audit` and `uow.events` | No export is a Drizzle table for T-1, T-2 or T-3, nor a raw pool or `db` handle. `uow.audit` has exactly one method, `append`; `uow.events` has exactly one, `record` |
+
+---
+
+## 10. DIFFERENCES — FROM THE REPLIT STARTER, AND WHAT THE FRONTEND RELIES ON
+
+### 10.1 Prototype engines
+
+Phase 0 replaces no prototype engine. The client's `eventBusEngine.ts` and `activityFeedEngine.ts` are frontend mock behaviour for Phases 6.2–6.3 of the prototype. The backend outbox is built from BACKEND_EVENT_ARCHITECTURE.md, not from them, and no behaviour is compared. The engines stay untouched until Phase 7 and Track F.
+
+### 10.2 Replit starter code
+
+| File | Today | After Phase 0 | Rule |
+|---|---|---|---|
+| `server/index.ts` lines 36–60 | Request logger captures every `res.json` body and prints `JSON.stringify` of it for `/api` paths | Removed. PS-06 writes one structured line with no body | Roadmap S-07; D-14; roster doctrine; BACKEND_OBSERVABILITY_ARCHITECTURE.md, What Is NOT Logged |
+| `server/index.ts` lines 25–34 | `log()` helper with an `en-US` 12-hour timestamp | Removed; pino with ISO timestamps | BACKEND_OBSERVABILITY_ARCHITECTURE.md, Log Structure |
+| `server/index.ts` lines 15–21 | Global `express.json` (default 100 kB limit) with `verify` keeping `req.rawBody` | JSON parsing only on `/api/v1` and `/portal/v1`, limit 1 MB; no `rawBody` (nothing verifies signatures in v1; keeping raw bodies only adds a copy that could be logged) | BACKEND_API_ARCHITECTURE.md, API Security Standards; Webhook API is future |
+| `server/index.ts` line 23 | Global `express.urlencoded` | Removed — the API is JSON-only, and the frontend posts no forms to the server | BACKEND_API_ARCHITECTURE.md, Validation Strategy (JSON + Zod) |
+| `server/index.ts` lines 65–76 | Error handler uses `err.status`, returns `{ message: err.message }`, and logs the whole error with `console.error` | PS-07: the error envelope, a generic 500 message, and the error serializer | BACKEND_API_ARCHITECTURE.md, Error Handling Strategy; §4.7 |
+| `server/index.ts` routing | Unknown `/api/*` paths fall through to the frontend catch-all and return `index.html` with status 200 | `404 NOT_FOUND` envelope (or `503` in frontend-only mode) | BACKEND_API_ARCHITECTURE.md, HTTP Status Code Mapping |
+| `server/index.ts` start-up | Starts with no configuration | Validates configuration: full or frontend-only mode outside production, fail fast in production | Roadmap S-02; §4.6 |
+| `server/routes.ts` | Empty `registerRoutes` | Deleted; `createApiApp` plus `server/modules/registry.ts` | S-01 |
+| `server/storage.ts` | In-memory `MemStorage` of `users` | Deleted. Unused, and users belong to the Identity module (Phase 2) | BACKEND_DATA_ARCHITECTURE.md, Aggregate Roots |
+| `shared/schema.ts` | `public.users` table (username, plaintext `password` column) | Deleted, so no migration can ever create it. The `@shared` alias stays in `tsconfig.json` and `vite.config.ts`, which is harmless and may hold shared DTOs in Track F | §3.1.1 (nothing in `public`); D-02 identity model |
+| `drizzle.config.ts` | `DATABASE_URL`, `shared/schema.ts` | `DATABASE_MIGRATION_URL`; platform and module schema files; `schemaFilter` | §3.5, §3.6 |
+| `package.json` scripts | `db:push` | `db:push` removed. Added: `db:generate`, `db:migrate`, `dev:worker`, `start:worker`, `test`, `test:unit`, `test:gate`. `check` becomes `tsc && tsc -p tsconfig.test.json`. `dev`, `dev:client`, `build`, `start` are unchanged | D-14 |
+| `package.json` dependencies | — | Added `jose`, `pino`; dev: `vitest`, `supertest`, `@types/supertest`, `@types/pg`. Unchanged: `passport`, `passport-local`, `express-session`, `memorystore`, `connect-pg-simple` and their types (removed in Phase 2), and `drizzle-zod` (unused after `shared/schema.ts` goes; removal is not needed for Phase 0) | D-14 |
+| `script/build.ts` | One esbuild entry, `server/index.ts` → `dist/index.cjs` | Adds `server/worker.ts` → `dist/worker.cjs`. Adds `jose` to the bundle allowlist, because `jose` v6 is ESM-only and the output is CommonJS; bundling avoids depending on the host Node's `require(esm)` support. `pino` stays external | S-14; D-14 |
+| `server/static.ts`, `server/vite.ts` | Frontend serving | Unchanged; mounted last (PS-02 step 5) | D-13 |
+| `.gitignore` | — | Adds `.env` | §4.6 |
+| New files | — | `.env.example`, `vitest.config.ts` (explicit `include: ['server/**/*.test.ts']`, so Playwright specs under `tests/` are never collected), `tsconfig.test.json`, `server/worker.ts`, `server/platform/**`, `server/modules/registry.ts`, `migrations/**` | §4.8, §11 |
+
+### 10.3 Deliberate differences from the architecture documents
+
+| Difference | Document | Reason |
+|---|---|---|
+| T-1 adds `sequence_no` | BACKEND_DATA_ARCHITECTURE.md, Audit Entry Structure | Entries in one transaction share `occurred_at`; a stable order and cursor key is needed (BACKEND_API_ARCHITECTURE.md, Pagination Strategy) |
+| T-1, T-2, T-3 add `causation_event_id`, `causation_actor_id` | Audit Entry Structure; Event Outbox Record Structure; Event Log Table | PM review finding B: subscriber-written records must be traceable to the human action (Audit Doctrine; BACKEND_OBSERVABILITY_ARCHITECTURE.md, Traceability) |
+| T-2 adds `event_id`, `event_version`, `actor_id`, `source_object_*`, `occurred_at`, `next_attempt_at`, `locked_at`, `locked_by`, `delivered_subscribers`, `last_error`, `dead_lettered_at` | BACKEND_EVENT_ARCHITECTURE.md, Event Outbox Record Structure | The envelope must be stored to be delivered (Event Payload Standard). The rest are needed for the claim lock, backoff, dead letter (BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Worker Resilience) and per-subscriber delivery (§4.5) |
+| T-3 adds `event_version`, `source_module` | Event Log Table | The event log is "queryable by … module" (BACKEND_EVENT_ARCHITECTURE.md, Audit Log vs Event Log) |
+| Five outbox statuses instead of three | Event Outbox Record Structure | Reconciled with BACKEND_INFRASTRUCTURE_ARCHITECTURE.md (`processing`, `dead_lettered`) (§4.5, OQ-08) |
+| Three database roles; variables `DATABASE_MIGRATION_URL(_TEST)` and `DATABASE_WORKER_URL(_TEST)`; the worker uses `DATABASE_WORKER_URL`, not `DATABASE_URL` | BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Required environment variables; D-12 | Grants hold only if no runtime process is the owner; the API must not change delivery state (§3.5, OQ-03) |
+| Token claims add `iss` and `aud` | BACKEND_AUTH_ARCHITECTURE.md, Access Token Claims, Portal Token Claims | Platform and portal tokens must never be accepted in each other's place (§4.3) |
+| Status 413 `PAYLOAD_TOO_LARGE`; 503 `BACKEND_NOT_CONFIGURED`; 401 `TOKEN_EXPIRED` | BACKEND_API_ARCHITECTURE.md, HTTP Status Code Mapping | 1 MB body cap (API Security Standards); frontend-only mode (§4.6); token refresh from Phase 2 |
+| Worker correlation field `runId`, not `jobId` | BACKEND_OBSERVABILITY_ARCHITECTURE.md, Log Correlation | Avoids confusion with job attribution (`job_id`) (OQ-15) |
+| Frontend-only mode outside production | Roadmap S-02 ("fail fast on missing variables") | D-13: the frontend and the Playwright suite must keep working without a database. Production and partial configurations still fail fast (OQ-13) |
+
+### 10.4 What the frontend relies on, and how Phase 0 keeps it
+
+| The frontend relies on | Phase 0 |
+|---|---|
+| Being served by the same Express server on port 5000: Vite middleware with HMR at `/vite-hmr` in development, `dist/public` in production | Unchanged. Frontend serving is mounted last; `PORT` default 5000 |
+| `npm run dev` starting with no configuration | Kept, in frontend-only mode (§4.6) |
+| Mock data only; no client code calls `/api` (`queryClient.ts`'s `apiRequest` is defined but never called) | Unchanged. `/api` paths now return JSON errors instead of `index.html`, which no client code requests |
+| Frontend routes `/portal`, `/portal/:section`, `/portal/:section/:id` | Not matched by `/portal/v1` mounting. **Constraint for Track F:** no portal section may be named `v1` |
+| No frontend route at `/health` | Confirmed in `client/src/App.tsx`; `/health` is free |
+| Playwright `baseURL` `http://localhost:5000`, `testDir: './tests'` | Unchanged. Backend tests live under `server/` and are collected only by Vitest |
+| `@shared` path alias (no client file uses it today) | Alias kept; `shared/schema.ts` removed |
+| `deploy/replit-public` stays mock-only | Phase 0 never touches that branch (D-13; owner memory) |
+
+---
+
+## 11. COMMIT PLAN (IMPLEMENTATION JOB — `backend-platform-engineer`)
+
+**Prerequisites (owner or PM, before commit 4):**
+- the role SQL from §3.5, run on the development and test databases;
+- a local `.env` with every variable in §4.6, including the three test URLs.
+
+Commits 1–3 need no database.
+
+After **every** commit the engineer runs `npm run check`, `npm run build`, and the unit tests that commit adds or touches, and reports. Commits that change what the frontend sees (3 and 9) also run the Playwright suite with no `.env` (G0-02). The gate tests are written in parallel by the test engineer and are run by the implementer once merged and pulled.
+
+| # | Commit | Contents | Unit tests next to the code |
+|---|---|---|---|
+| 1 | `platform: tooling, scripts and test configuration` | Dependencies and scripts (§10.2); `vitest.config.ts` with `unit` and `gate` projects. The gate project uses `fileParallelism: false` and global setup `server/tests/support/global-setup.ts` (written by the test engineer). The unit project uses `server/platform/testing/global-setup.ts`. `npm test` runs the unit project, then the gate project, never both at once, because they share the test database. Also `tsconfig.test.json`, `.env.example`, `.gitignore`, and `drizzle-kit push` removed | Vitest runs with `passWithNoTests` |
+| 2 | `platform: configuration, modes, logger and error serializer` | `config/env.ts` (§4.6 modes and rules); `config/test-database.ts` (PS-22); `context/request-context.ts`; `logging/logger.ts`; `logging/error-serializer.ts` (the §4.7 allowlist table) | Every row of the serializer table, including a real `22P02` error object and a wrapped error carrying `params`; every mode-table row; every guard rule |
+| 3 | `platform: HTTP pipeline, errors and frontend-only mode` | `errors/*`; `http/request-id.ts`, `http/request-logger.ts`, `http/not-found.ts`, `http/app.ts` (`createApiApp`, both modes), `http/health.ts` (frontend-only branch); `server/index.ts` rewritten (Replit logger removed); `server/routes.ts`, `server/storage.ts` and `shared/schema.ts` deleted; `server/modules/registry.ts` (empty) | Supertest: the pipeline order, envelope shapes, frontend-only responses, marker-free logs for the PS-07 cases. **Plus Playwright with no `.env`** |
+| 4 | `platform: database client, platform tables and grant migration` | `db/client.ts` (one pool per role); `db/schema/audit.ts`, `db/schema/intelligence.ts` (T-1 to T-3, exactly §3.2–§3.4); `drizzle.config.ts`; `migrations/0000_platform_tables.sql` (generated) and `migrations/0001_platform_grants.sql` (custom); `db/migrate.ts`; `testing/` (guard-first rebuild, per-role clients) | Migrate on the test database; a smoke test inserting as `ledger_app`; generated SQL reviewed against §3 |
+| 5 | `platform: unit of work, audit writer, outbox writer, tenant scoping` | `db/unit-of-work.ts`; `audit/audit-writer.ts`; `events/outbox-writer.ts`; `db/tenant-scope.ts`; execution-context factories with the private brand (§4.1) | Poisoning, closed-unit and nesting rules; strict input schemas; that context values win over caller values |
+| 6 | `platform: JWT utilities and token middleware` | `auth/keys.ts`, `auth/jwt.ts`, `auth/tenant-context.ts` (PS-10, PS-11); `/api/v1` and `/portal/v1` mounted in full mode; health full-mode branch | Every case in G0-32 and G0-33 at unit level; sign/verify round trip; refusal to sign invalid claims |
+| 7 | `platform: module registry, subscriber registry and port registry` | `ModuleRegistration` (§4.8, plus the PS-16 fields); `events/subscriber-registry.ts`; port registry with start-up validation; `ModuleDeps` with `contextOf`, `runInTransaction`, `logger` | Every check in PS-15 and PS-16 |
+| 8 | `platform: outbox worker and worker process` | `events/outbox-worker.ts` (PS-17 to PS-20, with `runOnce`, `start`, `stop`); `server/worker.ts`; second esbuild entry and the `jose` allowlist entry; `dev:worker`, `start:worker` | Claim, per-subscriber fencing, finish, failure and backoff arithmetic, stale recovery, two concurrent workers |
+| 9 | `platform: public surface and final verification` | `server/platform/index.ts` reviewed against §4 (no table objects, no pool; `testing/` not exported); dead code removed; nothing else | Full `npm test`, `npm run check`, `npm run build`, G0-01's bundle check, **Playwright with no `.env`** |
+
+Any change the engineer finds necessary outside this plan or this specification is reported, not made (roster, Working rules).
+
+---
+
+## 12. OPEN QUESTIONS (FOR THE OWNER CHECKPOINT)
+
+| ID | Question | Where | Recommendation |
+|---|---|---|---|
+| OQ-01 | FileStorage in Phase 0 or Phase 4? | §1.2 | **Closed — PM ruling, October 20, 2026: Phase 4 per the roadmap.** `server/platform/storage/` is reserved |
+| OQ-02 | Portal token algorithm. The sources give "a separate key" (D-14) and name it `PORTAL_JWT_SECRET`; this specification reads that as HS256 | §4.3 | Confirm HS256 with `PORTAL_JWT_SECRET`. If you prefer asymmetric portal keys, the change is ES256 with `PORTAL_JWT_PRIVATE_KEY` / `PORTAL_JWT_PUBLIC_KEY`, contained in `server/platform/auth/` |
+| OQ-03 | Three database roles and four variables not named in D-12 (`DATABASE_MIGRATION_URL`, `DATABASE_MIGRATION_URL_TEST`, `DATABASE_WORKER_URL`, `DATABASE_WORKER_URL_TEST`), plus a one-off owner SQL step on each database | §3.5, §4.6 | Approve. Without separate roles, gate item 5 and outbox integrity hold only in application code |
+| OQ-04 | Who adds the `company_id` foreign keys to the three platform tables once `tenant.companies` exists | §3.1.7 | Make it a platform-engineer job inside Phase 1 (the tables are platform-owned), merged after the tenant schema |
+| OQ-05 | `job_id` is required "when financially relevant", but the platform cannot know which entry types are | §3.2, §8.2 | Each module declares its audit entry types with a `jobRequired` flag and enforces it in its use cases; the doctrine reviewer checks it every phase. If wanted, a later platform change can add a typed `defineAuditCatalogue` that enforces the flag in `append()` |
+| OQ-06 | No event ordering guarantee across retries or workers | §4.5 | Confirm. Subscribers must not rely on order; any phase that needs ordering states it in its specification |
+| OQ-07 | Event payloads carry identifiers and operational metadata, never financial amounts, because payloads are copied into the event log, which holds no sensitive fields | §3.4, §7.3 | Confirm as a rule for every later specification |
+| OQ-08 | Outbox status names (`pending`, `processing`, `failed`, `delivered`, `dead_lettered`), and "max 5 retries" read as five attempts in total with delays of 1, 2, 4 and 8 s | §4.5 | Confirm |
+| OQ-09 | Stale-lock recovery returns the row to `pending` without counting an attempt (as the source says). An event whose subscriber crashes the worker process would then be retried for ever | §4.5, PS-20 | Count a stale-lock recovery as a failed attempt, so such an event dead-letters after five crashes. This changes PS-20 by one assignment |
+| OQ-10 | No phase builds the requeue of dead-lettered events or the outbox archival after 7 days (BACKEND_DATA_ARCHITECTURE.md, Event Outbox Table) | §1.2 | Add both to Phase 9: an audited command-line requeue and an archival job run by a maintenance role. Until then, dead letters stay visible in the table |
+| OQ-11 | No phase lists the audit query service or `/api/v1/audit/` | §1.2, §3.2 | Assign it to Phase 7 (alongside the Event Monitor), with the actor and entry-type indexes added then |
+| OQ-12 | A token stays valid for up to 15 minutes after its tenant is suspended, because the middleware does not check tenant status | §5.11 | Phase 1 adds a per-request tenant-status check to the token middleware, through a tenant port, cached for a few seconds. Phase 2's session revocation then covers refresh |
+| OQ-13 | Frontend-only mode: outside production, with no backend variables, the API serves the frontend and answers `/api` and `/portal/v1` with 503. Production and partial configurations fail fast | §4.6 | Approve. It keeps D-13's promise that frontend work and the Playwright suite need no database |
+| OQ-14 | Actor role for the D-15 provisioning script (a platform administrator outside the tenant model) | §3.2 | Decide in the Phase 1 specification. Until then it writes as `system` with no causation |
+| OQ-15 | Worker log correlation field named `runId` rather than the document's `jobId` | §4.7 | Confirm `runId` |
+| OQ-16 | Approval → financial record: one transaction or a subscriber | §4.9 | **Decided as D-17** (merged into `backend` @ 9500bca): one transaction, with dependency inversion through an `ApprovalEffectsPort`. §4.9 and PS-16 are brought in line with D-17 in review round 1 (R1-01) |
+| OQ-17 | A shared pagination helper (cursor encode/decode, `limit` 1–200 default 50, response shape) is not in the roadmap's Phase 0 list | §6.5 | Add it to the platform — by PM ruling in Phase 0, or as a platform change before the first list endpoint (Phase 1) — so every module paginates the same way |
+| OQ-18 | BACKEND_DATA_ARCHITECTURE.md says "Row-level security prevents any write except INSERT" on the audit table; RLS is Phase 9 | §1.2, §3.5 | Confirm that column and table grants satisfy the guarantee until Phase 9 |
