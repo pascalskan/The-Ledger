@@ -1,7 +1,7 @@
 # THE LEDGER — BACKEND OPEN DECISIONS
 
-Version: 1.1
-Status: APPROVED — all 16 decisions approved by the owner on October 20, 2026
+Version: 1.2
+Status: APPROVED — D-01 … D-16 approved by the owner on October 20, 2026; D-17 decided by the PM under the owner's delegation the same day
 Date: October 20, 2026
 Authority: Backend Documentation Reconciliation Pass
 
@@ -48,6 +48,7 @@ The frontend engines are reference behaviour, not specification. Where an engine
 | D-14 | Backend tooling | Phase 0 | APPROVED |
 | D-15 | Tenant provisioning surface | Phase 1 | APPROVED |
 | D-16 | CLAUDE.md backend instruction | Phase 0 | APPROVED |
+| D-17 | Approval → financial record: one transaction | Phases 4 and 5 | APPROVED (PM, owner-delegated) |
 
 ---
 
@@ -258,6 +259,26 @@ Submission intake takes the same job row lock, so a submission cannot slip in du
 > Backend implementation is authorised (October 2026) and follows `docs/backend/BACKEND_IMPLEMENTATION_ROADMAP.md`. Backend work happens only on branches from `main`. The frontend stays mock-driven until Track F switches each page group; `deploy/replit-public` stays mock-only.
 
 **Docs changed on approval.** CLAUDE.md.
+
+---
+
+## D-17 — Approval → financial record: one transaction
+
+**Conflict.** Raised by the Phase 0 specification (OQ-16).
+- BACKEND_DATA_ARCHITECTURE.md (Write Consistency Requirements, Transaction Boundary 2, "How operational truth becomes financial truth" step 4) requires approval status, financial record, audit entry and outbox event in **one ACID transaction**.
+- BACKEND_EVENT_ARCHITECTURE.md (catalogue and subscriber registry), BACKEND_SERVICE_ARCHITECTURE.md (inter-module example) and the roadmap's Phase 5 had Financial Normalization create the record later, in a `TimesheetApproved` / `ReportApproved` / `ExpenseApproved` **subscriber**.
+- A direct call from the Review Centre to Financial Normalization would point upward in the module dependency direction, which the architecture forbids.
+
+**Decision (PM, under the owner's delegation, October 20, 2026).**
+- Approving a submission and creating its financial records happen in **one transaction**. An approved submission can never exist without its financial records, and a failure creates neither.
+- The dependency stays downward through **dependency inversion**: the Review Centre's public surface defines an approval-effects port (one handler per submission type, called with the approval's Unit of Work and the approval reference). Financial Normalization implements it. The composition root (the process entry points, via the module registry) wires the implementation in. Review Centre code never imports Financial Normalization.
+- The approval events (`TimesheetApproved`, `ReportApproved`, `ExpenseApproved`) are still written to the outbox in the same transaction, for notifications, the activity feed and reporting. Financial Normalization no longer subscribes to them.
+- The `*EntryCreated` / `*RecordCreated` events Financial Normalization writes in that transaction are unchanged, so Accounting Integration, Financial Intelligence, Inventory & Asset and Reporting still react asynchronously.
+- The Phase 0 platform provides what this needs (passing the caller's Unit of Work across modules; a registry slot or typed port registration) as specified in PHASE-0-infrastructure.md.
+
+**Why.** It is the only option that meets the data architecture's explicit consistency requirement. A subscriber could leave a human-approved item with no financial record for as long as delivery takes, or for ever if the subscriber dead-letters, which is a silent financial gap. The approval reference and the record are created together, which keeps the Phase 5 gate simple. Dependency inversion keeps the dependency direction intact.
+
+**Docs changed.** BACKEND_EVENT_ARCHITECTURE.md (catalogue consumers, subscriber registry), BACKEND_SERVICE_ARCHITECTURE.md (Review Centre and Financial Normalization public surfaces, inter-module example), BACKEND_DOMAIN_ARCHITECTURE.md (Financial Normalization "Consumes Events"), BACKEND_IMPLEMENTATION_ROADMAP.md (Phase 4 and Phase 5).
 
 ---
 

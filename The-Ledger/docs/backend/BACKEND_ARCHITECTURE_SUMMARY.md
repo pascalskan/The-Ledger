@@ -99,7 +99,7 @@ Reporting & Analytics          (reads from all; produces distributable artifacts
 Intelligence & Automation      (reads from all; Notification Centre routes events to users)
 Financial Intelligence         (reads from Financial Normalization; produces advisory insights only)
 Accounting Integration         (reads from Financial; never writes to Ledger records)
-Financial Normalization        (reads approval events from Review Centre)
+Financial Normalization        (implements Review Centre's approval-effects port — D-17)
 Inventory & Asset              (reads mutation events from Financial Normalization)
 Submission & Review            (reads job context from Operational Core)
 Client Portal                  (reads from Operational Core; publishes requests)
@@ -468,10 +468,10 @@ Open decisions that gate individual phases are listed in BACKEND_OPEN_DECISIONS.
 | Document | Version | Contents |
 |---|---|---|
 | **BACKEND_ARCHITECTURE_SUMMARY.md** | **2.2** | This document — master summary |
-| BACKEND_DOMAIN_ARCHITECTURE.md | 2.2 | 11 bounded contexts, context map, aggregate ownership, dependency direction |
+| BACKEND_DOMAIN_ARCHITECTURE.md | 2.3 | 11 bounded contexts, context map, aggregate ownership, dependency direction |
 | BACKEND_LAYERING_ARCHITECTURE.md | 1.0 | Four-layer model, responsibilities, forbidden interactions |
-| BACKEND_SERVICE_ARCHITECTURE.md | 2.1 | Modular monolith, 11 module definitions, Notification Centre sub-module |
-| BACKEND_EVENT_ARCHITECTURE.md | 2.0 | Event strategy, full catalogue (incl. Tenant + Financial Intelligence events), subscriber registry |
+| BACKEND_SERVICE_ARCHITECTURE.md | 2.2 | Modular monolith, 11 module definitions, Notification Centre sub-module |
+| BACKEND_EVENT_ARCHITECTURE.md | 2.1 | Event strategy, full catalogue (incl. Tenant + Financial Intelligence events), subscriber registry |
 | BACKEND_DATA_ARCHITECTURE.md | 2.2 | 13 schemas, aggregate ownership, write/read models, transaction boundaries |
 | BACKEND_AUTH_ARCHITECTURE.md | 2.2 | JWT auth, tenant status check on login, RBAC, permission matrix |
 | BACKEND_MULTITENANCY_ARCHITECTURE.md | 2.1 | Tenant Context ownership, row-level isolation, tenant lifecycle |
@@ -479,7 +479,7 @@ Open decisions that gate individual phases are listed in BACKEND_OPEN_DECISIONS.
 | BACKEND_INFRASTRUCTURE_ARCHITECTURE.md | 1.2 | Workers, queues, scheduler, integration pipeline, file processing |
 | **BACKEND_DOCUMENT_INTELLIGENCE_ARCHITECTURE.md** | **2.0** | AI Limitations Covenant, processing pipeline stages, security boundaries |
 | BACKEND_OBSERVABILITY_ARCHITECTURE.md | 1.0 | Audit, logging, telemetry, financial mutation monitoring |
-| BACKEND_IMPLEMENTATION_ROADMAP.md | 2.1 | Dependency-ordered implementation sequence, phase gates, Track F |
-| BACKEND_OPEN_DECISIONS.md | 1.1 | Owner decisions D-01 … D-16 (all approved); reconciliation log |
+| BACKEND_IMPLEMENTATION_ROADMAP.md | 2.2 | Dependency-ordered implementation sequence, phase gates, Track F |
+| BACKEND_OPEN_DECISIONS.md | 1.2 | Decisions D-01 … D-17 (all approved); reconciliation log |
 | BACKEND_AGENT_ROSTER.md | 1.1 | Subagent team, PM review process (theoretical GitHub), notification map, folder ownership and shared rules |
 | BACKEND_MERGE_LOG.md | — | Record of every agent job, checked commit, review round, merge and notification |

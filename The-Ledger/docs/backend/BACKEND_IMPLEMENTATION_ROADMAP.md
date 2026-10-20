@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND IMPLEMENTATION ROADMAP
 
-Version: 2.1
+Version: 2.2
 Status: AUTHORITATIVE — all decisions in BACKEND_OPEN_DECISIONS.md approved (October 20, 2026)
 Date: October 20, 2026
 Authority: Backend Documentation Reconciliation Pass
@@ -14,6 +14,7 @@ Authority: Backend Documentation Reconciliation Pass
 | 1.0 | June 4, 2026 | Initial dependency-ordered sequence — 10 phases, 9 modules |
 | 2.0 | October 20, 2026 | Aligned with the v2.0 architecture: Tenant phase added before Identity; Financial Intelligence phase added; `notification` schema separated from `intelligence`; phase numbers now match BACKEND_ARCHITECTURE_SUMMARY.md; phase gates, decision dependencies, frontend reference engines and Track F (frontend integration) added |
 | 2.1 | October 20, 2026 | All 16 decisions approved by the owner; D-07 still requires COMMERCIAL_DOCUMENTS_DOMAIN.md before invoice-document work |
+| 2.2 | October 20, 2026 | Phases 4 and 5: approval creates financial records in the same transaction through an approval-effects port (D-17) |
 
 ---
 
@@ -220,6 +221,7 @@ Future    Document Intelligence Module — not part of v1
 - Typed submissions with a unified review queue query (per D-04)
 - Approval authority: PM own jobs; expense > £500 or billable is CEO-only; `assertApproverAuthority()`
 - Approval requires an authenticated human user; `assertAutomationCannotApprove()` refuses any system or automation actor
+- Approval-effects port (D-17): approval, financial records (via the port), audit entries and the approval event in one transaction; Review Centre never imports Financial Normalization
 - Rejection: mandatory reason, frozen after rejection, never deleted; resubmission with `rejected_submission_ref`; correction window closes when the job closes
 - Withdrawal before the reviewer opens the submission only
 - Report approval is all-or-nothing (invariant 12)
@@ -274,7 +276,7 @@ Future    Document Intelligence Module — not part of v1
 
 **Includes:**
 - `financial` schema: timesheet entries, expense entries, inventory mutations, equipment usage records, invoice line items, financial mutations, void records, adjustment records, payroll records
-- Subscribers: `TimesheetApproved`, `ReportApproved`, `ExpenseApproved`, all idempotent by submission ID
+- Implements the Review Centre's approval-effects port (D-17); every handler runs in the approval transaction and is idempotent by submission ID
 - Timesheet → `TimesheetEntry` with rate resolution and classification frozen at approval
 - Expense → `ExpenseEntry`; billable expense → `InvoiceLineItem (pending_inclusion)`
 - Report → one `InventoryMutation` per stock line (unit cost frozen) and one `EquipmentUsageRecord` per equipment line (cost rate frozen)

@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND EVENT ARCHITECTURE
 
-Version: 2.0
+Version: 2.1
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -13,6 +13,7 @@ Authority: Backend Architecture Refinement Pass
 |---|---|---|
 | 1.0 | June 4, 2026 | Initial event architecture |
 | 2.0 | June 4, 2026 | Refinement pass: Tenant Module events added; Financial Intelligence Module events added; Notification Centre events formalised as distinct sub-section; subscriber registry updated |
+| 2.1 | October 20, 2026 | Financial Normalization no longer subscribes to approval events; it runs inside the approval transaction (D-17) |
 
 ---
 
@@ -178,17 +179,17 @@ Outbox record marked delivered
 | Event | Producer | Consumers |
 |---|---|---|
 | `TimesheetSubmitted` | Review Centre | Intelligence (notification to PM/CEO) |
-| `TimesheetApproved` | Review Centre | Financial Normalization, Intelligence |
+| `TimesheetApproved` | Review Centre | Intelligence (financial records are created in the approval transaction — D-17) |
 | `TimesheetRejected` | Review Centre | Intelligence (notification to worker) |
 | `TimesheetResubmitted` | Review Centre | Intelligence |
 | `TimesheetWithdrawn` | Review Centre | Intelligence |
 | `ReportSubmitted` | Review Centre | Intelligence (notification to PM/CEO) |
-| `ReportApproved` | Review Centre | Financial Normalization, Intelligence |
+| `ReportApproved` | Review Centre | Intelligence (financial records are created in the approval transaction — D-17) |
 | `ReportRejected` | Review Centre | Intelligence (notification to worker) |
 | `ReportResubmitted` | Review Centre | Intelligence |
 | `ReportWithdrawn` | Review Centre | Intelligence |
 | `ExpenseSubmitted` | Review Centre | Intelligence (notification to PM/CEO) |
-| `ExpenseApproved` | Review Centre | Financial Normalization, Intelligence |
+| `ExpenseApproved` | Review Centre | Intelligence (financial records are created in the approval transaction — D-17) |
 | `ExpenseRejected` | Review Centre | Intelligence (notification to worker) |
 | `ExpenseResubmitted` | Review Centre | Intelligence |
 | `ExpenseWithdrawn` | Review Centre | Intelligence |
@@ -345,13 +346,14 @@ All events include `companyId` for tenant isolation. No event may be processed w
 
 ## EVENT BUS SUBSCRIBER REGISTRY
 
-Within the modular monolith, subscribers are registered at application startup:
+Within the modular monolith, subscribers are registered at application startup.
+
+Financial records are not created by a subscriber: the Review Centre's approval use case calls Financial Normalization through an approval-effects port inside the approval transaction (D-17).
 
 | Subscriber | Subscribed Events | Action |
 |---|---|---|
 | Identity Module | `TenantProvisioned` | Create initial CEO user for new tenant |
 | Identity Module | `TenantSuspended` | Revoke all active sessions for tenant |
-| Financial Normalization | `TimesheetApproved`, `ReportApproved`, `ExpenseApproved` | Create financial records |
 | **Financial Intelligence** | All `*EntryCreated`, `*RecordCreated`, `VoidRecordCreated`, `AdjustmentRecordCreated` | Update margin, KPI, exposure, and forecast models |
 | **Financial Intelligence** | `JobClosed` | Finalise job-level profitability analysis |
 | Inventory & Asset | `InventoryMutationCreated`, `EquipmentUsageRecorded` | Update stock levels / asset history |

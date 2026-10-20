@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND SERVICE ARCHITECTURE
 
-Version: 2.1
+Version: 2.2
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -14,6 +14,7 @@ Authority: Backend Architecture Refinement Pass
 | 1.0 | June 4, 2026 | Initial architecture — 9 modules |
 | 2.0 | June 4, 2026 | Refinement pass: Tenant Module extracted from Identity; Financial Intelligence Module added; Notification Centre formally defined as sub-module of Intelligence; total 11 modules |
 | 2.1 | October 20, 2026 | Owner-approved decisions applied (BACKEND_OPEN_DECISIONS.md, October 20, 2026): worker outcome notices (D-01), Review Centre closure use case (D-06), commercial documents pending (D-07), portal conversations, document revocation and job milestones/deliverables (D-08) |
+| 2.2 | October 20, 2026 | Approval creates financial records in the same transaction through an approval-effects port (D-17) |
 
 ---
 
@@ -131,7 +132,8 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 
 **Public API Surface:**
 - `submitTimesheet()`, `submitReport()`, `submitExpense()`, `submitIssue()`
-- `approveSubmission(submissionId, type, approverId)` → triggers normalization event
+- `approveSubmission(submissionId, type, approverId)` → in one transaction: approval, financial records via the approval-effects port, audit entries, approval event (D-17)
+- `ApprovalEffectsPort` (exported type) — one handler per submission type, called with the approval's Unit of Work and approval reference; implemented by Financial Normalization and wired in at the composition root (D-17)
 - `rejectSubmission(submissionId, reason, reviewerId)`
 - `withdrawSubmission(submissionId, workerId)`
 - `listPendingSubmissions(reviewerId, companyId)`
@@ -140,7 +142,7 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 
 **Internal Services:**
 - `SubmissionIntakeService` — validates, creates pending_review record
-- `ApprovalService` — validates approver authority, calls normalization via event
+- `ApprovalService` — validates approver authority, calls the approval-effects port in the same transaction (D-17)
 - `RejectionService` — enforces rejection doctrine
 - `CorrectionService` — creates resubmission with `rejected_submission_ref`
 
@@ -161,9 +163,10 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 **Owns:** TimesheetEntry, ExpenseEntry, InventoryMutation, EquipmentUsageRecord, InvoiceLineItem, FinancialMutation, VoidRecord, AdjustmentRecord, PayrollRecord
 
 **Public API Surface:**
-- `normalizeApprovedTimesheet(event)` → TimesheetEntry + PayrollRecord contribution
-- `normalizeApprovedReport(event)` → InventoryMutation[] + EquipmentUsageRecord[]
-- `normalizeApprovedExpense(event)` → ExpenseEntry [+ InvoiceLineItem if billable]
+- Implements the Review Centre's `ApprovalEffectsPort` (D-17), each handler running in the approval's Unit of Work:
+  - `normalizeApprovedTimesheet(uow, approval)` → TimesheetEntry + PayrollRecord contribution
+  - `normalizeApprovedReport(uow, approval)` → InventoryMutation[] + EquipmentUsageRecord[]
+  - `normalizeApprovedExpense(uow, approval)` → ExpenseEntry [+ InvoiceLineItem if billable]
 - `requestVoid(financialRecordId, requesterId)` → VoidRecord (pending CEO approval)
 - `requestAdjustment(financialRecordId, delta, requesterId)` → AdjustmentRecord (pending CEO approval)
 - `approveCorrection(correctionId, ceoId)` → applies void/adjustment
@@ -182,7 +185,7 @@ Each module corresponds to a bounded context from BACKEND_DOMAIN_ARCHITECTURE.md
 
 **Not yet owned (D-07):** invoice documents, quotes, variations, credit notes and payments. Owners are assigned once `COMMERCIAL_DOCUMENTS_DOMAIN.md` is frozen. This module already creates `InvoiceLineItem` records from approved billable expenses.
 
-**Dependencies:** Identity Module (UserContext), Review Centre Module (receives approval events)
+**Dependencies:** Identity Module (UserContext), Review Centre Module (implements its approval-effects port — D-17)
 
 ---
 
@@ -430,7 +433,7 @@ Example: `ReviewCentreModule.approveSubmission()` calls `IdentityModule.resolveP
 
 A module publishes a domain event; subscriber modules handle it asynchronously via the transactional outbox pattern.
 
-Example: `TimesheetApproved` event published by Review Centre Module → Financial Normalization Module subscribes and creates `TimesheetEntry` → `TimesheetEntryCreated` event published → Notification Centre routes to CEO/PM inbox.
+Example: Review Centre approves a timesheet; in the same transaction Financial Normalization (through the approval-effects port, D-17) creates the `TimesheetEntry` and both `TimesheetApproved` and `TimesheetEntryCreated` are written to the outbox → the Notification Centre routes `review_approved` to the worker, and Accounting Integration queues the entry for sync.
 
 ### Event Bus Guarantee
 

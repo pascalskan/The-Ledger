@@ -69,6 +69,7 @@ Commits checked
 | # | SHA | Message | PM verdict | Notes |
 |---|---|---|---|---|
 | 1 | 33d9b6b | docs(phase-0-spec): scope, sources, data model and platform model | Changes requested | A: FileStorage stays Phase 4 (PM ruling, roadmap). B: add causation (event/actor) for subscriber work. C: record Data vs Event architecture conflict on approval→normalization transaction as owner OQ. D: evaluate separate worker DB role. E: propose frontend-only start mode (D-13). F: pg error messages leak input values. G: domain-layer access to CompanyId type. |
+| 2 | e8c2383 | docs(phase-0-spec): apply PM review A-G to sections 1-4 | Accepted, continue | A–G resolved: causation columns + unforgeable subscriber context; ledger_worker role; frontend-only mode; allowlist serializer; plain strings in domain; OQ-16 raised (approval→financial record: same transaction vs subscriber). Carried to round 1: R1-01 — Review→Financial Normalization call is upward, not like D-06. |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
