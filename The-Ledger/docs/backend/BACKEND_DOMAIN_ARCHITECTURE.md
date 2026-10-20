@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND DOMAIN ARCHITECTURE
 
-Version: 2.2
+Version: 2.3
 Status: AUTHORITATIVE
 Date: June 4, 2026
 Authority: Backend Architecture Refinement Pass
@@ -15,6 +15,7 @@ Authority: Backend Architecture Refinement Pass
 | 2.0 | June 4, 2026 | Refinement pass: Tenant Context extracted from Identity; Financial Intelligence Context added; Notification Centre promoted to defined sub-domain; total 11 bounded contexts |
 | 2.1 | October 20, 2026 | Reconciliation pass: produced-event lists aligned with the event catalogue (per-type withdrawal events, correction events, sync retry, workflow blocked, governance, scheduler, report viewed) |
 | 2.2 | October 20, 2026 | Owner-approved decisions applied (BACKEND_OPEN_DECISIONS.md, October 20, 2026): worker outcome notices (D-01), job closure via the Review Centre (D-06), portal conversations and job milestones/deliverables (D-08) |
+| 2.3 | October 20, 2026 | Financial Normalization runs inside the approval transaction instead of consuming approval events (D-17) |
 
 ---
 
@@ -206,8 +207,7 @@ Company (Tenant) has a distinct lifecycle (active/suspended/terminated), subscri
 - `CorrectionRequestCreated`
 - `CorrectionApproved`
 
-**Consumes Events:**
-- `TimesheetApproved`, `ReportApproved`, `ExpenseApproved` (from Submission & Review)
+**Consumes Events:** None for record creation. Financial records are created inside the Review Centre's approval transaction, through the approval-effects port this context implements (D-17).
 
 ---
 
@@ -492,7 +492,7 @@ Submission & Review Context
 
 Financial Normalization Context
   ├── all financial records live here (post-approval)
-  ├── receives from → Review Centre (approval events)
+  ├── receives from → Review Centre (approval-effects port, same transaction — D-17)
   └── publishes to → Accounting Integration, Financial Intelligence, Intelligence, Reporting
 
 Financial Intelligence Context
@@ -609,7 +609,7 @@ Accounting Integration
   └── reads from Financial Normalization; never writes to it
 
 Financial Normalization
-  └── reads approval events from Submission & Review
+  └── implements Submission & Review's approval-effects port (D-17)
 
 Inventory & Asset
   └── reads mutation events from Financial Normalization
