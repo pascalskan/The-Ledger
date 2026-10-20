@@ -136,7 +136,13 @@ Doctrines verified at this gate (roadmap, Doctrine Verification by Phase): audit
 5. **Names** are `snake_case` in the database and `camelCase` in TypeScript (Drizzle column mapping).
 6. **`company_id`** is `uuid NOT NULL` on every tenant table and on all three Phase 0 tables.
 7. **The `company_id` foreign key in Phase 0.** `tenant.companies` does not exist until Phase 1, so Phase 0 cannot declare `REFERENCES tenant.companies(company_id)`. Phase 0 tables carry `company_id uuid NOT NULL` with no foreign key. Phase 1 must add, in a platform migration, `FOREIGN KEY (company_id) REFERENCES tenant.companies(company_id) ON DELETE RESTRICT` to T-1, T-2 and T-3 (BACKEND_MULTITENANCY_ARCHITECTURE.md, Tenant Ownership: "The `company_id` on every record in every schema is a foreign key to `tenant.companies.company_id`"). This is safe to add later because Phase 0 writes rows only in the test database, which is rebuilt on every test run (§4.6); the development database holds no Phase 0 rows. Which job makes that change is OQ-04.
-8. **Grants are explicit.** Every migration that creates a table also grants the runtime roles (§3.5) exactly the privileges the table needs, column by column where only some columns may change. Privileges every process needs go to `ledger_app` (the worker inherits them); privileges only the worker may use go to `ledger_worker`. No `ALTER DEFAULT PRIVILEGES`, so a new table is unreachable by the application until its migration grants access.
+8. **Grants are explicit.** Every migration that creates a table also grants the runtime roles (§3.5) exactly the privileges the table needs, column by column wherever only some columns may be inserted or changed. Privileges both processes need go to the group role `ledger_runtime`. API-only privileges go to `ledger_app`. Worker-only privileges go to `ledger_worker`. There is no `ALTER DEFAULT PRIVILEGES`, so a new table is unreachable by the application until its migration grants access.
+8a. **Financial and approval writes are API-only — a binding rule for every later phase (R2-B1, D-17).**
+    - No privilege on any `financial.*` table is ever granted to `ledger_runtime` or `ledger_worker`.
+    - No `UPDATE` of an approval-state column (a submission's `status`, `approved_by`, `approved_at`, rejection fields, or anything that records an approval decision) is ever granted to `ledger_runtime` or `ledger_worker`.
+    - These go to `ledger_app` only. Under D-17, approval and the financial records it creates both run in the API's request transaction, so no worker path ever needs them.
+    - A phase may grant `ledger_worker` `INSERT` on a `review` submission table only if its specification names the subscriber that needs it. Phase 4's timesheet creation from `ShiftEnded` is the expected case: it creates a `pending_review` submission and approves nothing.
+    - The Phase 5 gate must include an attack: as `ledger_worker`, an `INSERT` into each `financial.*` table is refused with 42501 (§4.10).
 9. **No hard deletes.** No runtime role is ever granted `DELETE` or `TRUNCATE` on a Phase 0 table (D-05 applies to the API from Phase 3; the platform tables follow it from the start).
 10. **Migrations** are generated with `drizzle-kit generate` into `migrations/` and committed. Grants and anything else Drizzle cannot express go in custom migrations created with `drizzle-kit generate --custom --name=<name>`. A committed migration is never edited (roster, Folder Ownership). PostgreSQL 16 or later is assumed (`gen_random_uuid()` built in, identity columns, column-level grants).
 
@@ -216,6 +222,7 @@ One row per domain event, written in the same transaction as the state change. E
 | `source_object_type` | `text` | no | — | — | no | envelope `sourceObjectType` |
 | `source_object_id` | `uuid` | no | — | — | no | envelope `sourceObjectId` |
 | `payload` | `jsonb` | no | — | `CHECK (jsonb_typeof(payload) = 'object')` | no | `payload` |
+| `job_id` | `uuid` | yes | — | Job attribution, from `DomainEventInput.jobId`. Required for event types whose catalogue entry says `jobRequired` (§4.5). Canonical context: Event Bus Doctrine and Activity Feed Doctrine ("Job attribution preserved on all event records") | no | — (added, §10.3) |
 | `causation_event_id` | `uuid` | yes | — | Set by `OutboxWriter` from the execution context when a subscriber writes this event (as T-1) | no | — (added, §10) |
 | `causation_actor_id` | `uuid` | yes | — | Nearest human in the causal chain (as T-1) | no | — (added, §10) |
 | `occurred_at` | `timestamptz` | no | `now()` | Transaction time of the state change | no | envelope `occurredAt` |
@@ -267,6 +274,7 @@ Permanent, append-only history of delivered events. **Every column is immutable*
 | `source_object_type` | `text` | no | — | — | `source_object_type` |
 | `source_object_id` | `uuid` | no | — | — | `source_object_id` |
 | `payload` | `jsonb` | no | — | Copied from the outbox row unchanged | `payload` |
+| `job_id` | `uuid` | yes | — | Copied from the outbox row | — (added, §10.3) |
 | `causation_event_id` | `uuid` | yes | — | Copied from the outbox row | — (added, §10) |
 | `causation_actor_id` | `uuid` | yes | — | Copied from the outbox row | — (added, §10) |
 | `occurred_at` | `timestamptz` | no | — | Copied from the outbox row | `occurred_at` |
@@ -287,62 +295,156 @@ Indexes:
 
 The event log is not a store for sensitive values (BACKEND_EVENT_ARCHITECTURE.md, Audit Log vs Event Log: "Sensitive fields: No (operational metadata only)"). Because the payload is copied verbatim, event payloads must carry identifiers and operational metadata, not financial amounts. Phase 0 cannot enforce this for payloads designed later; OQ-07 asks the owner to confirm it as a rule for every later specification.
 
-### 3.5 Database roles and grants
+### 3.5 Database roles, grants and immutability triggers
 
-Source: BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Audit Table Permissions ("enforced at the database permission level, not only in application code") and Process Model (two process types); BACKEND_DATA_ARCHITECTURE.md, Audit Immutability Enforcement.
+Source: BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Audit Table Permissions ("enforced at the database permission level, not only in application code") and Process Model (two process types); BACKEND_DATA_ARCHITECTURE.md, Audit Immutability Enforcement; D-17.
 
-A PostgreSQL table owner always holds every privilege on its table, so "the application role cannot UPDATE or DELETE audit entries" holds only if no runtime process connects as the owner. And because the API and the worker are separate processes with different jobs, giving them one role would let an API bug change delivery state, for example marking events `delivered` so they are silently never delivered. Phase 0 therefore uses three roles:
+**Why there are four roles.**
+- A PostgreSQL table owner always holds every privilege on its table. "The application role cannot UPDATE or DELETE audit entries" therefore holds only if no runtime process connects as the owner.
+- The API and the worker are separate processes with different jobs. One role for both would let an API bug change delivery state (for example, marking events `delivered` so they are never delivered). It would also let the worker reach anything granted to the API, including — from Phase 4 — approval-state and financial writes that, under D-17, only the API may perform.
 
-| Role | Used by | Privileges (Phase 0 tables) | Connection variables |
-|---|---|---|---|
-| Owner role (the database owner on the hosted project) | `npm run db:migrate`, `drizzle-kit`, the test harness rebuild step | Owns every schema, table and sequence | `DATABASE_MIGRATION_URL` (development), `DATABASE_MIGRATION_URL_TEST` (tests) |
-| `ledger_app` | The API process | `audit.audit_entries`: SELECT, INSERT · `intelligence.event_outbox`: SELECT, INSERT · `intelligence.event_log`: SELECT | `DATABASE_URL` (development), `DATABASE_URL_TEST` (tests) |
-| `ledger_worker` | The worker process | Everything `ledger_app` has (it is a member of `ledger_app`, with inherit), plus `intelligence.event_outbox`: UPDATE on the delivery-state columns only · `intelligence.event_log`: INSERT | `DATABASE_WORKER_URL` (development), `DATABASE_WORKER_URL_TEST` (tests) |
+So the two runtime login roles share only a group role, and neither inherits from the other:
 
-Why the worker inherits `ledger_app`: subscribers do module work (for example Phase 2 creates the first CEO user from `TenantProvisioned`), and each module grants its table privileges to `ledger_app` (§3.1.8). Membership means a module never has to grant twice, and only privileges that only the worker should hold are granted to `ledger_worker` directly. The API role cannot use the worker's privileges: membership runs one way.
+| Role | Kind | Used by | Phase 0 privileges | Connection variables |
+|---|---|---|---|---|
+| Owner (the database owner) | login | `npm run db:migrate`, `drizzle-kit`, the test-database rebuild — **nothing else** | Owns every schema, table, sequence and function | `DATABASE_MIGRATION_URL`, `DATABASE_MIGRATION_URL_TEST` |
+| `ledger_runtime` | **group, `NOLOGIN`** | — (granted to the two login roles below) | Schema `USAGE` on `audit`, `intelligence`. `audit.audit_entries`: `SELECT`, column-level `INSERT`. `intelligence.event_outbox`: `SELECT`, column-level `INSERT` of the envelope columns. `intelligence.event_log`: `SELECT` | — |
+| `ledger_app` | login, member of `ledger_runtime` | The API process; runtime scripts such as D-15 provisioning | `ledger_runtime` only, in Phase 0. API-only privileges arrive in later phases (§3.1.8a) | `DATABASE_URL`, `DATABASE_URL_TEST` |
+| `ledger_worker` | login, member of `ledger_runtime` | The worker process | `ledger_runtime`, plus `intelligence.event_outbox`: `UPDATE` of the delivery-state columns; `intelligence.event_log`: column-level `INSERT` | `DATABASE_WORKER_URL`, `DATABASE_WORKER_URL_TEST` |
 
-Considered and not chosen: one shared role. It is simpler (one variable, one SQL step) but leaves the API able to rewrite every outbox row's status, retry count and lock, and to write `event_log` rows for events that were never delivered. Both break outbox integrity, which is one of the three doctrines this gate verifies.
+The roles relate as follows:
+- `ledger_app` and `ledger_worker` are **not** members of each other. A privilege granted to one is never reachable from the other.
+- Module privileges both processes need (for example, Phase 2's identity tables, used by the API and by the `TenantProvisioned` subscriber) go to `ledger_runtime`.
+- §3.1.8a lists what must never go there.
 
-**Owner action before the first migration** (one-off per database server; recorded for the owner checkpoint, OQ-03). Create both login roles **in SQL as the owner**, so they have exactly the attributes listed and no memberships the hosting console might add by default:
+Considered and not chosen:
+- **One shared role.** It leaves the API able to rewrite delivery state and write `event_log` rows for events that were never delivered.
+- **The worker as a member of `ledger_app`** (v0.2). Every later API-only grant, financial writes included, would silently reach the worker.
+
+**Owner action before the first migration** (one-off per database server; owner checkpoint, OQ-03). The owner runs the following in `psql` against each database server. Create the roles **in SQL as the owner**, so they have exactly the attributes listed and none of the memberships a hosting console may add by default:
 
 ```sql
-CREATE ROLE ledger_app    LOGIN PASSWORD '<generated, stored only in the environment>'
-  NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
-CREATE ROLE ledger_worker LOGIN PASSWORD '<generated, different, stored only in the environment>'
-  NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
-GRANT ledger_app TO ledger_worker WITH INHERIT TRUE;          -- PostgreSQL 16 syntax
-GRANT CONNECT ON DATABASE <dev database>            TO ledger_app, ledger_worker;
-GRANT CONNECT ON DATABASE <test database ending _test> TO ledger_app, ledger_worker;
+CREATE ROLE ledger_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+CREATE ROLE ledger_app     LOGIN   NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+CREATE ROLE ledger_worker  LOGIN   NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+\password ledger_app        -- psql prompts, then sends only a SCRAM verifier; no plain text in history or logs
+\password ledger_worker
+GRANT ledger_runtime TO ledger_app    WITH INHERIT TRUE;     -- PostgreSQL 16 syntax
+GRANT ledger_runtime TO ledger_worker WITH INHERIT TRUE;
+
+-- for the development database and for the test database (name ending _test):
+REVOKE CONNECT, TEMPORARY ON DATABASE <database> FROM PUBLIC;
+GRANT  CONNECT            ON DATABASE <database> TO ledger_app, ledger_worker;
 ```
 
-**Grant migration** — a custom migration `migrations/0001_platform_grants.sql`, applied after the table migration. It first fails with a clear message if either role is missing or if `ledger_worker` is not a member of `ledger_app`, then:
+- **Passwords.** Use the psql `\password` meta-command, or `ALTER ROLE … PASSWORD 'SCRAM-SHA-256$…'` with a verifier computed offline. Never type a plain-text password into a SQL statement.
+- **Roles are cluster-wide.** Production must therefore use its own database server or project, or distinct role names. Otherwise the production `ledger_app` would be the same role that can connect to the development and test databases.
+
+**Grant migration** — the custom migration `migrations/0001_platform_grants.sql`, applied after the table migration. It first fails with a clear message if any of the three roles is missing, if either login role is not a member of `ledger_runtime`, or if `ledger_app` and `ledger_worker` are members of each other. It then runs:
 
 ```sql
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 REVOKE ALL ON SCHEMA audit, intelligence FROM PUBLIC;
 REVOKE ALL ON ALL TABLES IN SCHEMA audit, intelligence FROM PUBLIC;
-GRANT USAGE ON SCHEMA audit, intelligence TO ledger_app;      -- inherited by ledger_worker
+REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA audit, intelligence FROM PUBLIC;
+GRANT USAGE ON SCHEMA audit, intelligence TO ledger_runtime;
 
--- T-1: append-only, both processes
-GRANT SELECT, INSERT ON audit.audit_entries TO ledger_app;
+-- T-1: append-only; only content columns may be supplied (audit_id, sequence_no, occurred_at come from the database)
+GRANT SELECT ON audit.audit_entries TO ledger_runtime;
+GRANT INSERT (company_id, entry_type, actor_id, actor_role, source_object_type, source_object_id,
+              destination_object_type, destination_object_id, job_id, site_id, client_id,
+              previous_value, new_value, external_reference, metadata,
+              causation_event_id, causation_actor_id)
+  ON audit.audit_entries TO ledger_runtime;
 
--- T-2: the writing use case inserts (either process); only the worker changes delivery state
-GRANT SELECT, INSERT ON intelligence.event_outbox TO ledger_app;
+-- T-2: either process inserts envelope columns only; only the worker changes delivery state
+GRANT SELECT ON intelligence.event_outbox TO ledger_runtime;
+GRANT INSERT (event_id, event_type, event_version, source_module, company_id, actor_id,
+              source_object_type, source_object_id, job_id, payload,
+              causation_event_id, causation_actor_id)
+  ON intelligence.event_outbox TO ledger_runtime;
 GRANT UPDATE (status, retry_count, next_attempt_at, locked_at, locked_by,
               delivered_subscribers, last_error, delivered_at, dead_lettered_at)
   ON intelligence.event_outbox TO ledger_worker;
 
--- T-3: written only by the worker after delivery; readable by both
-GRANT SELECT ON intelligence.event_log TO ledger_app;
-GRANT INSERT ON intelligence.event_log TO ledger_worker;
+-- T-3: read by both; written only by the worker, copying the outbox row (event_log_id, logged_at from the database)
+GRANT SELECT ON intelligence.event_log TO ledger_runtime;
+GRANT INSERT (event_id, event_type, event_version, source_module, company_id, actor_id,
+              source_object_type, source_object_id, job_id, payload,
+              causation_event_id, causation_actor_id, occurred_at)
+  ON intelligence.event_log TO ledger_worker;
 ```
 
-Sequence privilege: `audit_entries.sequence_no` is an identity column. PostgreSQL draws identity values through an internal next-value expression that does not check privileges on the backing sequence (unlike `serial`, which needs `USAGE`), so no sequence grant is expected. The gate tests insert as `ledger_app` and settle it; if an insert is refused, the migration adds `USAGE` on that sequence to `ledger_app` and nothing more.
+**Writers use explicit column lists.** PostgreSQL checks column privileges against the insert's column list, including columns given the value `DEFAULT`, and Drizzle's insert builder lists every column. So `AuditWriter`, `OutboxWriter` and the worker's `event_log` insert use parameterised SQL (`sql` template) naming exactly the granted columns, with `RETURNING` only for `audit_id` and `event_id`. A row that supplies `occurred_at`, `sequence_no` (with or without `OVERRIDING SYSTEM VALUE`), `status`, `delivered_subscribers` or `next_attempt_at` is refused with 42501 (G0-20, G0-22).
 
-`event_log` writes use `INSERT … ON CONFLICT (event_id) DO NOTHING`. Per the PostgreSQL `INSERT` documentation, extra privileges are needed only for `ON CONFLICT DO UPDATE` (UPDATE on the `SET` columns and SELECT on columns it reads) and for `RETURNING`; `DO NOTHING` needs only INSERT. `ledger_worker` also inherits SELECT, so either reading holds.
+**Sequence privilege.** `audit_entries.sequence_no` is an identity column. PostgreSQL draws identity values through an internal next-value expression that does not check privileges on the backing sequence (`serial` needs `USAGE`), so no sequence grant is expected. G0-20 settles it by inserting as `ledger_app`. If that insert is refused, the migration adds `USAGE` on that one sequence to `ledger_runtime` and nothing more.
 
-What no runtime role may have on any Phase 0 table: `UPDATE` (except `ledger_worker` on the listed outbox columns), `DELETE`, `TRUNCATE`, `REFERENCES`, `TRIGGER`, ownership, `CREATE` on either schema, superuser, `BYPASSRLS`, or membership of any role other than `ledger_worker` → `ledger_app` (so, for example, not `pg_write_all_data`). Neither has access to the `drizzle` schema where the migration journal lives. All of this is gate-tested (§9).
+**`event_log` writes** use `INSERT … ON CONFLICT (event_id) DO NOTHING`. Per the PostgreSQL `INSERT` documentation, extra privileges are needed only for `ON CONFLICT DO UPDATE` (UPDATE on the `SET` columns, SELECT on the columns it reads) and for `RETURNING`; `DO NOTHING` needs only INSERT. `ledger_worker` also has SELECT through `ledger_runtime`.
 
-Later phases follow the same pattern: each module migration grants `ledger_app` exactly what its tables need (financial record tables, for example, get `UPDATE (status)` only — DOMAIN_MODEL_SUMMARY.md, Invariant 2), and grants `ledger_worker` directly only what must be closed to the API.
+**Immutability triggers — owner included (R2-09).** Grants stop the runtime roles. The owner, though, could still change history with ordinary DML. A third migration, `migrations/0002_platform_immutability.sql` (custom), therefore adds:
+
+```sql
+CREATE FUNCTION audit.refuse_change() RETURNS trigger LANGUAGE plpgsql
+  SET search_path = pg_catalog AS $$
+BEGIN
+  RAISE EXCEPTION 'append-only table %.%: % refused', TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_OP
+    USING ERRCODE = 'insufficient_privilege';
+END $$;
+REVOKE EXECUTE ON FUNCTION audit.refuse_change() FROM PUBLIC;
+
+CREATE TRIGGER audit_entries_no_update_delete BEFORE UPDATE OR DELETE ON audit.audit_entries
+  FOR EACH ROW EXECUTE FUNCTION audit.refuse_change();
+CREATE TRIGGER audit_entries_no_truncate BEFORE TRUNCATE ON audit.audit_entries
+  FOR EACH STATEMENT EXECUTE FUNCTION audit.refuse_change();
+CREATE TRIGGER event_log_no_update_delete BEFORE UPDATE OR DELETE ON intelligence.event_log
+  FOR EACH ROW EXECUTE FUNCTION audit.refuse_change();
+CREATE TRIGGER event_log_no_truncate BEFORE TRUNCATE ON intelligence.event_log
+  FOR EACH STATEMENT EXECUTE FUNCTION audit.refuse_change();
+```
+
+What the triggers do and do not cover:
+- **Owner DML is refused.** `UPDATE`, `DELETE` and `TRUNCATE` by the owner on T-1 or T-3 now fail.
+- **Runtime roles are refused earlier.** They fail on the privilege check (42501) before any trigger fires. The trigger does not need `EXECUTE` from the caller: PostgreSQL does not check `EXECUTE` when a trigger fires.
+- **The owner can still change history deliberately**, by dropping or disabling a trigger. That is a DDL change made with the migration credentials. The rule below and §3.6 keep those credentials out of every runtime path; this specification does not claim more.
+- **Dropping is unaffected.** `DROP TABLE` and `DROP SCHEMA … CASCADE` fire no row or `TRUNCATE` triggers, so the test-database rebuild (§4.6) still works.
+
+**Rule: runtime code never uses the owner credentials.** The API, the worker and every runtime script connect as a runtime role:
+- D-15 provisioning and any future requeue tool use `DATABASE_URL` (`ledger_app`) or `DATABASE_WORKER_URL`, as their specification states.
+- `DATABASE_MIGRATION_URL` is read only by `db:migrate`, `drizzle-kit` and the test harness.
+- In production, the API and the worker refuse to start if `DATABASE_MIGRATION_URL` is present in their environment (§4.6).
+
+**Runtime role self-check (R2-10).** `db/client.ts` attaches a check to every new pool connection, before the pool hands the connection out:
+
+```sql
+SELECT current_user,
+       r.rolsuper, r.rolbypassrls,
+       EXISTS (SELECT 1 FROM pg_namespace n
+                WHERE n.nspname IN ('audit','intelligence') AND n.nspowner = r.oid) AS owns_platform_schema
+  FROM pg_roles r WHERE r.rolname = current_user;
+```
+
+The connection is accepted only if all of these hold:
+- `current_user` is the role this pool expects: `ledger_app` for the API pool, `ledger_worker` for the worker pool;
+- `rolsuper` and `rolbypassrls` are both false;
+- `owns_platform_schema` is false.
+
+Otherwise the connection is destroyed and an `ERROR` is logged. The log line names the failed condition and the role name — never the URL. In production the process then exits 1 with a `FATAL` line. In development the request or health check fails (503 or 500).
+
+The check is provider-neutral: it uses only the PostgreSQL catalogue. It runs per connection, so it costs one query per pooled connection, not one per request.
+
+**What no runtime role may have** on any Phase 0 table:
+- `UPDATE`, except `ledger_worker` on the listed outbox columns;
+- `INSERT` of any column not listed above;
+- `DELETE`, `TRUNCATE`, `REFERENCES` or `TRIGGER`;
+- ownership, or `CREATE` on `audit`, `intelligence` or `public`;
+- `TEMPORARY` on the database;
+- `USAGE` on schema `drizzle`;
+- superuser or `BYPASSRLS`;
+- membership of any role except `ledger_runtime`.
+
+All of this is gate-tested (§9).
+
+**Later phases** follow the same pattern. Each module migration grants exactly what its tables need, to the narrowest role that needs it: `ledger_runtime` for both processes, `ledger_app` for API-only, `ledger_worker` for worker-only. Rule §3.1.8a always applies. For example, financial record tables get `INSERT (content columns)` and `UPDATE (status)` for `ledger_app` only (DOMAIN_MODEL_SUMMARY.md, Invariant 2).
 
 ### 3.6 Migration files and configuration
 
@@ -350,6 +452,7 @@ Later phases follow the same pattern: each module migration grants `ledger_app` 
 |---|---|
 | `migrations/0000_platform_tables.sql` | Generated by `drizzle-kit generate --name=platform_tables`: `CREATE SCHEMA audit`, `CREATE SCHEMA intelligence`, T-1, T-2, T-3 with constraints and indexes |
 | `migrations/0001_platform_grants.sql` | Custom migration (`drizzle-kit generate --custom --name=platform_grants`): role check and grants (§3.5) |
+| `migrations/0002_platform_immutability.sql` | Custom migration (`--custom --name=platform_immutability`): `audit.refuse_change()` and the `UPDATE`/`DELETE`/`TRUNCATE` triggers on T-1 and T-3 (§3.5) |
 | `migrations/meta/` | Drizzle journal and snapshots, generated, committed |
 | `drizzle.config.ts` | `dialect: 'postgresql'`; `schema`: `./server/platform/db/schema/*.ts` and `./server/modules/*/infrastructure/schema.ts`; `out: './migrations'`; `schemaFilter: ['audit', 'intelligence']` (each later phase adds its schema); `dbCredentials.url` from `DATABASE_MIGRATION_URL`, failing with the variable's name if it is missing |
 
@@ -568,6 +671,7 @@ Used outside the two processes:
 |---|---|---|
 | `production` | all four | **Full mode** |
 | `production` | any missing | **Fail fast**: `ConfigError` naming the missing variables, exit code 1 |
+| `production` | `DATABASE_MIGRATION_URL` (or either `_TEST` owner URL) present | **Fail fast** — runtime processes must never hold the owner credentials (§3.5). The worker applies the same rule |
 | `development` / `test` | all four | **Full mode** |
 | `development` / `test` | none of the four | **Frontend-only mode** |
 | `development` / `test` | some but not all | **Fail fast** — a half-configured backend is a mistake, not a choice |
@@ -609,7 +713,7 @@ The Vitest global setup and every test database client call it.
 2. Connected as the owner, it drops every schema the owner role owns except `public`, with `CASCADE`. This includes `audit`, `intelligence`, `drizzle`, any test-only schema such as `gate_test`, and every later module schema, so the rule never needs updating.
 3. It re-runs every migration.
 
-This rebuild is the only way audit rows are ever removed, and it happens only in a database that has passed the guard.
+Audit and event-log rows cannot be removed by any runtime role (grants), nor by owner DML (the immutability triggers, §3.5). In the test database they disappear only when this rebuild drops their schema as the owner, and the rebuild runs only in a database that has passed the guard.
 
 Tests then connect as `ledger_app` for API behaviour and as `ledger_worker` for worker behaviour. They connect as the owner only to prove a database-level guarantee or to set up a failure on purpose.
 
@@ -732,7 +836,18 @@ How the Phase 0 port design (PS-16) meets each part of D-17:
 
 Phase 0 builds the generic mechanism only. `ApprovalEffectsPort`'s handlers, signatures and idempotency rules belong to the Phase 4 and Phase 5 specifications.
 
+### 4.10 Binding obligations on later phases
+
+Some of what Phase 0 guarantees holds only if later specifications respect it. Each later phase specification lists the rows below that apply to it, and its gate tests them.
+
+| Phase | Obligation | Source |
+|---|---|---|
+| Every phase | Grant table privileges to the narrowest role that needs them. Never grant a `financial.*` privilege, or `UPDATE` on an approval-state column, to `ledger_runtime` or `ledger_worker` | §3.1.8a (R2-B1) |
+| Every phase | Runtime code, scripts included, connects as a runtime role and never uses the owner URL | §3.5 (R2-09) |
+| Phase 5 | Gate attack: as `ledger_worker`, an `INSERT` into each `financial.*` table must be refused with 42501 | §3.1.8a (R2-B1) |
+
 ---
+
 ## 5. USE CASES (PLATFORM SERVICES)
 
 Phase 0 has no business use cases, so no role or PM-scope authorisation applies here. For each platform service this section gives the template's columns: inputs, who calls it, the invariants it checks, the records it writes, its audit entry, its events and its transaction boundary. The transaction rules come from BACKEND_DATA_ARCHITECTURE.md, Transaction Boundaries and Write Consistency Requirements: a state change, its audit entry and its outbox event commit together in one transaction, or not at all.
