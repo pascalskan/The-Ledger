@@ -1,11 +1,11 @@
 # THE LEDGER — PHASE 0 SPECIFICATION — INFRASTRUCTURE FOUNDATION
 
-Version: 0.4 (draft) — 0.2 applied PM review of 33d9b6b (A–G); 0.3 applied review round 1 (R1-01 to R1-05); 0.4 applies review round 2 (R2-B1, R2-B2, R2-01 to R2-18, OQ-09 ruling)
-Status: DRAFT — awaiting PM review and the owner checkpoint
-Date: October 20, 2026
+Version: 0.5 (draft) — 0.2 applied the PM review of 33d9b6b (A–G); 0.3 applied review round 1 (R1-01 to R1-05); 0.4 applied review round 2 (R2-B1, R2-B2, R2-01 to R2-18, the OQ-09 ruling); 0.5 applies review round 3 (R3-01 to R3-17)
+Status: DRAFT — review rounds 1 and 2 closed; round 3 fixes applied, awaiting the PM's verification; then the owner checkpoint
+Date: October 20, 2026 (revised October 21, 2026)
 Author: `backend-architect`
-Branch: `agent/backend-architect/phase-0-spec` (from `backend` @ b6ab5be)
-Implements: `BACKEND_IMPLEMENTATION_ROADMAP.md` v2.1, Phase 0
+Branch: `agent/backend-architect/phase-0-spec` (from `backend` @ b6ab5be; `backend` @ 9500bca merged in, which brought D-17)
+Implements: `BACKEND_IMPLEMENTATION_ROADMAP.md` v2.2, Phase 0, under `BACKEND_OPEN_DECISIONS.md` v1.2 (D-01 … D-17)
 Implementer: `backend-platform-engineer` · Gate tests: `backend-test-engineer`
 
 This specification follows the Phase Specification Template in `BACKEND_AGENT_ROSTER.md` v1.1. All paths are relative to the app folder (`The-Ledger/`). Identifiers used below:
@@ -34,7 +34,7 @@ Every item below is taken from the Phase 0 "Includes" list of the roadmap. Nothi
 | S-04 | Schema-per-module convention in Drizzle (`pgSchema('tenant')`, …) | `server/platform/db/schema/` and the convention in §3.1 |
 | S-05 | Unit of Work / transaction helper shared by all Application Layer use cases | `server/platform/db/unit-of-work.ts` (§4.4, §5) |
 | S-06 | Middleware: request ID, structured JSON logging (no request/response bodies, no financial amounts), global error handler with the API error envelope | `server/platform/http/`, `server/platform/logging/`, `server/platform/errors/` (§4.7, §5, §6) |
-| S-07 | Replace the current request logger, which prints whole JSON response bodies | Removal of the logger in `server/index.ts` lines 25–60 (§10) |
+| S-07 | Replace the current request logger, which prints whole JSON response bodies | Removal of the logger in `server/index.ts` lines 25–60 (§10.2) |
 | S-08 | `GET /health` | `server/platform/http/health.ts` (§6) |
 | S-09 | JWT utilities (sign, verify, claims) for the platform and portal tokens | `server/platform/auth/jwt.ts`, `server/platform/auth/keys.ts` (§4.3, §5) |
 | S-10 | Tenant context middleware (extract `company_id` from the token; required parameter on every use case) | `server/platform/auth/tenant-context.ts`, `server/platform/db/tenant-scope.ts` (§4.1, §4.2, §5) |
@@ -116,7 +116,7 @@ Doctrines verified at this gate (roadmap, Doctrine Verification by Phase): audit
 | **D-11** File storage | Not built in Phase 0: the roadmap places `FileStorage` in Phase 4 and the phase table lists D-11 against Phases 4 and 9 only. Phase 0 reserves `server/platform/storage/` for it. PM ruling: Phase 4 per the roadmap (OQ-01, closed) |
 | **D-12** Hosted PostgreSQL for dev and test | `DATABASE_URL` (development) and `DATABASE_URL_TEST` (tests) point at separate databases on a hosted PostgreSQL project. Tests refuse to run unless the database name in every test URL ends in `_test` (§4.6). Only synthetic data is written. Phase 0 adds variables the decision does not name — the migration-owner URLs and the worker-role URLs — because the grant guarantees need separate database roles (§3.5, OQ-03). Nothing in the design depends on a particular hosting provider |
 | **D-14** Tooling | `vitest` and `supertest` (tests), `jose` (JWT, ES256 platform key pair and a separate portal key — §4.3, OQ-02), `pino` (logging), `drizzle-kit generate` with committed SQL migrations; `drizzle-kit push` is removed from the scripts. `bcryptjs` is not installed in Phase 0 because nothing hashes a password until Phase 2. `passport`, `passport-local`, `express-session`, `memorystore`, `connect-pg-simple` stay until Phase 2 |
-| **D-16** CLAUDE.md backend instruction | Already applied: `CLAUDE.md` "CURRENT PLATFORM STATE" carries the approved paragraph. Phase 0 is backend work on a branch from `main` (via `backend`); the frontend stays mock-driven. Phase 0 changes no frontend behaviour (§10) |
+| **D-16** CLAUDE.md backend instruction | Already applied: `CLAUDE.md` "CURRENT PLATFORM STATE" carries the approved paragraph. Phase 0 is backend work on a branch from `main` (via `backend`); the frontend stays mock-driven. Phase 0 changes no frontend behaviour (§10.4) |
 | **D-17** Approval → financial record in one transaction (decided after this specification raised it as OQ-16) | Phase 0 builds no approval, but it provides the mechanism D-17 relies on: passing the caller's Unit of Work across modules (§4.4) and typed ports wired at the composition root (PS-16, §4.8 `requiresPorts` / `providesPorts`). §4.9 maps every D-17 requirement to it |
 
 ### 2.4 Code read
@@ -159,7 +159,7 @@ Append-only and permanent. **Every column is immutable**: the runtime roles can 
 | Column | Type | Null | Default | Constraint / notes | Source field |
 |---|---|---|---|---|---|
 | `audit_id` | `uuid` | no | `gen_random_uuid()` | Primary key | `audit_id` |
-| `sequence_no` | `bigint` | no | `GENERATED ALWAYS AS IDENTITY` | No index and no `UNIQUE` constraint in Phase 0 (R3-02). Uniqueness comes from the identity sequence: no runtime role may supply the column (§3.5). Insertion order; the stable sort and cursor key for later audit queries (entries in one transaction share `occurred_at`) | — (added, §10) |
+| `sequence_no` | `bigint` | no | `GENERATED ALWAYS AS IDENTITY` | No index and no `UNIQUE` constraint in Phase 0 (R3-02). Uniqueness comes from the identity sequence: no runtime role may supply the column (§3.5). Insertion order; the stable sort and cursor key for later audit queries (entries in one transaction share `occurred_at`) | — (added, §10.3) |
 | `company_id` | `uuid` | no | — | Taken from the Unit of Work's tenant context, never from the caller's entry (§4.4). Foreign key added in Phase 1 (§3.1.7) | `company_id` |
 | `entry_type` | `text` | no | — | `CHECK (entry_type ~ '^[a-z][a-z0-9_]{2,99}$')` — the domain audit entry type, e.g. `timesheet_approved` | `entry_type` / "what" |
 | `actor_id` | `uuid` | yes | — | The user (or portal account) who acted; `NULL` only for the system actor | `actor_id` / "who" |
@@ -176,8 +176,8 @@ Append-only and permanent. **Every column is immutable**: the runtime roles can 
 | `new_value` | `jsonb` | yes | — | — | `new_value` |
 | `external_reference` | `text` | yes | — | e.g. accounting provider reference | `external_reference` |
 | `metadata` | `jsonb` | no | `'{}'::jsonb` | `AuditWriter` adds `requestId` (API) or `runId` (worker) from the execution context | `metadata` |
-| `causation_event_id` | `uuid` | yes | — | The `event_id` of the event whose subscriber wrote this entry. Set by `AuditWriter` from the execution context, never by the caller (§4.1). No foreign key: the triggering event's `event_log` row is written only after its subscribers finish, and outbox rows are not permanent | — (added, §10) |
-| `causation_actor_id` | `uuid` | yes | — | The nearest human actor in the causal chain: the triggering event's `actor_id`, or — if that event was itself written by a subscriber — its `causation_actor_id`. `NULL` when no human is in the chain | — (added, §10) |
+| `causation_event_id` | `uuid` | yes | — | The `event_id` of the event whose subscriber wrote this entry. Set by `AuditWriter` from the execution context, never by the caller (§4.1). No foreign key: the triggering event's `event_log` row is written only after its subscribers finish, and outbox rows are not permanent | — (added, §10.3) |
+| `causation_actor_id` | `uuid` | yes | — | The nearest human actor in the causal chain: the triggering event's `actor_id`, or — if that event was itself written by a subscriber — its `causation_actor_id`. `NULL` when no human is in the chain | — (added, §10.3) |
 
 Causation constraints:
 
@@ -222,7 +222,7 @@ One row per domain event, written in the same transaction as the state change. E
 | Column | Type | Null | Default | Constraint / notes | Mutable | Source field |
 |---|---|---|---|---|---|---|
 | `outbox_id` | `uuid` | no | `gen_random_uuid()` | Primary key | no | `outbox_id` |
-| `event_id` | `uuid` | no | — | `UNIQUE`. The envelope `eventId`; the idempotency key subscribers may use (§7) | no | envelope `eventId` |
+| `event_id` | `uuid` | no | — | `UNIQUE`. The envelope `eventId`; the idempotency key subscribers may use (§7.3) | no | envelope `eventId` |
 | `event_type` | `text` | no | — | `CHECK (event_type ~ '^[A-Z][A-Za-z0-9]{2,99}$')` — `{Noun}{PastTenseVerb}` in PascalCase | no | `event_type` |
 | `event_version` | `text` | no | `'1.0'` | — | no | envelope `eventVersion` |
 | `source_module` | `text` | no | — | `CHECK (source_module ~ '^[a-z][a-z_]{1,49}$')`, e.g. `review_centre` | no | `source_module` |
@@ -232,8 +232,8 @@ One row per domain event, written in the same transaction as the state change. E
 | `source_object_id` | `uuid` | no | — | — | no | envelope `sourceObjectId` |
 | `payload` | `jsonb` | no | — | `CHECK (jsonb_typeof(payload) = 'object')` | no | `payload` |
 | `job_id` | `uuid` | yes | — | Job attribution, from `DomainEventInput.jobId`. Required for event types whose catalogue entry says `jobRequired` (§4.5). Canonical context: Event Bus Doctrine and Activity Feed Doctrine ("Job attribution preserved on all event records") | no | — (added, §10.3) |
-| `causation_event_id` | `uuid` | yes | — | Set by `OutboxWriter` from the execution context when a subscriber writes this event (as T-1) | no | — (added, §10) |
-| `causation_actor_id` | `uuid` | yes | — | Nearest human in the causal chain (as T-1) | no | — (added, §10) |
+| `causation_event_id` | `uuid` | yes | — | Set by `OutboxWriter` from the execution context when a subscriber writes this event (as T-1) | no | — (added, §10.3) |
+| `causation_actor_id` | `uuid` | yes | — | Nearest human in the causal chain (as T-1) | no | — (added, §10.3) |
 | `occurred_at` | `timestamptz` | no | `now()` | Transaction time of the state change | no | envelope `occurredAt` |
 | `created_at` | `timestamptz` | no | `now()` | — | no | `created_at` |
 | `status` | `text` | no | `'pending'` | `CHECK (status IN ('pending','processing','failed','delivered','dead_lettered'))` (§4.5) | yes | `status` |
@@ -241,7 +241,7 @@ One row per domain event, written in the same transaction as the state change. E
 | `next_attempt_at` | `timestamptz` | no | `now()` | Earliest time the worker may claim the row | yes | — (backoff schedule) |
 | `locked_at` | `timestamptz` | yes | — | Set when claimed | yes | `locked_at` (Worker Resilience) |
 | `locked_by` | `text` | yes | — | Worker instance ID that holds the claim; used to fence late writes | yes | — (claim lock) |
-| `delivered_subscribers` | `text[]` | no | `'{}'` | Names of subscribers that have already handled this event (§4.5) | yes | — (added, §10) |
+| `delivered_subscribers` | `text[]` | no | `'{}'` | Names of subscribers that have already handled this event (§4.5) | yes | — (added, §10.3) |
 | `last_error` | `text` | yes | — | Sanitised error summary, at most 1 000 characters, no payload values (§4.7) | yes | — |
 | `delivered_at` | `timestamptz` | yes | — | — | yes | `delivered_at` |
 | `dead_lettered_at` | `timestamptz` | yes | — | — | yes | — (dead letter) |
@@ -278,16 +278,16 @@ Permanent, append-only history of delivered events. **Every column is immutable*
 | `event_log_id` | `uuid` | no | `gen_random_uuid()` | The documented row identifier. It is kept, but **not** indexed (R3-02): nothing looks a row up by it | `event_log_id` |
 | `event_id` | `uuid` | no | — | **Primary key** — at most one log row per event, even if an event is redelivered. It is the conflict target of PS-18's `ON CONFLICT (event_id) DO NOTHING` | `event_id` |
 | `event_type` | `text` | no | — | — | `event_type` |
-| `event_version` | `text` | no | — | — | — (added, §10) |
-| `source_module` | `text` | no | — | Event log is "queryable by … module" | — (added, §10) |
+| `event_version` | `text` | no | — | — | — (added, §10.3) |
+| `source_module` | `text` | no | — | Event log is "queryable by … module" | — (added, §10.3) |
 | `company_id` | `uuid` | no | — | Foreign key added in Phase 1 | `company_id` |
 | `actor_id` | `uuid` | yes | — | `NULL` for system events | `actor_id` |
 | `source_object_type` | `text` | no | — | — | `source_object_type` |
 | `source_object_id` | `uuid` | no | — | — | `source_object_id` |
 | `payload` | `jsonb` | no | — | Copied from the outbox row unchanged | `payload` |
 | `job_id` | `uuid` | yes | — | Copied from the outbox row | — (added, §10.3) |
-| `causation_event_id` | `uuid` | yes | — | Copied from the outbox row | — (added, §10) |
-| `causation_actor_id` | `uuid` | yes | — | Copied from the outbox row | — (added, §10) |
+| `causation_event_id` | `uuid` | yes | — | Copied from the outbox row | — (added, §10.3) |
+| `causation_actor_id` | `uuid` | yes | — | Copied from the outbox row | — (added, §10.3) |
 | `occurred_at` | `timestamptz` | no | — | Copied from the outbox row | `occurred_at` |
 | `logged_at` | `timestamptz` | no | `now()` | — | `logged_at` |
 
@@ -493,7 +493,7 @@ All of this is gate-tested (§9).
 | `migrations/meta/` | Drizzle journal and snapshots, generated, committed |
 | `drizzle.config.ts` | `dialect: 'postgresql'`; `schema`: `./server/platform/db/schema/*.ts` and `./server/modules/*/infrastructure/schema.ts`; `out: './migrations'`; `schemaFilter: ['audit', 'intelligence']` (each later phase adds its schema); `dbCredentials.url` from `DATABASE_MIGRATION_URL`, failing with the variable's name if it is missing |
 
-`shared/schema.ts` (the Replit starter's `public.users` table) is deleted so it can never produce a migration (§10).
+`shared/schema.ts` (the Replit starter's `public.users` table) is deleted so it can never produce a migration (§10.2).
 
 ---
 
@@ -633,7 +633,7 @@ Source: BACKEND_AUTH_ARCHITECTURE.md, Access Token Claims, Portal Token Claims, 
 
 The algorithms follow the two sources as written: D-14 gives ES256 keys to the platform token and "a separate key" to the portal token, and the environment variable list names that key `PORTAL_JWT_SECRET`, a shared secret. OQ-02 asks the owner to confirm HS256 for the portal token or choose an ES256 key pair instead; only `server/platform/auth/` changes either way.
 
-`iss` and `aud` are not in the documented claim sets. They are added so the two token types can never be accepted in each other's place even if a key were reused (§10).
+`iss` and `aud` are not in the documented claim sets. They are added so the two token types can never be accepted in each other's place even if a key were reused (§10.3).
 
 Verification rules (all enforced by `verifyPlatformToken` / `verifyPortalToken`):
 
@@ -750,7 +750,7 @@ interface Subscriber {
 - **One Unit of Work per subscriber.** The worker calls each subscriber for an event in its own Unit of Work. The tenant is the event's `companyId`; the actor is `system`, named after the subscriber; causation comes from the outbox row (§4.1). A failing subscriber therefore never undoes another subscriber's work, and everything it writes is traceable to the event and the human behind it.
 - **No human-only ports in subscribers (R2-B2).** The `deps` passed to `subscribers(deps)` cannot return a `humanOnly` port: `deps.ports.get` throws at start-up for one. The port wrapper also refuses any system or subscriber context at run time (PS-16).
 - **Causation stays off the envelope.** The envelope has no causation fields; causation reaches the subscriber only through `uow.context.causation.eventId`.
-- **Delivered subscribers are recorded atomically.** In the subscriber's own transaction, the worker appends the subscriber's name to `delivered_subscribers`, guarded by `locked_by` (§5). A retried event skips subscribers already listed. A worker that has lost its claim cannot commit a subscriber's work.
+- **Delivered subscribers are recorded atomically.** In the subscriber's own transaction, the worker appends the subscriber's name to `delivered_subscribers`, guarded by `locked_by` (PS-18). A retried event skips subscribers already listed. A worker that has lost its claim cannot commit a subscriber's work.
 - **Every subscriber must be idempotent.** Delivery is at least once (BACKEND_EVENT_ARCHITECTURE.md). `delivered_subscribers` narrows duplicates but cannot remove them, for example when a subscriber has effects outside the database. Each subscriber is keyed on `eventId` or on its own natural key (for example a submission ID).
 - **No ordering guarantee.** Events are claimed in `next_attempt_at, created_at` order, which is oldest first for events not yet tried, but nothing guarantees order across retries or worker instances. Subscribers must not depend on order (OQ-06).
 - **Informational only.** Subscribers are informational and evaluative (Event Bus Doctrine). Their system actor can never satisfy a human-approval check.
@@ -934,7 +934,7 @@ The level is `INFO`, except `DEBUG` for `/health`.
 
 `cause` chains are followed to a depth of three, applying the same table at each level. Using constraint, table and column names keeps database failures diagnosable without logging a value. Platform code never puts input values into an error message, and module error messages follow the same rule — "any other error" is the only row whose message is logged as written.
 
-**Error classes.** `AppError(code, status, safeMessage, details?)` and the platform subclasses `ValidationError` (400), `UnauthenticatedError` (401), `ForbiddenError` (403), `NotFoundError` (404), `ConflictError` (409), `BusinessRuleError` (422). Programming and infrastructure errors — `MissingTenantContextError`, `NestedUnitOfWorkError`, `UnitOfWorkClosedError`, `AuditWriteFailedError`, `OutboxWriteFailedError`, `ConfigError`, `LockLostError` — are not `AppError`s and surface as 500. Module domain errors live in each module's domain layer, which may not import the platform (BACKEND_LAYERING_ARCHITECTURE.md, Layer 1); each module's API layer maps them to `AppError`s. The global error handler knows only `AppError`, `ZodError`, the JSON body parser's errors and "anything else" (§6).
+**Error classes.** `AppError(code, status, safeMessage, details?)` and the platform subclasses `ValidationError` (400), `UnauthenticatedError` (401), `ForbiddenError` (403), `NotFoundError` (404), `ConflictError` (409), `BusinessRuleError` (422). Programming and infrastructure errors — `MissingTenantContextError`, `NestedUnitOfWorkError`, `UnitOfWorkClosedError`, `AuditWriteFailedError`, `OutboxWriteFailedError`, `ConfigError`, `LockLostError` — are not `AppError`s and surface as 500. Module domain errors live in each module's domain layer, which may not import the platform (BACKEND_LAYERING_ARCHITECTURE.md, Layer 1); each module's API layer maps them to `AppError`s. The global error handler knows only `AppError`, `ZodError`, the JSON body parser's errors and "anything else" (PS-07, §6.3).
 
 **Worker correlation.** Each claimed event is processed under a `runId` (UUID). BACKEND_OBSERVABILITY_ARCHITECTURE.md calls this `jobId`; Phase 0 names it `runId` so it cannot be mistaken for a Ledger job's `job_id` in logs (OQ-15). Worker log lines name `eventId`, `eventType`, `companyId`, subscriber name and attempt number — never the payload. A dead-lettered event is logged at `ERROR` (BACKEND_INFRASTRUCTURE_ARCHITECTURE.md: "alerts via monitoring"); a failed attempt at `WARN`.
 
@@ -948,7 +948,7 @@ Source: BACKEND_SERVICE_ARCHITECTURE.md, Architecture Decision and Module Bounda
 server/
   index.ts                API process entry
   worker.ts               worker process entry
-  static.ts, vite.ts      frontend serving (kept, §10)
+  static.ts, vite.ts      frontend serving (kept, §10.2)
   platform/
     index.ts              the only file modules may import from the platform
     system/index.ts       createSystemContext, toCompanyId — scripts and platform only (rule 11)
@@ -1098,7 +1098,7 @@ Some of what Phase 0 guarantees holds only if later specifications respect it. E
 | Every phase | Event payloads carry identifiers and operational metadata, never financial amounts (OQ-07). Besides keeping the event log free of sensitive fields, this keeps amounts away from any surface that reads events: `event_log` is readable by `ledger_runtime`, and a future worker-facing or activity endpoint could otherwise expose them (Invariant 26) | §3.4, §7.3 |
 | Every phase | Every path parameter is a UUID, and no path carries personal data or financial values | §4.7 (R2-13) |
 | Phase 1 | The D-15 provisioning script records the operator's identity (an operator name or ID supplied on the command line, and the host account) in the audit entry's `metadata`. It connects as `ledger_app`, never with the owner URL | §3.5; OQ-14 |
-| Phase 2 | Close the tenant-suspension window: a token must not stay usable for up to 15 minutes after its tenant is suspended or terminated (OQ-12) | §5.11 |
+| Phase 2 | Close the tenant-suspension window: a token must not stay usable for up to 15 minutes after its tenant is suspended or terminated (OQ-12) | PS-10 |
 | Phase 2 | On approval and other authority-bearing paths, re-load the actor's current role and active status from `identity`, and do not trust the token's `role` claim alone | §4.1 |
 | Phase 2 | The refresh-token cookie is `HttpOnly`, `Secure` and `SameSite=Strict`, with its `Path` limited to the refresh route; the refresh endpoint checks `Origin` | BACKEND_AUTH_ARCHITECTURE.md, Token Storage |
 | Phases 4a and 5 | Name a detection path for a dead-lettered event whose subscribers have effects (for example stock-level updates), so a dead letter is never a silent gap | §4.5; BACKEND_OBSERVABILITY_ARCHITECTURE.md, Principle 3 |
@@ -1115,6 +1115,8 @@ Some of what Phase 0 guarantees holds only if later specifications respect it. E
 Phase 0 has no business use cases, so no role or PM-scope authorisation applies here. For each platform service this section gives the template's columns: inputs, who calls it, the invariants it checks, the records it writes, its audit entry, its events and its transaction boundary. The transaction rules come from BACKEND_DATA_ARCHITECTURE.md, Transaction Boundaries and Write Consistency Requirements: a state change, its audit entry and its outbox event commit together in one transaction, or not at all.
 
 ### 5.1 Summary
+
+Each platform service below is headed and cited by its PS-nn ID only. Its subsection has no separate §5 number, so the two numbering systems can no longer drift apart (R3-05).
 
 | ID | Service | Called by | Writes | Transaction |
 |---|---|---|---|---|
@@ -1143,7 +1145,7 @@ Phase 0 has no business use cases, so no role or PM-scope authorisation applies 
 
 None of these services writes an audit entry of its own (§8), and none emits a domain event of its own (§7).
 
-### 5.2 PS-01 — Configuration and start-up mode
+### PS-01 — Configuration and start-up mode
 
 - **Input:** `process.env`, after the optional `.env` load (§4.6).
 - **Checks:**
@@ -1153,7 +1155,7 @@ None of these services writes an audit entry of its own (§8), and none emits a 
 - **Output:** a frozen `ApiConfig` (`mode: 'full' | 'frontend_only'`) or `WorkerConfig`.
 - **Failure:** `ConfigError` naming the variables. The entry point writes one `FATAL` log line with the names (never values) and exits with code 1 before listening or connecting.
 
-### 5.3 PS-02 — API process start-up
+### PS-02 — API process start-up
 
 Order in `server/index.ts`:
 
@@ -1166,7 +1168,7 @@ Order in `server/index.ts`:
 
 The API does not connect to the database at start-up; `/health` reports whether the database is reachable (BACKEND_OBSERVABILITY_ARCHITECTURE.md, Health Check Endpoint). The API process never runs the outbox worker.
 
-### 5.4 PS-03 — Worker process start-up
+### PS-03 — Worker process start-up
 
 Order in `server/worker.ts`:
 
@@ -1181,7 +1183,7 @@ The outbox worker exposes three methods:
 - `start()` begins the loop.
 - `stop()` ends it.
 
-### 5.5 PS-04 — Request pipeline
+### PS-04 — Request pipeline
 
 `createApiApp` builds the Express app in the order below. It is a function so that gate tests can build the same app with their own module registrations.
 
@@ -1200,21 +1202,21 @@ Rules:
 - PS-07 is attached only to the API, portal and health routers. Errors raised by Vite or static serving keep today's behaviour (Express's default handler).
 - Step 6 never matches `/portal` without `/v1`, so the frontend's `/portal`, `/portal/:section` and `/portal/:section/:id` routes are unaffected.
 
-### 5.6 PS-05 — Request ID and request context
+### PS-05 — Request ID and request context
 
 - Generates a `crypto.randomUUID()` for every request. Any inbound `X-Request-Id` is ignored, so a client cannot inject values into logs.
 - Sets the `X-Request-Id` response header.
 - Runs the rest of the request inside the `AsyncLocalStorage` request context `{ requestId }`. PS-10 and PS-11 later run the remaining handlers in a nested context that adds the execution context.
 - Through the mixin (§4.7), every log line written while handling the request carries `requestId`, plus `companyId` and `userId` once the request is authenticated.
 
-### 5.7 PS-06 — Request logger
+### PS-06 — Request logger
 
 - Writes one line per logged request, on the response `finish` event, with exactly the fields in §4.7.
 - Reads only `req.method`, the matched route template (`req.baseUrl + req.route.path`, or `<unmatched>`), `res.statusCode`, a monotonic duration and the request context. Nothing else from the request or response is read, and `res.json` / `res.send` are not patched.
 - Level is `INFO`, except `DEBUG` for `/health`.
 - A request that ends in a 5xx is also logged by PS-07, at `ERROR`, with the error.
 
-### 5.8 PS-07 — Error handler and not-found handler
+### PS-07 — Error handler and not-found handler
 
 | Error | Status | Code | Message (British English, fixed text) | Logged |
 |---|---|---|---|---|
@@ -1228,10 +1230,10 @@ Rules:
 | Anything else | 500 | `INTERNAL_ERROR` | "An unexpected error occurred." | `ERROR` through the error serializer (§4.7), with `requestId`, `method` and `route` (the matched template, or `<unmatched>`; never the raw path, R3-14) |
 
 - Every response uses the envelope `{ "error": { "code", "message", "details", "requestId" } }`. `details` is always present (`{}` when empty).
-- A response never contains a stack trace, any database text, or an error's own message — the only message passed through is an `AppError`'s `safeMessage`. The current Replit handler returns `err.message` to the client; this one does not (§10).
+- A response never contains a stack trace, any database text, or an error's own message — the only message passed through is an `AppError`'s `safeMessage`. The current Replit handler returns `err.message` to the client; this one does not (§10.2).
 - If headers have already been sent, the handler only logs and ends the response.
 
-### 5.9 PS-08 — Health check
+### PS-08 — Health check
 
 - **Full mode:** acquires a pool connection and runs `SELECT 1`; the whole check has a 2-second timeout.
   - Success returns `200 {"status":"ok","mode":"full"}`.
@@ -1241,7 +1243,7 @@ Rules:
 - **No authentication.** The response body contains only the status and mode — no version, host, database name or error text.
 - **No transaction.** It is read-only and needs no tenant context, because it touches no tenant data.
 
-### 5.10 PS-09 — JWT utilities
+### PS-09 — JWT utilities
 
 - **`signPlatformToken(claims, keys)` / `signPortalToken(claims, secret)`.** The input is the typed claim set from §4.3, without `iss`, `aud`, `iat` and `exp`; the function sets those, with a 15-minute lifetime. The claims are validated with the same Zod schemas the verifiers use, so the platform can never sign a token it would then refuse.
 - **`verifyPlatformToken(token, keys)` / `verifyPortalToken(token, secret)`.** These apply the four rules in §4.3. Each returns typed claims, or throws:
@@ -1251,7 +1253,7 @@ Rules:
   Apart from expiry, the error never says which check failed.
 - No I/O, no transaction, nothing logged.
 
-### 5.11 PS-10 — Platform-token middleware (tenant context)
+### PS-10 — Platform-token middleware (tenant context)
 
 - **Input:** the `Authorization` header, which must match exactly `^Bearer ([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)$`: the scheme in that case, one space, and three base64url segments. The header may be at most 4 096 characters. Anything else gets `401 UNAUTHENTICATED` before any parsing (R2-14). Tokens are never read from a cookie or a query parameter.
 - **Header missing, or scheme not `Bearer`:** `401 UNAUTHENTICATED` "Authentication is required.", with `WWW-Authenticate: Bearer`.
@@ -1269,13 +1271,13 @@ Rules:
   - checking that the user still exists and is active (Phase 2).
 - **Records written:** none. Authentication failures are logged only by PS-06 (as status 401), never with the token.
 
-### 5.12 PS-11 — Portal-token middleware
+### PS-11 — Portal-token middleware
 
 The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
 - On success the actor is `{ kind: 'portal_user', portalAccountId: claims.sub, clientId: claims.client_id, role: 'client' }`.
 - A platform token on `/portal/v1`, or a portal token on `/api/v1`, fails verification and gets `401`, because the two token types use different algorithms, keys and audiences. This is part of roadmap Phase 6a's gate; the platform makes it true from Phase 0.
 
-### 5.13 PS-12 — `runInTransaction` (Unit of Work)
+### PS-12 — `runInTransaction` (Unit of Work)
 
 - **Inputs:**
   - an `ExecutionContext` (§4.1);
@@ -1291,7 +1293,7 @@ The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
 - **Records written:** only what `work` writes, plus T-1 and T-2 rows through PS-13 and PS-14.
 - **Errors:** an error thrown by `work` is rethrown unchanged. If the unit was poisoned but `work` returned normally, it throws `AuditWriteFailedError` or `OutboxWriteFailedError`, with the first failure as `cause`.
 
-### 5.14 PS-13 — `AuditWriter.append`
+### PS-13 — `AuditWriter.append`
 
 - **Input:** `AuditEntryInput` (§4.4).
 - **Checks:**
@@ -1305,7 +1307,7 @@ The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
 - **On failure** (validation or database): marks the unit poisoned, then throws. The caller's transaction cannot commit (§4.4).
 - **Never** updates, deletes or reads audit rows. `AuditWriter` exposes only `append()` (BACKEND_DATA_ARCHITECTURE.md, Audit Immutability Enforcement), and the Drizzle table object for T-1 is not exported from `server/platform/index.ts`.
 
-### 5.15 PS-14 — `OutboxWriter.record`
+### PS-14 — `OutboxWriter.record`
 
 - **Input:** `DomainEventInput` (§4.4).
 - **Checks:**
@@ -1319,7 +1321,7 @@ The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
 - **Delivery** never happens in the writing process. The worker can see the row only once the caller's transaction commits, so a rolled-back transaction leaves no row and its event can never be delivered (gate item 3).
 - The Drizzle table objects for T-2 and T-3 are not exported from the platform index.
 
-### 5.16 PS-15 — Subscriber registry
+### PS-15 — Subscriber registry
 
 - Built at start-up **by the worker only**, by calling every `ModuleRegistration.subscribers(deps)` factory (§4.8).
 - **Checks:**
@@ -1330,7 +1332,7 @@ The same as PS-10, but for `/portal/v1` and using `verifyPortalToken`.
 - **Lookup:** `subscribersFor(eventType)` returns subscribers in registration order.
 - Immutable after start-up.
 
-### 5.17 PS-16 — Port registry (typed cross-module ports)
+### PS-16 — Port registry (typed cross-module ports)
 
 A port lets a lower module call into a higher one without importing it. The lower module defines the interface, the higher module implements it, and the process entry points wire the two together, so every compile-time import still points downward (BACKEND_LAYERING_ARCHITECTURE.md, Application Layer — cross-context calls only through "well-defined contracts"; BACKEND_SERVICE_ARCHITECTURE.md, Module Boundary Rules 1–2). The **first user is D-17's `ApprovalEffectsPort`** (Review Centre defines it, Financial Normalization implements it; Phases 4 and 5) — §4.9 maps each D-17 requirement to this mechanism. Phase 0 defines no ports.
 
@@ -1363,7 +1365,7 @@ The registration fields are `requiresPorts` and `providesPorts` on `ModuleRegist
 - **Failure at start-up**: either process exits with code 1 and one `FATAL` line naming the port, before it listens (API) or claims an event (worker). There is no "missing handler" state at run time.
 - **No transaction** of its own.
 
-### 5.18 PS-17 — Outbox worker: claim
+### PS-17 — Outbox worker: claim
 
 ```sql
 UPDATE intelligence.event_outbox
@@ -1387,7 +1389,7 @@ RETURNING *;
 - The claim commits before any subscriber runs, so a slow subscriber never holds a row lock on the outbox.
 - **No tenant context.** The claim spans all companies by design. It is the only cross-tenant query in Phase 0, and it reads no business data. Every later step runs in the claimed event's own tenant context.
 
-### 5.19 PS-18 — Outbox worker: deliver one event
+### PS-18 — Outbox worker: deliver one event
 
 The worker handles each claimed row in claim order, under a new `runId`:
 
@@ -1408,7 +1410,7 @@ The worker handles each claimed row in claim order, under a new `runId`:
 
 **Transaction boundaries.** There is one transaction per subscriber, holding its work, its audit entries and events, and its `delivered_subscribers` mark. Then one transaction finishes the event (`event_log` row plus `delivered`). This keeps the documented lifecycle order — subscribers handle the event, then it is written to the event log, then the outbox row is marked delivered (BACKEND_EVENT_ARCHITECTURE.md, Event Lifecycle) — and makes each step atomic.
 
-### 5.20 PS-19 — Outbox worker: record a failed attempt
+### PS-19 — Outbox worker: record a failed attempt
 
 This is one statement in its own transaction, guarded by `locked_by = $workerId AND status = 'processing'`. It sets:
 - `retry_count = retry_count + 1`;
@@ -1420,7 +1422,7 @@ This is one statement in its own transaction, guarded by `locked_by = $workerId 
 
 It is logged at `WARN`, or at `ERROR` when dead-lettered (§4.7). Subscribers that succeeded stay in `delivered_subscribers`, so the next attempt runs only the ones that failed.
 
-### 5.21 PS-20 — Outbox worker: stale-lock recovery
+### PS-20 — Outbox worker: stale-lock recovery
 
 At the start of every cycle:
 
@@ -1448,11 +1450,11 @@ UPDATE intelligence.event_outbox
 
 If the loop itself hits an unexpected error (for example, the database is unreachable), it logs at `ERROR`, waits one poll interval and carries on. The process does not exit.
 
-### 5.22 PS-21 — Migration runner
+### PS-21 — Migration runner
 
 `server/platform/db/migrate.ts`, run as `npm run db:migrate`, applies `migrations/` with Drizzle's node-postgres migrator using `DATABASE_MIGRATION_URL`, and exits non-zero on failure. The test harness calls the same function with `DATABASE_MIGRATION_URL_TEST`, after PS-22. The API and the worker never apply migrations at start-up.
 
-### 5.23 PS-22 — Test-database guard
+### PS-22 — Test-database guard
 
 Specified in §4.6. It is a pure function. On failure it throws `TestDatabaseGuardError` naming the rule that failed and the variable — never the full URL, which contains a password.
 
@@ -1525,7 +1527,7 @@ Every error response under `/api/` and `/portal/v1/` uses this envelope (BACKEND
 
 Modules define their own codes as `AppError`s (for example `SUBMISSION_ALREADY_APPROVED`). Codes are `UPPER_SNAKE_CASE`. Messages are British English, written for the user, and contain no input values.
 
-Statuses 413, 415, 503 for `BACKEND_NOT_CONFIGURED`, and the codes `BAD_REQUEST` and `CLIENT_ERROR`, are not in BACKEND_API_ARCHITECTURE.md's status table; this specification adds them (§10). Status 429 (rate limiting) arrives in Phase 9.
+Statuses 413, 415, 503 for `BACKEND_NOT_CONFIGURED`, and the codes `BAD_REQUEST` and `CLIENT_ERROR`, are not in BACKEND_API_ARCHITECTURE.md's status table; this specification adds them (§10.3). Status 429 (rate limiting) arrives in Phase 9.
 
 ### 6.4 Validation
 
@@ -1632,11 +1634,12 @@ Together these cover every field the Audit Doctrine requires:
   |---|---|---|
   | platform engineer | `vitest.config.ts` | Three projects:<br>• `unit` — `server/**/*.test.ts`, except `*.db.test.ts` and `server/tests/**`; no database.<br>• `db` — `server/**/*.db.test.ts`, except `server/tests/**`.<br>• `gate` — `server/tests/gate/**/*.test.ts`.<br>`db` and `gate` use `fileParallelism: false` and the platform global setup below. All three use `passWithNoTests`. The config references **no** file under `server/tests/` |
   | platform engineer | `server/platform/testing/global-setup.ts` | Runs the guard (PS-22), then rebuilds the test database (§4.6). Runs once per `db` or `gate` invocation |
-  | platform engineer | `server/platform/testing/index.ts` | The test-only surface (rule 1a):<br>• `assertTestDatabase`, `rebuildTestDatabase`;<br>• the owner, `ledger_app` and `ledger_worker` clients for the test database;<br>• re-exports of what tests build processes from: `loadApiConfig`, `loadWorkerConfig`, `createLogger` (with an injectable output stream), `createApiApp`, `createOutboxWorker` (accepting the test-only `hooks.beforeFinish` and `hooks.afterSubscriber`, which `server/worker.ts` never sets), `buildRegistries`, a pool factory with an explicit `expectedRole` (G0-46(d)–(e)), `createSystemContext` |
+  | platform engineer | `server/platform/testing/index.ts` | The test-only surface (rule 1a):<br>• `assertTestDatabase`, `rebuildTestDatabase`;<br>• the owner, `ledger_app` and `ledger_worker` clients for the test database;<br>• re-exports of what tests build processes from: `loadApiConfig`, `loadWorkerConfig`, `createLogger` (with an injectable output stream), `createApiApp`, `createOutboxWorker` with the test-only hooks `beforeFinish` and `afterSubscriber` (see the hook rule below), `buildRegistries`, a pool factory with an explicit `expectedRole` (G0-46(d)–(e)), `createSystemContext` |
   | test engineer | `server/tests/support/gate-fixtures.ts` | `ensureGateFixtures()` — idempotent; called in each gate file's `beforeAll` through the owner client. It creates the test-only schema `gate_test` with three tables:<br>• `probe_state (id uuid primary key, company_id uuid not null, value text)` — granted to `ledger_runtime`;<br>• `subscriber_effects (subscriber text, effect_key uuid, primary key (subscriber, effect_key))` — granted to `ledger_runtime`;<br>• `api_only (id uuid primary key)` — granted to `ledger_app` **only**, used by G0-25;<br>• `unique_probe (value text primary key)` — granted to `ledger_runtime`, used by G0-27(k): a duplicate insert produces a 23505 whose `detail` quotes the value |
   | test engineer | `server/tests/support/` (other files) | • Probe module registrations: probe routes in namespaces `/__probe`, `/__alpha`, `/__beta`; probe subscribers; probe ports, one of them `humanOnly`; catalogue entries `gate_test_probe` and `gate_test_job_probe` (`jobRequired`) for audit, and `GateProbeRecorded` and `GateJobProbeRecorded` (`jobRequired`) for events.<br>• Test app and worker builders.<br>• An ES256 key pair and portal secret generated per run, plus a token factory.<br>• In-memory log capture at level `debug`, so even debug lines are checked.<br>• The boundary scanner and `fixtures/boundaries/` |
   | test engineer | `server/tests/gate/phase-0-infrastructure/*.test.ts` | The G0 tests |
 
+- **Test-only worker hooks cannot reach production.** The platform's production factory, `createOutboxWorker(deps)` in `server/platform/events/`, takes **no** hooks option. Internally the worker is built from a set of step functions: claim, recover, run-one-subscriber, finish, fail. The production factory passes the plain steps. The testing surface's own `createOutboxWorker(deps, hooks)` lives in `server/platform/testing/`, so it is never bundled. It *decorates* the step functions to call `afterSubscriber` after the run-one-subscriber step and `beforeFinish` before the finish step, then builds the worker from the decorated steps. The production code therefore contains no hook parameter and no hook call. G0-01 checks that `dist/worker.cjs` contains neither the string `beforeFinish` nor `afterSubscriber`.
 - **Rules.**
   - "Refused with 42501" means PostgreSQL `insufficient_privilege`; "23514" means `check_violation`.
   - Tests change only per-database object grants, and restore them in `finally`. They never change the attributes or memberships of an existing role, because roles are cluster-wide (§4.6). The single exception, G0-46(d)–(e), creates and drops its own throwaway roles.
@@ -1657,7 +1660,7 @@ Together these cover every field the Audit Doctrine requires:
 | Doctrine: no sensitive data in logs | G0-27, G0-28, G0-36, G0-46 |
 | Tenant context required (S-10; Shared Rules) | G0-07, G0-08, G0-17, G0-31, G0-49 |
 | Causation recorded and unforgeable (§4.1) | G0-18, G0-19 |
-| Frontend unchanged (§10; D-13) | G0-02, G0-37 |
+| Frontend unchanged (§10.4; D-13) | G0-02, G0-37 |
 | Test database isolation (D-12) | G0-39 |
 | No Redis (D-10) | G0-42 |
 | Module layout and boundaries (S-01) | G0-40, G0-41, G0-48 |
@@ -1703,7 +1706,7 @@ Together these cover every field the Audit Doctrine requires:
 
 | ID | Protects | Attack / check | Pass when |
 |---|---|---|---|
-| G0-01 **Command** | Gate item 1; R2-18 | Run `npm run check` (both `tsc` passes, including the test tsconfig) and `npm run build`. Then, from the app folder **with a `.env` file present** that sets every variable, run each bundle with an emptied environment (`env -i PATH="$PATH" node dist/index.cjs`, then the same for `dist/worker.cjs`). Finally, search both bundles for test-only strings | Both commands exit 0, and `dist/index.cjs`, `dist/worker.cjs` and `dist/public/index.html` exist. Run with an emptied environment, the API exits 1 with a `ConfigError` naming the four backend variables, and the worker exits 1 naming `DATABASE_WORKER_URL`. This proves the CommonJS bundles load (including the bundled `jose`), that a built bundle always runs as production, and that it never reads `.env` (§4.6). **Neither bundle contains** `__probe`, `gate_test`, `platform/testing`, `rebuildTestDatabase`, `GateProbeRecorded` or `server/tests` (R2-18) |
+| G0-01 **Command** | Gate item 1; R2-18 | Run `npm run check` (both `tsc` passes, including the test tsconfig) and `npm run build`. Then, from the app folder **with a `.env` file present** that sets every variable, run each bundle with an emptied environment (`env -i PATH="$PATH" node dist/index.cjs`, then the same for `dist/worker.cjs`). Finally, search both bundles for test-only strings | Both commands exit 0, and `dist/index.cjs`, `dist/worker.cjs` and `dist/public/index.html` exist. Run with an emptied environment, the API exits 1 with a `ConfigError` naming the four backend variables, and the worker exits 1 naming `DATABASE_WORKER_URL`. This proves the CommonJS bundles load (including the bundled `jose`), that a built bundle always runs as production, and that it never reads `.env` (§4.6). **Neither bundle contains** `__probe`, `gate_test`, `platform/testing`, `rebuildTestDatabase`, `GateProbeRecorded`, `server/tests`, `beforeFinish` or `afterSubscriber` (R2-18; test-only worker hooks) |
 | G0-02 **Command** | Frontend unchanged (D-13) | With **no** `.env` and no backend variables, start `npm run dev` and run the full Playwright suite (`npx playwright test`) | The same pass count as `backend` before Phase 0, with no new failures. The server log shows the single frontend-only `WARN` line |
 
 ### 9.4 Audit atomicity and the Unit of Work — gate item 2
@@ -1981,7 +1984,7 @@ The test engineer writes the gate tests in parallel. The implementer runs them o
 | 5 | `platform: unit of work, audit writer, outbox writer, tenant scoping` | `db/unit-of-work.ts`; `audit/audit-writer.ts`; `events/outbox-writer.ts`; `db/tenant-scope.ts`; execution contexts (WeakSet membership, deep freeze, expiry, private causation slot — §4.1), `server/platform/system/index.ts`, `tenantValues`, the savepoint-refusing `tx` wrapper, `app.company_id`, explicit-column inserts, the audit and event catalogue checks | Poisoning, closed-unit and nesting rules; strict input schemas; that context values win over caller values |
 | 6 | `platform: JWT utilities and token middleware` | `auth/keys.ts`, `auth/jwt.ts`, `auth/tenant-context.ts` (PS-10, PS-11); `/api/v1` and `/portal/v1` mounted in full mode; health full-mode branch | Every case in G0-32 and G0-33 at unit level; sign/verify round trip; refusal to sign invalid claims |
 | 7 | `platform: module registry, subscriber registry and port registry` | `ModuleRegistration` (§4.8: namespaces, `publicRoutes`, catalogues, `requiresPorts` / `providesPorts`); `humanOnly` port wrapper; `events/subscriber-registry.ts`; port registry with start-up validation; `ModuleDeps` with `contextOf`, `runInTransaction`, `logger` | Every check in PS-15 and PS-16 |
-| 8 | `platform: outbox worker and worker process` | `events/outbox-worker.ts` (PS-17 to PS-20, with `runOnce`, `start`, `stop`, the heartbeat and the test-only hooks). The commit report includes the `EXPLAIN` of the claim against 10 000 due rows (PS-17); `server/worker.ts`; second esbuild entry and the `jose` allowlist entry; `dev:worker`, `start:worker` | Claim, per-subscriber fencing, finish, failure and backoff arithmetic, stale recovery, two concurrent workers |
+| 8 | `platform: outbox worker and worker process` | `events/outbox-worker.ts` (PS-17 to PS-20, with `runOnce`, `start`, `stop` and the heartbeat, built from step functions so that `server/platform/testing/` can decorate them with the test-only hooks, §9.1). The commit report includes the `EXPLAIN` of the claim against 10 000 due rows (PS-17); `server/worker.ts`; second esbuild entry and the `jose` allowlist entry; `dev:worker`, `start:worker` | Claim, per-subscriber fencing, finish, failure and backoff arithmetic, stale recovery, two concurrent workers |
 | 9 | `platform: public surface and final verification` | `server/platform/index.ts` reviewed against §4 (no table objects, no pool; `testing/` not exported); dead code removed; nothing else | Full `npm test`, `npm run check`, `npm run build`, G0-01's bundle check, **Playwright with no `.env`** |
 
 Any change the engineer finds necessary outside this plan or this specification is reported, not made (roster, Working rules).
@@ -2003,7 +2006,7 @@ Any change the engineer finds necessary outside this plan or this specification 
 | OQ-09 | Should stale-lock recovery count as a failed attempt? | §4.5, PS-20 | **Closed — PM ruling, October 20, 2026: yes.** A recovery counts as a failed attempt (same count, backoff and dead letter), so an event that crashes the worker dead-letters after five crashes |
 | OQ-10 | No phase builds the requeue of dead-lettered events, or the outbox archival after 7 days (BACKEND_DATA_ARCHITECTURE.md, Event Outbox Table) | §1.2, §4.5 | Add both to Phase 9, following the §4.5 rules (R2-17): only `dead_lettered` rows can be requeued; a requeue never clears `delivered_subscribers` and is audited with the operator's identity; `delivered` rows are never requeued; archival removes only `delivered` rows, as a maintenance role with no other privilege. Until then, dead letters stay visible in the table |
 | OQ-11 | No phase lists the audit query service or `/api/v1/audit/` | §1.2, §3.2, §3.4 | Assign it to Phase 7, alongside the Event Monitor. That phase also adds the audit and event-log read indexes deferred from Phase 0 (R3-02), with `CREATE INDEX CONCURRENTLY` |
-| OQ-12 | A token stays valid for up to 15 minutes after its tenant is suspended, because the middleware does not check tenant status | §5.11, §4.10 | Close it in Phase 2 (§4.10). Phase 1 provides a tenant-status lookup; the token middleware checks it on each request, with a short cache. Session revocation then covers refresh |
+| OQ-12 | A token stays valid for up to 15 minutes after its tenant is suspended, because the middleware does not check tenant status | PS-10, §4.10 | Close it in Phase 2 (§4.10). Phase 1 provides a tenant-status lookup; the token middleware checks it on each request, with a short cache. Session revocation then covers refresh |
 | OQ-13 | Frontend-only mode: outside production, with no backend variables, the API serves the frontend and answers `/api` and `/portal/v1` with 503. Production and partial configurations fail fast | §4.6 | Approve. It keeps D-13's promise that frontend work and the Playwright suite need no database |
 | OQ-14 | The actor role for the D-15 provisioning script (a platform administrator outside the tenant model) | §3.2, §4.10 | Decide in the Phase 1 specification. Until then the script writes as `system` with no causation. Either way, it records the operator's identity in the audit entry's `metadata` and connects as `ledger_app` (§4.10) |
 | OQ-15 | Worker log correlation field named `runId` rather than the document's `jobId` | §4.7 | Confirm `runId` |
