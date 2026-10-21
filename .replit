@@ -1,0 +1,48 @@
+# Replit config for "the ledger main" (branch: main) — the working project.
+# The public demo is a separate Replit project on deploy/replit-public, with its own .replit.
+#
+# The app lives in ./The-Ledger, so every command runs from there. npm must
+# always be run inside ./The-Ledger: Replit's package installer otherwise
+# targets the repository root and creates an unrelated root npm project
+# (see .agents/memory/nested-npm-imports.md).
+modules = ["nodejs-22", "web", "postgresql-16"]
+run = "cd The-Ledger && npm install --no-audit --no-fund && npm run dev"
+
+[nix]
+channel = "stable-25_05"
+
+[agent]
+expertMode = true
+
+[deployment]
+deploymentTarget = "autoscale"
+build = ["sh", "-c", "cd The-Ledger && npm ci --no-audit --no-fund && npm run build"]
+run = ["sh", "-c", "cd The-Ledger && npm run start"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd The-Ledger && npm install --no-audit --no-fund && npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
