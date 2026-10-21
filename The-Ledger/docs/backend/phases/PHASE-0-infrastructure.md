@@ -145,6 +145,34 @@ The owner decided on October 21, 2026 that **all hosting is on Replit**. This se
 | RP-01 | Every database variable the platform reads has a `LEDGER_` prefix: `LEDGER_APP_DATABASE_URL`, `LEDGER_WORKER_DATABASE_URL`, `LEDGER_MIGRATION_DATABASE_URL`, and each with `_TEST`. Nothing falls back to Replit's `DATABASE_URL`, not even for migrations | §3.5, §3.6, §4.6, §9, §11 | Replit's `DATABASE_URL` is a superuser URL. Under the old name, the API would have connected as the superuser whenever the owner forgot to override it. That would defeat every grant in §3.5 (gate item 5; R2-B1, R2-05), and the self-check (R2-10) would have been the only barrier. A migration fallback to `DATABASE_URL` was considered and rejected: the injected value differs between the workspace and a deployment, so the database a migration touched would depend on where the command happened to run. The owner sets `LEDGER_MIGRATION_DATABASE_URL` explicitly in Replit Secrets (it may hold the same value as `DATABASE_URL`) |
 | RP-02 | The v0.5 production rule "refuse to start if an owner URL is present" is replaced. **Runtime code never reads** the owner or migration variables, Replit's `DATABASE_URL`, or any `PG*` variable. `server/platform/config/` is the only code that reads `process.env` (import rule 13); the runtime loaders read only their listed variables; and the per-connection self-check refuses a superuser or owner connection | §3.5, §4.6, §4.8 | On Replit a superuser `DATABASE_URL` is always present, so the old rule would stop every production start. The intent of R2-09 and R2-10 was that a runtime process never *uses* owner credentials. That is now enforced at the two places it can be: reading (one module, an allowlist) and connecting (the self-check). The credentials still exist in the process environment on Replit, and this specification does not claim otherwise |
 | RP-03 | Runtime and test URLs must state user, password, host and database explicitly. The platform builds `pg.Pool` from an explicit configuration object, with every field set, so node-postgres never fills a field from `PG*` variables or `~/.pgpass`. The self-check also verifies the connected database | §4.6, PS-02, PS-03, §3.5 | node-postgres fills missing connection fields from `PGHOST`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` and `PGPORT`. On Replit those belong to the superuser, so a runtime URL without a password could silently connect with the superuser's password, or as the superuser |
+| RP-04 | Every statement that assumed a non-superuser owner was re-checked. Three changed. (1) The test rebuild excludes system schemas, which the bootstrap superuser owns. (2) The trigger limits now say that a superuser bypasses grants and can switch triggers off with `session_replication_role = replica`; the runtime roles cannot. (3) G0-46's `pg_write_all_data` case is unconditional, because a superuser can always grant it. The rest still holds: the self-check, the grants, `ALTER DEFAULT PRIVILEGES` (applied to objects `postgres` creates) and the owner SQL | §3.5, §4.6, §9 | Without the exclusion, the first rebuild on either host would have tried to drop `pg_catalog`. R2-09 already described the trigger limit for an ordinary owner; a superuser has the additional switch, now stated and tested |
+| RP-05 | Two test environments: the local mirror, used by agents at every commit, and Replit's `ledger_test`, used by the PM before a phase closes. Same harness and tests; only the URLs differ. G0-01 and G0-02 run on the laptop | §9.1, §9.13, §11 | Agents cannot reach `helium` |
+| RP-06 | **Development:** the platform engineer changes the root `.replit` in Phase 0 commit 8, adding a "Start worker" workflow to the parallel "Project" workflow (TOML below). **Production:** `autoscale` cannot run a long-lived worker; a separate always-on deployment is a Phase 9 obligation (§4.10). Nothing in Phase 0 depends on it | §4.10, §11 | Two process types (BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Process Model) |
+| RP-07 | Replit Secrets instead of `.env`; `trust proxy` stays `false`, because Phase 0 reads no client address or protocol; frame-denial headers stay on API paths only, so Replit's webview iframe still works; Vite HMR at `/vite-hmr` is unaffected; port 5000 is unchanged; `process.loadEnvFile` exists on Node 22. Risk recorded: once Phase 0 reaches `main`, the `autoscale` deployment of "The-Ledger-main" runs in production mode and fails fast unless its deployment Secrets hold the four backend variables (OQ-19) | §4.6, §4.7, §4.10, §12 | Each item was checked against the Replit facts above |
+
+**RP-06 — the `.replit` change** (Phase 0 commit 8, by the platform engineer, who owns root configuration):
+
+```toml
+# added to the existing "Project" workflow (mode = "parallel"), after its "Start application" task:
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start worker"
+
+# new workflow:
+[[workflows.workflow]]
+name = "Start worker"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd The-Ledger && until node -e \"fetch('http://localhost:5000/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))\"; do sleep 2; done && npm run dev:worker"
+```
+
+- **Why Node, not `curl`.** The wait loop uses Node 22's built-in `fetch`, because Node is guaranteed by the `nodejs-22` module and `curl` may not be in Replit's nix environment.
+- **Why the worker waits for `/health`.** It waits until the API answers `/health`. By then "Start application" has finished `npm install`, so the worker never starts against a half-installed `node_modules`.
+- **Without backend configuration.** In frontend-only mode (no backend Secrets) the API still answers `/health`. The worker then fails fast with its `ConfigError` (§4.6). That stops only the worker task; the parallel API task keeps running.
+- **When it takes effect.** `.replit` reaches the Replit project only when `backend` is merged into `main`, the branch the project runs (§2.5).
+
 
 ---
 
@@ -344,7 +372,7 @@ So the two runtime login roles share only a group role, and neither inherits fro
 
 | Role | Kind | Used by | Phase 0 privileges | Connection variables |
 |---|---|---|---|---|
-| Owner (the database owner) | login | `npm run db:migrate`, `drizzle-kit`, the test-database rebuild — **nothing else** | Owns every schema, table, sequence and function | `LEDGER_MIGRATION_DATABASE_URL`, `LEDGER_MIGRATION_DATABASE_URL_TEST` |
+| Owner (the database owner) | login — on Replit and on the local mirror this is the **`postgres` superuser** (RP-04) | `npm run db:migrate`, `drizzle-kit`, the test-database rebuild — **nothing else** | Owns every schema, table, sequence and function. As a superuser it also bypasses every privilege check | `LEDGER_MIGRATION_DATABASE_URL`, `LEDGER_MIGRATION_DATABASE_URL_TEST` |
 | `ledger_runtime` | **group, `NOLOGIN`** | — (granted to the two login roles below) | Schema `USAGE` on `audit`, `intelligence`. `audit.audit_entries`: `SELECT`, column-level `INSERT`. `intelligence.event_outbox`: `SELECT`, column-level `INSERT` of the envelope columns. `intelligence.event_log`: `SELECT` | — |
 | `ledger_app` | login, member of `ledger_runtime` | The API process; runtime scripts such as D-15 provisioning | `ledger_runtime` only, in Phase 0. API-only privileges arrive in later phases (§3.1.8a) | `LEDGER_APP_DATABASE_URL`, `LEDGER_APP_DATABASE_URL_TEST` |
 | `ledger_worker` | login, member of `ledger_runtime` | The worker process | `ledger_runtime`, plus `intelligence.event_outbox`: `UPDATE` of the delivery-state columns; `intelligence.event_log`: column-level `INSERT` | `LEDGER_WORKER_DATABASE_URL`, `LEDGER_WORKER_DATABASE_URL_TEST` |
@@ -445,7 +473,13 @@ CREATE TRIGGER event_log_no_truncate BEFORE TRUNCATE ON intelligence.event_log
 What the triggers do and do not cover:
 - **Owner DML is refused.** `UPDATE`, `DELETE` and `TRUNCATE` by the owner on T-1 or T-3 now fail.
 - **Runtime roles are refused earlier.** They fail on the privilege check (42501) before any trigger fires. The trigger does not need `EXECUTE` from the caller: PostgreSQL does not check `EXECUTE` when a trigger fires.
-- **The owner can still change history deliberately**, by dropping or disabling a trigger. That is a DDL change made with the migration credentials. The rule below and §3.6 keep those credentials out of every runtime path; this specification does not claim more.
+- **The owner can still change history deliberately**, by dropping or disabling a trigger. That is a DDL change made with the migration credentials. On both hosts the owner is the `postgres` superuser (RP-04), which has two more ways to do it:
+  - it bypasses every grant;
+  - it can run `SET session_replication_role = replica`, which stops ordinary triggers firing for its session.
+
+  Superusers are not exempt from the triggers otherwise. With the default `session_replication_role = origin`, a superuser's `UPDATE`, `DELETE` or `TRUNCATE` is still refused (G0-45). `session_replication_role` cannot be set by the runtime roles; only a superuser, or a role granted `SET` on it, can (G0-20).
+
+  The rule below and §3.6 keep the owner credentials out of every runtime path. On Replit they are present in every process's environment (§2.5), so the protection is that runtime code never reads or uses them (RP-02) and the self-check refuses any superuser connection. This specification does not claim more.
 - **Dropping is unaffected.** `DROP TABLE` and `DROP SCHEMA … CASCADE` fire no row or `TRUNCATE` triggers, so the test-database rebuild (§4.6) still works.
 
 **Rule: runtime code never uses the owner credentials.** The API, the worker and every runtime script connect as a runtime role:
@@ -882,6 +916,8 @@ So `npm run dev` with no `.env` behaves as it does today for the frontend and th
 - `.gitignore` gains `.env*` with the exception `!.env.example`, so `.env.local`, `.env.test` and similar files are never committed.
 - `.env.example` is committed. It lists every variable, and **every value in it deliberately fails validation** — for example `PORTAL_JWT_SECRET=replace-me` (too short once decoded) and `LEDGER_APP_DATABASE_URL=postgresql://replace-me` (no database). Copying it unchanged therefore fails fast with the variable names; it can never start a backend with known secrets.
 - On a hosted deployment the variables come from the host's secret store.
+- **On Replit (RP-07)** the variables come from **Replit Secrets**, which Replit puts into the process environment. They therefore win over any `.env` file. The workspace keeps no `.env` (it would be git-ignored, but it would be another copy of the secrets). A Replit deployment has its own Secrets.
+  - `process.loadEnvFile` exists on Replit's Node 22 (it was added in Node 20.12 and 21.7). The laptop runs Node 24.
 
 **Built bundles are always production.** `script/build.ts` passes esbuild `define: { "process.env.NODE_ENV": '"production"' }` (kept from the Replit starter). esbuild replaces that exact expression in the bundled code with the literal `"production"`. The loader is therefore required to resolve the environment name like this:
 
@@ -917,7 +953,7 @@ It refuses if any of these holds:
 The **host-equality rule from v0.3 is dropped.** Hosted providers commonly give the same database a pooled and a direct host name, so the rule would refuse valid configurations. It is replaced by the server-side check below, which asks the database itself.
 
 **Server-side checks.** Two checks stop a test run from touching a non-test database even if a URL is misread:
-- `rebuildTestDatabase()` calls the guard itself. Then, on the live owner connection and before any `DROP`, it checks that `SELECT current_database()` ends in `_test` and equals the guarded name. Every `DROP SCHEMA` it issues is built with `format('DROP SCHEMA %I CASCADE', nspname)` from the catalogue, never by string concatenation.
+- `rebuildTestDatabase()` calls the guard itself. Then, on the live owner connection and before any `DROP`, it checks that `SELECT current_database()` ends in `_test` and equals the guarded name. Every `DROP SCHEMA` it issues is built with `format('DROP SCHEMA %I CASCADE', nspname)` from the catalogue query in the lifecycle below — which excludes `public`, `information_schema` and `pg_*` (RP-04) — never by string concatenation.
 - `db/client.ts` refuses, when running under Vitest (the config module reports `isVitest`, read from `VITEST`; rule 13), to create a pool whose URL database does not end in `_test`. When creating it, it also adds `current_database()` to the first-use check of `withClient` (§3.5, R3-03), so a connection whose server-side database does not end in `_test` is destroyed before any test statement runs. An implementer's `*.db.test.ts` file can therefore never reach the development database by mistake.
 
 **Tests never change existing roles.** Roles are cluster-wide, so a change would leak into every database on the server. The one exception is G0-46(d)–(e). That test creates, and in `finally` drops, its own throwaway roles named `gate_probe_<random>` and `gate_extra_<random>`. It never alters `ledger_app`, `ledger_worker` or `ledger_runtime`, apart from granting `ledger_runtime` membership to its throwaway role. Tests change only per-database object grants (for example revoking `INSERT` for G0-03), and restore them in `finally`. They never change role attributes or memberships.
@@ -926,7 +962,8 @@ The Vitest global setup and every test database client call the guard.
 
 **Test database lifecycle.** At the start of each `db` or `gate` test run, the platform's global setup (`server/platform/testing/global-setup.ts`, §9.1) rebuilds the test database:
 1. It runs the guard.
-2. Connected as the owner, it drops every schema the owner role owns except `public`, with `CASCADE`. This includes `audit`, `intelligence`, `drizzle`, any test-only schema such as `gate_test`, and every later module schema, so the rule never needs updating.
+2. Connected as the owner, it drops, with `CASCADE`, every schema the owner role owns **except** `public`, `information_schema` and every schema whose name starts with `pg_`. This covers `audit`, `intelligence`, `drizzle`, any test-only schema such as `gate_test`, and every later module schema, so the rule never needs updating.
+   - **RP-04:** the owner on both hosts is `postgres`, the bootstrap superuser. It also owns `pg_catalog`, `pg_toast` and `information_schema`, so without the exclusions the rebuild would try to drop the system catalogue. The query is `SELECT nspname FROM pg_namespace WHERE nspowner = current_user::regrole AND nspname <> 'public' AND nspname <> 'information_schema' AND nspname NOT LIKE 'pg\_%'`. A gate check asserts that the list it would drop contains no system schema (G0-39).
 3. It re-runs every migration.
 
 Audit and event-log rows cannot be removed by any runtime role (grants), nor by owner DML (the immutability triggers, §3.5). In the test database they disappear only when this rebuild drops their schema as the owner, and the rebuild runs only in a database that has passed the guard.
@@ -1082,7 +1119,7 @@ It carries **no** connection string, pool, database handle, key or secret, and n
     - No other file imports it — not the module's own routes, subscribers or other application code.
 
     A humanOnly port's guard therefore cannot be skipped by calling the implementation directly. The boundary scanner checks the import and re-export parts. "Not passed to the module's own routers or subscribers inside `index.ts`" is a review item.
-13. **Only `server/platform/config/` reads the environment (RP-02).** No other file under `server/` mentions `process.env`. That includes the entry points, `server/vite.ts` and `server/static.ts`: today's `process.env.NODE_ENV` and `process.env.PORT` reads move into the loaders. The literal `process.env.NODE_ENV` that esbuild replaces (§4.6) is in the config module. Outside `server/`, `drizzle.config.ts`, `script/build.ts` and `vite.config.ts` read only their documented variables.
+13. **Only `server/platform/config/` reads the environment (RP-02).** No other file under `server/` mentions `process.env`. That includes the entry points, `server/vite.ts` and `server/static.ts`: today's `process.env.NODE_ENV` and `process.env.PORT` reads move into the loaders. The NODE_ENV rule in §4.6 still uses the **literal expression** `process.env.NODE_ENV` inside the config module. esbuild's `define` replaces that exact expression (R1-04), so built bundles still always run as production. Moving the read into the config module changes where the expression sits, not its form; reading NODE_ENV through any alias would break this. Outside `server/`, `drizzle.config.ts`, `script/build.ts` and `vite.config.ts` read only their documented variables.
 
 Rules 4 and 5 read the layering document's dependency directions literally (Application → Domain; Infrastructure → Domain). The Application Layer reaches its repository implementations through the interfaces it is given (dependency injection at the module's `index.ts`), which BACKEND_LAYERING_ARCHITECTURE.md allows ("May call infrastructure implementations through injected interfaces").
 
@@ -1147,6 +1184,9 @@ Some of what Phase 0 guarantees holds only if later specifications respect it. E
 | Phase 9 | Row Level Security on every tenant table, with `FORCE ROW LEVEL SECURITY`, reading `app.company_id` | §4.2 |
 | Phase 9 | HSTS; a Content Security Policy for the frontend; rate limits (D-10); signing-key rotation with `kid` | §6.2, §4.3 |
 | Phase 9 | Requeue and archival tooling that follows the §4.5 rules (OQ-10) | §4.5 (R2-17) |
+| Phase 9 | **Worker deployment on Replit (RP-06).** Replit's `autoscale` deployment serves requests and scales to zero, so it cannot host the long-running worker. Phase 9 adds a separate always-on deployment for `npm run start:worker` (a Reserved VM or background-worker deployment) that shares the production database. It also creates the four roles in the Replit **production** database, with its own Secrets (the `LEDGER_*` variables and the JWT keys); roles are per server, and the production database is not `heliumdb` | §2.5, §3.5 |
+| Phase 9 | If client address or protocol is needed (rate limiting), set `trust proxy` to Replit's single proxy hop, never `true` | §4.7 (RP-07) |
+| Phase 9 | The frontend CSP allows Replit's webview origin in development, or applies in production only | §6.2 (RP-07) |
 
 ---
 
@@ -1538,6 +1578,14 @@ Phase 0 adds exactly one route. Everything else under the two API prefixes answe
 
 **Proxy and client address (R2-15).** `trust proxy` stays `false`, and no Phase 0 code reads or logs `req.ip`, `X-Forwarded-For` or any other client address. Rate limiting by client (Phase 9) decides its own proxy setting.
 
+**Behind Replit's proxy (RP-07).** Replit terminates TLS and forwards to port 5000, which `.replit` maps to external port 80. Phase 0 depends on neither the client's address nor the request protocol: it reads no `req.ip`, `req.protocol`, `req.secure` or `X-Forwarded-*`, and it sets no cookies. So `trust proxy = false` is correct on Replit, and nothing in Phase 0 changes.
+- Phase 2's refresh cookie sets `Secure` explicitly, so it does not need `req.secure`.
+- If a later phase needs the client address (Phase 9 rate limiting) or the original protocol, it sets `trust proxy` to exactly Replit's one proxy hop (§4.10).
+
+**Replit's preview iframe (RP-07).** The Replit webview shows the app inside an iframe. The frame-denial headers (`X-Frame-Options: DENY`, `frame-ancestors 'none'`) are set **only** on `/api`, `/portal/v1` and `/health` responses, never on the frontend, so the preview keeps working. Phase 9's frontend CSP must allow Replit's webview origin in development, or be applied in production only (§4.10).
+
+**Vite HMR (RP-07).** `server/vite.ts` attaches HMR to the same HTTP server at `/vite-hmr`. WebSocket upgrades are handled by the HTTP server before Express routing, and `/vite-hmr` is not under `/api`, `/portal/v1` or `/health`. Nothing in Phase 0 changes its behaviour through Replit's proxy: it is not routed, not logged and not given security headers.
+
 Request bodies are accepted only on `/api/v1` and `/portal/v1`, must be JSON, and are limited to 1 MB (BACKEND_API_ARCHITECTURE.md, API Security Standards).
 
 ### 6.3 Error envelope and platform error codes
@@ -1668,6 +1716,19 @@ Together these cover every field the Audit Doctrine requires:
 
 - **Location.** Gate tests live in `server/tests/gate/phase-0-infrastructure/`. `backend-test-engineer` writes them from this section, not from the implementation. They use Vitest and Supertest against the test database (D-12, D-14).
 - **Two kinds of test.** Tests marked **Command** are verification commands the PM runs. Every other test is a Vitest test in the `gate` project.
+- **Two test environments (RP-05).** The same harness and the same tests run in both; only the URLs differ.
+
+  | | Local mirror (agents, every commit) | Replit `ledger_test` (the PM, before a phase closes) |
+  |---|---|---|
+  | Where it runs | The owner's laptop, inside the agent's worktree | The Replit shell of "The-Ledger-main", after the PM pushes the integration branch and pulls it there |
+  | Database | Docker `ledger-pg`, PostgreSQL 16.14, `127.0.0.1:55432`, database `ledger_test` | Replit's PostgreSQL 16.10, `helium:5432`, database `ledger_test` |
+  | Owner | `postgres` superuser | `postgres` superuser |
+  | Where the URLs come from | The worktree's git-ignored `.env`, copied from the PM's credentials file outside the repository | Replit Secrets: `LEDGER_APP_DATABASE_URL_TEST`, `LEDGER_WORKER_DATABASE_URL_TEST` and `LEDGER_MIGRATION_DATABASE_URL_TEST`, all naming `ledger_test` on `helium`, set by the owner/PM after the role passwords have been set with `\password` |
+  | Replit-injected `DATABASE_URL` and `PG*` | Absent, unless a test sets them | Present (superuser, `heliumdb`) |
+  | Command | `npm test` (`unit`, `db`, `gate`) | `npm test` |
+  | G0-01, G0-02 (commands) | Run here — Playwright needs the laptop's browsers | Not run |
+
+  **What must differ: only the URLs.** Two tests, G0-36(j) and G0-51, prove the platform ignores Replit's injected superuser variables. They set `DATABASE_URL` and the `PG*` variables themselves, to the owner's credentials, so they test the same thing in both environments. On Replit the real injected values are present as well, which makes the Replit run the more realistic one. The guard's `heliumdb` check (§4.6) does not fire locally, where no `DATABASE_URL` names it.
 - **Who builds the harness.** Nothing the implementer's branch needs may live in the test engineer's folders, because those files do not exist on that branch until the gate-test job merges (roster, Folder Ownership).
 
   | Created by | File | Does |
@@ -1873,12 +1934,12 @@ Where no test can fail, and why that is acceptable:
 
 ### 9.13 Run cost and determinism (R3-08)
 
-**Estimated run time**, against a hosted test database with about 30 ms per round trip:
+**Estimated run time** on the local mirror (under 1 ms per round trip on `127.0.0.1`), with the hosted-database estimate kept for reference (about 30 ms per round trip). On Replit, `helium` is inside the same container network, so the Replit run is close to the local figures (RP-05):
 
 | Part | Estimate | Main cost |
 |---|---|---|
-| Global setup: guard, rebuild (drop schemas, three migrations) | 5–15 s | About 60 statements, plus the hosted connection set-up |
-| G0-03 – G0-50 (Vitest, one file at a time) | 2–4 min | Mostly round trips. The slowest tests are G0-13 (30 events, two workers, about 5 s), G0-14 (latches, two cycles, about 3 s), G0-38 (concurrency and the refused port, about 2 s), G0-44 (five recoveries, about 2 s) and G0-46 (throwaway roles, about 2 s) |
+| Global setup: guard, rebuild (drop schemas, three migrations) | under 5 s locally; 5–15 s hosted | About 60 statements, plus the connection set-up |
+| G0-03 – G0-51 (Vitest, one file at a time) | about 1 min locally; 2–4 min hosted | Mostly round trips. The slowest tests are G0-13 (30 events, two workers, about 5 s), G0-14 (latches, two cycles, about 3 s), G0-38 (concurrency and the refused port, about 2 s), G0-44 (five recoveries, about 2 s) and G0-46 (throwaway roles, about 2 s) |
 | G0-01 (command: check, build, bundle runs, string search) | 1–2 min | `tsc` twice, then the Vite and esbuild builds |
 | G0-02 (command: full Playwright suite) | about 40 min | The existing suite |
 
@@ -2005,9 +2066,10 @@ This is a map of guarantees already specified elsewhere in this document. It add
 
 ### 11.2 Commits
 
-**Prerequisites (owner or PM, before commit 4):**
-- the role SQL from §3.5, run on the development and test databases;
-- a local `.env` with every variable in §4.6, including the three test URLs.
+**Prerequisites (owner or PM, before commit 4)** — on both hosts these are already done (§2.5), except where stated:
+- the role SQL from §3.5, run on the development and test databases: done on the local mirror; done on Replit **except the role passwords**, which the owner sets with `\password` before the first Replit gate run;
+- for the implementer, a worktree `.env` for the **local mirror** with every variable in §4.6, including the three `_TEST` URLs. It is copied from the PM's credentials file and points at `127.0.0.1:55432`;
+- for the PM's phase gate on Replit, the three `_TEST` URLs in **Replit Secrets** (§9.1, RP-05).
 
 Commits 1–3 need no database.
 
@@ -2024,7 +2086,7 @@ The test engineer writes the gate tests in parallel. The implementer runs them o
 | 5 | `platform: unit of work, audit writer, outbox writer, tenant scoping` | `db/unit-of-work.ts`; `audit/audit-writer.ts`; `events/outbox-writer.ts`; `db/tenant-scope.ts`; execution contexts (WeakSet membership, deep freeze, expiry, private causation slot — §4.1), `server/platform/system/index.ts`, `tenantValues`, the savepoint-refusing `tx` wrapper, `app.company_id`, explicit-column inserts, the audit and event catalogue checks | Poisoning, closed-unit and nesting rules; strict input schemas; that context values win over caller values |
 | 6 | `platform: JWT utilities and token middleware` | `auth/keys.ts`, `auth/jwt.ts`, `auth/tenant-context.ts` (PS-10, PS-11); `/api/v1` and `/portal/v1` mounted in full mode; health full-mode branch | Every case in G0-32 and G0-33 at unit level; sign/verify round trip; refusal to sign invalid claims |
 | 7 | `platform: module registry, subscriber registry and port registry` | `ModuleRegistration` (§4.8: namespaces, `publicRoutes`, catalogues, `requiresPorts` / `providesPorts`); `humanOnly` port wrapper; `events/subscriber-registry.ts`; port registry with start-up validation; `ModuleDeps` with `contextOf`, `runInTransaction`, `logger` | Every check in PS-15 and PS-16 |
-| 8 | `platform: outbox worker and worker process` | `events/outbox-worker.ts` (PS-17 to PS-20, with `runOnce`, `start`, `stop` and the heartbeat, built from step functions so that `server/platform/testing/` can decorate them with the test-only hooks, §9.1). The commit report includes the `EXPLAIN` of the claim against 10 000 due rows (PS-17); `server/worker.ts`; second esbuild entry and the `jose` allowlist entry; `dev:worker`, `start:worker` | Claim, per-subscriber fencing, finish, failure and backoff arithmetic, stale recovery, two concurrent workers |
+| 8 | `platform: outbox worker and worker process` | **`.replit` (repository root):** the "Start worker" workflow and its task in "Project", exactly as in §2.5 RP-06. `events/outbox-worker.ts` (PS-17 to PS-20, with `runOnce`, `start`, `stop` and the heartbeat, built from step functions so that `server/platform/testing/` can decorate them with the test-only hooks, §9.1). The commit report includes the `EXPLAIN` of the claim against 10 000 due rows (PS-17); `server/worker.ts`; second esbuild entry and the `jose` allowlist entry; `dev:worker`, `start:worker` | Claim, per-subscriber fencing, finish, failure and backoff arithmetic, stale recovery, two concurrent workers |
 | 9 | `platform: public surface and final verification` | `server/platform/index.ts` reviewed against §4 (no table objects, no pool; `testing/` not exported); dead code removed; nothing else | Full `npm test`, `npm run check`, `npm run build`, G0-01's bundle check, **Playwright with no `.env`** |
 
 Any change the engineer finds necessary outside this plan or this specification is reported, not made (roster, Working rules).
@@ -2053,3 +2115,4 @@ Any change the engineer finds necessary outside this plan or this specification 
 | OQ-16 | Approval → financial record: one transaction or a subscriber | §4.9 | **Decided as D-17** (merged into `backend` @ 9500bca): one transaction, with dependency inversion through an `ApprovalEffectsPort`. §4.9 and PS-16 now cite it and map each of its requirements to the port mechanism (review round 1, R1-01). Removed from the open list |
 | OQ-17 | A shared pagination helper (cursor encode/decode, `limit` 1–200 default 50, response shape) is not in the roadmap's Phase 0 list | §6.5 | **Closed — approved by the owner, October 21, 2026.** The pagination helper is added in Phase 1's platform work, before the first list endpoint, so every module paginates the same way |
 | OQ-18 | BACKEND_DATA_ARCHITECTURE.md says "Row-level security prevents any write except INSERT" on the audit table; RLS is Phase 9 | §1.2, §3.5 | **Closed — approved by the owner, October 21, 2026.** Column and table grants satisfy the guarantee until Phase 9 |
+| OQ-19 | Once Phase 0 is merged into `main`, the Replit project's `autoscale` deployment (`npm run start`) runs in production mode. It refuses to start unless the deployment's Secrets hold `LEDGER_APP_DATABASE_URL` (for the production database's `ledger_app`), `JWT_PRIVATE_KEY`, `JWT_PUBLIC_KEY` and `PORTAL_JWT_SECRET` (§4.6) | §2.5 (RP-07), §4.6 | Before `backend` is merged into `main`, the owner either configures those deployment Secrets and the production database roles (the Phase 9 work, brought forward), or does not publish the deployment from `main` until then. The public demo is a separate project on `deploy/replit-public` and is unaffected |
