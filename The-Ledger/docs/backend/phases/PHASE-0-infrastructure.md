@@ -155,7 +155,7 @@ Append-only and permanent. **Every column is immutable**: the runtime roles can 
 | Column | Type | Null | Default | Constraint / notes | Source field |
 |---|---|---|---|---|---|
 | `audit_id` | `uuid` | no | `gen_random_uuid()` | Primary key | `audit_id` |
-| `sequence_no` | `bigint` | no | `GENERATED ALWAYS AS IDENTITY` | `UNIQUE`. Insertion order; the stable sort and cursor key for later audit queries (entries in one transaction share `occurred_at`) | — (added, §10) |
+| `sequence_no` | `bigint` | no | `GENERATED ALWAYS AS IDENTITY` | No index and no `UNIQUE` constraint in Phase 0 (R3-02). Uniqueness comes from the identity sequence: no runtime role may supply the column (§3.5). Insertion order; the stable sort and cursor key for later audit queries (entries in one transaction share `occurred_at`) | — (added, §10) |
 | `company_id` | `uuid` | no | — | Taken from the Unit of Work's tenant context, never from the caller's entry (§4.4). Foreign key added in Phase 1 (§3.1.7) | `company_id` |
 | `entry_type` | `text` | no | — | `CHECK (entry_type ~ '^[a-z][a-z0-9_]{2,99}$')` — the domain audit entry type, e.g. `timesheet_approved` | `entry_type` / "what" |
 | `actor_id` | `uuid` | yes | — | The user (or portal account) who acted; `NULL` only for the system actor | `actor_id` / "who" |
@@ -190,19 +190,24 @@ Together with `actor_role` these columns distinguish the three kinds of writer:
 
 The D-15 provisioning script is a platform administrator acting outside the tenant model; whether its entries keep `actor_role = 'system'` or get their own actor role is for the Phase 1 specification (OQ-14). Until then it is the third row.
 
-Indexes (each leads with `company_id`, because every audit read is tenant-scoped):
+Indexes — **write cost first (R3-02).** The audit table is written by every financially relevant action from Phase 1 onward, and every index is paid for on every write. Phase 0 therefore creates only the indexes that a constraint, or a reader in Phases 0–6, needs:
 
-| Name | Columns | Why |
+| Name | Columns | Kept because |
 |---|---|---|
-| `audit_entries_pkey` | `(audit_id)` | Primary key |
-| `audit_entries_sequence_no_key` | `(sequence_no)` | Unique identity |
-| `audit_entries_company_sequence_idx` | `(company_id, sequence_no)` | Tenant timeline, cursor pagination |
-| `audit_entries_company_occurred_idx` | `(company_id, occurred_at)` | Time-range filter (Audit Trail View) |
-| `audit_entries_company_source_idx` | `(company_id, source_object_type, source_object_id)` | History of one entity |
-| `audit_entries_company_job_idx` | `(company_id, job_id) WHERE job_id IS NOT NULL` | Job audit trail (mini-ledger doctrine) |
-| `audit_entries_company_causation_idx` | `(company_id, causation_event_id) WHERE causation_event_id IS NOT NULL` | Trace a record back to the event (and so the approval) that caused it (BACKEND_OBSERVABILITY_ARCHITECTURE.md, How Platform-Wide Traceability Is Preserved) |
+| `audit_entries_pkey` | `(audit_id)` | Primary key. `AuditWriter` returns `audit_id`, and gate tests look entries up by it |
 
-Indexes for the actor and entry-type filters of the Audit Trail View are left to the phase that builds the audit query (OQ-11), because each index adds cost to every audit write.
+No other index exists in Phase 0, because no Phase 0–6 code reads audit entries by anything else. The readers of the Audit Trail View — the audit query service and `/api/v1/audit/` — are unassigned (OQ-11; proposed Phase 7). Gate tests in later phases look entries up within one test company, in a small test database, so a sequential scan costs nothing there.
+
+The phase that builds the audit query adds, in the same migration as its reader, the indexes that reader needs. The expected set:
+- `(company_id, sequence_no)` — timeline and cursor;
+- `(company_id, occurred_at)`;
+- `(company_id, source_object_type, source_object_id)`;
+- `(company_id, job_id) WHERE job_id IS NOT NULL`;
+- `(company_id, causation_event_id) WHERE causation_event_id IS NOT NULL`;
+- the actor and entry-type indexes.
+
+By then the table already holds rows, so that phase builds the indexes with `CREATE INDEX CONCURRENTLY`, in a custom migration that runs outside a transaction.
+
 
 ### 3.3 T-2 `intelligence.event_outbox`
 
@@ -249,10 +254,12 @@ Indexes:
 
 | Name | Columns | Why |
 |---|---|---|
-| `event_outbox_pkey` | `(outbox_id)` | Primary key |
-| `event_outbox_event_id_key` | `(event_id)` | Unique envelope ID |
-| `event_outbox_ready_idx` | `(next_attempt_at, created_at) WHERE status IN ('pending','failed')` | The worker's claim query touches only claimable rows |
-| `event_outbox_processing_idx` | `(locked_at) WHERE status = 'processing'` | Stale-lock recovery |
+| `event_outbox_pkey` | `(outbox_id)` | Primary key; every worker `UPDATE` (PS-18 to PS-20) finds its row by it |
+| `event_outbox_event_id_key` | `(event_id)` | Constraint: `eventId` is every subscriber's default idempotency key (§7.3), so a duplicate must be impossible |
+| `event_outbox_ready_idx` | `(next_attempt_at, created_at) WHERE status IN ('pending','failed')` | Serves the claim (PS-17): an index range scan in `ORDER BY next_attempt_at, created_at` order, stopping at `LIMIT` (R3-01). Being partial, it holds only claimable rows, so it stays small however many events have been delivered |
+| `event_outbox_processing_idx` | `(locked_at) WHERE status = 'processing'` | Serves stale-lock recovery (PS-20), which runs every cycle; at most a batch's worth of rows per worker are in it |
+
+The outbox is the delivery table, not an archive. Delivered rows leave both partial indexes, so the per-write cost is the two unique indexes plus the partial indexes the row is in at that moment.
 
 Immutability of the envelope is enforced by the database: only `ledger_worker` has `UPDATE`, and only on the mutable columns listed above; the API's role `ledger_app` can insert and read outbox rows but not change them (§3.5).
 
@@ -264,8 +271,8 @@ Permanent, append-only history of delivered events. **Every column is immutable*
 
 | Column | Type | Null | Default | Constraint / notes | Source field |
 |---|---|---|---|---|---|
-| `event_log_id` | `uuid` | no | `gen_random_uuid()` | Primary key | `event_log_id` |
-| `event_id` | `uuid` | no | — | `UNIQUE` — at most one log row per event, even if an event is redelivered | `event_id` |
+| `event_log_id` | `uuid` | no | `gen_random_uuid()` | The documented row identifier. It is kept, but **not** indexed (R3-02): nothing looks a row up by it | `event_log_id` |
+| `event_id` | `uuid` | no | — | **Primary key** — at most one log row per event, even if an event is redelivered. It is the conflict target of PS-18's `ON CONFLICT (event_id) DO NOTHING` | `event_id` |
 | `event_type` | `text` | no | — | — | `event_type` |
 | `event_version` | `text` | no | — | — | — (added, §10) |
 | `source_module` | `text` | no | — | Event log is "queryable by … module" | — (added, §10) |
@@ -286,12 +293,15 @@ Indexes:
 
 | Name | Columns | Why |
 |---|---|---|
-| `event_log_pkey` | `(event_log_id)` | Primary key |
-| `event_log_event_id_key` | `(event_id)` | One log row per event |
-| `event_log_company_occurred_idx` | `(company_id, occurred_at)` | Company and time range |
-| `event_log_company_type_idx` | `(company_id, event_type, occurred_at)` | By event type |
-| `event_log_company_source_idx` | `(company_id, source_object_type, source_object_id)` | By source object |
-| `event_log_company_causation_idx` | `(company_id, causation_event_id) WHERE causation_event_id IS NOT NULL` | Follow an event chain forwards |
+| `event_log_pkey` | `(event_id)` | Primary key. It is required: it is the conflict target of PS-18's finish insert, and it makes "one log row per event" a database guarantee |
+
+No other index exists in Phase 0 (R3-02). The event log's readers — the Event Monitor and the activity feed (CEO only) — arrive in Phase 7. That phase adds, with `CREATE INDEX CONCURRENTLY`:
+- `(company_id, occurred_at)`;
+- `(company_id, event_type, occurred_at)`;
+- `(company_id, source_object_type, source_object_id)`;
+- `(company_id, causation_event_id) WHERE causation_event_id IS NOT NULL`.
+
+Making `event_id` the primary key saves one unique index compared with v0.4, which had a primary key on `event_log_id` plus a unique `event_id`.
 
 The event log is not a store for sensitive values (BACKEND_EVENT_ARCHITECTURE.md, Audit Log vs Event Log: "Sensitive fields: No (operational metadata only)"). Because the payload is copied verbatim, event payloads must carry identifiers and operational metadata, not financial amounts. Phase 0 cannot enforce this for payloads designed later; OQ-07 asks the owner to confirm it as a rule for every later specification.
 
@@ -414,7 +424,13 @@ What the triggers do and do not cover:
 - `DATABASE_MIGRATION_URL` is read only by `db:migrate`, `drizzle-kit` and the test harness.
 - In production, the API and the worker refuse to start if `DATABASE_MIGRATION_URL` is present in their environment (§4.6).
 
-**Runtime role self-check (R2-10).** `db/client.ts` attaches a check to every new pool connection, before the pool hands the connection out:
+**Runtime role self-check (R2-10), and how it is run (R3-03).** node-postgres does **not** await `pool.on('connect')` handlers, so a check attached there could run after the caller's first query. The check is therefore run by the platform's own acquire wrapper:
+- `db/client.ts` exposes only `withClient(fn)`. It calls `pool.connect()`, and if the client is not yet in a platform-private `WeakSet` of verified clients, it runs the check below **as that client's first statement**, before `fn` runs. Only then does it add the client to the set.
+- Every platform database access goes through `withClient`: `runInTransaction`, the health check, the worker's claim, finish, failure and recovery statements, and the test rebuild. Platform code never calls `pool.query` or `pool.connect` directly, and modules have no pool at all (rule 10).
+- A client that fails the check is released with an error (`client.release(err)`), which destroys it rather than returning it to the pool. `withClient` then throws `RuntimeRoleError`, and no statement of the caller's has run.
+- The `WeakSet` drops a client when the pool discards it, so a replacement connection is checked again.
+
+The check is one query per physical connection, not per request:
 
 ```sql
 SELECT current_user,
@@ -706,7 +722,7 @@ interface Subscriber {
 - **Causation stays off the envelope.** The envelope has no causation fields; causation reaches the subscriber only through `uow.context.causation.eventId`.
 - **Delivered subscribers are recorded atomically.** In the subscriber's own transaction, the worker appends the subscriber's name to `delivered_subscribers`, guarded by `locked_by` (§5). A retried event skips subscribers already listed. A worker that has lost its claim cannot commit a subscriber's work.
 - **Every subscriber must be idempotent.** Delivery is at least once (BACKEND_EVENT_ARCHITECTURE.md). `delivered_subscribers` narrows duplicates but cannot remove them, for example when a subscriber has effects outside the database. Each subscriber is keyed on `eventId` or on its own natural key (for example a submission ID).
-- **No ordering guarantee.** Events are claimed in `created_at` order, but nothing guarantees order across retries or worker instances. Subscribers must not depend on order (OQ-06).
+- **No ordering guarantee.** Events are claimed in `next_attempt_at, created_at` order, which is oldest first for events not yet tried, but nothing guarantees order across retries or worker instances. Subscribers must not depend on order (OQ-06).
 - **Informational only.** Subscribers are informational and evaluative (Event Bus Doctrine). Their system actor can never satisfy a human-approval check.
 
 **Outbox record state machine** (T-2 `status`). Interpretation of the sources: BACKEND_EVENT_ARCHITECTURE.md lists `pending → delivered → failed`; BACKEND_INFRASTRUCTURE_ARCHITECTURE.md adds the `processing` claim state and `dead_lettered`. Phase 0 uses all five, with `failed` meaning "the last attempt failed; waiting for the next one" (OQ-08).
@@ -714,8 +730,8 @@ interface Subscriber {
 | From | To | Triggered by | Condition | Side effects (same transaction) |
 |---|---|---|---|---|
 | — | `pending` | `OutboxWriter.record`, inside the writing use case's Unit of Work | The use case's transaction commits | — (the row disappears if it rolls back) |
-| `pending`, `failed` | `processing` | Worker claim | `next_attempt_at <= now()`, and the row is not locked by another claimer (`FOR UPDATE SKIP LOCKED`) | `locked_at = now()`, `locked_by = <worker id>` |
-| `processing` | `processing` | Worker, after one subscriber succeeds | `locked_by` still matches | The subscriber's own writes; its name appended to `delivered_subscribers` |
+| `pending`, `failed` | `processing` | Worker claim, in `next_attempt_at, created_at` order | `next_attempt_at <= now()`, and the row is not locked by another claimer (`FOR UPDATE SKIP LOCKED`) | `locked_at = now()`, `locked_by = <worker id>` |
+| `processing` | `processing` | Worker, when it starts a row, and after each subscriber succeeds (lock heartbeat, R3-04) | `locked_by` still matches | `locked_at = now()`; after a subscriber, also that subscriber's own writes and its name appended to `delivered_subscribers` |
 | `processing` | `delivered` | Worker, once every subscribed handler has succeeded (immediately if there are none) | `locked_by` still matches | `intelligence.event_log` row inserted (`ON CONFLICT (event_id) DO NOTHING`); `delivered_at = now()`; lock cleared |
 | `processing` | `failed` | Worker, when a subscriber threw **or the lock went stale** | `retry_count + 1 < OUTBOX_MAX_ATTEMPTS` (and, for a thrown error, `locked_by` matches) | `retry_count += 1`; `next_attempt_at = now() + backoff`; `last_error` set; lock cleared |
 | `processing` | `dead_lettered` | Same as the row above | `retry_count + 1 = OUTBOX_MAX_ATTEMPTS` | `retry_count += 1`; `dead_lettered_at = now()`; `last_error` set; lock cleared; `ERROR` log line (§4.7) |
@@ -827,7 +843,7 @@ The **host-equality rule from v0.3 is dropped.** Hosted providers commonly give 
 
 **Server-side checks.** Two checks stop a test run from touching a non-test database even if a URL is misread:
 - `rebuildTestDatabase()` calls the guard itself. Then, on the live owner connection and before any `DROP`, it checks that `SELECT current_database()` ends in `_test` and equals the guarded name. Every `DROP SCHEMA` it issues is built with `format('DROP SCHEMA %I CASCADE', nspname)` from the catalogue, never by string concatenation.
-- `db/client.ts` refuses, when running under Vitest (`process.env.VITEST` is set), to create a pool whose URL database does not end in `_test`. It also checks `current_database()` on each new connection, alongside the role self-check (§3.5). An implementer's `*.db.test.ts` file can therefore never reach the development database by mistake.
+- `db/client.ts` refuses, when running under Vitest (`process.env.VITEST` is set), to create a pool whose URL database does not end in `_test`. When creating it, it also adds `current_database()` to the first-use check of `withClient` (§3.5, R3-03), so a connection whose server-side database does not end in `_test` is destroyed before any test statement runs. An implementer's `*.db.test.ts` file can therefore never reach the development database by mistake.
 
 **Tests never change roles.** Roles are cluster-wide, so a change would leak into every database on the server. Tests change only per-database object grants (for example revoking `INSERT` for G0-03), and restore them in `finally`. They never change role attributes or memberships.
 
@@ -1305,13 +1321,19 @@ UPDATE intelligence.event_outbox
  WHERE outbox_id IN (
          SELECT outbox_id FROM intelligence.event_outbox
           WHERE status IN ('pending', 'failed') AND next_attempt_at <= now()
-          ORDER BY created_at
+          ORDER BY next_attempt_at, created_at
           LIMIT $batchSize
           FOR UPDATE SKIP LOCKED)
 RETURNING *;
 ```
 
 - One statement in its own short transaction, run as `ledger_worker`. `SKIP LOCKED` ensures two workers never claim the same row.
+- **Expected plan (R3-01).**
+  - The `WHERE` matches the predicate of `event_outbox_ready_idx` and the `ORDER BY` matches its key order. The planner therefore uses an **Index Scan on `event_outbox_ready_idx`** with index condition `next_attempt_at <= now()`, then **LockRows**, then **Limit**. There is **no Sort node**, and the scan stops after `$batchSize` lockable rows.
+  - So even after an outage with a large due backlog, a claim reads about `$batchSize` index entries, plus any rows other workers hold locked.
+  - Rows that failed and are waiting (`next_attempt_at` in the future) lie beyond the index range and are never read. `processing` and `delivered` rows are not in the index at all.
+  - The implementer confirms the plan with `EXPLAIN` against a test table of 10 000 due rows, and records the output in the commit report (§11, commit 8).
+- **Order.** A pending row's `next_attempt_at` defaults to its insert time, the same value as `created_at`, so pending events are still claimed oldest first. A retried event is claimed by its retry time, so it can now come after newer pending events. That does not change any guarantee: there is no ordering guarantee across retries or workers (§4.5, OQ-06).
 - The claim commits before any subscriber runs, so a slow subscriber never holds a row lock on the outbox.
 - **No tenant context.** The claim spans all companies by design. It is the only cross-tenant query in Phase 0, and it reads no business data. Every later step runs in the claimed event's own tenant context.
 
@@ -1319,10 +1341,12 @@ RETURNING *;
 
 The worker handles each claimed row in claim order, under a new `runId`:
 
+0. **Start the row: lock heartbeat (R3-04).** Before handling a row, the worker runs `UPDATE intelligence.event_outbox SET locked_at = now() WHERE outbox_id = $id AND status = 'processing' AND locked_by = $workerId`. If no row is updated, the claim was lost while earlier rows in the batch were being handled; the worker skips this row and records nothing. The `delivered_subscribers` append in step 2 also sets `locked_at = now()`. A lock's age is therefore bounded by **one subscriber's run time**, not by the batch: rows later in a batch do not age while earlier ones run.
+
 1. **Prepare.** Build the envelope from the row (§4.5). The subscriber list is `subscribersFor(event_type)` minus `delivered_subscribers`.
 2. **Call each subscriber.** Each one runs in its own `runInTransaction`, with the worker subscriber context (system actor, the row's company, causation from the row). Inside that transaction:
    1. `await subscriber.handle(envelope, uow)`;
-   2. `UPDATE intelligence.event_outbox SET delivered_subscribers = array_append(delivered_subscribers, $name) WHERE outbox_id = $id AND status = 'processing' AND locked_by = $workerId AND NOT ($name = ANY(delivered_subscribers))`. If no row is updated, it throws `LockLostError`, which rolls back the subscriber's writes.
+   2. `UPDATE intelligence.event_outbox SET delivered_subscribers = array_append(delivered_subscribers, $name), locked_at = now() WHERE outbox_id = $id AND status = 'processing' AND locked_by = $workerId AND NOT ($name = ANY(delivered_subscribers))`. If no row is updated, it throws `LockLostError`, which rolls back the subscriber's writes.
 
    If a subscriber throws, the worker logs at `WARN` and **carries on with the remaining subscribers**, so independent subscribers are not held back by a failing one. On `LockLostError`, the worker stops handling this event at once and records nothing more, because another worker now owns it.
 3. **Finish.** If every listed subscriber succeeded (including when there were none), the worker finishes in one transaction:
@@ -1820,7 +1844,7 @@ Any change the engineer finds necessary outside this plan or this specification 
 | OQ-08 | Outbox status names (`pending`, `processing`, `failed`, `delivered`, `dead_lettered`), and "max 5 retries" read as five attempts in total with delays of 1, 2, 4 and 8 s | §4.5 | Confirm |
 | OQ-09 | Should stale-lock recovery count as a failed attempt? | §4.5, PS-20 | **Closed — PM ruling, October 20, 2026: yes.** A recovery counts as a failed attempt (same count, backoff and dead letter), so an event that crashes the worker dead-letters after five crashes |
 | OQ-10 | No phase builds the requeue of dead-lettered events, or the outbox archival after 7 days (BACKEND_DATA_ARCHITECTURE.md, Event Outbox Table) | §1.2, §4.5 | Add both to Phase 9, following the §4.5 rules (R2-17): only `dead_lettered` rows can be requeued; a requeue never clears `delivered_subscribers` and is audited with the operator's identity; `delivered` rows are never requeued; archival removes only `delivered` rows, as a maintenance role with no other privilege. Until then, dead letters stay visible in the table |
-| OQ-11 | No phase lists the audit query service or `/api/v1/audit/` | §1.2, §3.2 | Assign it to Phase 7 (alongside the Event Monitor), with the actor and entry-type indexes added then |
+| OQ-11 | No phase lists the audit query service or `/api/v1/audit/` | §1.2, §3.2, §3.4 | Assign it to Phase 7, alongside the Event Monitor. That phase also adds the audit and event-log read indexes deferred from Phase 0 (R3-02), with `CREATE INDEX CONCURRENTLY` |
 | OQ-12 | A token stays valid for up to 15 minutes after its tenant is suspended, because the middleware does not check tenant status | §5.11, §4.10 | Close it in Phase 2 (§4.10). Phase 1 provides a tenant-status lookup; the token middleware checks it on each request, with a short cache. Session revocation then covers refresh |
 | OQ-13 | Frontend-only mode: outside production, with no backend variables, the API serves the frontend and answers `/api` and `/portal/v1` with 503. Production and partial configurations fail fast | §4.6 | Approve. It keeps D-13's promise that frontend work and the Playwright suite need no database |
 | OQ-14 | The actor role for the D-15 provisioning script (a platform administrator outside the tenant model) | §3.2, §4.10 | Decide in the Phase 1 specification. Until then the script writes as `system` with no causation. Either way, it records the operator's identity in the audit entry's `metadata` and connects as `ledger_app` (§4.10) |
