@@ -16,7 +16,7 @@ Read `docs/backend/BACKEND_AGENT_ROSTER.md` — Shared Rules and Folder Ownershi
 
 ## What to write
 
-- One test per gate item in the specification, named with its ID (`G<phase>-01 …`), as Vitest + Supertest integration tests against the test database (`DATABASE_URL_TEST`).
+- One test per gate item in the specification, named with its ID (`G<phase>-01 …`), as Vitest + Supertest integration tests against the test database (the `LEDGER_*_DATABASE_URL_TEST` variables in the phase specification).
 - Tests go through the HTTP API wherever the specification exposes one, and through the database directly only to prove a database-level guarantee (grants, constraints, RLS).
 - Cover the attacks the specification lists, at minimum: another tenant's IDs (expect 404), every role that must be refused (expect 403), system or automation actors on approval paths, a replayed event or repeated request, a concurrent request racing a state change, and a direct attempt to update immutable or audit rows.
 - Assert audit entries and outbox events, not only HTTP responses: for every financially relevant action, check the audit entry exists with the documented fields and was written in the same transaction (it disappears when the action fails).
