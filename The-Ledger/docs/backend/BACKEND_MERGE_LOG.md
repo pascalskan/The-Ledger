@@ -18,7 +18,8 @@ Only the PM edits this file.
 
 | Job | Phase | Agent | Branch | Status | Merge SHA |
 |---|---|---|---|---|---|
-| phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | Merged — awaiting owner checkpoint | 5768030 |
+| phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Open | — |
+| phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | Merged — approved by owner Oct 21, 2026 | 5768030 |
 
 Status values: **Open** (assigned, commits in progress) → **In review** (review rounds running) → **Merged** → or **Abandoned** (with reason).
 
@@ -56,6 +57,23 @@ Follow-ups: <anything deferred, with owner>
 ---
 
 ## ENTRIES
+
+### phase-0-replit — backend-architect — Open
+
+Phase: 0 Infrastructure Foundation (amendment)
+Branch: agent/backend-architect/phase-0-replit   (from backend @ 1ee38a2, which includes the root .replit from main, PRs #46/#47)
+Specification: docs/backend/phases/PHASE-0-infrastructure.md → v0.6
+Why: the owner approved the Phase 0 specification and all PM-recommended answers to the open questions (October 21, 2026), and decided that all hosting is on Replit; Replit adaptations are required now.
+PM groundwork: main has a root .replit (PRs #46 and #47, CI green, merged); Replit project The-Ledger-main pulled main @ a70c19d; Replit PostgreSQL 16.10 (host helium, reachable only inside Replit): development database heliumdb, test database ledger_test created; roles ledger_runtime, ledger_app and ledger_worker created there without passwords (the owner sets them); local mirror for agents: Docker container ledger-pg (PostgreSQL 16.14, 127.0.0.1:55432) with ledger_dev, ledger_test and the same roles.
+Items: RP-01 variable names vs the Replit-injected DATABASE_URL; RP-02 the owner-URL-present rule; RP-03 libpq PG* fallbacks; RP-04 superuser owner; RP-05 two test environments; RP-06 worker process on Replit; RP-07 other Replit risks.
+
+Commits checked
+| # | SHA | Message | PM verdict | Notes |
+|---|---|---|---|---|
+
+Review rounds
+| Round | Focus | Findings sent | Agent answer | Result |
+|---|---|---|---|---|
 
 ### phase-0-spec — backend-architect — Merged (awaiting owner checkpoint)
 
