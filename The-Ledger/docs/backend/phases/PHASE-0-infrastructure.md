@@ -583,7 +583,7 @@ Source: BACKEND_AUTH_ARCHITECTURE.md, Access Token Claims, Portal Token Claims, 
 | | Platform access token | Portal access token |
 |---|---|---|
 | Algorithm | ES256 (P-256), `jose` | HS256, `jose` (OQ-02) |
-| Signing key | `JWT_PRIVATE_KEY` (PKCS#8 PEM) | `PORTAL_JWT_SECRET` (at least 32 bytes) |
+| Signing key | `JWT_PRIVATE_KEY` (PKCS#8 PEM) | `PORTAL_JWT_SECRET`: base64 or base64url of at least 32 random bytes, measured **after decoding**; passed to `jose` as `createSecretKey(decoded)` |
 | Verification key | `JWT_PUBLIC_KEY` (SPKI PEM) | `PORTAL_JWT_SECRET` |
 | Lifetime | 15 minutes | 15 minutes |
 | `iss` | `the-ledger` | `the-ledger` |
@@ -601,10 +601,12 @@ The algorithms follow the two sources as written: D-14 gives ES256 keys to the p
 
 Verification rules (all enforced by `verifyPlatformToken` / `verifyPortalToken`):
 
-1. The algorithm is pinned: the platform verifier accepts only `ES256`, the portal verifier only `HS256`. `alg: none` and any other algorithm are refused.
-2. Signature, `exp`, `iss` and `aud` must all be valid. No clock tolerance is configured.
-3. The payload is then parsed with a Zod schema for that token type. A missing or malformed claim (for example no `company_id`, or `role: 'client'` in a platform token) is refused.
-4. The result is a typed claims object; nothing downstream reads the raw payload.
+1. **Algorithm pinned.** The platform verifier accepts only `ES256` and the portal verifier only `HS256`. `alg: none` and every other algorithm are refused.
+2. **`jwtVerify` options.** `jwtVerify` is called with `issuer`, `audience`, `algorithms` and `requiredClaims: ['iss', 'aud', 'sub', 'iat', 'exp']`, with `maxTokenAge: '15m'` and no clock tolerance. A token without `exp`, or whose `iat` is more than 15 minutes ago, is refused. A token whose `iat` is in the future is refused explicitly as well (R2-14).
+3. **Zod schema.** The payload is then parsed with the Zod schema for that token type.
+   - `iat` and `exp` must be integers, with `0 < exp − iat ≤ 900`. A token minted by anything with a longer lifetime is therefore refused even before it expires.
+   - A missing or malformed claim is refused — for example no `company_id`, or `role: 'client'` in a platform token.
+4. **Typed result.** Verification returns a typed claims object; nothing downstream reads the raw payload.
 
 Signing (`signPlatformToken(claims)`, `signPortalToken(claims)`) is built and unit-tested in Phase 0 and first called by Phase 2 (login) and Phase 6a (portal login). Tokens are never logged (§4.7).
 
@@ -751,7 +753,7 @@ Source: BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Application Configuration and Re
 | `DATABASE_URL` | backend variable (below) | — | PostgreSQL URL for the `ledger_app` role |
 | `JWT_PRIVATE_KEY` | backend variable | — | PKCS#8 PEM, P-256; `\n` escapes accepted; must import as an ES256 key at start-up |
 | `JWT_PUBLIC_KEY` | backend variable | — | SPKI PEM, P-256; must import as an ES256 key and match the private key |
-| `PORTAL_JWT_SECRET` | backend variable | — | at least 32 bytes |
+| `PORTAL_JWT_SECRET` | backend variable | — | base64 or base64url text decoding to at least 32 bytes. It is refused if it equals, or is contained in, `JWT_PRIVATE_KEY` or `JWT_PUBLIC_KEY` (a pasted key is not a secret) |
 | `DATABASE_WORKER_URL` | — | required | PostgreSQL URL for the `ledger_worker` role |
 | `OUTBOX_*` (five, §4.5) | — | optional | positive integers, defaults as listed |
 
@@ -781,7 +783,15 @@ Used outside the two processes:
 
 So `npm run dev` with no `.env` behaves as it does today for the frontend and the Playwright suite. A developer who wants the backend adds the variables to `.env`. The mode is chosen only by `NODE_ENV` and whether the variables are present — there is no "skip the backend" flag that could be left on by mistake. Production can never start without its backend. This is the proposal for OQ-13; the owner confirms it at the checkpoint.
 
-**Local `.env` file.** Outside production, the loader reads `.env` from the app folder if it exists (`process.loadEnvFile`), and variables already set in the environment win. `.env` is added to `.gitignore`; `.env.example` (names and placeholder values only) is committed. On a hosted deployment the variables come from the host's secret store.
+**Empty means absent (R2-14).** A variable set to the empty string, or to whitespace only, counts as absent, both for the mode decision and for the required-variable checks. `DATABASE_URL=""` therefore cannot make a half-configured backend look unconfigured or configured.
+
+**No backend secret behind a `VITE_` prefix (R2-14).** Vite exposes every `VITE_`-prefixed variable to the browser bundle. The API loader therefore fails with `ConfigError` if any variable name starts with `VITE_` and contains `DATABASE`, `JWT`, `SECRET`, `KEY`, `PASSWORD` or `TOKEN`. The error names the variable, never its value.
+
+**Local `.env` file.**
+- Outside production, the loader reads `.env` from the app folder if it exists (`process.loadEnvFile`). Variables already set in the environment win.
+- `.gitignore` gains `.env*` with the exception `!.env.example`, so `.env.local`, `.env.test` and similar files are never committed.
+- `.env.example` is committed. It lists every variable, and **every value in it deliberately fails validation** — for example `PORTAL_JWT_SECRET=replace-me` (too short once decoded) and `DATABASE_URL=postgresql://replace-me` (no database). Copying it unchanged therefore fails fast with the variable names; it can never start a backend with known secrets.
+- On a hosted deployment the variables come from the host's secret store.
 
 **Built bundles are always production.** `script/build.ts` passes esbuild `define: { "process.env.NODE_ENV": '"production"' }` (kept from the Replit starter). esbuild replaces that exact expression in the bundled code with the literal `"production"`. The loader is therefore required to resolve the environment name like this:
 
@@ -799,13 +809,29 @@ The rule must be written with the literal `process.env.NODE_ENV`; reading it thr
 
 G0-01 relies on this, and checks it. No other part of §4.6 or §9 assumes a bundle can run in development or frontend-only mode: G0-02 runs `npm run dev` (tsx), and G0-36 and G0-37 call the loader and `createApiApp` inside Vitest.
 
-**Test-database guard (D-12).** `assertTestDatabase(urls)` in `server/platform/config/test-database.ts` runs before any connection is opened. It refuses if:
-- any of the three test URLs is missing;
-- a test URL's database name (the URL path, percent-decoded, case-sensitive) does not end in `_test`;
-- the three test URLs name different databases or different hosts;
-- the test database matches the database in `DATABASE_URL`, `DATABASE_WORKER_URL` or `DATABASE_MIGRATION_URL`, when those are set.
+**Test-database guard (D-12, R2-12).** `assertTestDatabase(urls)` in `server/platform/config/test-database.ts` runs before any connection is opened.
 
-The Vitest global setup and every test database client call it.
+How it reads each URL:
+- It parses the URL with `pg-connection-string`, the parser the `pg` driver itself uses, so the guard and the driver cannot disagree about which database a URL names.
+- Only `postgres:` and `postgresql:` URLs are accepted.
+- Query parameters are refused, except an allowlist: `sslmode`, `sslrootcert`, `channel_binding`, `application_name`. This stops `?host=`, `?dbname=`, `?user=` or `?options=` from overriding what the path says.
+
+It refuses if any of these holds:
+- one of the three test URLs is missing or empty;
+- a URL is a socket URL or has an empty database path;
+- a database name (percent-decoded, case-sensitive) does not end in `_test`;
+- the three test URLs name different databases;
+- the test database name equals the database in `DATABASE_URL`, `DATABASE_WORKER_URL` or `DATABASE_MIGRATION_URL`, when those are set.
+
+The **host-equality rule from v0.3 is dropped.** Hosted providers commonly give the same database a pooled and a direct host name, so the rule would refuse valid configurations. It is replaced by the server-side check below, which asks the database itself.
+
+**Server-side checks.** Two checks stop a test run from touching a non-test database even if a URL is misread:
+- `rebuildTestDatabase()` calls the guard itself. Then, on the live owner connection and before any `DROP`, it checks that `SELECT current_database()` ends in `_test` and equals the guarded name. Every `DROP SCHEMA` it issues is built with `format('DROP SCHEMA %I CASCADE', nspname)` from the catalogue, never by string concatenation.
+- `db/client.ts` refuses, when running under Vitest (`process.env.VITEST` is set), to create a pool whose URL database does not end in `_test`. It also checks `current_database()` on each new connection, alongside the role self-check (§3.5). An implementer's `*.db.test.ts` file can therefore never reach the development database by mistake.
+
+**Tests never change roles.** Roles are cluster-wide, so a change would leak into every database on the server. Tests change only per-database object grants (for example revoking `INSERT` for G0-03), and restore them in `finally`. They never change role attributes or memberships.
+
+The Vitest global setup and every test database client call the guard.
 
 **Test database lifecycle.** At the start of each `db` or `gate` test run, the platform's global setup (`server/platform/testing/global-setup.ts`, §9.1) rebuilds the test database:
 1. It runs the guard.
@@ -825,9 +851,20 @@ Source: BACKEND_OBSERVABILITY_ARCHITECTURE.md, Logging Strategy; BACKEND_API_ARC
 **Logger.** One `pino` logger per process (`service: 'api'` or `service: 'worker'`), JSON to stdout, with:
 - `level` written as an upper-case label (`"level":"INFO"`) and `timestamp` as ISO 8601, `message` as the message key — the structure in BACKEND_OBSERVABILITY_ARCHITECTURE.md, Log Structure;
 - a mixin that adds `requestId`, `companyId` and `userId` (API) or `runId` (worker) from the active execution context (an `AsyncLocalStorage` in `server/platform/context/request-context.ts`);
-- no transports and no `pino-pretty` (nothing runs in a worker thread; the production bundle stays simple).
+- no transports and no `pino-pretty` (nothing runs in a worker thread; the production bundle stays simple);
+- **errors are always made safe, whatever key they are logged under (R2-13):**
+  - `serializers: { err: safeError, error: safeError }`;
+  - a `formatters.log` hook that passes **every top-level value that is an `Error`** through `safeError`, so `logger.warn({ failure: e })` is as safe as `logger.warn({ err: e })`;
+  - `safeError` is the error serializer below.
 
-**What is logged per request** — exactly one line when the response finishes, for paths under `/api/`, `/portal/v1/` and `/health` (Vite asset requests are not logged): `requestId`, `method`, `path` (Express `req.path` — the query string is never logged), `statusCode`, `durationMs`, and `companyId`/`userId` when the request was authenticated. Level `INFO`; `/health` at `DEBUG`.
+**What is logged per request.** Exactly one line is written when the response finishes, for paths under `/api/`, `/portal/v1/` and `/health`; Vite asset requests are not logged. The line carries:
+- `requestId`, `method`, `statusCode`, `durationMs`;
+- `companyId` and `userId` when the request was authenticated;
+- `route` — the **matched route template** (`req.baseUrl + req.route.path`, for example `/api/v1/jobs/:jobId`), never the raw path, capped at 256 characters (R2-13). A request that matched no route, including one refused with 401 before routing, is logged with `route: "<unmatched>"`. The raw path, the query string and path parameter values are therefore never logged.
+
+The level is `INFO`, except `DEBUG` for `/health`.
+
+**API path convention — binding on every later specification (R2-13; closes the carried R2-01).** Every path segment is either a fixed literal (`jobs`, `approve`) or a UUID path parameter. A path never carries an email address, a name, free text, a token, an amount or any other personal or financial value; those go in the JSON body or, for filters, in validated query parameters, which are never logged. A reviewer checks this by reading the route table in each phase specification's §6: every `:param` must be documented as a UUID, and its Zod path schema must be `z.string().uuid()`. The gate cannot prove the absence of such data in future routes, so the review is the control.
 
 **What is never logged** (BACKEND_OBSERVABILITY_ARCHITECTURE.md, What Is NOT Logged; roster doctrine): request bodies, response bodies, query strings, headers (in particular `Authorization` and `Cookie`), JWTs, passwords, financial amounts, event payloads, audit `previous_value`/`new_value`, personal data beyond user ID. The logger is never given a request or response object, so no serializer can expand one.
 
@@ -838,6 +875,7 @@ Source: BACKEND_OBSERVABILITY_ARCHITECTURE.md, Logging Strategy; BACKEND_API_ARC
 | **PostgreSQL error** (the driver's `DatabaseError`: has a five-character SQLSTATE `code` and the protocol `severity` field) | `name`, `pgCode` (SQLSTATE), `severity`, `schema`, `table`, `column`, `constraint`, `dataType`, and a fixed message `"PostgreSQL error <code>"` | The server's `message` — **for every SQLSTATE class, not just class 22**. Class 22 data errors quote values (`22P02` "invalid input syntax for type uuid: "…""), but so can others: `P0001` raised by functions, `23514`/`23502` text naming rows, and any future message. Also never: `detail`, `hint`, `where`, `internalQuery`, `position`, and `stack`, whose first line repeats the message |
 | **Database-library wrapper** (an error with a `query`, `params` or `parameters` property, or whose `cause` is a PostgreSQL error — for example Drizzle's query error, which puts the SQL and the bound parameter values in its message) | `name`, a fixed message `"Database query failed"`, and its `cause` serialized by these same rules | Its own `message`, `query`, `params`, `parameters`, `stack` |
 | **JSON body-parser error** (`type === 'entity.parse.failed'`; V8's parse message quotes the start of the body) | `name`, code `MALFORMED_JSON` | `message`, `body`, `stack` |
+| **Other client errors from Express or its parsers** — `http-errors`-style errors with `expose === true` and `status` 400–499, for example an unsupported charset or encoding, or a path parameter that cannot be decoded (R2-13) | `type`, `status` | `message` (it can quote the charset, encoding or path), `stack`, every other property |
 | **`ZodError`** | `name`, code `VALIDATION_ERROR`, the number of issues | `issues` (they can hold received values), `message`, `stack` |
 | **`AppError`** | `name`, `code`, `status`, `safeMessage` | `details` (validation details go to the client, not the log) |
 | **Any other error** | `name`, `code` if a string, `message`, `stack` | every other property |
@@ -1096,7 +1134,7 @@ Rules:
 ### 5.7 PS-06 — Request logger
 
 - Writes one line per logged request, on the response `finish` event, with exactly the fields in §4.7.
-- Reads only `req.method`, `req.path`, `res.statusCode`, a monotonic duration and the request context. Nothing else from the request or response is read, and `res.json` / `res.send` are not patched.
+- Reads only `req.method`, the matched route template (`req.baseUrl + req.route.path`, or `<unmatched>`), `res.statusCode`, a monotonic duration and the request context. Nothing else from the request or response is read, and `res.json` / `res.send` are not patched.
 - Level is `INFO`, except `DEBUG` for `/health`.
 - A request that ends in a 5xx is also logged by PS-07, at `ERROR`, with the error.
 
@@ -1108,6 +1146,8 @@ Rules:
 | `ZodError` | 400 | `VALIDATION_ERROR` | "Request validation failed." — `details` is `{ "<path>": ["<issue message>", …] }`, path joined with `.`, root-level issues under `"_root"` | `DEBUG`, code and issue count only |
 | JSON parse failure (`entity.parse.failed`) | 400 | `MALFORMED_JSON` | "Request body is not valid JSON." | `DEBUG`, code only |
 | Body too large (`entity.too.large`) | 413 | `PAYLOAD_TOO_LARGE` | "Request body is too large." | `DEBUG`, code only |
+| Unsupported charset or encoding (`charset.unsupported`, `encoding.unsupported`) | 415 | `UNSUPPORTED_MEDIA_TYPE` | "The request body's encoding is not supported." | `DEBUG`, type and status only |
+| Any other `http-errors`-style client error (`expose === true`, status 400–499), for example a path parameter that cannot be URL-decoded | its status | `BAD_REQUEST` for 400, otherwise `CLIENT_ERROR` | "The request could not be processed." | `DEBUG`, type and status only |
 | No route matched | 404 | `NOT_FOUND` | "The requested resource was not found." | `DEBUG` |
 | Anything else | 500 | `INTERNAL_ERROR` | "An unexpected error occurred." | `ERROR` through the error serializer (§4.7), with `requestId`, `method`, `path` |
 
@@ -1120,7 +1160,8 @@ Rules:
 - **Full mode:** acquires a pool connection and runs `SELECT 1`; the whole check has a 2-second timeout.
   - Success returns `200 {"status":"ok","mode":"full"}`.
   - Any failure or timeout returns `503 {"status":"unavailable","mode":"full"}`, and the failure is logged at `WARN` through the error serializer.
-- **Headers:** `Cache-Control: no-store`.
+- **One check at a time (R2-15).** Concurrent `/health` requests share one in-flight check, and its result is reused for 1 second. A flood of health requests therefore uses at most one pool connection, and cannot exhaust the pool.
+- **Headers:** the security headers in §6.2, including `Cache-Control: no-store`.
 - **No authentication.** The response body contains only the status and mode — no version, host, database name or error text.
 - **No transaction.** It is read-only and needs no tenant context, because it touches no tenant data.
 
@@ -1136,7 +1177,7 @@ Rules:
 
 ### 5.11 PS-10 — Platform-token middleware (tenant context)
 
-- **Input:** the `Authorization` header. The only accepted form is `Bearer <token>`, with the scheme case-insensitive. Tokens are never read from a cookie or a query parameter.
+- **Input:** the `Authorization` header, which must match exactly `^Bearer ([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)$`: the scheme in that case, one space, and three base64url segments. The header may be at most 4 096 characters. Anything else gets `401 UNAUTHENTICATED` before any parsing (R2-14). Tokens are never read from a cookie or a query parameter.
 - **Header missing, or scheme not `Bearer`:** `401 UNAUTHENTICATED` "Authentication is required.", with `WWW-Authenticate: Bearer`.
 - **`TokenExpiredError`:** `401 TOKEN_EXPIRED` "Your session has expired.", with `WWW-Authenticate: Bearer error="invalid_token"`. The separate code lets the frontend refresh from Phase 2 on.
 - **`TokenInvalidError`:** `401 UNAUTHENTICATED`, with the same header.
@@ -1358,8 +1399,16 @@ Phase 0 adds exactly one route. Everything else under the two API prefixes answe
 |---|---|---|
 | `X-Request-Id` | every response | the request's UUID (PS-05) |
 | `WWW-Authenticate` | every 401 | `Bearer`, or `Bearer error="invalid_token"` for invalid and expired tokens |
-| `Cache-Control` | `/health` | `no-store` |
-| `Content-Type` | every API, portal and health response | `application/json; charset=utf-8` |
+| `Cache-Control` | every `/api`, `/portal/v1` and `/health` response | `no-store` |
+| `X-Content-Type-Options` | same | `nosniff` |
+| `Referrer-Policy` | same | `no-referrer` |
+| `X-Frame-Options` | same | `DENY` |
+| `Content-Security-Policy` | same (JSON responses only; the frontend's own CSP is Phase 9, §4.10) | `default-src 'none'; frame-ancestors 'none'` |
+| `Content-Type` | same | `application/json; charset=utf-8` |
+| `X-Powered-By` | never | `app.disable('x-powered-by')` for the whole app, frontend included |
+| `Access-Control-Allow-Origin` (or any CORS header) | never | No CORS middleware: the frontend is same-origin (§1.2) |
+
+**Proxy and client address (R2-15).** `trust proxy` stays `false`, and no Phase 0 code reads or logs `req.ip`, `X-Forwarded-For` or any other client address. Rate limiting by client (Phase 9) decides its own proxy setting.
 
 Request bodies are accepted only on `/api/v1` and `/portal/v1`, must be JSON, and are limited to 1 MB (BACKEND_API_ARCHITECTURE.md, API Security Standards).
 
@@ -1381,13 +1430,16 @@ Every error response under `/api/` and `/portal/v1/` uses this envelope (BACKEND
 | `NOT_FOUND` | 404 | No route; or the resource does not exist or belongs to another tenant (`NotFoundError`) | PS-07; modules |
 | `CONFLICT` | 409 | State conflict (`ConflictError`; modules may use more specific codes) | modules |
 | `PAYLOAD_TOO_LARGE` | 413 | Body over 1 MB | PS-07 |
+| `UNSUPPORTED_MEDIA_TYPE` | 415 | Unsupported body charset or encoding | PS-07 |
+| `BAD_REQUEST` | 400 | Another client error raised by Express or a parser, for example an undecodable path | PS-07 |
+| `CLIENT_ERROR` | other 4xx | As above, for any other 4xx status | PS-07 |
 | `BUSINESS_RULE_VIOLATION` | 422 | A business rule refused the request (`BusinessRuleError`; modules use specific codes such as those in BACKEND_API_ARCHITECTURE.md, Error Codes) | modules |
 | `INTERNAL_ERROR` | 500 | Anything unexpected | PS-07 |
 | `BACKEND_NOT_CONFIGURED` | 503 | Frontend-only mode (§4.6) | PS-04 |
 
 Modules define their own codes as `AppError`s (for example `SUBMISSION_ALREADY_APPROVED`). Codes are `UPPER_SNAKE_CASE`. Messages are British English, written for the user, and contain no input values.
 
-Status 413, and 503 for `BACKEND_NOT_CONFIGURED`, are not in BACKEND_API_ARCHITECTURE.md's status table; this specification adds them (§10). Status 429 (rate limiting) arrives in Phase 9.
+Statuses 413, 415, 503 for `BACKEND_NOT_CONFIGURED`, and the codes `BAD_REQUEST` and `CLIENT_ERROR`, are not in BACKEND_API_ARCHITECTURE.md's status table; this specification adds them (§10). Status 429 (rate limiting) arrives in Phase 9.
 
 ### 6.4 Validation
 
@@ -1644,10 +1696,10 @@ Phase 0 replaces no prototype engine. The client's `eventBusEngine.ts` and `acti
 | `shared/schema.ts` | `public.users` table (username, plaintext `password` column) | Deleted, so no migration can ever create it. The `@shared` alias stays in `tsconfig.json` and `vite.config.ts`, which is harmless and may hold shared DTOs in Track F | §3.1.1 (nothing in `public`); D-02 identity model |
 | `drizzle.config.ts` | `DATABASE_URL`, `shared/schema.ts` | `DATABASE_MIGRATION_URL`; platform and module schema files; `schemaFilter` | §3.5, §3.6 |
 | `package.json` scripts | `db:push` | `db:push` removed. Added: `db:generate`, `db:migrate`, `dev:worker`, `start:worker`, `test` (runs `test:unit`, `test:db`, `test:gate` in that order), `test:unit`, `test:db`, `test:gate`. `check` becomes `tsc && tsc -p tsconfig.test.json`. `dev`, `dev:client`, `build`, `start` are unchanged | D-14 |
-| `package.json` dependencies | — | Added `jose`, `pino`; dev: `vitest`, `supertest`, `@types/supertest`, `@types/pg`. Unchanged: `passport`, `passport-local`, `express-session`, `memorystore`, `connect-pg-simple` and their types (removed in Phase 2), and `drizzle-zod` (unused after `shared/schema.ts` goes; removal is not needed for Phase 0) | D-14 |
+| `package.json` dependencies | — | Added `jose`, `pino`, `pg-connection-string` (already installed with `pg`; declared directly because the test-database guard uses it, §4.6); dev: `vitest`, `supertest`, `@types/supertest`, `@types/pg`. Unchanged: `passport`, `passport-local`, `express-session`, `memorystore`, `connect-pg-simple` and their types (removed in Phase 2), and `drizzle-zod` (unused after `shared/schema.ts` goes; removal is not needed for Phase 0) | D-14 |
 | `script/build.ts` | One esbuild entry, `server/index.ts` → `dist/index.cjs` | Adds `server/worker.ts` → `dist/worker.cjs`. Adds `jose` to the bundle allowlist, because `jose` v6 is ESM-only and the output is CommonJS; bundling avoids depending on the host Node's `require(esm)` support. `pino` stays external | S-14; D-14 |
 | `server/static.ts`, `server/vite.ts` | Frontend serving | Unchanged; mounted last (PS-02 step 5) | D-13 |
-| `.gitignore` | — | Adds `.env` | §4.6 |
+| `.gitignore` | — | Adds `.env*` with the exception `!.env.example` | §4.6 (R2-14) |
 | New files | — | `.env.example`, `vitest.config.ts` (projects `unit`, `db`, `gate` with explicit includes under `server/` only, so Playwright specs under `tests/` are never collected; §9.1), `tsconfig.test.json`, `server/worker.ts`, `server/platform/**`, `server/modules/registry.ts`, `migrations/**` | §4.8, §11 |
 
 ### 10.3 Deliberate differences from the architecture documents
