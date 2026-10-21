@@ -186,6 +186,7 @@ A notification says: what merged (merge SHA), the public surface that changed (m
 | `server/modules/<module>/**` | module engineer for that module | others import only from `server/modules/<module>/index.ts` |
 | `server/modules/registry.ts` | platform engineer (creates it) | each module engineer adds one registration line |
 | `server/index.ts`, `server/worker.ts` | platform engineer | — |
+| `server/scripts/**` | the module engineer whose phase specification names the script (for example Phase 1 provisioning → the tenant module engineer) | scripts import only `server/platform/system/` and module `index.ts` files; they connect as a runtime role, never the owner |
 | `server/tests/gate/**`, `server/tests/support/**` | test engineer | implementers read only |
 | `server/**/*.test.ts` next to source | the implementer of that source | — |
 | `migrations/**` | whoever owns the schema being migrated | generated with `drizzle-kit generate`, never hand-edited after commit |

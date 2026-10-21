@@ -18,7 +18,7 @@ Only the PM edits this file.
 
 | Job | Phase | Agent | Branch | Status | Merge SHA |
 |---|---|---|---|---|---|
-| phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | Open | — |
+| phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | In review | — |
 
 Status values: **Open** (assigned, commits in progress) → **In review** (review rounds running) → **Merged** → or **Abandoned** (with reason).
 
@@ -57,7 +57,7 @@ Follow-ups: <anything deferred, with owner>
 
 ## ENTRIES
 
-### phase-0-spec — backend-architect — Open
+### phase-0-spec — backend-architect — In review
 
 Phase: 0 Infrastructure Foundation
 Branch: agent/backend-architect/phase-0-spec   (from backend @ b6ab5be)
@@ -70,7 +70,17 @@ Commits checked
 |---|---|---|---|---|
 | 1 | 33d9b6b | docs(phase-0-spec): scope, sources, data model and platform model | Changes requested | A: FileStorage stays Phase 4 (PM ruling, roadmap). B: add causation (event/actor) for subscriber work. C: record Data vs Event architecture conflict on approval→normalization transaction as owner OQ. D: evaluate separate worker DB role. E: propose frontend-only start mode (D-13). F: pg error messages leak input values. G: domain-layer access to CompanyId type. |
 | 2 | e8c2383 | docs(phase-0-spec): apply PM review A-G to sections 1-4 | Accepted, continue | A–G resolved: causation columns + unforgeable subscriber context; ledger_worker role; frontend-only mode; allowlist serializer; plain strings in domain; OQ-16 raised (approval→financial record: same transaction vs subscriber). Carried to round 1: R1-01 — Review→Financial Normalization call is upward, not like D-06. |
+| 3 | fa3b411 | docs(phase-0-spec): platform services, API, events and audit entries | Accepted, continue | PS-01…PS-22 incl. PS-16 port registry; worker fencing verified; error envelope never echoes messages. Pulled backend (merge 5f532dc, D-17). Carried: R1-01 cite D-17; R2-01 no personal data in paths; R3-01 claim query vs ready index. |
+| 4 | 3c9d626 | docs(phase-0-spec): gate tests, differences, commit plan, open questions | Accepted | 43 gate tests (G0-01…G0-43) mapped to all six roadmap gate items; §10 differences; 9-commit plan; OQ-01…OQ-18. Job finished → review rounds. |
+| 5 | 6959ffd | docs(phase-0-spec): review round 1 fixes R1-01 to R1-05 | Accepted (round 1 closed) | See round 1 row |
+| 6 | e367436 | docs(phase-0-spec): round 2 [1] roles, grants and immutability triggers | Accepted, continue | ledger_runtime group role (no app↔worker membership), §3.1.8a financial/approval writes API-only, column INSERT grants, owner-proof immutability triggers, runtime-role self-check, PUBLIC revokes, password. Note sent: other roles relying on PUBLIC CONNECT need explicit grants. |
+| 7 | f1ea859 | docs(phase-0-spec): round 2 [2] contexts, ports, registry and boundaries | Accepted, continue | Agent hit a usage limit after committing, before reporting; PM reviewed the commit directly (clean tree, complete). humanOnly ports, WeakSet-brand frozen expiring contexts, private causation actor, system-context surface (rule 11), declarative public routes + module namespaces, no savepoints, rule 10, tenantValues + set_config, audit/event catalogues with jobRequired, requeue rules, OQ-09 ruling, §4.10 obligations. |
+| 9 | d8d875e | docs(phase-0-spec): round 2 [4] gate tests, differences, obligations, open questions | Accepted | 50 gate tests; every R2 item and the OQ-09 ruling mapped in §9.2; §10.3, §11, §12 and §4.10 updated; spec v0.4. PM ruling on the agent question: server/scripts/** ownership added to the roster. |
+| 8 | 1a21789 | docs(phase-0-spec): round 2 [3] logging, HTTP, tokens, config and guard | Accepted, continue | Driver-parser test-DB guard + server-side current_database() check; error serializers on every key; route templates and the no-personal-data-in-paths convention (closes R2-01 carried); JWT required claims and max age; portal secret format; security headers; deduplicated /health. |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
+| 1 | Correctness | R1-01 D-17 port design in §4.8/§4.9/PS-16; R1-02 backoff formula gives 0.5× base on first failure; R1-03 G0-14 can deadlock on the effects key; R1-04 esbuild hard-codes NODE_ENV=production in the bundle; R1-05 gate globalSetup owned by test engineer breaks implementer branch; R1-06 evidence on G0-12(b) and finish-lock-lost | Fix commit 6959ffd (spec v0.3): port fields in registry, import rule 9 (no module cycles), PS-16 wiring order; backoff uses new count; latch first in G0-14 + new G0-14(b); bundles always production; platform owns test setup, test engineer owns only gate fixtures; R1-06 evidenced | Closed — PM verified each fix in the file |
+| 2 | Security and doctrine | Doctrine reviewer: 2 Blocking (worker role inherits API role → could write financial tables; approval-effects port reachable from system contexts) + 11 Should fix. Security reviewer: 0 Blocking + 12 Should fix. PM verified and merged into R2-B1, R2-B2, R2-01…R2-18 (context forgery, causation hidden, system-context surface, declarative public routes + namespaces, column INSERT grants, savepoints, no module connections, tenant stamping, owner triggers on audit/event_log, runtime-role self-check, PUBLIC revokes, robust test-DB guard, logging gaps + route templates + path convention, JWT required claims + secret format, security headers, job attribution on audit and events, requeue safety, test code out of bundles). PM ruling: OQ-09 stale recovery counts as an attempt. | Commits e367436, f1ea859, 1a21789, d8d875e (spec v0.4), every ID answered; PM verified each group in the file | Fixes verified by PM; both reviewers re-verifying |
+| 3 | Efficiency and quality | R3-01 claim ORDER BY vs ready index; R3-02 write amplification on append-only tables; R3-03 node-postgres does not await pool connect handlers (self-check timing); R3-04 batch lock ageing vs stale threshold; R3-05 cross-reference integrity; R3-06 implementer checklist; R3-07 mutation table (which test fails for which defect); R3-08 gate run cost and flaky timing | (pending) | (pending) |
