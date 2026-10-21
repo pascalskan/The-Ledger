@@ -18,7 +18,7 @@ Only the PM edits this file.
 
 | Job | Phase | Agent | Branch | Status | Merge SHA |
 |---|---|---|---|---|---|
-| phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Open | — |
+| phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Merged | 99746d9 |
 | phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | Merged — approved by owner Oct 21, 2026 | 5768030 |
 
 Status values: **Open** (assigned, commits in progress) → **In review** (review rounds running) → **Merged** → or **Abandoned** (with reason).
@@ -58,7 +58,7 @@ Follow-ups: <anything deferred, with owner>
 
 ## ENTRIES
 
-### phase-0-replit — backend-architect — Open
+### phase-0-replit — backend-architect — Merged
 
 Phase: 0 Infrastructure Foundation (amendment)
 Branch: agent/backend-architect/phase-0-replit   (from backend @ 1ee38a2, which includes the root .replit from main, PRs #46/#47)
@@ -70,10 +70,26 @@ Items: RP-01 variable names vs the Replit-injected DATABASE_URL; RP-02 the owner
 Commits checked
 | # | SHA | Message | PM verdict | Notes |
 |---|---|---|---|---|
+| 1 | 138b169 | docs(phase-0-spec): v0.6 [1] owner approval; Replit variables, env reading, explicit connections | Accepted, continue | Owner approval and OQ closures recorded; LEDGER_ variable names, no migration fallback to Replit DATABASE_URL; config module is the only process.env reader (rule 13); explicit Pool objects, complete URLs, PGOPTIONS refused. Note sent: keep the literal process.env.NODE_ENV for esbuild define. |
+| 2 | 50e8fba | docs(phase-0-spec): v0.6 [2] superuser owner, test environments, worker on Replit, Replit risks | Accepted, continue | RP-04 found a real bug: test rebuild would have dropped pg_catalog etc. under the postgres superuser; fixed. Two test environments documented; worker workflow TOML for platform commit 8; Phase 9 always-on worker. PM ruling OQ-19: The-Ledger-main is not published until production Secrets and roles exist. |
+| 3 | 862eeed | docs(phase-0-spec): v0.6 [3] Replit gate tests, map, differences, checklist, OQ-19 ruling | Accepted | G0-51 libpq fallback test, G0-36(j)/G0-39/G0-46/G0-20 updates, §9.2/§10/§11 updated, cross-reference check 0 problems. Job finished → review rounds. |
+| 4 | f83efa1 | docs(phase-0-spec): v0.6 review round 1 fixes RA1-01 to RA1-04 | Accepted (round 1 closed) | See round 1 row |
+| 5 | 359f4ac | docs(phase-0-spec): v0.6 round 2 [A] env reading allowlist, scrubbing, TLS fail-closed, Replit .env | Accepted (round 2) | |
+| 6 | 80426d2 | docs(phase-0-spec): v0.6 round 2 [B] migration lint, bounded test roles, obligations, Replit notes | Accepted (round 2 closed) | |
+| 7 | 9ec7169 | docs(phase-0-spec): v0.6 review round 3 fixes RC3-01 to RC3-05 | Accepted (round 3 closed) | |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
+| 1 | Correctness | RA1-01 Replit gate run must not disturb the main workspace (temporary worktree); RA1-02 G0-02 frontend-only run vs agent .env files; RA1-03 worker wait loop silent and unbounded; RA1-04 evidence that the gate does not depend on .replit workflows | Fix commit f83efa1: temporary detached gate worktree on Replit; frontend-only G0-02 procedure; waiting messages + console table; G0-38 ephemeral port (agent-found) | Closed — PM verified |
+| 2 | Security and doctrine | Doctrine: 0 Blocking, 1 Should fix (rule-13 scanner evasions), 4 Notes. Security: 0 Blocking, 3 Should fix (scrub superuser env after load, TLS fail-closed in production, no .env on Replit), 6 Notes. PM verified helium enforces passwords (wrong-password login refused). Sent as RB2-01…RB2-09 | Commits 359f4ac, 80426d2: rule-13 allowlist, owner-variable scrub, TLS fail-closed, no .env on Replit, migration lint, bounded test roles, §4.10 rows, Replit notes | Closed — PM verified |
+| 3 | Efficiency and quality | RC3-01 mutation table rows for every amendment guarantee; RC3-02 self-check one statement per connection; RC3-03 Replit gate npm ci cost; RC3-04 every amendment item mapped to a commit and the checklist; RC3-05 header/status, cross-reference re-run | Fix commit 9ec7169: ten mutation-table rows with anti-vacuous controls (G0-36(o)/(n), G0-51(e), G0-39(q), G0-46(f)); self-check one statement per connection; npm ci --prefer-offline with timings; every item mapped to commits 2/4/8/9 and agents; header/status | Closed — PM verified |
+
+Verification on merge: docs-only job (one file, +305/−84); no code changed, so check/build/tests unaffected and not run. Cross-reference script: 0 problems.
+Merge: 99746d9 into backend on October 21, 2026 (--no-ff).
+Public surface changed: none in code; the specification now names the LEDGER_ variables, the config-module-only environment rule (13), explicit pools, the Replit test environments and the .replit worker workflow.
+Notified: the platform engineer and the test engineer are briefed from spec v0.6 and this entry when their Phase 0 jobs start (next).
+Follow-ups: owner sets ledger_app/ledger_worker passwords on Replit and the three _TEST Secrets before the first Replit gate run.
 
 ### phase-0-spec — backend-architect — Merged (awaiting owner checkpoint)
 
