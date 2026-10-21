@@ -18,7 +18,7 @@ Only the PM edits this file.
 
 | Job | Phase | Agent | Branch | Status | Merge SHA |
 |---|---|---|---|---|---|
-| phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | In review | — |
+| phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | Merged — awaiting owner checkpoint | 5768030 |
 
 Status values: **Open** (assigned, commits in progress) → **In review** (review rounds running) → **Merged** → or **Abandoned** (with reason).
 
@@ -57,11 +57,11 @@ Follow-ups: <anything deferred, with owner>
 
 ## ENTRIES
 
-### phase-0-spec — backend-architect — In review
+### phase-0-spec — backend-architect — Merged (awaiting owner checkpoint)
 
 Phase: 0 Infrastructure Foundation
 Branch: agent/backend-architect/phase-0-spec   (from backend @ b6ab5be)
-Specification: docs/backend/phases/PHASE-0-infrastructure.md (being written)
+Specification: docs/backend/phases/PHASE-0-infrastructure.md (v0.5, 2,015 lines)
 Preflight: no phase dependencies; decisions D-10, D-12, D-14, D-16 APPROVED.
 Assigned: October 20, 2026. Planned commits: (1) sections 1–4, (2) sections 5–8, (3) sections 9–12.
 
@@ -77,10 +77,20 @@ Commits checked
 | 7 | f1ea859 | docs(phase-0-spec): round 2 [2] contexts, ports, registry and boundaries | Accepted, continue | Agent hit a usage limit after committing, before reporting; PM reviewed the commit directly (clean tree, complete). humanOnly ports, WeakSet-brand frozen expiring contexts, private causation actor, system-context surface (rule 11), declarative public routes + module namespaces, no savepoints, rule 10, tenantValues + set_config, audit/event catalogues with jobRequired, requeue rules, OQ-09 ruling, §4.10 obligations. |
 | 8 | 1a21789 | docs(phase-0-spec): round 2 [3] logging, HTTP, tokens, config and guard | Accepted, continue | Driver-parser test-DB guard + server-side current_database() check; error serializers on every key; route templates and the no-personal-data-in-paths convention (closes R2-01 carried); JWT required claims and max age; portal secret format; security headers; deduplicated /health. |
 | 9 | d8d875e | docs(phase-0-spec): round 2 [4] gate tests, differences, obligations, open questions | Accepted | 50 gate tests; every R2 item and the OQ-09 ruling mapped in §9.2; §10.3, §11, §12 and §4.10 updated; spec v0.4. PM ruling on the agent question: server/scripts/** ownership added to the roster. |
+| 10 | 7636b4e | docs(phase-0-spec): round 3 [1] claim plan, index budget, acquire check, lock heartbeat | Accepted, continue | Claim uses the ready index without a sort; append-only tables keep only constraint/reader indexes; role check moved into withClient (connect hooks are not awaited); lock heartbeat per row and per subscriber. |
+| 11 | 36a978e | docs(phase-0-spec): round 3 [2] approval-column grants, type ownership, port roles | Accepted, continue | Worker INSERT on review tables column-level without decision columns; audit/event type ownership with module-bound units and adopt(); rule 12 port implementations; port roles (approvalEffects ceo/pm); default-privilege EXECUTE revoke; client/.env* secret scans. |
+| 12 | f9537ed | docs(phase-0-spec): round 3 [3] checklist, test strength, run cost, self-check and logging | Accepted, continue | Implementer checklist §11.1; mutation table §9.12 (19 guarantees, tests tightened); agent found and fixed a gap in its own heartbeat (now batch-wide); §9.13 run cost and determinism; self-check effective memberships/privileges; nested-error walk; route on 500s. Note sent: worker test hooks must not be settable in production. |
+| 13 | c8ba5dd | docs(phase-0-spec): round 3 [4] cross-reference check, numbering, version, worker hooks | Accepted | Scripted cross-reference check (0 problems after 50 manual fixes); PS numbering offset removed; production worker factory takes no test hooks; G0-01 checks the bundle. |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
 | 1 | Correctness | R1-01 D-17 port design in §4.8/§4.9/PS-16; R1-02 backoff formula gives 0.5× base on first failure; R1-03 G0-14 can deadlock on the effects key; R1-04 esbuild hard-codes NODE_ENV=production in the bundle; R1-05 gate globalSetup owned by test engineer breaks implementer branch; R1-06 evidence on G0-12(b) and finish-lock-lost | Fix commit 6959ffd (spec v0.3): port fields in registry, import rule 9 (no module cycles), PS-16 wiring order; backoff uses new count; latch first in G0-14 + new G0-14(b); bundles always production; platform owns test setup, test engineer owns only gate fixtures; R1-06 evidenced | Closed — PM verified each fix in the file |
-| 2 | Security and doctrine | Doctrine reviewer: 2 Blocking (worker role inherits API role → could write financial tables; approval-effects port reachable from system contexts) + 11 Should fix. Security reviewer: 0 Blocking + 12 Should fix. PM verified and merged into R2-B1, R2-B2, R2-01…R2-18 (context forgery, causation hidden, system-context surface, declarative public routes + namespaces, column INSERT grants, savepoints, no module connections, tenant stamping, owner triggers on audit/event_log, runtime-role self-check, PUBLIC revokes, robust test-DB guard, logging gaps + route templates + path convention, JWT required claims + secret format, security headers, job attribution on audit and events, requeue safety, test code out of bundles). PM ruling: OQ-09 stale recovery counts as an attempt. | Commits e367436, f1ea859, 1a21789, d8d875e (spec v0.4), every ID answered; PM verified each group in the file | Fixes verified by PM; both reviewers re-verifying |
-| 3 | Efficiency and quality | R3-01 claim ORDER BY vs ready index; R3-02 write amplification on append-only tables; R3-03 node-postgres does not await pool connect handlers (self-check timing); R3-04 batch lock ageing vs stale threshold; R3-05 cross-reference integrity; R3-06 implementer checklist; R3-07 mutation table (which test fails for which defect); R3-08 gate run cost and flaky timing | (pending) | (pending) |
+| 2 | Security and doctrine | Doctrine reviewer: 2 Blocking (worker role inherits API role → could write financial tables; approval-effects port reachable from system contexts) + 11 Should fix. Security reviewer: 0 Blocking + 12 Should fix. PM verified and merged into R2-B1, R2-B2, R2-01…R2-18 (context forgery, causation hidden, system-context surface, declarative public routes + namespaces, column INSERT grants, savepoints, no module connections, tenant stamping, owner triggers on audit/event_log, runtime-role self-check, PUBLIC revokes, robust test-DB guard, logging gaps + route templates + path convention, JWT required claims + secret format, security headers, job attribution on audit and events, requeue safety, test code out of bundles). PM ruling: OQ-09 stale recovery counts as an attempt. | Commits e367436, f1ea859, 1a21789, d8d875e (spec v0.4), every ID answered; PM verified each group in the file | Closed — PM verified; doctrine reviewer: 21/21 resolved (+1 Should fix, 2 Notes); security reviewer: 9/12 resolved, 3 partly (+5 Notes); remainders moved to round 3 (R3-09…R3-17) |
+| 3 | Efficiency and quality | R3-01 claim ORDER BY vs ready index; R3-02 write amplification on append-only tables; R3-03 node-postgres does not await pool connect handlers (self-check timing); R3-04 batch lock ageing vs stale threshold; R3-05 cross-reference integrity; R3-06 implementer checklist; R3-07 mutation table (which test fails for which defect); R3-08 gate run cost and flaky timing; from re-verification: R3-09 worker INSERT on submissions column-level without status/approval columns; R3-10 catalogue owning module; R3-11 approval-effects reachable only via bind; R3-12 self-check effective memberships/privileges; R3-13 nested errors in logs; R3-14 route not path on 500s + undecodable param; R3-15 port roles list; R3-16 Bearer case recorded; R3-17 function EXECUTE in later schemas + client/.env* | Commits 7636b4e, 36a978e, f9537ed, c8ba5dd (spec v0.5), every ID answered | Closed — PM verified each group in the file |
+
+Verification on merge: docs-only job (one file, docs/backend/phases/PHASE-0-infrastructure.md, +2,015); no code changed, so npm run check / build / tests are unaffected and were not run for this merge. Architect ran a scripted cross-reference check (0 problems).
+Merge: 5768030 into backend on October 21, 2026 (--no-ff).
+Public surface changed: none in code. The specification defines the platform surface every module will use (server/platform/index.ts, ModuleRegistration, ports, catalogues, roles and grants) and 59 gate-test rows (G0-01 … G0-50 with lettered cases).
+Notified: no other agent is on a job yet. The platform engineer and the test engineer are briefed from this specification and this entry when their Phase 0 jobs are assigned after the owner checkpoint.
+Follow-ups: owner checkpoint (spec approval and OQ-02 … OQ-18); owner prerequisite before platform commit 4 — hosted PostgreSQL dev and test databases plus the one-off role SQL in §3.5; PM to update CLAUDE.md "CURRENT PLATFORM STATE" when Phase 0 code merges.

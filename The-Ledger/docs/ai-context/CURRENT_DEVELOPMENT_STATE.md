@@ -23,7 +23,9 @@ frozen domains and with the frontend prototype.
   at least three review rounds before merging into `backend`, and related agents are notified after
   each merge. Roster: `docs/backend/BACKEND_AGENT_ROSTER.md`; agents: `.claude/agents/`; PM playbook:
   `.claude/skills/ledger-backend-lead/`; record: `docs/backend/BACKEND_MERGE_LOG.md`.
-- Backend Phase 0 may start. D-07 still needs a commercial documents domain session
+- Phase 0 specification written and reviewed (three rounds, 4 agents) and merged into `backend`:
+  `docs/backend/phases/PHASE-0-infrastructure.md` v0.5 — awaiting the owner checkpoint.
+- Backend Phase 0 implementation starts after that approval. D-07 still needs a commercial documents domain session
   (`COMMERCIAL_DOCUMENTS_DOMAIN.md`) before any invoice-document, quote, variation, credit note or
   payment work.
 
