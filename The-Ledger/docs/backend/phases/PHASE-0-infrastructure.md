@@ -165,12 +165,20 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd The-Ledger && until node -e \"fetch('http://localhost:5000/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))\"; do sleep 2; done && npm run dev:worker"
+args = "cd The-Ledger && i=0; until node -e \"fetch('http://localhost:5000/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))\"; do if [ $((i % 15)) -eq 0 ]; then echo 'Start worker: waiting for the API at /health (still starting, or its database is unreachable)'; fi; i=$((i+1)); sleep 2; done; npm run dev:worker"
 ```
 
 - **Why Node, not `curl`.** The wait loop uses Node 22's built-in `fetch`, because Node is guaranteed by the `nodejs-22` module and `curl` may not be in Replit's nix environment.
 - **Why the worker waits for `/health`.** It waits until the API answers `/health`. By then "Start application" has finished `npm install`, so the worker never starts against a half-installed `node_modules`.
-- **Without backend configuration.** In frontend-only mode (no backend Secrets) the API still answers `/health`. The worker then fails fast with its `ConfigError` (§4.6). That stops only the worker task; the parallel API task keeps running.
+- **Never silent (RA1-03).** While it waits, the loop prints one line, `Start worker: waiting for the API at /health (still starting, or its database is unreachable)`, straight away and then about every 30 seconds (every 15th two-second try).
+- **What the owner sees in the Replit console, in each case:**
+
+  | Situation | `/health` | "Start worker" console |
+  |---|---|---|
+  | Frontend-only (no backend Secrets) | `200`, `mode: frontend_only` | One waiting line at most, then the worker's `FATAL` `ConfigError` naming `LEDGER_WORKER_DATABASE_URL`, then the task ends. Only the worker task stops; the API task keeps serving the frontend |
+  | Full mode, database reachable | `200`, `mode: full` | Possibly one waiting line during `npm install`, then the worker's JSON log lines (`service: "worker"`) |
+  | Full mode, database unreachable | `503` | A waiting line every ~30 s until the database is back. Then the worker starts as above. The API's own console shows the `/health` failures at `WARN` |
+  | API not running (its own start-up failed) | no answer | A waiting line every ~30 s. The cause is in the "Start application" console |
 - **When it takes effect.** `.replit` reaches the Replit project only when `backend` is merged into `main`, the branch the project runs (§2.5).
 
 
@@ -1720,13 +1728,33 @@ Together these cover every field the Audit Doctrine requires:
 
   | | Local mirror (agents, every commit) | Replit `ledger_test` (the PM, before a phase closes) |
   |---|---|---|
-  | Where it runs | The owner's laptop, inside the agent's worktree | The Replit shell of "The-Ledger-main", after the PM pushes the integration branch and pulls it there |
+  | Where it runs | The owner's laptop, inside the agent's worktree | The Replit shell of "The-Ledger-main", in a **temporary detached worktree** of the pushed `backend` branch under `/tmp`. The workspace checkout of `main`, and what the Run button runs, are never touched (procedure below) |
   | Database | Docker `ledger-pg`, PostgreSQL 16.14, `127.0.0.1:55432`, database `ledger_test` | Replit's PostgreSQL 16.10, `helium:5432`, database `ledger_test` |
   | Owner | `postgres` superuser | `postgres` superuser |
   | Where the URLs come from | The worktree's git-ignored `.env`, copied from the PM's credentials file outside the repository | Replit Secrets: `LEDGER_APP_DATABASE_URL_TEST`, `LEDGER_WORKER_DATABASE_URL_TEST` and `LEDGER_MIGRATION_DATABASE_URL_TEST`, all naming `ledger_test` on `helium`, set by the owner/PM after the role passwords have been set with `\password` |
   | Replit-injected `DATABASE_URL` and `PG*` | Absent, unless a test sets them | Present (superuser, `heliumdb`) |
   | Command | `npm test` (`unit`, `db`, `gate`) | `npm test` |
-  | G0-01, G0-02 (commands) | Run here — Playwright needs the laptop's browsers | Not run |
+  | G0-01, G0-02 (commands) | Run on the laptop — Playwright needs the laptop's browsers — in the places §9.3 states | Not run |
+
+  **The Replit gate procedure (RA1-01).** The PM pushes `backend` to GitHub, then runs in the Replit Shell:
+
+  ```sh
+  cd ~/workspace                                   # the "The-Ledger-main" checkout of main — left as it is
+  git fetch --depth=1 origin backend               # fetch only the tip commit of backend
+  git worktree add --detach /tmp/ledger-gate FETCH_HEAD
+  cd /tmp/ledger-gate/The-Ledger
+  printenv | grep -c '^LEDGER_.*_TEST='            # names only: expect 3 (the Secrets reached this shell)
+  test ! -e .env                                   # the gate tree has no .env (git-ignored, never committed)
+  npm ci --no-audit --no-fund
+  npm test
+  cd ~/workspace && git worktree remove --force /tmp/ledger-gate && git worktree prune
+  ```
+
+  - **Shallow clone.** The Replit checkout may be shallow (grafted). `--depth=1` is sufficient, because the gate needs only the tip's tree, not history. It also avoids deepening the clone. Fetching records one more shallow boundary in `.git/shallow`, which does not change the `main` checkout. `FETCH_HEAD` is used so that no local branch is created or moved.
+  - **What the workspace keeps.** The workspace's working tree, branch, `node_modules` and the running Run-button processes are untouched. The gate tree has its own `node_modules`.
+  - **Secrets.** Replit Secrets are exported into every Replit Shell, so the three `_TEST` URLs reach the gate. So do the injected `DATABASE_URL` and `PG*` variables, which G0-36(j) and G0-51 expect.
+  - **Nothing outside the gate tree is read.** The harness reads only the process environment and files inside `/tmp/ledger-gate/The-Ledger`: its `vitest.config.ts`, its migrations, and its own `client/.env*` scan, of which there are none. G0-51's password file is a temporary file it creates itself. No gate test binds port 5000, which the workspace's running app uses: Supertest and the worker tests use in-process apps on ephemeral ports, and G0-38's refused port is found dynamically (RA1-04).
+  - **No `.replit` dependency.** The gate does not use the `.replit` workflows (RA1-04), so it works before the RP-06 change reaches `main`.
 
   **What must differ: only the URLs.** Two tests, G0-36(j) and G0-51, prove the platform ignores Replit's injected superuser variables. They set `DATABASE_URL` and the `PG*` variables themselves, to the owner's credentials, so they test the same thing in both environments. On Replit the real injected values are present as well, which makes the Replit run the more realistic one. The guard's `heliumdb` check (§4.6) does not fire locally, where no `DATABASE_URL` names it.
 - **Who builds the harness.** Nothing the implementer's branch needs may live in the test engineer's folders, because those files do not exist on that branch until the gate-test job merges (roster, Folder Ownership).
@@ -1814,8 +1842,8 @@ Together these cover every field the Audit Doctrine requires:
 
 | ID | Protects | Attack / check | Pass when |
 |---|---|---|---|
-| G0-01 **Command** | Gate item 1; R2-18 | Run `npm run check` (both `tsc` passes, including the test tsconfig) and `npm run build`. Then, from the app folder **with a `.env` file present** that sets every variable, run each bundle with an emptied environment (`env -i PATH="$PATH" node dist/index.cjs`, then the same for `dist/worker.cjs`). Finally, search both bundles for test-only strings | Both commands exit 0, and `dist/index.cjs`, `dist/worker.cjs` and `dist/public/index.html` exist. Run with an emptied environment, the API exits 1 with a `ConfigError` naming the four backend variables, and the worker exits 1 naming `LEDGER_WORKER_DATABASE_URL`. This proves the CommonJS bundles load (including the bundled `jose`), that a built bundle always runs as production, and that it never reads `.env` (§4.6). **Neither bundle contains** `__probe`, `gate_test`, `platform/testing`, `rebuildTestDatabase`, `GateProbeRecorded`, `server/tests`, `beforeFinish` or `afterSubscriber` (R2-18; test-only worker hooks) |
-| G0-02 **Command** | Frontend unchanged (D-13) | With **no** `.env` and no backend variables, start `npm run dev` and run the full Playwright suite (`npx playwright test`) | The same pass count as `backend` before Phase 0, with no new failures. The server log shows the single frontend-only `WARN` line |
+| G0-01 **Command** | Gate item 1; R2-18 | Run `npm run check` (both `tsc` passes, including the test tsconfig) and `npm run build`. Then, from the app folder **with a `.env` file present** that sets every variable, run each bundle with an emptied environment (`env -i PATH="$PATH" node dist/index.cjs`, then the same for `dist/worker.cjs`). Finally, search both bundles for test-only strings | **Where:** at the gate, the PM runs G0-01 in the integration worktree **after** G0-02. For its bundle step only, the PM writes a temporary `.env` there from the local-mirror credentials file, and deletes it as soon as the step ends, so G0-02 always sees no `.env`. An implementer runs it in its own worktree, which already has the mirror `.env`. Both commands exit 0, and `dist/index.cjs`, `dist/worker.cjs` and `dist/public/index.html` exist. Run with an emptied environment, the API exits 1 with a `ConfigError` naming the four backend variables, and the worker exits 1 naming `LEDGER_WORKER_DATABASE_URL`. This proves the CommonJS bundles load (including the bundled `jose`), that a built bundle always runs as production, and that it never reads `.env` (§4.6). **Neither bundle contains** `__probe`, `gate_test`, `platform/testing`, `rebuildTestDatabase`, `GateProbeRecorded`, `server/tests`, `beforeFinish` or `afterSubscriber` (R2-18; test-only worker hooks) |
+| G0-02 **Command** | Frontend unchanged (D-13) | **Where (RA1-02):** in the PM's **integration worktree**, which has no `.env`. Before starting, the PM checks that `test ! -e .env` succeeds and that `printenv \| grep -E '^(LEDGER_\|JWT_\|PORTAL_JWT_SECRET)'` prints nothing. Then start `npm run dev`, confirm `GET /health` returns `{"status":"ok","mode":"frontend_only"}`, and run the full Playwright suite (`npx playwright test`). There is no flag that disables the backend; frontend-only mode comes only from the variables being absent (§4.6) | The same pass count as `backend` before Phase 0, with no new failures. The server log shows the single frontend-only `WARN` line, and `/health` reported `frontend_only` before the suite started |
 
 ### 9.4 Audit atomicity and the Unit of Work — gate item 2
 
@@ -1894,7 +1922,7 @@ Each request in these tests carries a unique marker string (`MARK-<test>-<random
 |---|---|---|---|
 | G0-36 | Fail fast without leaking values (S-02; R2-09, R2-14) | `loadApiConfig` with:<br>(a) three of the four backend variables, each set to a marker;<br>(b) `NODE_ENV=production` and none of them;<br>(c) a mismatched key pair;<br>(d) a `PORTAL_JWT_SECRET` that decodes to 10 bytes;<br>(e) every value from the committed `.env.example`;<br>(f) all four set, but `LEDGER_APP_DATABASE_URL=""`;<br>(g) `PORTAL_JWT_SECRET` set to the text of `JWT_PUBLIC_KEY`;<br>(h) a 40-character `PORTAL_JWT_SECRET` that decodes to 30 bytes;<br>(i) an extra `VITE_JWT_SECRET` variable;<br>(j) **Replit's injected variables are never read (RP-02).** `NODE_ENV=production`, all four set, plus — each set to an owner (superuser) value containing a marker — `DATABASE_URL`, `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`, `LEDGER_MIGRATION_DATABASE_URL` and `LEDGER_MIGRATION_DATABASE_URL_TEST`; then the same for `loadWorkerConfig`;<br>(k) a temporary `client/.env.local` defining `LEDGER_APP_DATABASE_URL`, and another defining `VITE_PORTAL_SECRET` (R3-17), removed in `finally`;<br>(l) `PGOPTIONS` set (RP-03);<br>Also `loadWorkerConfig` with no `LEDGER_WORKER_DATABASE_URL` | Each case except (j) throws `ConfigError`. Its message, and the captured `FATAL` line, name the right variables and contain no marker or key material. For (a) and (f), exactly the missing variable is named — the empty one counts as missing. For (e), every backend variable is named. **(j) succeeds:** both loaders return a full-mode configuration, and a deep scan of the returned object finds **none** of the owner values or markers — only the `LEDGER_APP_`/`LEDGER_WORKER_` settings. (This replaces v0.5's "refused when an owner URL is present", which could never pass on Replit.) |
 | G0-37 | Frontend-only mode (§4.6; D-13) | Set `NODE_ENV=development` and none of the four variables. Build the app with a sentinel frontend handler and a spy on the pool factory. Request `/api/v1/x`, `/api/foo`, `/portal/v1/x`, `/health`, `/` and `/portal/projects` | The mode is `frontend_only`. The `/api` and `/portal/v1` paths get `503 BACKEND_NOT_CONFIGURED` envelopes. `/health` gets `200 {"status":"ok","mode":"frontend_only"}`. `/` and `/portal/projects` reach the sentinel. The pool factory is never called and no socket is opened. Exactly one start-up `WARN` line is logged |
-| G0-38 | Health (S-08; R2-15) | Full mode with a reachable test database; full mode with `LEDGER_APP_DATABASE_URL` pointing at a closed local port; and 50 concurrent `/health` requests with a spy on the pool's `connect`. The spy holds the first check on a latch until all 50 requests are in flight, then releases it (R3-08: deterministic). The closed port is on `127.0.0.1`, so the failure is an immediate connection refusal rather than a network timeout | `200 {"status":"ok","mode":"full"}` and `503 {"status":"unavailable","mode":"full"}`; the 503 arrives within 3 seconds, which leaves a 1-second margin over the 2-second check timeout. Both bodies have no other keys. The 50 concurrent requests cause **exactly one** `connect` call |
+| G0-38 | Health (S-08; R2-15) | Full mode with a reachable test database; full mode with `LEDGER_APP_DATABASE_URL` pointing at a closed local port — found by binding an ephemeral port on `127.0.0.1` and closing it, never a fixed port such as 5000, which the Replit workspace's running app uses (RA1-04); and 50 concurrent `/health` requests with a spy on the pool's `connect`. The spy holds the first check on a latch until all 50 requests are in flight, then releases it (R3-08: deterministic). The closed port is on `127.0.0.1`, so the failure is an immediate connection refusal rather than a network timeout | `200 {"status":"ok","mode":"full"}` and `503 {"status":"unavailable","mode":"full"}`; the 503 arrives within 3 seconds, which leaves a 1-second margin over the 2-second check timeout. Both bodies have no other keys. The 50 concurrent requests cause **exactly one** `connect` call |
 | G0-39 | Test database isolation (D-12; R2-12) | Call the guard with test URLs whose database is:<br>(a) `ledger_dev`;<br>(b) `ledger_test_backup`;<br>(c) `ledger_TEST`;<br>(d) missing;<br>(e) different across the three URLs;<br>(f) equal to `LEDGER_APP_DATABASE_URL`'s.<br>Also: (g) `…/ledger_test?host=other`; (h) `…/ledger_test?user=postgres`; (i) a socket URL; (j) an empty path; (k) a `mysql://` URL; (l) `…/ledger_test?options=-c%20search_path%3Dx`.<br>The URLs point at an unroutable host, and the pg client and pool constructors are spied on. Then: (m) call `rebuildTestDatabase` with an owner client stubbed so that `current_database()` returns `ledger_dev`; (n) under Vitest, build a `db/client.ts` pool from a non-`_test` URL;<br>(o) a test URL with no password, and one with no user, while `PGUSER` and `PGPASSWORD` hold the owner's credentials (RP-03);<br>(p) `DATABASE_URL` set to a URL naming `ledger_test`, as if Replit's development database were the test database (RP-01);<br>(q) list the schemas the rebuild would drop, as the superuser owner, without dropping them (RP-04) | (a)–(l), (o) and (p) each throw `TestDatabaseGuardError`, which does not contain the password, and no pg client or pool is constructed. (m) Refuses before any `DROP`, as the statement log shows. (n) Refused before connecting. (q) The list contains `audit`, `intelligence`, `drizzle` and `gate_test`, and **no** `public`, `information_schema` or `pg_*` schema. A valid set (`ledger_test` in all three URLs, complete, with `?sslmode=require`) passes |
 
 ### 9.11 Structure, registries, ports and dependencies
@@ -2050,7 +2078,7 @@ This is a map of guarantees already specified elsewhere in this document. It add
 | 3 | Pipeline order: `/health`, `/api`, `/portal/v1` first, the frontend last; JSON parser and error handler scoped to the API | PS-04 | G0-35, G0-37, G0-02 |
 | 3 | Error envelope with fixed messages; nothing echoed; security headers; no `X-Powered-By`; no CORS | PS-07, §6.2, §6.3 | G0-30 |
 | 3 | One request line per request, with a route template and never a raw path; server-generated request IDs | PS-05, PS-06 | G0-27, G0-29 |
-| 3 | **Playwright suite run with no `.env`** | §11 | G0-02 |
+| 3 | **Playwright suite run in frontend-only mode** (`.env` moved aside; `/health` reports `frontend_only`) | §11.2 | G0-02 |
 | 4 | Tables, constraints and indexes exactly as T-1 to T-3 | §3.2–§3.4 | G0-26, review of the generated SQL |
 | 4 | Four roles; column-level grants; no app/worker membership; PUBLIC defaults revoked | §3.5 | G0-20 – G0-25 |
 | 4 | Owner-proof immutability triggers | §3.5 | G0-45 |
@@ -2074,9 +2102,9 @@ This is a map of guarantees already specified elsewhere in this document. It add
 | 9 | Public surface exports no tables, pool, `createSystemContext` or `toCompanyId` | §4.8 | G0-43 |
 | 9 | Boundary rules 1–12 | §4.8 | G0-40 |
 | 9 | No test code in the bundles | rule 1a | G0-01 |
-| 9 | **Playwright suite run with no `.env`** | §11 | G0-02 |
+| 9 | **Playwright suite run in frontend-only mode** (`.env` moved aside; `/health` reports `frontend_only`) | §11.2 | G0-02 |
 
-**Running the Playwright suite.** The full suite takes about 40 minutes (§9.13). It runs only at commits 3 and 9 and at the gate. All other commits run `npm run check`, `npm run build` and `npm test`.
+**Running the Playwright suite.** The full suite takes about 40 minutes (§9.13). It runs only at commits 3 and 9 and at the gate, always in frontend-only mode: with `.env` moved aside in an implementer's worktree, or in the PM's integration worktree, which has none (§11.2, G0-02). All other commits run `npm run check`, `npm run build` and `npm test`.
 
 ### 11.2 Commits
 
@@ -2087,7 +2115,16 @@ This is a map of guarantees already specified elsewhere in this document. It add
 
 Commits 1–3 need no database.
 
-After **every** commit the engineer runs `npm run check`, `npm run build` and `npm test`, and reports. Commits that change what the frontend sees (3 and 9) also run the Playwright suite with no `.env` (G0-02).
+After **every** commit the engineer runs `npm run check`, `npm run build` and `npm test`, and reports. Commits that change what the frontend sees (3 and 9) also run the Playwright suite in frontend-only mode (G0-02).
+
+**Running Playwright from an implementer worktree (RA1-02).** The implementer's worktree holds the mirror `.env` by design, which would start the API in full mode. For the Playwright run only:
+1. `mv .env .env.mirror` — `.env*` is git-ignored, and the loader reads only `.env`.
+2. Check that `printenv | grep -E '^(LEDGER_|JWT_|PORTAL_JWT_SECRET)'` prints nothing.
+3. Start `npm run dev`, and confirm `/health` reports `frontend_only`.
+4. Run the suite.
+5. `mv .env.mirror .env`.
+
+No flag disables the backend (§4.6). The report states that `/health` showed `frontend_only`.
 
 The test engineer writes the gate tests in parallel. The implementer runs them only once they are merged into `backend` and pulled. Every implementation commit must pass `npm run check` and `npm test` with **no** file from `server/tests/` present: `vitest.config.ts` references nothing there, the `gate` project passes with no tests, and the global setup lives in `server/platform/testing/` (§9.1). If something on the implementer's branch would need a test-engineer file, the plan is wrong — report it.
 
