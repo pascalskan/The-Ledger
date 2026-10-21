@@ -1,10 +1,10 @@
 # THE LEDGER — PHASE 0 SPECIFICATION — INFRASTRUCTURE FOUNDATION
 
-Version: 0.5 (draft) — 0.2 applied the PM review of 33d9b6b (A–G); 0.3 applied review round 1 (R1-01 to R1-05); 0.4 applied review round 2 (R2-B1, R2-B2, R2-01 to R2-18, the OQ-09 ruling); 0.5 applies review round 3 (R3-01 to R3-17)
-Status: DRAFT — review rounds 1 and 2 closed; round 3 fixes applied, awaiting the PM's verification; then the owner checkpoint
+Version: 0.6 — v0.5 (approved): PM review A–G, review rounds R1/R2/R3. **v0.6: Replit hosting amendment RP-01 to RP-07 (§2.5), reviewed in three rounds — RA1-01 to RA1-04 (correctness), RB2-01 to RB2-09 (security and doctrine), RC3-01 to RC3-05 (efficiency and quality)**
+Status: **APPROVED by the owner, October 21, 2026; v0.6 Replit amendment reviewed (three rounds) — awaiting PM merge**
 Date: October 20, 2026 (revised October 21, 2026)
 Author: `backend-architect`
-Branch: `agent/backend-architect/phase-0-spec` (from `backend` @ b6ab5be; `backend` @ 9500bca merged in, which brought D-17)
+Branch: `agent/backend-architect/phase-0-spec` (v0.1–v0.5, merged into `backend` @ 5768030); `agent/backend-architect/phase-0-replit` (v0.6, from `backend` @ 1ee38a2)
 Implements: `BACKEND_IMPLEMENTATION_ROADMAP.md` v2.2, Phase 0, under `BACKEND_OPEN_DECISIONS.md` v1.2 (D-01 … D-17)
 Implementer: `backend-platform-engineer` · Gate tests: `backend-test-engineer`
 
@@ -114,14 +114,76 @@ Doctrines verified at this gate (roadmap, Doctrine Verification by Phase): audit
 |---|---|
 | **D-10** No Redis | No Redis client package is added. The outbox, its locks and its retry schedule live in PostgreSQL (T-2). Phase 0 has no rate limiter or cache. A gate test fails if a Redis client appears in `package.json` |
 | **D-11** File storage | Not built in Phase 0: the roadmap places `FileStorage` in Phase 4 and the phase table lists D-11 against Phases 4 and 9 only. Phase 0 reserves `server/platform/storage/` for it. PM ruling: Phase 4 per the roadmap (OQ-01, closed) |
-| **D-12** Hosted PostgreSQL for dev and test | `DATABASE_URL` (development) and `DATABASE_URL_TEST` (tests) point at separate databases on a hosted PostgreSQL project. Tests refuse to run unless the database name in every test URL ends in `_test` (§4.6). Only synthetic data is written. Phase 0 adds variables the decision does not name — the migration-owner URLs and the worker-role URLs — because the grant guarantees need separate database roles (§3.5, OQ-03). Nothing in the design depends on a particular hosting provider |
+| **D-12** Hosted PostgreSQL for dev and test | D-12's `DATABASE_URL` (development) and `DATABASE_URL_TEST` (tests) are named `LEDGER_APP_DATABASE_URL` and `LEDGER_APP_DATABASE_URL_TEST` here, because Replit injects its own superuser `DATABASE_URL` (RP-01, §2.5). They point at separate databases: on Replit, `heliumdb` and `ledger_test`; in the agents' local mirror, `ledger_dev` and `ledger_test`. Tests refuse to run unless the database name in every test URL ends in `_test` (§4.6). Only synthetic data is written. Phase 0 adds variables the decision does not name — the migration-owner URLs and the worker-role URLs — because the grant guarantees need separate database roles (§3.5, OQ-03). The design does not depend on a particular provider; §2.5 records what hosting on Replit adds |
 | **D-14** Tooling | `vitest` and `supertest` (tests), `jose` (JWT, ES256 platform key pair and a separate portal key — §4.3, OQ-02), `pino` (logging), `drizzle-kit generate` with committed SQL migrations; `drizzle-kit push` is removed from the scripts. `bcryptjs` is not installed in Phase 0 because nothing hashes a password until Phase 2. `passport`, `passport-local`, `express-session`, `memorystore`, `connect-pg-simple` stay until Phase 2 |
 | **D-16** CLAUDE.md backend instruction | Already applied: `CLAUDE.md` "CURRENT PLATFORM STATE" carries the approved paragraph. Phase 0 is backend work on a branch from `main` (via `backend`); the frontend stays mock-driven. Phase 0 changes no frontend behaviour (§10.4) |
 | **D-17** Approval → financial record in one transaction (decided after this specification raised it as OQ-16) | Phase 0 builds no approval, but it provides the mechanism D-17 relies on: passing the caller's Unit of Work across modules (§4.4) and typed ports wired at the composition root (PS-16, §4.8 `requiresPorts` / `providesPorts`). §4.9 maps every D-17 requirement to it |
 
 ### 2.4 Code read
 
-`server/index.ts`, `server/routes.ts`, `server/storage.ts`, `server/static.ts`, `server/vite.ts`, `shared/schema.ts`, `drizzle.config.ts`, `script/build.ts`, `package.json`, `tsconfig.json`, `playwright.config.ts`, `vite.config.ts`, `.gitignore`, `client/src/App.tsx` (route table), `client/src/lib/queryClient.ts`. Differences are listed in §10.
+`server/index.ts`, `server/routes.ts`, `server/storage.ts`, `server/static.ts`, `server/vite.ts`, `shared/schema.ts`, `drizzle.config.ts`, `script/build.ts`, `package.json`, `tsconfig.json`, `playwright.config.ts`, `vite.config.ts`, `.gitignore`, `client/src/App.tsx` (route table), `client/src/lib/queryClient.ts`, and the repository root's `.replit`. Differences are listed in §10.
+
+### 2.5 Hosting on Replit — amendment (v0.6)
+
+The owner decided on October 21, 2026 that **all hosting is on Replit**. This section records the facts this specification relies on and each change made for them (RP-01 …). No doctrine changes. Each change keeps, or tightens, a guarantee from the earlier review rounds.
+
+**The Replit environment** — facts established by the PM, treated as given:
+
+| Fact | Consequence for Phase 0 |
+|---|---|
+| The Replit project "The-Ledger-main" runs branch `main` from the repository-root `.replit`: the app is in `./The-Ledger`, with Node 22, the `postgresql-16` module and nix channel `stable-25_05`. The run button starts `npm install` and `npm run dev` on port 5000. Deployment is `autoscale`, built with `npm ci && npm run build` and started with `npm run start` | The process model and the frontend serving are unchanged (§10.4) |
+| Replit's built-in PostgreSQL 16.10 is at host `helium`, port 5432, reachable **only from inside the Replit container**. Its development database is `heliumdb`; the test database is `ledger_test` | The PM's phase gate runs on Replit; agents cannot reach `helium` |
+| Replit **injects** `DATABASE_URL` and the libpq variables `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` and `PGDATABASE` for the `postgres` **superuser**. They cannot be relied on to be absent or overridden | RP-01, RP-02, RP-03 |
+| The roles `ledger_runtime` (`NOLOGIN`), `ledger_app` and `ledger_worker` exist on Replit, with memberships exactly as §3.5. `CONNECT` and `TEMPORARY` are revoked from `PUBLIC` on `heliumdb` and `ledger_test`, and `CONNECT` is granted to the two login roles. Their passwords are not yet set; the owner sets them with `\password` before the first Replit gate run. The owner role on Replit is the `postgres` superuser | §3.5's owner action is done on Replit except for the passwords. RP-04 |
+| Build agents run on the owner's Windows laptop and cannot reach `helium`. The PM runs a local mirror: Docker container `ledger-pg` (postgres:16-alpine 16.14) on `127.0.0.1:55432`, with superuser `postgres` as the owner, databases `ledger_dev` and `ledger_test`, and the same three roles with passwords. The credentials are in a git-ignored file outside the repository, which agents copy into their worktree's `.env` | RP-04, RP-05 |
+| Process (PM decision): agents run the `unit`, `db` and `gate` tests against the local mirror. Before a phase closes, the PM runs the full gate on Replit's `ledger_test` | RP-05 |
+| **Verified by the PM, October 21, 2026:** `helium` enforces password authentication. A login as `ledger_app` with a wrong password was refused ("password authentication failed for user ledger_app") | The role passwords set with `\password` are a real barrier (RB2-08) |
+| Workspace Secrets — including the superuser migration URLs — are readable by every collaborator with edit access, and by Replit's built-in Agent (`.replit` enables `expertMode`). Deployment Secrets are separate (OQ-19) | Collaborators on "The-Ledger-main" are kept to the owner and the PM (RB2-08) |
+| The laptop mirror publishes PostgreSQL on `127.0.0.1:55432` only, never on all interfaces | Nothing else on the network can reach the mirror's superuser (RB2-08) |
+
+**Changes:**
+
+| ID | Change | Where | Why |
+|---|---|---|---|
+| RP-01 | Every database variable the platform reads has a `LEDGER_` prefix: `LEDGER_APP_DATABASE_URL`, `LEDGER_WORKER_DATABASE_URL`, `LEDGER_MIGRATION_DATABASE_URL`, and each with `_TEST`. Nothing falls back to Replit's `DATABASE_URL`, not even for migrations | §3.5, §3.6, §4.6, §9, §11 | Replit's `DATABASE_URL` is a superuser URL. Under the old name, the API would have connected as the superuser whenever the owner forgot to override it. That would defeat every grant in §3.5 (gate item 5; R2-B1, R2-05), and the self-check (R2-10) would have been the only barrier. A migration fallback to `DATABASE_URL` was considered and rejected: the injected value differs between the workspace and a deployment, so the database a migration touched would depend on where the command happened to run. The owner sets `LEDGER_MIGRATION_DATABASE_URL` explicitly in Replit Secrets (it may hold the same value as `DATABASE_URL`) |
+| RP-02 | The v0.5 production rule "refuse to start if an owner URL is present" is replaced. **Runtime code never reads** the owner or migration variables, Replit's `DATABASE_URL`, or any `PG*` variable. `server/platform/config/` is the only code that reads `process.env` (import rule 13); the runtime loaders read only their listed variables; and the per-connection self-check refuses a superuser or owner connection | §3.5, §4.6, §4.8 | On Replit a superuser `DATABASE_URL` is always present, so the old rule would stop every production start. The intent of R2-09 and R2-10 was that a runtime process never *uses* owner credentials. That is now enforced at the two places it can be: reading (one module, an allowlist) and connecting (the self-check). The credentials still exist in the process environment on Replit, and this specification does not claim otherwise |
+| RP-03 | Runtime and test URLs must state user, password, host and database explicitly. The platform builds `pg.Pool` from an explicit configuration object, with every field set, so node-postgres never fills a field from `PG*` variables or `~/.pgpass`. The self-check also verifies the connected database | §4.6, PS-02, PS-03, §3.5 | node-postgres fills missing connection fields from `PGHOST`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` and `PGPORT`. On Replit those belong to the superuser, so a runtime URL without a password could silently connect with the superuser's password, or as the superuser |
+| RP-04 | Every statement that assumed a non-superuser owner was re-checked. Three changed. (1) The test rebuild excludes system schemas, which the bootstrap superuser owns. (2) The trigger limits now say that a superuser bypasses grants and can switch triggers off with `session_replication_role = replica`; the runtime roles cannot. (3) G0-46's `pg_write_all_data` case is unconditional, because a superuser can always grant it. The rest still holds: the self-check, the grants, `ALTER DEFAULT PRIVILEGES` (applied to objects `postgres` creates) and the owner SQL | §3.5, §4.6, §9 | Without the exclusion, the first rebuild on either host would have tried to drop `pg_catalog`. R2-09 already described the trigger limit for an ordinary owner; a superuser has the additional switch, now stated and tested |
+| RP-05 | Two test environments: the local mirror, used by agents at every commit, and Replit's `ledger_test`, used by the PM before a phase closes. Same harness and tests; only the URLs differ. G0-01 and G0-02 run on the laptop | §9.1, §9.13, §11 | Agents cannot reach `helium` |
+| RP-06 | **Development:** the platform engineer changes the root `.replit` in Phase 0 commit 8, adding a "Start worker" workflow to the parallel "Project" workflow (TOML below). **Production:** `autoscale` cannot run a long-lived worker; a separate always-on deployment is a Phase 9 obligation (§4.10). Nothing in Phase 0 depends on it | §4.10, §11 | Two process types (BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Process Model) |
+| RP-07 | Replit Secrets instead of `.env`; `trust proxy` stays `false`, because Phase 0 reads no client address or protocol; frame-denial headers stay on API paths only, so Replit's webview iframe still works; Vite HMR at `/vite-hmr` is unaffected; port 5000 is unchanged; `process.loadEnvFile` exists on Node 22. Risk recorded and ruled on: once Phase 0 reaches `main`, the `autoscale` deployment of "The-Ledger-main" runs in production mode and would fail fast without its backend Secrets, so the project is not published until they and the production roles exist (OQ-19, PM ruling) | §4.6, §4.7, §4.10, §12 | Each item was checked against the Replit facts above |
+
+**RP-06 — the `.replit` change** (Phase 0 commit 8, by the platform engineer, who owns root configuration):
+
+```toml
+# added to the existing "Project" workflow (mode = "parallel"), after its "Start application" task:
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start worker"
+
+# new workflow:
+[[workflows.workflow]]
+name = "Start worker"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd The-Ledger && i=0; until node -e \"fetch('http://127.0.0.1:5000/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))\"; do if [ $((i % 15)) -eq 0 ]; then echo 'Start worker: waiting for the API at /health (still starting, or its database is unreachable)'; fi; i=$((i+1)); sleep 2; done; npm run dev:worker"
+```
+
+- **Why Node, not `curl`.** The wait loop uses Node 22's built-in `fetch`, because Node is guaranteed by the `nodejs-22` module and `curl` may not be in Replit's nix environment.
+- **Why the worker waits for `/health`.** It waits until the API answers `/health`. By then "Start application" has finished `npm install`, so the worker never starts against a half-installed `node_modules`.
+- **Never silent (RA1-03).** While it waits, the loop prints one line, `Start worker: waiting for the API at /health (still starting, or its database is unreachable)`, straight away and then about every 30 seconds (every 15th two-second try).
+- **What the owner sees in the Replit console, in each case:**
+
+  | Situation | `/health` | "Start worker" console |
+  |---|---|---|
+  | Frontend-only (no backend Secrets) | `200`, `mode: frontend_only` | One waiting line at most, then the worker's `FATAL` `ConfigError` naming `LEDGER_WORKER_DATABASE_URL`, then the task ends. Only the worker task stops; the API task keeps serving the frontend |
+  | Full mode, database reachable | `200`, `mode: full` | Possibly one waiting line during `npm install`, then the worker's JSON log lines (`service: "worker"`) |
+  | Full mode, database unreachable | `503` | A waiting line every ~30 s until the database is back. Then the worker starts as above. The API's own console shows the `/health` failures at `WARN` |
+  | API not running (its own start-up failed) | no answer | A waiting line every ~30 s. The cause is in the "Start application" console |
+- **When it takes effect.** `.replit` reaches the Replit project only when `backend` is merged into `main`, the branch the project runs (§2.5).
+
 
 ---
 
@@ -135,7 +197,7 @@ Doctrines verified at this gate (roadmap, Doctrine Verification by Phase): audit
 4. **Timestamps** are `timestamptz`, written and returned in UTC.
 5. **Names** are `snake_case` in the database and `camelCase` in TypeScript (Drizzle column mapping).
 6. **`company_id`** is `uuid NOT NULL` on every tenant table and on all three Phase 0 tables.
-7. **The `company_id` foreign key in Phase 0.** `tenant.companies` does not exist until Phase 1, so Phase 0 cannot declare `REFERENCES tenant.companies(company_id)`. Phase 0 tables carry `company_id uuid NOT NULL` with no foreign key. Phase 1 must add, in a platform migration, `FOREIGN KEY (company_id) REFERENCES tenant.companies(company_id) ON DELETE RESTRICT` to T-1, T-2 and T-3 (BACKEND_MULTITENANCY_ARCHITECTURE.md, Tenant Ownership: "The `company_id` on every record in every schema is a foreign key to `tenant.companies.company_id`"). This is safe to add later because Phase 0 writes rows only in the test database, which is rebuilt on every test run (§4.6); the development database holds no Phase 0 rows. Which job makes that change is OQ-04.
+7. **The `company_id` foreign key in Phase 0.** `tenant.companies` does not exist until Phase 1, so Phase 0 cannot declare `REFERENCES tenant.companies(company_id)`. Phase 0 tables carry `company_id uuid NOT NULL` with no foreign key. Phase 1 must add, in a platform migration, `FOREIGN KEY (company_id) REFERENCES tenant.companies(company_id) ON DELETE RESTRICT` to T-1, T-2 and T-3 (BACKEND_MULTITENANCY_ARCHITECTURE.md, Tenant Ownership: "The `company_id` on every record in every schema is a foreign key to `tenant.companies.company_id`"). This is safe to add later because Phase 0 writes rows only in the test database, which is rebuilt on every test run (§4.6); the development database holds no Phase 0 rows. Approved (OQ-04): a platform-engineer job inside Phase 1.
 8. **Grants are explicit.** Every migration that creates a table also grants the runtime roles (§3.5) exactly the privileges the table needs, column by column wherever only some columns may be inserted or changed. Privileges both processes need go to the group role `ledger_runtime`. API-only privileges go to `ledger_app`. Worker-only privileges go to `ledger_worker`. Default privileges never **grant** anything, so a new table is unreachable by the application until its migration grants access. The only `ALTER DEFAULT PRIVILEGES` statement in the platform is a revoke: PUBLIC loses `EXECUTE` on future functions (§3.5, R3-17).
 8a. **Financial and approval writes are API-only — a binding rule for every later phase (R2-B1, D-17).**
     - No privilege on any `financial.*` table is ever granted to `ledger_runtime` or `ledger_worker`.
@@ -307,7 +369,7 @@ No other index exists in Phase 0 (R3-02). The event log's readers — the Event 
 
 Making `event_id` the primary key saves one unique index compared with v0.4, which had a primary key on `event_log_id` plus a unique `event_id`.
 
-The event log is not a store for sensitive values (BACKEND_EVENT_ARCHITECTURE.md, Audit Log vs Event Log: "Sensitive fields: No (operational metadata only)"). Because the payload is copied verbatim, event payloads must carry identifiers and operational metadata, not financial amounts. Phase 0 cannot enforce this for payloads designed later; OQ-07 asks the owner to confirm it as a rule for every later specification.
+The event log is not a store for sensitive values (BACKEND_EVENT_ARCHITECTURE.md, Audit Log vs Event Log: "Sensitive fields: No (operational metadata only)"). Because the payload is copied verbatim, event payloads must carry identifiers and operational metadata, not financial amounts. Phase 0 cannot enforce this for payloads designed later. The owner approved it as a rule for every later specification (OQ-07).
 
 ### 3.5 Database roles, grants and immutability triggers
 
@@ -321,10 +383,10 @@ So the two runtime login roles share only a group role, and neither inherits fro
 
 | Role | Kind | Used by | Phase 0 privileges | Connection variables |
 |---|---|---|---|---|
-| Owner (the database owner) | login | `npm run db:migrate`, `drizzle-kit`, the test-database rebuild — **nothing else** | Owns every schema, table, sequence and function | `DATABASE_MIGRATION_URL`, `DATABASE_MIGRATION_URL_TEST` |
+| Owner (the database owner) | login — on Replit and on the local mirror this is the **`postgres` superuser** (RP-04) | `npm run db:migrate`, `drizzle-kit`, the test-database rebuild — **nothing else** | Owns every schema, table, sequence and function. As a superuser it also bypasses every privilege check | `LEDGER_MIGRATION_DATABASE_URL`, `LEDGER_MIGRATION_DATABASE_URL_TEST` |
 | `ledger_runtime` | **group, `NOLOGIN`** | — (granted to the two login roles below) | Schema `USAGE` on `audit`, `intelligence`. `audit.audit_entries`: `SELECT`, column-level `INSERT`. `intelligence.event_outbox`: `SELECT`, column-level `INSERT` of the envelope columns. `intelligence.event_log`: `SELECT` | — |
-| `ledger_app` | login, member of `ledger_runtime` | The API process; runtime scripts such as D-15 provisioning | `ledger_runtime` only, in Phase 0. API-only privileges arrive in later phases (§3.1.8a) | `DATABASE_URL`, `DATABASE_URL_TEST` |
-| `ledger_worker` | login, member of `ledger_runtime` | The worker process | `ledger_runtime`, plus `intelligence.event_outbox`: `UPDATE` of the delivery-state columns; `intelligence.event_log`: column-level `INSERT` | `DATABASE_WORKER_URL`, `DATABASE_WORKER_URL_TEST` |
+| `ledger_app` | login, member of `ledger_runtime` | The API process; runtime scripts such as D-15 provisioning | `ledger_runtime` only, in Phase 0. API-only privileges arrive in later phases (§3.1.8a) | `LEDGER_APP_DATABASE_URL`, `LEDGER_APP_DATABASE_URL_TEST` |
+| `ledger_worker` | login, member of `ledger_runtime` | The worker process | `ledger_runtime`, plus `intelligence.event_outbox`: `UPDATE` of the delivery-state columns; `intelligence.event_log`: column-level `INSERT` | `LEDGER_WORKER_DATABASE_URL`, `LEDGER_WORKER_DATABASE_URL_TEST` |
 
 The roles relate as follows:
 - `ledger_app` and `ledger_worker` are **not** members of each other. A privilege granted to one is never reachable from the other.
@@ -422,13 +484,19 @@ CREATE TRIGGER event_log_no_truncate BEFORE TRUNCATE ON intelligence.event_log
 What the triggers do and do not cover:
 - **Owner DML is refused.** `UPDATE`, `DELETE` and `TRUNCATE` by the owner on T-1 or T-3 now fail.
 - **Runtime roles are refused earlier.** They fail on the privilege check (42501) before any trigger fires. The trigger does not need `EXECUTE` from the caller: PostgreSQL does not check `EXECUTE` when a trigger fires.
-- **The owner can still change history deliberately**, by dropping or disabling a trigger. That is a DDL change made with the migration credentials. The rule below and §3.6 keep those credentials out of every runtime path; this specification does not claim more.
+- **The owner can still change history deliberately**, by dropping or disabling a trigger. That is a DDL change made with the migration credentials. On both hosts the owner is the `postgres` superuser (RP-04), which has two more ways to do it:
+  - it bypasses every grant;
+  - it can run `SET session_replication_role = replica`, which stops ordinary triggers firing for its session.
+
+  Superusers are not exempt from the triggers otherwise. With the default `session_replication_role = origin`, a superuser's `UPDATE`, `DELETE` or `TRUNCATE` is still refused (G0-45). `session_replication_role` cannot be set by the runtime roles; only a superuser, or a role granted `SET` on it, can (G0-20).
+
+  The rule below and §3.6 keep the owner credentials out of every runtime path. On Replit they are present in every process's environment (§2.5), so the protection is that runtime code never reads or uses them (RP-02) and the self-check refuses any superuser connection. This specification does not claim more.
 - **Dropping is unaffected.** `DROP TABLE` and `DROP SCHEMA … CASCADE` fire no row or `TRUNCATE` triggers, so the test-database rebuild (§4.6) still works.
 
 **Rule: runtime code never uses the owner credentials.** The API, the worker and every runtime script connect as a runtime role:
-- D-15 provisioning and any future requeue tool use `DATABASE_URL` (`ledger_app`) or `DATABASE_WORKER_URL`, as their specification states.
-- `DATABASE_MIGRATION_URL` is read only by `db:migrate`, `drizzle-kit` and the test harness.
-- In production, the API and the worker refuse to start if `DATABASE_MIGRATION_URL` is present in their environment (§4.6).
+- D-15 provisioning and any future requeue tool use `LEDGER_APP_DATABASE_URL` (`ledger_app`) or `LEDGER_WORKER_DATABASE_URL`, as their specification states.
+- `LEDGER_MIGRATION_DATABASE_URL` is read only by `db:migrate`, `drizzle-kit` and the test harness.
+- **Runtime code never reads an owner URL (RP-02).** `server/platform/config/` is the only code under `server/` that reads `process.env` (import rule 13). The API and worker loaders read only the variables listed for them in §4.6, and none of these: `LEDGER_MIGRATION_DATABASE_URL[_TEST]`, Replit's `DATABASE_URL`, or any `PG*` variable. On Replit those values are present in every process's environment, and nothing can remove them. The guarantee is that runtime code never *uses* them: it is checked once when variables are read (rule 13) and again when connecting (the self-check below refuses a superuser or a schema owner). This replaces v0.5's rule that production refused to start while an owner URL was present, which could never pass on Replit (§2.5).
 
 **Runtime role self-check (R2-10), and how it is run (R3-03).** node-postgres does **not** await `pool.on('connect')` handlers, so a check attached there could run after the caller's first query. The check is therefore run by the platform's own acquire wrapper:
 - `db/client.ts` exposes only `withClient(fn)`. It calls `pool.connect()`, and if the client is not yet in a platform-private `WeakSet` of verified clients, it runs the check below **as that client's first statement**, before `fn` runs. Only then does it add the client to the set.
@@ -436,7 +504,9 @@ What the triggers do and do not cover:
 - A client that fails the check is released with an error (`client.release(err)`), which destroys it rather than returning it to the pool. `withClient` then throws `RuntimeRoleError`, and no statement of the caller's has run.
 - The `WeakSet` drops a client when the pool discards it, so a replacement connection is checked again.
 
-The check is one query per physical connection, not per request:
+**Cost (RC3-02).** The check is **one SQL statement — one round trip — per new pooled connection**, run by `withClient` on first use and never again for that client. It is never run per query, per transaction or per request. It reads `pg_roles`, `pg_namespace` and the privilege functions — catalogue lookups that take well under a millisecond on the server — so its cost is essentially one round trip: under 1 ms on the local mirror and on `helium`, about 30 ms on a remote host. A pool reuses its connections, so a long-running process pays it at most `max` times (default 10) per pool, plus once for each connection the pool later replaces.
+
+The statement:
 
 ```sql
 SELECT current_user,
@@ -461,7 +531,7 @@ The connection is accepted only if all of these hold:
 - `owns_platform_schema` is false;
 - **`member_of` is exactly `{ledger_runtime}` (R3-12).** `pg_has_role(…, 'MEMBER')` follows memberships recursively. A role that is also a member of the owner, of `pg_write_all_data`, of a provider's admin group or of any other role is refused, even if its own attributes look harmless;
 - **effective privileges match the design (R3-12):** `can_backdate_audit`, `can_change_audit` and `can_rewrite_envelope` are false, and for the API pool `can_update_outbox` is false too. This catches privilege granted by any route — directly, through `PUBLIC`, or through membership;
-- under Vitest, `current_database()` ends in `_test` (§4.6).
+- `current_database()` is the database named in the pool's URL (RP-03); under Vitest it also ends in `_test` (§4.6).
 
 The check reads the platform tables, so it needs the migrations applied. Against a database that has not been migrated, every connection is refused with "platform tables missing" (and `/health` reports 503) instead of failing later on a first write.
 
@@ -491,9 +561,20 @@ All of this is gate-tested (§9).
 | `migrations/0001_platform_grants.sql` | Custom migration (`drizzle-kit generate --custom --name=platform_grants`): role check and grants (§3.5) |
 | `migrations/0002_platform_immutability.sql` | Custom migration (`--custom --name=platform_immutability`): `audit.refuse_change()` and the `UPDATE`/`DELETE`/`TRUNCATE` triggers on T-1 and T-3 (§3.5) |
 | `migrations/meta/` | Drizzle journal and snapshots, generated, committed |
-| `drizzle.config.ts` | `dialect: 'postgresql'`; `schema`: `./server/platform/db/schema/*.ts` and `./server/modules/*/infrastructure/schema.ts`; `out: './migrations'`; `schemaFilter: ['audit', 'intelligence']` (each later phase adds its schema); `dbCredentials.url` from `DATABASE_MIGRATION_URL`, failing with the variable's name if it is missing |
+| `drizzle.config.ts` | `dialect: 'postgresql'`; `schema`: `./server/platform/db/schema/*.ts` and `./server/modules/*/infrastructure/schema.ts`; `out: './migrations'`; `schemaFilter: ['audit', 'intelligence']` (each later phase adds its schema); `dbCredentials` as an explicit object (`host`, `port`, `user`, `password`, `database`, `ssl`), parsed from `LEDGER_MIGRATION_DATABASE_URL` by the same function as the runtime URLs (§4.6, RP-03). It fails, naming the variable, if that variable is missing or incomplete. There is **no** fallback to Replit's `DATABASE_URL` (RP-01). `drizzle.config.ts` sits outside `server/`, so rule 13 does not apply to it; it reads only this one variable |
 
 `shared/schema.ts` (the Replit starter's `public.users` table) is deleted so it can never produce a migration (§10.2).
+
+**Migration lint (RB2-05).** Migrations run as the superuser owner, so they could undo §3.5's guarantees. The boundary scanner (G0-40) therefore also reads every `migrations/*.sql` and refuses any file containing one of these (case-insensitive):
+- `session_replication_role`;
+- `DISABLE TRIGGER`, or `DROP TRIGGER`, on `audit.audit_entries` or `intelligence.event_log`;
+- `ALTER ROLE ledger_` (any of the three runtime roles);
+- `GRANT pg_` (a predefined role), or the words `SUPERUSER` or `BYPASSRLS` — matched as whole words, so `NOSUPERUSER` and `NOBYPASSRLS` pass;
+- DML on the two append-only tables: `INSERT INTO`, `UPDATE`, `DELETE FROM` or `TRUNCATE`, followed by `audit.audit_entries` or `intelligence.event_log`.
+
+`CREATE TRIGGER` (migration 0002) and the grant statements of §3.5 pass. Changing any of these rules needs a specification change.
+
+**Owner tools (RB2-08).** The `package.json` scripts use only `drizzle-kit generate`, which needs no database, and the platform's own `db:migrate`. `drizzle-kit push` and `drizzle-kit studio` are never used with the owner credentials: `studio` would serve a local web UI holding a superuser connection. Owner-run tools (`db:migrate`, `psql`) run from the Replit Shell or the laptop terminal, never from a workflow whose logs persist.
 
 ---
 
@@ -631,7 +712,7 @@ Source: BACKEND_AUTH_ARCHITECTURE.md, Access Token Claims, Portal Token Claims, 
 | `email` | string | — |
 | `iat`, `exp` | set by `jose` | set by `jose` |
 
-The algorithms follow the two sources as written: D-14 gives ES256 keys to the platform token and "a separate key" to the portal token, and the environment variable list names that key `PORTAL_JWT_SECRET`, a shared secret. OQ-02 asks the owner to confirm HS256 for the portal token or choose an ES256 key pair instead; only `server/platform/auth/` changes either way.
+The algorithms follow the two sources as written: D-14 gives ES256 keys to the platform token and "a separate key" to the portal token, and the environment variable list names that key `PORTAL_JWT_SECRET`, a shared secret. The owner approved HS256 with `PORTAL_JWT_SECRET` for the portal token (OQ-02).
 
 `iss` and `aud` are not in the documented claim sets. They are added so the two token types can never be accepted in each other's place even if a key were reused (§10.3).
 
@@ -789,47 +870,78 @@ Only the worker process changes `status`, and the database enforces it: only `le
 
 Source: BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Application Configuration and Required environment variables; D-12; D-13 (the frontend stays mock-driven until Track F; the Playwright suite keeps passing).
 
-`loadApiConfig(env)` and `loadWorkerConfig(env)` parse `process.env` with Zod and return a frozen, typed object. On failure they throw `ConfigError` listing **the names** of every missing or invalid variable and never their values; the process entry point logs that and exits with code 1 before opening a port or a connection.
+`loadApiConfig(env)` and `loadWorkerConfig(env)` parse `process.env` with Zod and return a frozen, typed object. They are in `server/platform/config/env.ts`, and that folder is the only code under `server/` that reads `process.env` (import rule 13, RP-02). Every other module receives values from the loaders. Each loader reads **only the variables listed for it below** and ignores everything else in the environment — in particular Replit's `DATABASE_URL`, every `PG*` variable and the migration variables. On failure they throw `ConfigError` listing **the names** of every missing or invalid variable and never their values; the process entry point logs that and exits with code 1 before opening a port or a connection.
 
 | Variable | API | Worker | Rule |
 |---|---|---|---|
 | `NODE_ENV` | optional | optional | `development` \| `test` \| `production`, default `development` |
 | `PORT` | optional | — | integer 1–65535, default `5000` (unchanged) |
 | `LOG_LEVEL` | optional | optional | `fatal`…`debug`, default `info` |
-| `DATABASE_URL` | backend variable (below) | — | PostgreSQL URL for the `ledger_app` role |
+| `LEDGER_APP_DATABASE_URL` | backend variable (below) | — | PostgreSQL URL for the `ledger_app` role. It must be **complete** (RP-03, below) |
 | `JWT_PRIVATE_KEY` | backend variable | — | PKCS#8 PEM, P-256; `\n` escapes accepted; must import as an ES256 key at start-up |
 | `JWT_PUBLIC_KEY` | backend variable | — | SPKI PEM, P-256; must import as an ES256 key and match the private key |
 | `PORTAL_JWT_SECRET` | backend variable | — | base64 or base64url text decoding to at least 32 bytes. It is refused if it equals, or is contained in, `JWT_PRIVATE_KEY` or `JWT_PUBLIC_KEY` (a pasted key is not a secret) |
-| `DATABASE_WORKER_URL` | — | required | PostgreSQL URL for the `ledger_worker` role |
+| `LEDGER_WORKER_DATABASE_URL` | — | required | PostgreSQL URL for the `ledger_worker` role. It must be complete (RP-03) |
 | `OUTBOX_*` (five, §4.5) | — | optional | positive integers, defaults as listed |
 
 Used outside the two processes:
 
 | Variable | Used by | Rule |
 |---|---|---|
-| `DATABASE_MIGRATION_URL` | `npm run db:migrate`, `drizzle-kit` | PostgreSQL URL for the owner role |
-| `DATABASE_URL_TEST` | test harness, acting as the API (`ledger_app`) | database name must end in `_test` |
-| `DATABASE_WORKER_URL_TEST` | test harness, acting as the worker (`ledger_worker`) | database name must end in `_test` |
-| `DATABASE_MIGRATION_URL_TEST` | test harness rebuild step (owner) | database name must end in `_test` |
+| `LEDGER_MIGRATION_DATABASE_URL` | `npm run db:migrate`, `drizzle-kit` | PostgreSQL URL for the owner role, complete (RP-03). Read only by `loadMigrationConfig` and `drizzle.config.ts`, never by the runtime loaders. It never falls back to Replit's `DATABASE_URL` (RP-01) |
+| `LEDGER_APP_DATABASE_URL_TEST` | test harness, acting as the API (`ledger_app`) | database name must end in `_test` |
+| `LEDGER_WORKER_DATABASE_URL_TEST` | test harness, acting as the worker (`ledger_worker`) | database name must end in `_test` |
+| `LEDGER_MIGRATION_DATABASE_URL_TEST` | test harness rebuild step (owner) | database name must end in `_test` |
 
-**API start-up modes.** The four API "backend variables" are `DATABASE_URL`, `JWT_PRIVATE_KEY`, `JWT_PUBLIC_KEY` and `PORTAL_JWT_SECRET`. The loader decides the mode from them:
+All three `_TEST` URLs must also be complete (RP-03).
+
+**Owner variables are removed from the running process (RB2-02).** `server/index.ts` and `server/worker.ts` call `scrubOwnerVariables()` from `server/platform/config/` straight after `loadApiConfig` / `loadWorkerConfig` return, in every mode. It deletes these from `process.env`:
+- `DATABASE_URL`;
+- every variable whose name starts with `PG`;
+- `LEDGER_MIGRATION_DATABASE_URL` and `LEDGER_MIGRATION_DATABASE_URL_TEST`.
+
+Dependencies that read the environment — `connect-pg-simple` and `express-session` stay installed until Phase 2 — and every child process the API or worker spawns therefore cannot pick them up. The loaders themselves never delete anything, so a test process that calls them keeps its own variables. `NODE_ENV` is not touched, and the literal-expression rule (R1-04) is unchanged.
+
+**What scrubbing is not.** It is **not** a defence against code execution inside the process. The original values stay in the process's initial environment block (`/proc/<pid>/environ`), in the parent shell and in Replit's Secrets store. It narrows accidental use, nothing more. The guarantees remain "never read" (rule 13) and "never connect as owner" (the self-check).
+
+**Never read by any loader (RP-01, RP-02):** `DATABASE_URL`, `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` and the other `PG*` variables, which Replit injects for its superuser. The one exception is the test-database guard: it reads `DATABASE_URL` and `PGDATABASE` only to compare database **names**, so a test run can never rebuild the development database (below).
+
+**API start-up modes.** The four API "backend variables" are `LEDGER_APP_DATABASE_URL`, `JWT_PRIVATE_KEY`, `JWT_PUBLIC_KEY` and `PORTAL_JWT_SECRET`. The loader decides the mode from them:
 
 | `NODE_ENV` | Backend variables present | Result |
 |---|---|---|
 | `production` | all four | **Full mode** |
 | `production` | any missing | **Fail fast**: `ConfigError` naming the missing variables, exit code 1 |
-| `production` | `DATABASE_MIGRATION_URL` (or either `_TEST` owner URL) present | **Fail fast** — runtime processes must never hold the owner credentials (§3.5). The worker applies the same rule |
 | `development` / `test` | all four | **Full mode** |
 | `development` / `test` | none of the four | **Frontend-only mode** |
 | `development` / `test` | some but not all | **Fail fast** — a half-configured backend is a mistake, not a choice |
 
 - **Full mode**: the API process opens the database pool, imports the keys and mounts `/health`, `/api/v1` and `/portal/v1` as described in §6.
 - **Frontend-only mode** exists so frontend work on this branch is unchanged without a database (D-13). The API process opens **no** database connection and imports no keys. It mounts no module routers and no auth middleware. Every request under `/api/` or `/portal/v1/` gets `503` with the error envelope and code `BACKEND_NOT_CONFIGURED`, so API paths never fall through to the frontend. `GET /health` returns `200 {"status":"ok","mode":"frontend_only"}`. At start-up the process logs exactly one `WARN` line: "Backend not configured: running in frontend-only mode", with the four variable names and no values. The frontend is served exactly as now (Vite in development, static files otherwise).
-- **The worker never has a frontend-only mode.** Without `DATABASE_WORKER_URL` it fails fast, because there is nothing useful it can do.
+- **The worker never has a frontend-only mode.** Without `LEDGER_WORKER_DATABASE_URL` it fails fast, because there is nothing useful it can do.
 
-So `npm run dev` with no `.env` behaves as it does today for the frontend and the Playwright suite. A developer who wants the backend adds the variables to `.env`. The mode is chosen only by `NODE_ENV` and whether the variables are present — there is no "skip the backend" flag that could be left on by mistake. Production can never start without its backend. This is the proposal for OQ-13; the owner confirms it at the checkpoint.
+So `npm run dev` with no `.env` behaves as it does today for the frontend and the Playwright suite. A developer who wants the backend adds the variables to `.env`. The mode is chosen only by `NODE_ENV` and whether the variables are present — there is no "skip the backend" flag that could be left on by mistake. Production can never start without its backend. The owner approved this design (OQ-13).
 
-**Empty means absent (R2-14).** A variable set to the empty string, or to whitespace only, counts as absent, both for the mode decision and for the required-variable checks. `DATABASE_URL=""` therefore cannot make a half-configured backend look unconfigured or configured.
+**Complete URLs, explicit pool settings (RP-03).** node-postgres fills any connection field the caller leaves unset. It takes the host, port, user, password and database from `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` and `PGDATABASE`, and takes the password from `~/.pgpass`. On Replit those variables belong to the superuser. So:
+- **Parsing.** `parseDatabaseUrl(name, value)` in `server/platform/config/` parses each runtime, migration and test URL with `pg-connection-string`. It returns `ConfigError` — naming the variable and the missing part, never the value — unless the URL:
+  - states a **user, password, host and database** explicitly;
+  - is not a socket URL;
+  - uses the query-parameter allowlist from the guard.
+
+  If the URL has no port, the platform sets `5432` itself, never `PGPORT`.
+- **Pool settings.** Every pool — runtime, test and migration — is created with an explicit object: `new Pool({ host, port, user, password, database, ssl, application_name })`. It is never given `connectionString`, and no field is left for the driver to default.
+  - `ssl` is always set, which also means `PGSSLMODE` is never consulted.
+    - With `sslmode=verify-full`, or `sslmode=require` (which `pg-connection-string` 2.10 treats as `verify-full`), it is `{ rejectUnauthorized: true, servername: host }`.
+    - Otherwise it is `false`. Replit's internal `helium` and the local mirror both run without TLS.
+  - **TLS fails closed in production (RB2-03).** When `NODE_ENV` resolves to `production`, `parseDatabaseUrl` throws `ConfigError` (naming the variable, never the value) unless one of these holds:
+    - the URL's `sslmode` is `verify-full` or `require`; or
+    - its host is on the explicit internal allowlist: `helium`, `localhost`, `127.0.0.1`, `::1`.
+
+    So a production URL pointing at any remote host without verified TLS cannot start a process. Outside production, URLs without TLS are accepted for the local mirror and `helium`. Full TLS for every non-local URL remains a Phase 9 obligation (§4.10).
+- **Identity check.** Any setting the driver might still take from the environment cannot change identity unnoticed. The `withClient` self-check confirms `current_user` and `current_database()` against the URL (§3.5).
+- **`PGOPTIONS`.** `PGOPTIONS` is not set on Replit or on the mirror. If it is ever set, the loader refuses to start, because it could inject session settings into every runtime connection.
+
+**Empty means absent (R2-14).** A variable set to the empty string, or to whitespace only, counts as absent, both for the mode decision and for the required-variable checks. `LEDGER_APP_DATABASE_URL=""` therefore cannot make a half-configured backend look unconfigured or configured.
 
 **No backend secret behind a `VITE_` prefix (R2-14).** Vite exposes every `VITE_`-prefixed variable to the browser bundle. The API loader therefore fails with `ConfigError` if any variable name starts with `VITE_` and contains `DATABASE`, `JWT`, `SECRET`, `KEY`, `PASSWORD` or `TOKEN`. The error names the variable, never its value.
 
@@ -841,9 +953,12 @@ So `npm run dev` with no `.env` behaves as it does today for the frontend and th
 
 **Local `.env` file.**
 - Outside production, the loader reads `.env` from the app folder if it exists (`process.loadEnvFile`). Variables already set in the environment win.
+- **Never on Replit (RB2-04).** If `REPL_ID` or `REPLIT_DEPLOYMENT` is present — read once, inside the config module (rule 13) — the loader does **not** call `process.loadEnvFile`. If a `.env` file exists anyway, it logs one `WARN`, "`.env` ignored on Replit: use Replit Secrets", without reading the file.
 - `.gitignore` gains `.env*` with the exception `!.env.example`, so `.env.local`, `.env.test` and similar files are never committed.
-- `.env.example` is committed. It lists every variable, and **every value in it deliberately fails validation** — for example `PORTAL_JWT_SECRET=replace-me` (too short once decoded) and `DATABASE_URL=postgresql://replace-me` (no database). Copying it unchanged therefore fails fast with the variable names; it can never start a backend with known secrets.
+- `.env.example` is committed. It lists every variable, and **every value in it deliberately fails validation** — for example `PORTAL_JWT_SECRET=replace-me` (too short once decoded) and `LEDGER_APP_DATABASE_URL=postgresql://replace-me` (no database). Copying it unchanged therefore fails fast with the variable names; it can never start a backend with known secrets.
 - On a hosted deployment the variables come from the host's secret store.
+- **On Replit (RP-07)** the variables come from **Replit Secrets**, which Replit puts into the process environment. They therefore win over any `.env` file. The workspace keeps no `.env` (it would be git-ignored, but it would be another copy of the secrets). A Replit deployment has its own Secrets.
+  - `process.loadEnvFile` exists on Replit's Node 22 (it was added in Node 20.12 and 21.7). The laptop runs Node 24.
 
 **Built bundles are always production.** `script/build.ts` passes esbuild `define: { "process.env.NODE_ENV": '"production"' }` (kept from the Replit starter). esbuild replaces that exact expression in the bundled code with the literal `"production"`. The loader is therefore required to resolve the environment name like this:
 
@@ -873,21 +988,23 @@ It refuses if any of these holds:
 - a URL is a socket URL or has an empty database path;
 - a database name (percent-decoded, case-sensitive) does not end in `_test`;
 - the three test URLs name different databases;
-- the test database name equals the database in `DATABASE_URL`, `DATABASE_WORKER_URL` or `DATABASE_MIGRATION_URL`, when those are set.
+- a test URL is incomplete: it lacks a user, password, host or database (RP-03);
+- the test database name equals the database in `LEDGER_APP_DATABASE_URL`, `LEDGER_WORKER_DATABASE_URL` or `LEDGER_MIGRATION_DATABASE_URL`, or — on Replit — the database named by the injected `DATABASE_URL` or `PGDATABASE` (`heliumdb`), when those are set.
 
 The **host-equality rule from v0.3 is dropped.** Hosted providers commonly give the same database a pooled and a direct host name, so the rule would refuse valid configurations. It is replaced by the server-side check below, which asks the database itself.
 
 **Server-side checks.** Two checks stop a test run from touching a non-test database even if a URL is misread:
-- `rebuildTestDatabase()` calls the guard itself. Then, on the live owner connection and before any `DROP`, it checks that `SELECT current_database()` ends in `_test` and equals the guarded name. Every `DROP SCHEMA` it issues is built with `format('DROP SCHEMA %I CASCADE', nspname)` from the catalogue, never by string concatenation.
-- `db/client.ts` refuses, when running under Vitest (`process.env.VITEST` is set), to create a pool whose URL database does not end in `_test`. When creating it, it also adds `current_database()` to the first-use check of `withClient` (§3.5, R3-03), so a connection whose server-side database does not end in `_test` is destroyed before any test statement runs. An implementer's `*.db.test.ts` file can therefore never reach the development database by mistake.
+- `rebuildTestDatabase()` calls the guard itself. Then, on the live owner connection and before any `DROP`, it checks that `SELECT current_database()` ends in `_test` and equals the guarded name. Every `DROP SCHEMA` it issues is built with `format('DROP SCHEMA %I CASCADE', nspname)` from the catalogue query in the lifecycle below — which excludes `public`, `information_schema` and `pg_*` (RP-04) — never by string concatenation.
+- `db/client.ts` refuses, when running under Vitest (the config module reports `isVitest`, read from `VITEST`; rule 13), to create a pool whose URL database does not end in `_test`. When creating it, it also adds `current_database()` to the first-use check of `withClient` (§3.5, R3-03), so a connection whose server-side database does not end in `_test` is destroyed before any test statement runs. An implementer's `*.db.test.ts` file can therefore never reach the development database by mistake.
 
-**Tests never change existing roles.** Roles are cluster-wide, so a change would leak into every database on the server. The one exception is G0-46(d)–(e). That test creates, and in `finally` drops, its own throwaway roles named `gate_probe_<random>` and `gate_extra_<random>`. It never alters `ledger_app`, `ledger_worker` or `ledger_runtime`, apart from granting `ledger_runtime` membership to its throwaway role. Tests change only per-database object grants (for example revoking `INSERT` for G0-03), and restore them in `finally`. They never change role attributes or memberships.
+**Tests never change existing roles.** Roles are cluster-wide, so a change would leak into every database on the server. The one exception is G0-46(d)–(e). That test creates, and in `finally` drops, its own throwaway roles named `gate_probe_<random>` and `gate_extra_<random>`. **Bounded (RB2-06):** each is created with `VALID UNTIL` 15 minutes ahead (a timestamp computed at creation) and `CONNECTION LIMIT 2`. The platform global setup first drops any leftover `gate_probe_%` / `gate_extra_%` roles (`DROP OWNED BY` in the test database, then `DROP ROLE`), so a crashed run leaves nothing usable behind on the shared server. It never alters `ledger_app`, `ledger_worker` or `ledger_runtime`, apart from granting `ledger_runtime` membership to its throwaway role. Tests change only per-database object grants (for example revoking `INSERT` for G0-03), and restore them in `finally`. They never change role attributes or memberships.
 
 The Vitest global setup and every test database client call the guard.
 
 **Test database lifecycle.** At the start of each `db` or `gate` test run, the platform's global setup (`server/platform/testing/global-setup.ts`, §9.1) rebuilds the test database:
 1. It runs the guard.
-2. Connected as the owner, it drops every schema the owner role owns except `public`, with `CASCADE`. This includes `audit`, `intelligence`, `drizzle`, any test-only schema such as `gate_test`, and every later module schema, so the rule never needs updating.
+2. Connected as the owner, it drops, with `CASCADE`, every schema the owner role owns **except** `public`, `information_schema` and every schema whose name starts with `pg_`. This covers `audit`, `intelligence`, `drizzle`, any test-only schema such as `gate_test`, and every later module schema, so the rule never needs updating.
+   - **RP-04:** the owner on both hosts is `postgres`, the bootstrap superuser. It also owns `pg_catalog`, `pg_toast` and `information_schema`, so without the exclusions the rebuild would try to drop the system catalogue. The query is `SELECT nspname FROM pg_namespace WHERE nspowner = current_user::regrole AND nspname <> 'public' AND nspname <> 'information_schema' AND nspname NOT LIKE 'pg\_%'`. A gate check asserts that the list it would drop contains no system schema (G0-39).
 3. It re-runs every migration.
 
 Audit and event-log rows cannot be removed by any runtime role (grants), nor by owner DML (the immutability triggers, §3.5). In the test database they disappear only when this rebuild drops their schema as the owner, and the rebuild runs only in a database that has passed the guard.
@@ -1043,6 +1160,12 @@ It carries **no** connection string, pool, database handle, key or secret, and n
     - No other file imports it — not the module's own routes, subscribers or other application code.
 
     A humanOnly port's guard therefore cannot be skipped by calling the implementation directly. The boundary scanner checks the import and re-export parts. "Not passed to the module's own routers or subscribers inside `index.ts`" is a review item.
+13. **Only `server/platform/config/` reads the environment (RP-02, RB2-01).** No other file under `server/` reads the environment, by any route. The scanner works from an allowlist, not from the literal text `process.env`. Outside `server/platform/config/` it flags:
+    - any import or `require` of `process` or `node:process`;
+    - any `process[` (computed access) and any `globalThis.process`;
+    - any use of the identifier `process` other than `process.<member>` with `<member>` in the allowlist `exit`, `exitCode`, `on`, `once`, `off`, `pid`, `platform`, `argv`, `hrtime`, `uptime`, `memoryUsage`, `nextTick`, `stdout`, `stderr`, `version`, `versions`, `cwd`, `kill`. That catches `process.env`, `const { env } = process` and `const p = process`.
+
+    The entry points may still call `process.exit`, `process.on('SIGTERM', …)` and similar. That includes the entry points, `server/vite.ts` and `server/static.ts`: today's `process.env.NODE_ENV` and `process.env.PORT` reads move into the loaders. The NODE_ENV rule in §4.6 still uses the **literal expression** `process.env.NODE_ENV` inside the config module. esbuild's `define` replaces that exact expression (R1-04), so built bundles still always run as production. Moving the read into the config module changes where the expression sits, not its form; reading NODE_ENV through any alias would break this. Outside `server/`, `drizzle.config.ts`, `script/build.ts` and `vite.config.ts` read only their documented variables.
 
 Rules 4 and 5 read the layering document's dependency directions literally (Application → Domain; Infrastructure → Domain). The Application Layer reaches its repository implementations through the interfaces it is given (dependency injection at the module's `index.ts`), which BACKEND_LAYERING_ARCHITECTURE.md allows ("May call infrastructure implementations through injected interfaces").
 
@@ -1093,6 +1216,7 @@ Some of what Phase 0 guarantees holds only if later specifications respect it. E
 | Phase 5 | The approval-effects implementation is reachable only through its `bind` registration: it is not exported from the module's `index.ts`, and not called from the module's own routes or subscribers. Checked by boundary rule 12 and in review | §4.8 (R3-11) |
 | Every phase | A migration that creates a function also runs `REVOKE EXECUTE … FROM PUBLIC` on it, and grants `EXECUTE` only to the role that needs it. This is belt and braces: the owner's default privileges already revoke it (R3-17) | §3.5 |
 | Every phase | No backend secret, and no backend variable name, ever goes in any `client/.env*` file (R3-17) | §4.6 |
+| Every phase | No `SECURITY DEFINER` function owned by the owner or a superuser is ever executable by a runtime role (RB2-07) | §3.5 |
 | Every phase | Each audit entry and event type has exactly one owning module; shared domain types name their owner | §4.4 (R3-10) |
 | Phases 4 and 5 | Each approval-effects handler checks, inside `uow.tx`, that the approval reference is for a submission that is `approved` in this transaction with `approved_by` equal to the acting user, before creating anything | PS-16 (R2-B2) |
 | Every phase | Event payloads carry identifiers and operational metadata, never financial amounts (OQ-07). Besides keeping the event log free of sensitive fields, this keeps amounts away from any surface that reads events: `event_log` is readable by `ledger_runtime`, and a future worker-facing or activity endpoint could otherwise expose them (Invariant 26) | §3.4, §7.3 |
@@ -1107,6 +1231,10 @@ Some of what Phase 0 guarantees holds only if later specifications respect it. E
 | Phase 9 | Row Level Security on every tenant table, with `FORCE ROW LEVEL SECURITY`, reading `app.company_id` | §4.2 |
 | Phase 9 | HSTS; a Content Security Policy for the frontend; rate limits (D-10); signing-key rotation with `kid` | §6.2, §4.3 |
 | Phase 9 | Requeue and archival tooling that follows the §4.5 rules (OQ-10) | §4.5 (R2-17) |
+| Phase 9 | The production deployment's Secrets never contain `LEDGER_MIGRATION_DATABASE_URL`, `LEDGER_MIGRATION_DATABASE_URL_TEST` or any `_TEST` URL. Production migrations run from a one-off Shell session with the owner URL supplied only there (RB2-07) | §3.5, §4.6 |
+| Phase 9 | **Worker deployment on Replit (RP-06).** Replit's `autoscale` deployment serves requests and scales to zero, so it cannot host the long-running worker. Phase 9 adds a separate always-on deployment for `npm run start:worker` (a Reserved VM or background-worker deployment) that shares the production database. It also creates the four roles in the Replit **production** database, with its own Secrets (the `LEDGER_*` variables and the JWT keys); roles are per server, and the production database is not `heliumdb`. **Until both are in place, the "The-Ledger-main" project is not published** (OQ-19, PM ruling). Merging `backend` into `main` is not blocked, because the workspace run uses `npm run dev`, which falls back to frontend-only mode | §2.5, §3.5, OQ-19 |
+| Phase 9 | If client address or protocol is needed (rate limiting), set `trust proxy` to Replit's single proxy hop, never `true` | §4.7 (RP-07) |
+| Phase 9 | The frontend CSP allows Replit's webview origin in development, or applies in production only | §6.2 (RP-07) |
 
 ---
 
@@ -1159,9 +1287,9 @@ None of these services writes an audit entry of its own (§8), and none emits a 
 
 Order in `server/index.ts`:
 
-1. Run PS-01 `loadApiConfig`. Exit on `ConfigError`.
+1. Run PS-01 `loadApiConfig`. Exit on `ConfigError`. Then call `scrubOwnerVariables()` (§4.6, RB2-02).
 2. Create the logger (`service: 'api'`).
-3. In full mode: create the `ledger_app` pool (`pg.Pool` with `DATABASE_URL` and driver defaults; no connection is made yet). Then read `server/modules/registry.ts`: check the namespaces, public routes and catalogues (§4.4, §4.8), and wire the ports (PS-16). The API does not call `subscribers` factories. Any registry error stops the API with one `FATAL` line before it listens.
+3. In full mode: create the `ledger_app` pool from the explicit settings parsed out of `LEDGER_APP_DATABASE_URL` (RP-03). Every field is set, nothing is left to driver or `PG*` defaults, and no connection is made yet. Then read `server/modules/registry.ts`: check the namespaces, public routes and catalogues (§4.4, §4.8), and wire the ports (PS-16). The API does not call `subscribers` factories. Any registry error stops the API with one `FATAL` line before it listens.
 4. Call `createApiApp({ config, logger, db, modules })` (PS-04).
 5. Mount frontend serving, unchanged: Vite middleware in development (`setupVite`), static files in production (`serveStatic`). It is mounted last, so the frontend catch-all can never shadow `/health`, `/api` or `/portal/v1`.
 6. Listen on `PORT` (default 5000).
@@ -1172,8 +1300,8 @@ The API does not connect to the database at start-up; `/health` reports whether 
 
 Order in `server/worker.ts`:
 
-1. Run `loadWorkerConfig`. Exit on `ConfigError`.
-2. Create the logger (`service: 'worker'`) and the `ledger_worker` pool (`DATABASE_WORKER_URL`).
+1. Run `loadWorkerConfig`. Exit on `ConfigError`. Then call `scrubOwnerVariables()` (§4.6, RB2-02).
+2. Create the logger (`service: 'worker'`) and the `ledger_worker` pool, from the explicit settings parsed out of `LEDGER_WORKER_DATABASE_URL` (RP-03).
 3. Read `server/modules/registry.ts`: check the catalogues, wire the ports (PS-16; `humanOnly` ports are not available to subscribers), and build the subscriber registry (PS-15). The worker builds no routers. Any registry error stops the worker with one `FATAL` line before it claims an event.
 4. Create the outbox worker with an instance ID of the form `<hostname>:<pid>:<8 random hex>`, and `start()` it.
 5. On `SIGINT` or `SIGTERM`: `stop()` (finish the event in hand and claim no more), close the pool, exit 0. Full graceful shutdown with timeouts is Phase 9.
@@ -1452,7 +1580,7 @@ If the loop itself hits an unexpected error (for example, the database is unreac
 
 ### PS-21 — Migration runner
 
-`server/platform/db/migrate.ts`, run as `npm run db:migrate`, applies `migrations/` with Drizzle's node-postgres migrator using `DATABASE_MIGRATION_URL`, and exits non-zero on failure. The test harness calls the same function with `DATABASE_MIGRATION_URL_TEST`, after PS-22. The API and the worker never apply migrations at start-up.
+`server/platform/db/migrate.ts`, run as `npm run db:migrate`, applies `migrations/` with Drizzle's node-postgres migrator using `LEDGER_MIGRATION_DATABASE_URL`, and exits non-zero on failure. The test harness calls the same function with `LEDGER_MIGRATION_DATABASE_URL_TEST`, after PS-22. The API and the worker never apply migrations at start-up.
 
 ### PS-22 — Test-database guard
 
@@ -1497,6 +1625,14 @@ Phase 0 adds exactly one route. Everything else under the two API prefixes answe
 | `Access-Control-Allow-Origin` (or any CORS header) | never | No CORS middleware: the frontend is same-origin (§1.2) |
 
 **Proxy and client address (R2-15).** `trust proxy` stays `false`, and no Phase 0 code reads or logs `req.ip`, `X-Forwarded-For` or any other client address. Rate limiting by client (Phase 9) decides its own proxy setting.
+
+**Behind Replit's proxy (RP-07).** Replit terminates TLS and forwards to port 5000, which `.replit` maps to external port 80. Phase 0 depends on neither the client's address nor the request protocol: it reads no `req.ip`, `req.protocol`, `req.secure` or `X-Forwarded-*`, and it sets no cookies. So `trust proxy = false` is correct on Replit, and nothing in Phase 0 changes.
+- Phase 2's refresh cookie sets `Secure` explicitly, so it does not need `req.secure`.
+- If a later phase needs the client address (Phase 9 rate limiting) or the original protocol, it sets `trust proxy` to exactly Replit's one proxy hop (§4.10).
+
+**Replit's preview iframe (RP-07).** The Replit webview shows the app inside an iframe. The frame-denial headers (`X-Frame-Options: DENY`, `frame-ancestors 'none'`) are set **only** on `/api`, `/portal/v1` and `/health` responses, never on the frontend, so the preview keeps working. Phase 9's frontend CSP must allow Replit's webview origin in development, or be applied in production only (§4.10).
+
+**Vite HMR (RP-07).** `server/vite.ts` attaches HMR to the same HTTP server at `/vite-hmr`. WebSocket upgrades are handled by the HTTP server before Express routing, and `/vite-hmr` is not under `/api`, `/portal/v1` or `/health`. Nothing in Phase 0 changes its behaviour through Replit's proxy: it is not routed, not logged and not given security headers.
 
 Request bodies are accepted only on `/api/v1` and `/portal/v1`, must be JSON, and are limited to 1 MB (BACKEND_API_ARCHITECTURE.md, API Security Standards).
 
@@ -1628,12 +1764,46 @@ Together these cover every field the Audit Doctrine requires:
 
 - **Location.** Gate tests live in `server/tests/gate/phase-0-infrastructure/`. `backend-test-engineer` writes them from this section, not from the implementation. They use Vitest and Supertest against the test database (D-12, D-14).
 - **Two kinds of test.** Tests marked **Command** are verification commands the PM runs. Every other test is a Vitest test in the `gate` project.
+- **Two test environments (RP-05).** The same harness and the same tests run in both; only the URLs differ.
+
+  | | Local mirror (agents, every commit) | Replit `ledger_test` (the PM, before a phase closes) |
+  |---|---|---|
+  | Where it runs | The owner's laptop, inside the agent's worktree | The Replit shell of "The-Ledger-main", in a **temporary detached worktree** of the pushed `backend` branch under `/tmp`. The workspace checkout of `main`, and what the Run button runs, are never touched (procedure below) |
+  | Database | Docker `ledger-pg`, PostgreSQL 16.14, `127.0.0.1:55432`, database `ledger_test` | Replit's PostgreSQL 16.10, `helium:5432`, database `ledger_test` |
+  | Owner | `postgres` superuser | `postgres` superuser |
+  | Where the URLs come from | The worktree's git-ignored `.env`, copied from the PM's credentials file outside the repository | Replit Secrets: `LEDGER_APP_DATABASE_URL_TEST`, `LEDGER_WORKER_DATABASE_URL_TEST` and `LEDGER_MIGRATION_DATABASE_URL_TEST`, all naming `ledger_test` on `helium`, set by the owner/PM after the role passwords have been set with `\password` |
+  | Replit-injected `DATABASE_URL` and `PG*` | Absent, unless a test sets them | Present (superuser, `heliumdb`) |
+  | Command | `npm test` (`unit`, `db`, `gate`) | `npm test` |
+  | G0-01, G0-02 (commands) | Run on the laptop — Playwright needs the laptop's browsers — in the places §9.3 states | Not run |
+
+  **The Replit gate procedure (RA1-01).** The PM pushes `backend` to GitHub, then runs in the Replit Shell:
+
+  ```sh
+  cd ~/workspace                                   # the "The-Ledger-main" checkout of main — left as it is
+  git fetch --depth=1 origin backend               # fetch only the tip commit of backend
+  git worktree add --detach /tmp/ledger-gate FETCH_HEAD
+  cd /tmp/ledger-gate/The-Ledger
+  printenv | grep -c '^LEDGER_.*_TEST='            # names only: expect 3 (the Secrets reached this shell)
+  test ! -e .env                                   # the gate tree has no .env (git-ignored, never committed)
+  npm ci --prefer-offline --no-audit --no-fund
+  npm test
+  cd ~/workspace && git worktree remove --force /tmp/ledger-gate && git worktree prune
+  ```
+
+  - **Shallow clone.** The Replit checkout may be shallow (grafted). `--depth=1` is sufficient, because the gate needs only the tip's tree, not history. It also avoids deepening the clone. Fetching records one more shallow boundary in `.git/shallow`, which does not change the `main` checkout. `FETCH_HEAD` is used so that no local branch is created or moved.
+  - **What the workspace keeps.** The workspace's working tree, branch, `node_modules` and the running Run-button processes are untouched. The gate tree has its own `node_modules`.
+  - **`npm ci --prefer-offline` (RC3-03).** This keeps `npm ci`'s semantics: it installs exactly the lockfile, checks each package's integrity hash, and fails if `package.json` and the lockfile disagree. It only prefers packages already in the npm cache (`~/.npm`, shared with the workspace's own installs) to network downloads, so it is safe. A package missing from the cache is still downloaded.
+  - **Secrets.** Replit Secrets are exported into every Replit Shell, so the three `_TEST` URLs reach the gate. So do the injected `DATABASE_URL` and `PG*` variables, which G0-36(j) and G0-51 expect.
+  - **Nothing outside the gate tree is read.** The harness reads only the process environment and files inside `/tmp/ledger-gate/The-Ledger`: its `vitest.config.ts`, its migrations, and its own `client/.env*` scan, of which there are none. G0-51's password file is a temporary file it creates itself. No gate test binds port 5000, which the workspace's running app uses: Supertest and the worker tests use in-process apps on ephemeral ports, and G0-38's refused port is found dynamically (RA1-04).
+  - **No `.replit` dependency.** The gate does not use the `.replit` workflows (RA1-04), so it works before the RP-06 change reaches `main`.
+
+  **What must differ: only the URLs.** Two tests, G0-36(j) and G0-51, prove the platform ignores Replit's injected superuser variables. They set `DATABASE_URL` and the `PG*` variables themselves, to the owner's credentials, so they test the same thing in both environments. On Replit the real injected values are present as well, which makes the Replit run the more realistic one. The guard's `heliumdb` check (§4.6) does not fire locally, where no `DATABASE_URL` names it.
 - **Who builds the harness.** Nothing the implementer's branch needs may live in the test engineer's folders, because those files do not exist on that branch until the gate-test job merges (roster, Folder Ownership).
 
   | Created by | File | Does |
   |---|---|---|
   | platform engineer | `vitest.config.ts` | Three projects:<br>• `unit` — `server/**/*.test.ts`, except `*.db.test.ts` and `server/tests/**`; no database.<br>• `db` — `server/**/*.db.test.ts`, except `server/tests/**`.<br>• `gate` — `server/tests/gate/**/*.test.ts`.<br>`db` and `gate` use `fileParallelism: false` and the platform global setup below. All three use `passWithNoTests`. The config references **no** file under `server/tests/` |
-  | platform engineer | `server/platform/testing/global-setup.ts` | Runs the guard (PS-22), then rebuilds the test database (§4.6). Runs once per `db` or `gate` invocation |
+  | platform engineer | `server/platform/testing/global-setup.ts` | Runs the guard (PS-22), drops leftover `gate_probe_%` / `gate_extra_%` roles (RB2-06), then rebuilds the test database (§4.6). Runs once per `db` or `gate` invocation |
   | platform engineer | `server/platform/testing/index.ts` | The test-only surface (rule 1a):<br>• `assertTestDatabase`, `rebuildTestDatabase`;<br>• the owner, `ledger_app` and `ledger_worker` clients for the test database;<br>• re-exports of what tests build processes from: `loadApiConfig`, `loadWorkerConfig`, `createLogger` (with an injectable output stream), `createApiApp`, `createOutboxWorker` with the test-only hooks `beforeFinish` and `afterSubscriber` (see the hook rule below), `buildRegistries`, a pool factory with an explicit `expectedRole` (G0-46(d)–(e)), `createSystemContext` |
   | test engineer | `server/tests/support/gate-fixtures.ts` | `ensureGateFixtures()` — idempotent; called in each gate file's `beforeAll` through the owner client. It creates the test-only schema `gate_test` with three tables:<br>• `probe_state (id uuid primary key, company_id uuid not null, value text)` — granted to `ledger_runtime`;<br>• `subscriber_effects (subscriber text, effect_key uuid, primary key (subscriber, effect_key))` — granted to `ledger_runtime`;<br>• `api_only (id uuid primary key)` — granted to `ledger_app` **only**, used by G0-25;<br>• `unique_probe (value text primary key)` — granted to `ledger_runtime`, used by G0-27(k): a duplicate insert produces a 23505 whose `detail` quotes the value |
   | test engineer | `server/tests/support/` (other files) | • Probe module registrations: probe routes in namespaces `/__probe`, `/__alpha`, `/__beta`; probe subscribers; probe ports, one of them `humanOnly`; catalogue entries `gate_test_probe` and `gate_test_job_probe` (`jobRequired`) for audit, and `GateProbeRecorded` and `GateJobProbeRecorded` (`jobRequired`) for events.<br>• Test app and worker builders.<br>• An ES256 key pair and portal secret generated per run, plus a token factory.<br>• In-memory log capture at level `debug`, so even debug lines are checked.<br>• The boundary scanner and `fixtures/boundaries/` |
@@ -1701,13 +1871,28 @@ Together these cover every field the Audit Doctrine requires:
 | **R3-13** nested errors made safe | G0-27(k) |
 | **R3-14** `route` on 500s; undecodable parameter | G0-27(o)–(p) |
 | **R3-16** case-sensitive `Bearer` | G0-32(r); recorded in §10.3 |
+| **RP-01** `LEDGER_`-prefixed database variables; no `DATABASE_URL` fallback | G0-36(j), G0-39(p), G0-46(c) |
+| **RP-02** only `server/platform/config/` reads the environment; runtime loaders ignore owner and `PG*` variables | G0-36(j), G0-40 (rule 13), G0-46(a), (c) |
+| **RP-03** complete URLs and explicit pool settings; no libpq fallback | G0-51, G0-39(o), G0-36(l) |
+| **RP-04** superuser owner: rebuild excludes system schemas; runtime roles cannot disable triggers | G0-39(q), G0-20, G0-45, G0-46(d) |
+| **RP-05** two test environments | §9.1; the PM's Replit gate run |
+| **RP-06** worker workflow on Replit; always-on worker deployment | §2.5 TOML (commit 8, reviewed); Phase 9 obligation (§4.10) |
+| **RP-07** Replit Secrets, proxy, iframe, HMR, port | G0-30 (frame denial only on API paths), G0-02; review |
+| **RB2-01** rule 13 by allowlist, not by literal text | G0-40 |
+| **RB2-02** owner variables scrubbed after loading | G0-36(o) |
+| **RB2-03** TLS fails closed in production | G0-36(m) |
+| **RB2-04** no `.env` on Replit | G0-36(n) |
+| **RB2-05** migration lint | G0-40 (migration fixtures) |
+| **RB2-06** bounded throwaway roles; leftovers dropped | G0-46(d)–(e); global setup |
+| **RB2-07** no migration URLs in production Secrets; no runtime-executable `SECURITY DEFINER` | Phase 9 and every-phase obligations (§4.10) |
+| **RB2-08** owner tools, collaborators, mirror binding, `helium` password auth | §2.5, §3.6; review |
 
 ### 9.3 Build and frontend
 
 | ID | Protects | Attack / check | Pass when |
 |---|---|---|---|
-| G0-01 **Command** | Gate item 1; R2-18 | Run `npm run check` (both `tsc` passes, including the test tsconfig) and `npm run build`. Then, from the app folder **with a `.env` file present** that sets every variable, run each bundle with an emptied environment (`env -i PATH="$PATH" node dist/index.cjs`, then the same for `dist/worker.cjs`). Finally, search both bundles for test-only strings | Both commands exit 0, and `dist/index.cjs`, `dist/worker.cjs` and `dist/public/index.html` exist. Run with an emptied environment, the API exits 1 with a `ConfigError` naming the four backend variables, and the worker exits 1 naming `DATABASE_WORKER_URL`. This proves the CommonJS bundles load (including the bundled `jose`), that a built bundle always runs as production, and that it never reads `.env` (§4.6). **Neither bundle contains** `__probe`, `gate_test`, `platform/testing`, `rebuildTestDatabase`, `GateProbeRecorded`, `server/tests`, `beforeFinish` or `afterSubscriber` (R2-18; test-only worker hooks) |
-| G0-02 **Command** | Frontend unchanged (D-13) | With **no** `.env` and no backend variables, start `npm run dev` and run the full Playwright suite (`npx playwright test`) | The same pass count as `backend` before Phase 0, with no new failures. The server log shows the single frontend-only `WARN` line |
+| G0-01 **Command** | Gate item 1; R2-18 | Run `npm run check` (both `tsc` passes, including the test tsconfig) and `npm run build`. Then, from the app folder **with a `.env` file present** that sets every variable, run each bundle with an emptied environment (`env -i PATH="$PATH" node dist/index.cjs`, then the same for `dist/worker.cjs`). Finally, search both bundles for test-only strings | **Where:** at the gate, the PM runs G0-01 in the integration worktree **after** G0-02. For its bundle step only, the PM writes a temporary `.env` there from the local-mirror credentials file, and deletes it as soon as the step ends, so G0-02 always sees no `.env`. An implementer runs it in its own worktree, which already has the mirror `.env`. Both commands exit 0, and `dist/index.cjs`, `dist/worker.cjs` and `dist/public/index.html` exist. Run with an emptied environment, the API exits 1 with a `ConfigError` naming the four backend variables, and the worker exits 1 naming `LEDGER_WORKER_DATABASE_URL`. This proves the CommonJS bundles load (including the bundled `jose`), that a built bundle always runs as production, and that it never reads `.env` (§4.6). **Neither bundle contains** `__probe`, `gate_test`, `platform/testing`, `rebuildTestDatabase`, `GateProbeRecorded`, `server/tests`, `beforeFinish` or `afterSubscriber` (R2-18; test-only worker hooks) |
+| G0-02 **Command** | Frontend unchanged (D-13) | **Where (RA1-02):** in the PM's **integration worktree**, which has no `.env`. Before starting, the PM checks that `test ! -e .env` succeeds and that `printenv \| grep -E '^(LEDGER_\|JWT_\|PORTAL_JWT_SECRET)'` prints nothing. Then start `npm run dev`, confirm `GET /health` returns `{"status":"ok","mode":"frontend_only"}`, and run the full Playwright suite (`npx playwright test`). There is no flag that disables the backend; frontend-only mode comes only from the variables being absent (§4.6) | The same pass count as `backend` before Phase 0, with no new failures. The server log shows the single frontend-only `WARN` line, and `/health` reported `frontend_only` before the suite started |
 
 ### 9.4 Audit atomicity and the Unit of Work — gate item 2
 
@@ -1748,7 +1933,7 @@ Every test in this group connects as the named role, runs the statement, and exp
 
 | ID | Role and table | Attack | Pass when |
 |---|---|---|---|
-| G0-20 | `ledger_app` on `audit.audit_entries` | `UPDATE … SET entry_type = 'x'`; `DELETE`; `TRUNCATE`; `ALTER TABLE … DISABLE TRIGGER ALL`; `DROP TABLE`; `CREATE TABLE audit.x (…)`; `INSERT` naming `audit_id`, naming `occurred_at`, and naming `sequence_no` with `OVERRIDING SYSTEM VALUE` (R2-05); an explicit-column `INSERT` of only the granted columns; `SELECT` | Everything is refused (42501, or "must be owner") except the explicit-column `INSERT` and the `SELECT`, which succeed. The successful insert also proves that no sequence grant is missing for `sequence_no` |
+| G0-20 | `ledger_app` on `audit.audit_entries` | `UPDATE … SET entry_type = 'x'`; `DELETE`; `TRUNCATE`; `ALTER TABLE … DISABLE TRIGGER ALL`; `DROP TABLE`; `CREATE TABLE audit.x (…)`; `SET session_replication_role = replica`, which would switch the triggers off (RP-04); `INSERT` naming `audit_id`, naming `occurred_at`, and naming `sequence_no` with `OVERRIDING SYSTEM VALUE` (R2-05); an explicit-column `INSERT` of only the granted columns; `SELECT` | Everything is refused (42501, or "must be owner") except the explicit-column `INSERT` and the `SELECT`, which succeed. The successful insert also proves that no sequence grant is missing for `sequence_no` |
 | G0-21 | `ledger_worker` on `audit.audit_entries` | The same statements | The same results: the worker holds only what `ledger_runtime` grants (R2-B1) |
 | G0-22 | `ledger_app` on `intelligence.event_outbox` | `UPDATE … SET status = 'delivered'`, and the same for each delivery-state column; `DELETE`; `TRUNCATE`; `INSERT` naming `status`, naming `delivered_subscribers`, naming `next_attempt_at`, naming `created_at` and naming `occurred_at` (R2-05); an explicit-column `INSERT` of the envelope columns; `SELECT` | Every `UPDATE`, `DELETE`, `TRUNCATE` and non-envelope `INSERT` is refused: **the API role cannot change delivery state, or set it at insert**. The envelope-column `INSERT` and the `SELECT` succeed |
 | G0-23 | `ledger_worker` on `intelligence.event_outbox` | `UPDATE` of each delivery-state column; `UPDATE` of each envelope column (`payload`, `company_id`, `event_type`, `actor_id`, `job_id`, `causation_event_id`, `causation_actor_id`, `occurred_at`, `source_object_id`); `DELETE`; `TRUNCATE` | The delivery-state updates succeed. Every envelope update, `DELETE` and `TRUNCATE` is refused |
@@ -1756,7 +1941,7 @@ Every test in this group connects as the named role, runs the statement, and exp
 | G0-25 | Role attributes, memberships and PUBLIC defaults (§3.5; R2-B1, R2-11) | Query `pg_roles`, `pg_auth_members`, ownership in `pg_class` / `pg_namespace` / `pg_proc`, `has_schema_privilege`, `has_database_privilege`, `has_function_privilege` and `aclexplode` on the three tables. Then, as `ledger_worker`, `INSERT` into `gate_test.api_only`, which is granted to `ledger_app` only | `ledger_runtime` is `NOLOGIN`. None of the three runtime roles is superuser, `CREATEDB`, `CREATEROLE`, `REPLICATION` or `BYPASSRLS`. `ledger_app` and `ledger_worker` are each members of `ledger_runtime` only, and **not of each other**. No runtime role owns any object in `audit`, `intelligence` or `drizzle`, has `USAGE` on schema `drizzle`, or has `CREATE` on `audit`, `intelligence` or `public`. Neither login role has `TEMPORARY` on the database, and neither has `EXECUTE` on `audit.refuse_change()`. `PUBLIC` holds no privilege on the three tables, no `CONNECT` or `TEMPORARY` on the database, and no `CREATE` on `public`. The worker's insert into `api_only` is refused with 42501: **an API-only grant never reaches the worker**. A function the owner creates during the test in `gate_test` is not executable by `PUBLIC`, which shows the default-privilege revoke works (R3-17) |
 | G0-26 | Database constraints hold against direct SQL | As `ledger_app`, insert an audit row with `actor_role = 'system'` and a non-null `actor_id`; one with `actor_role = 'ceo'` and a null `actor_id`; one with an `entry_type` of `'X'`; and one with a destination type but no ID. Insert outbox rows with an array `payload` and with `status = 'done'`, supplied through an owner-run insert because `ledger_app` cannot name `status` | Each is refused with 23514 |
 | G0-45 | Owner DML is refused too (R2-09) | As the **owner**: `UPDATE`, `DELETE` and `TRUNCATE` on `audit.audit_entries` and on `intelligence.event_log`. Then list `pg_trigger` for both tables | Each statement fails with the trigger's `insufficient_privilege` exception, and the rows are unchanged. All four triggers exist and are enabled. The global setup's `DROP SCHEMA … CASCADE` rebuild succeeded at the start of the run, which shows the triggers do not block it |
-| G0-46 | Runtime role self-check (R2-10); no owner credentials at runtime (R2-09) | (a) Build the full-mode API with `DATABASE_URL` set to the **owner** test URL, then call `/health` and a probe route. (b) Build the worker with `DATABASE_WORKER_URL` set to the `ledger_app` test URL and run `runOnce()`. (c) Run the production-mode loaders for both processes with `DATABASE_MIGRATION_URL`, or an owner `_TEST` URL, present.<br>(d) **Effective memberships (R3-12).** The owner creates a throwaway login role `gate_probe_<random>`, granted `ledger_runtime`, and a throwaway group role `gate_extra_<random>`. The test builds a pool through `server/platform/testing/` with `expectedRole` set to the throwaway name. It connects once as granted, then again after granting it `gate_extra_<random>`, and then — only where the owner holds the right to grant it — after granting it `pg_write_all_data` instead.<br>(e) **Effective privileges (R3-12).** As (d), with `ledger_runtime` only, but the owner grants the throwaway role `UPDATE (payload)` on `intelligence.event_outbox` directly. Every throwaway role is dropped in `finally` | (a) Every connection is refused: `/health` returns 503 and the probe route 500. An `ERROR` line names the failed condition ("owns platform schema" or "unexpected role") and the role name, but never the URL or password.<br>(b) Refused with "unexpected role"; nothing is claimed.<br>(c) `ConfigError` naming the owner variable.<br>(d) The first connection is **accepted**, so the check does not refuse everything. Each later one is refused with "unexpected memberships", naming the extra role.<br>(e) Refused with "can rewrite envelope" |
+| G0-46 | Runtime role self-check (R2-10); no owner credentials at runtime (R2-09) | (a) Build the full-mode API with `LEDGER_APP_DATABASE_URL` set to the **owner** test URL, then call `/health` and a probe route. (b) Build the worker with `LEDGER_WORKER_DATABASE_URL` set to the `ledger_app` test URL and run `runOnce()`. (c) **Replit's shape (RP-02).** Set `DATABASE_URL` and the `PG*` variables to the owner's test credentials, as Replit does. Build the full-mode API from complete `LEDGER_APP_DATABASE_URL_TEST` settings, then run a probe query.<br>(d) **Effective memberships (R3-12).** The owner creates a throwaway login role `gate_probe_<random>` (`VALID UNTIL` 15 minutes ahead, `CONNECTION LIMIT 2`; RB2-06), granted `ledger_runtime`, and a throwaway group role `gate_extra_<random>`. The test builds a pool through `server/platform/testing/` with `expectedRole` set to the throwaway name. It connects once as granted, then again after granting it `gate_extra_<random>`, and then after granting it `pg_write_all_data` instead. This case is unconditional: the owner is a superuser on both hosts, so it can always grant `pg_write_all_data` (RP-04).<br>(e) **Effective privileges (R3-12).** As (d), with `ledger_runtime` only, but the owner grants the throwaway role `UPDATE (payload)` on `intelligence.event_outbox` directly. Every throwaway role is dropped in `finally`.<br>(f) **Bounded roles and cleanup (RB2-06).** Read `rolvaliduntil` and `rolconnlimit` for the throwaway role. Then, as the owner, create a leftover role `gate_probe_leftover_<random>` and run the global-setup cleanup function | (a) Every connection is refused: `/health` returns 503 and the probe route 500. An `ERROR` line names the failed condition ("owns platform schema" or "unexpected role") and the role name, but never the URL or password.<br>(b) Refused with "unexpected role"; nothing is claimed.<br>(c) The connection is made, and the self-check passes, as `ledger_app` on `ledger_test`. The probe query's `current_user` is `ledger_app`: the injected owner variables had no effect.<br>(d) The first connection is **accepted**, so the check does not refuse everything. Each later one is refused with "unexpected memberships", naming the extra role.<br>(e) Refused with "can rewrite envelope".<br>(f) `rolvaliduntil` is within 15 minutes of now and `rolconnlimit = 2`. After the cleanup, the leftover role no longer exists in `pg_roles` |
 
 ### 9.8 Logging — gate item 6
 
@@ -1784,21 +1969,22 @@ Each request in these tests carries a unique marker string (`MARK-<test>-<random
 
 | ID | Protects | Attack | Pass when |
 |---|---|---|---|
-| G0-36 | Fail fast without leaking values (S-02; R2-09, R2-14) | `loadApiConfig` with:<br>(a) three of the four backend variables, each set to a marker;<br>(b) `NODE_ENV=production` and none of them;<br>(c) a mismatched key pair;<br>(d) a `PORTAL_JWT_SECRET` that decodes to 10 bytes;<br>(e) every value from the committed `.env.example`;<br>(f) all four set, but `DATABASE_URL=""`;<br>(g) `PORTAL_JWT_SECRET` set to the text of `JWT_PUBLIC_KEY`;<br>(h) a 40-character `PORTAL_JWT_SECRET` that decodes to 30 bytes;<br>(i) an extra `VITE_JWT_SECRET` variable;<br>(k) a temporary `client/.env.local` defining `DATABASE_URL`, and another defining `VITE_PORTAL_SECRET` (R3-17), removed in `finally`;<br>(j) `NODE_ENV=production`, all four set, plus `DATABASE_MIGRATION_URL`.<br>Also `loadWorkerConfig` with no `DATABASE_WORKER_URL` | Each throws `ConfigError`. Its message, and the captured `FATAL` line, name the right variables and contain no marker or key material. For (a) and (f), exactly the missing variable is named — the empty one counts as missing. For (e), every backend variable is named |
+| G0-36 | Fail fast without leaking values (S-02; R2-09, R2-14) | `loadApiConfig` with:<br>(a) three of the four backend variables, each set to a marker;<br>(b) `NODE_ENV=production` and none of them;<br>(c) a mismatched key pair;<br>(d) a `PORTAL_JWT_SECRET` that decodes to 10 bytes;<br>(e) every value from the committed `.env.example`;<br>(f) all four set, but `LEDGER_APP_DATABASE_URL=""`;<br>(g) `PORTAL_JWT_SECRET` set to the text of `JWT_PUBLIC_KEY`;<br>(h) a 40-character `PORTAL_JWT_SECRET` that decodes to 30 bytes;<br>(i) an extra `VITE_JWT_SECRET` variable;<br>(j) **Replit's injected variables are never read (RP-02).** `NODE_ENV=production`, all four set, plus — each set to an owner (superuser) value containing a marker — `DATABASE_URL`, `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`, `LEDGER_MIGRATION_DATABASE_URL` and `LEDGER_MIGRATION_DATABASE_URL_TEST`; then the same for `loadWorkerConfig`;<br>(k) a temporary `client/.env.local` defining `LEDGER_APP_DATABASE_URL`, and another defining `VITE_PORTAL_SECRET` (R3-17), removed in `finally`;<br>(l) `PGOPTIONS` set (RP-03);<br>(m) **TLS fail-closed (RB2-03):** `NODE_ENV=production`, with `LEDGER_APP_DATABASE_URL` naming a remote host (`db.example.com`) and no `sslmode`; then the same with `sslmode=disable`; then with `sslmode=verify-full`; then host `helium` with no `sslmode`;<br>(n) **No `.env` on Replit (RB2-04):** a `.env` in a temporary app folder defining a marker variable. **First** load without `REPL_ID`, which proves the file is read. Then load again with `REPL_ID` set (RC3-01);<br>(o) **Scrubbing (RB2-02):** in a spawned Node process, set `DATABASE_URL`, the `PG*` variables and both `LEDGER_MIGRATION_DATABASE_URL` variables to marker values, plus valid runtime variables. **First**, print the listed names from `process.env` and from a `node -e` grandchild, which proves they were present. Then run the API's start sequence up to `scrubOwnerVariables()`, and print them again from `process.env` and from a new grandchild started with the default inherited environment (RC3-01);<br>Also `loadWorkerConfig` with no `LEDGER_WORKER_DATABASE_URL` | Each case except (j) throws `ConfigError`. Its message, and the captured `FATAL` line, name the right variables and contain no marker or key material. For (a) and (f), exactly the missing variable is named — the empty one counts as missing. For (e), every backend variable is named. **(j) succeeds:** both loaders return a full-mode configuration, and a deep scan of the returned object finds **none** of the owner values or markers — only the `LEDGER_APP_`/`LEDGER_WORKER_` settings. (This replaces v0.5's "refused when an owner URL is present", which could never pass on Replit.) **(m):** the first two are refused, naming the variable; `verify-full` succeeds with `ssl.rejectUnauthorized = true`; `helium` succeeds with `ssl = false`. **(n):** without `REPL_ID` the marker is loaded; with `REPL_ID` it is not, and exactly one `WARN` names `.env` without its contents. **(o):** before scrubbing, every listed name is present in the process and in the first grandchild, so the test cannot pass vacuously. After scrubbing, every listed name is `undefined` in the process and absent in the second grandchild, and the runtime variables are still present |
 | G0-37 | Frontend-only mode (§4.6; D-13) | Set `NODE_ENV=development` and none of the four variables. Build the app with a sentinel frontend handler and a spy on the pool factory. Request `/api/v1/x`, `/api/foo`, `/portal/v1/x`, `/health`, `/` and `/portal/projects` | The mode is `frontend_only`. The `/api` and `/portal/v1` paths get `503 BACKEND_NOT_CONFIGURED` envelopes. `/health` gets `200 {"status":"ok","mode":"frontend_only"}`. `/` and `/portal/projects` reach the sentinel. The pool factory is never called and no socket is opened. Exactly one start-up `WARN` line is logged |
-| G0-38 | Health (S-08; R2-15) | Full mode with a reachable test database; full mode with `DATABASE_URL` pointing at a closed local port; and 50 concurrent `/health` requests with a spy on the pool's `connect`. The spy holds the first check on a latch until all 50 requests are in flight, then releases it (R3-08: deterministic). The closed port is on `127.0.0.1`, so the failure is an immediate connection refusal rather than a network timeout | `200 {"status":"ok","mode":"full"}` and `503 {"status":"unavailable","mode":"full"}`; the 503 arrives within 3 seconds, which leaves a 1-second margin over the 2-second check timeout. Both bodies have no other keys. The 50 concurrent requests cause **exactly one** `connect` call |
-| G0-39 | Test database isolation (D-12; R2-12) | Call the guard with test URLs whose database is:<br>(a) `ledger_dev`;<br>(b) `ledger_test_backup`;<br>(c) `ledger_TEST`;<br>(d) missing;<br>(e) different across the three URLs;<br>(f) equal to `DATABASE_URL`'s.<br>Also: (g) `…/ledger_test?host=other`; (h) `…/ledger_test?user=postgres`; (i) a socket URL; (j) an empty path; (k) a `mysql://` URL; (l) `…/ledger_test?options=-c%20search_path%3Dx`.<br>The URLs point at an unroutable host, and the pg client and pool constructors are spied on. Then: (m) call `rebuildTestDatabase` with an owner client stubbed so that `current_database()` returns `ledger_dev`; (n) under Vitest, build a `db/client.ts` pool from a non-`_test` URL | (a)–(l) each throw `TestDatabaseGuardError`, which does not contain the password, and no pg client or pool is constructed. (m) Refuses before any `DROP`, as the statement log shows. (n) Refused before connecting. A valid set (`ledger_test` in all three URLs, with `?sslmode=require`) passes |
+| G0-38 | Health (S-08; R2-15) | Full mode with a reachable test database; full mode with `LEDGER_APP_DATABASE_URL` pointing at a closed local port — found by binding an ephemeral port on `127.0.0.1` and closing it, never a fixed port such as 5000, which the Replit workspace's running app uses (RA1-04); and 50 concurrent `/health` requests with a spy on the pool's `connect`. The spy holds the first check on a latch until all 50 requests are in flight, then releases it (R3-08: deterministic). The closed port is on `127.0.0.1`, so the failure is an immediate connection refusal rather than a network timeout | `200 {"status":"ok","mode":"full"}` and `503 {"status":"unavailable","mode":"full"}`; the 503 arrives within 3 seconds, which leaves a 1-second margin over the 2-second check timeout. Both bodies have no other keys. The 50 concurrent requests cause **exactly one** `connect` call |
+| G0-39 | Test database isolation (D-12; R2-12) | Call the guard with test URLs whose database is:<br>(a) `ledger_dev`;<br>(b) `ledger_test_backup`;<br>(c) `ledger_TEST`;<br>(d) missing;<br>(e) different across the three URLs;<br>(f) equal to `LEDGER_APP_DATABASE_URL`'s.<br>Also: (g) `…/ledger_test?host=other`; (h) `…/ledger_test?user=postgres`; (i) a socket URL; (j) an empty path; (k) a `mysql://` URL; (l) `…/ledger_test?options=-c%20search_path%3Dx`.<br>The URLs point at an unroutable host, and the pg client and pool constructors are spied on. Then: (m) call `rebuildTestDatabase` with an owner client stubbed so that `current_database()` returns `ledger_dev`; (n) under Vitest, build a `db/client.ts` pool from a non-`_test` URL;<br>(o) a test URL with no password, and one with no user, while `PGUSER` and `PGPASSWORD` hold the owner's credentials (RP-03);<br>(p) `DATABASE_URL` set to a URL naming `ledger_test`, as if Replit's development database were the test database (RP-01);<br>(q) list the schemas the rebuild would drop, as the superuser owner, without dropping them (RP-04). As a control, first confirm from `pg_namespace` that the owner does own `pg_catalog`, so the exclusion is actually needed (RC3-01) | (a)–(l), (o) and (p) each throw `TestDatabaseGuardError`, which does not contain the password, and no pg client or pool is constructed. (m) Refuses before any `DROP`, as the statement log shows. (n) Refused before connecting. (q) The list contains `audit`, `intelligence`, `drizzle` and `gate_test`, and **no** `public`, `information_schema` or `pg_*` schema. A valid set (`ledger_test` in all three URLs, complete, with `?sslmode=require`) passes |
 
 ### 9.11 Structure, registries, ports and dependencies
 
 | ID | Protects | Attack | Pass when |
 |---|---|---|---|
-| G0-40 | Import rules 1–6, 1a and 8–12 (§4.8; R2-03, R2-07, R2-18, R3-11) | Run the boundary scanner (test support) over the real `server/` tree, then over a fixture tree (`server/tests/support/fixtures/boundaries/`) with one deliberate violation per planted file:<br>• a module importing `server/platform/db/client.ts`;<br>• importing another module's `application/`;<br>• `domain/` importing `drizzle-orm`, the platform's `index.ts` and a Node built-in;<br>• `application/` importing `express`;<br>• `infrastructure/` importing `application/`;<br>• `api/` importing `domain/`;<br>• production code importing `server/platform/testing/`;<br>• a non-test file importing `server/tests/support/` (1a);<br>• `server/platform/` importing `server/modules/`;<br>• two fixture modules each importing the other's `index.ts` (a cycle, rule 9);<br>• module files importing `pg`, importing `drizzle-orm/node-postgres`, reading `process.env`, containing the string `audit_entries`, containing `pgSchema('audit')`, and containing `SAVEPOINT` in a `sql` template (rule 10);<br>• a module importing `server/platform/system/index.ts` (rule 11);<br>• a module's own route file importing its `application/ports/x.impl.ts`, and a module `index.ts` re-exporting it (rule 12) | The real tree reports no violations. The fixture tree reports exactly one violation per planted file, with the rule number |
+| G0-40 | Import rules 1–6, 1a and 8–13 (§4.8; R2-03, R2-07, R2-18, R3-11, RP-02) | Run the boundary scanner (test support) over the real `server/` tree, then over a fixture tree (`server/tests/support/fixtures/boundaries/`) with one deliberate violation per planted file:<br>• a module importing `server/platform/db/client.ts`;<br>• importing another module's `application/`;<br>• `domain/` importing `drizzle-orm`, the platform's `index.ts` and a Node built-in;<br>• `application/` importing `express`;<br>• `infrastructure/` importing `application/`;<br>• `api/` importing `domain/`;<br>• production code importing `server/platform/testing/`;<br>• a non-test file importing `server/tests/support/` (1a);<br>• `server/platform/` importing `server/modules/`;<br>• two fixture modules each importing the other's `index.ts` (a cycle, rule 9);<br>• module files importing `pg`, importing `drizzle-orm/node-postgres`, reading `process.env`, containing the string `audit_entries`, containing `pgSchema('audit')`, and containing `SAVEPOINT` in a `sql` template (rule 10);<br>• a module importing `server/platform/system/index.ts` (rule 11);<br>• a module's own route file importing its `application/ports/x.impl.ts`, and a module `index.ts` re-exporting it (rule 12);<br>• `process.env` in a platform file outside `server/platform/config/`, and in a fixture `server/index.ts` (rule 13, RP-02);<br>• rule-13 bypasses, one fixture each: `import { env } from 'node:process'`, `require('process').env`, `process['env']`, `globalThis.process.env`, `const { env } = process` (RB2-01). A fixture entry point that uses only `process.exit` and `process.on('SIGTERM', …)` is **not** flagged;<br>• **migration lint (RB2-05)**, one fixture `.sql` file per pattern in §3.6 — `SET session_replication_role`, `DISABLE TRIGGER` and `DROP TRIGGER` on each append-only table, `ALTER ROLE ledger_app`, `GRANT pg_write_all_data`, `SUPERUSER`, `BYPASSRLS`, and `INSERT`/`UPDATE`/`DELETE`/`TRUNCATE` on each append-only table — plus one passing fixture containing `CREATE TRIGGER`, `NOSUPERUSER` and `NOBYPASSRLS` | The real tree reports no violations. The fixture tree reports exactly one violation per planted file, with the rule number |
 | G0-41 | Registries fail at start-up, not at run time (PS-15, PS-16; R2-04, R2-16, R2-B2) | Build both processes' registries with each of:<br>(a) two subscribers with the same name;<br>(b) a subscriber with no event types;<br>(c) a `requiresPorts` with no provider;<br>(d) two providers for one port;<br>(e) a provider for a port no module requires;<br>(f) a provider's `create` calling `deps.ports.get`;<br>(g) a module calling `deps.ports.get` for a token missing from its `requiresPorts`;<br>(h) `Ports.get` called after start-up;<br>(j) one namespace claimed by two modules;<br>(k) a namespace `/jobs/x` (more than one segment);<br>(l) a public route outside its module's namespaces;<br>(m) two public routes with the same surface, method and path;<br>(n) a subscriber to an unregistered event type;<br>(o) one audit entry type registered by two modules;<br>(p) a subscriber factory, in the worker, calling `deps.ports.get` for a `humanOnly` token.<br>Also (i): start the API and worker entry points with case (c) | (a)–(g) and (j)–(p) each throw at build time, naming the subscriber, port, namespace, route or type. (h) throws. (i) Both processes exit 1 with one `FATAL` line naming the port: the API before it listens, the worker before it claims. A correct wiring passes a probe port's implementation to the requiring module, and calling it with a human context's `uow` writes an audit row with that human as actor and causation `NULL` |
 | G0-47 | Human-only ports at run time (R2-B2, R3-15; D-17) | A probe port defined `{ humanOnly: true, roles: ['ceo', 'pm'] }`. Its implementation writes a `probe_state` row and an audit entry of a type owned by the implementing module. Call it with the `uow` of:<br>(a) a `createSystemContext` unit;<br>(b) a subscriber unit — the test hands the API-wired implementation into a probe subscriber's closure, which no module can do;<br>(c) a portal-user request;<br>(d) a platform-user request with role `worker`;<br>(e) as (a), but the caller's work first writes its own `probe_state` row, **catches** the refusal and returns normally;<br>(f) a `ceo` user request, and separately a `pm` user request | (a)–(d) Each throws `HumanActorRequiredError` before the implementation runs: no `probe_state` row and no audit row. (e) The unit is poisoned and rolls back, including the caller's own row. (f) Succeeds: the audit row has the user as `actor_id`, their role and causation `NULL`, and is accepted against the implementing module's catalogue (the wrapper adopted the unit) |
 | G0-49 | Tenant stamping and the database tenant setting (R2-08) | (a) `tenantValues(probeTable, ctxA, { companyId: B, … })`. (b) `tenantValues(probeTable, ctxA, { … })`. (c) Inside `runInTransaction(ctxA)`, read `current_setting('app.company_id', true)`. (d) On a pool of size 1, after that unit commits, read the setting in a new plain transaction | (a) `TenantMismatchError`, with no SQL issued. (b) The row carries company A. (c) The setting equals A's ID. (d) The setting is empty or `NULL`: it was transaction-local |
 | G0-50 | Event catalogue, type ownership and job attribution on events (R2-16, R3-10) | Two probe modules: Alpha owns `GateProbeRecorded` and audit type `gate_test_probe`; Beta owns `GateJobProbeRecorded` and `gate_test_job_probe`. Run each case below inside a unit that also inserts a `probe_state` row, and swallow the error each time:<br>(a) `record` an unregistered event type;<br>(b) in a Beta unit, `record` `GateJobProbeRecorded` (`jobRequired`) without `jobId`;<br>(c) `record` with an explicit `sourceModule` key;<br>(e) in an **Alpha** unit, `record` Beta's `GateJobProbeRecorded`, and `append` Beta's `gate_test_job_probe`;<br>(f) Beta's public probe function, which writes Beta's types, called with an Alpha `uow` **without** `adopt`;<br>(g) the same call **with** `deps.adopt(uow)`.<br>Separately, (d): in a Beta unit, `record` `GateJobProbeRecorded` with `jobId` J, commit, then deliver | (a), (b), (c), (e) and (f): each refused, the unit poisoned and rolled back, with no outbox row and no `probe_state` row. (g) Succeeds, with `source_module = 'beta'` and Alpha's human actor. (d) `job_id = J` on the outbox and `event_log` rows, `envelope.jobId = J`, and `source_module` equals the unit's module |
 | G0-42 | No Redis (D-10) | Read the `dependencies`, `devDependencies` and `optionalDependencies` in `package.json` | None of `redis`, `ioredis`, `@redis/*`, `bull`, `bullmq`, `connect-redis` or `rate-limit-redis` is present |
+| G0-51 | No libpq fallback (RP-03) | Set `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` and `PGDATABASE` in the test process to the **owner's** test credentials, as Replit does. Also write a `~/.pgpass`-style file whose path is `PGPASSFILE`, holding the owner's password. Then:<br>(a) `loadApiConfig` with `LEDGER_APP_DATABASE_URL` naming `ledger_app` but **no password**;<br>(b) the same with no user, then no host, then no database;<br>(c) a complete URL. Spy on the `pg.Pool` constructor and run a probe query;<br>(d) as (c) for `loadWorkerConfig` and the test harness's role clients;<br>(e) **control, so the test cannot pass vacuously (RC3-01):** with the same `PG*` variables, a raw `new pg.Pool({ connectionString })` built **without** the platform's parser, from a URL naming only host, port and database | (a) and (b) throw `ConfigError`, naming the variable and the missing part, never a value; no pool is constructed. (c) The `Pool` constructor receives an object with `host`, `port`, `user`, `password`, `database` and `ssl` all set, and **no** `connectionString`. The probe query returns `current_user = 'ledger_app'` and `current_database() = 'ledger_test'`, so nothing came from the `PG*` variables or the password file. (d) The same: every pool's `current_user` is the role named in its own URL.<br>(e) The raw pool **does** connect as the owner (`current_user = 'postgres'`). This proves the fallback the platform prevents is real in this environment |
 | G0-43 | Only `append()` writes audit rows (BACKEND_DATA_ARCHITECTURE.md, Audit Immutability Enforcement) | Import `server/platform/index.ts` and list its exports. Inspect `uow.audit` and `uow.events` | No export is a Drizzle table for T-1, T-2 or T-3, a raw pool or `db` handle, `createSystemContext` or `toCompanyId`. `uow.audit` has exactly one method, `append`, and `uow.events` exactly one, `record` |
 
 ### 9.12 Would the gate catch a broken implementation? (R3-07)
@@ -1826,6 +2012,16 @@ The highest-risk guarantees, with the most likely way each could be implemented 
 | Runtime-role self-check (R2-10, R3-12) | The check runs in `pool.on('connect')`, or ignores memberships | G0-46(a), (d) | The probe route's query runs as the owner; the throwaway role with an extra membership is accepted |
 | Log redaction (§4.7) | The serializer keeps PostgreSQL `message` or `detail`; the hook only looks at top-level keys; the request logger logs `req.path` | G0-27(g), (k), (m)–(o) | The marker appears in a captured line |
 | Tenant stamping (R2-08) | `tenantValues` lets the caller's `companyId` win | G0-49(a) | The row carries company B |
+| Explicit pool settings, no libpq fallback (RP-03) | A pool is built with `connectionString`, or a missing password or user is left for the driver to fill | G0-51(a)–(c) | The incomplete URL is not refused, or the `Pool` constructor spy sees `connectionString`. The probe's `current_user` is the owner's; G0-51(e) shows that fallback is real |
+| Rule 13 allowlist (RB2-01) | The scanner matches only the literal text `process.env` | G0-40 | The `node:process`, `require('process')`, `process['env']`, `globalThis.process` and destructuring fixtures are not reported |
+| Owner-variable scrub (RB2-02) | `scrubOwnerVariables()` is not called by an entry point, or misses the `PG*` prefix | G0-36(o) | After the start sequence the variables are still present in the process or the grandchild, although the first print proved they were set |
+| TLS fails closed (RB2-03) | Production accepts a remote URL without `sslmode`, or `require` is mapped to `rejectUnauthorized: false` | G0-36(m) | The remote URL is accepted, or the `verify-full` case shows `rejectUnauthorized` false |
+| No `.env` on Replit (RB2-04) | The loader ignores `REPL_ID` | G0-36(n) | The marker is loaded with `REPL_ID` set — the first load proved the file is otherwise read |
+| `PGOPTIONS` refused (RP-03) | The loader does not check `PGOPTIONS` | G0-36(l) | No `ConfigError` |
+| Migration lint (RB2-05) | The scanner skips `migrations/`, or matches `SUPERUSER` inside `NOSUPERUSER` | G0-40 | A refused-pattern fixture is not reported, or the passing fixture is |
+| Rebuild excludes system schemas (RP-04) | The rebuild query keeps v0.5's "everything but `public`" | G0-39(q) | The drop list contains `pg_catalog`, `pg_toast` or `information_schema`; the control confirms the owner owns them |
+| `heliumdb` name check (RP-01) | The guard compares only the `LEDGER_*` URLs | G0-39(p) | A test database named by `DATABASE_URL` is accepted |
+| Bounded throwaway roles and cleanup (RB2-06) | Roles are created without `VALID UNTIL` or `CONNECTION LIMIT`, or the global setup skips the cleanup | G0-46(f) | `rolvaliduntil` is null, `rolconnlimit` is −1, or the leftover role survives |
 
 Where no test can fail, and why that is acceptable:
 - **The `humanOnly` wrapper's `causation === null` check.** No genuine context has `actor.kind === 'user'` and non-null causation: only the worker builds contexts with causation, and those are always `system`. The check is defence in depth against a future factory bug, and cannot be reached without breaking the WeakSet brand, which G0-08 and G0-19 test.
@@ -1833,14 +2029,17 @@ Where no test can fail, and why that is acceptable:
 
 ### 9.13 Run cost and determinism (R3-08)
 
-**Estimated run time**, against a hosted test database with about 30 ms per round trip:
+**Estimated run time** on the local mirror (under 1 ms per round trip on `127.0.0.1`), with the hosted-database estimate kept for reference (about 30 ms per round trip). On Replit, `helium` is inside the same container network, so the Replit run is close to the local figures (RP-05):
 
 | Part | Estimate | Main cost |
 |---|---|---|
-| Global setup: guard, rebuild (drop schemas, three migrations) | 5–15 s | About 60 statements, plus the hosted connection set-up |
-| G0-03 – G0-50 (Vitest, one file at a time) | 2–4 min | Mostly round trips. The slowest tests are G0-13 (30 events, two workers, about 5 s), G0-14 (latches, two cycles, about 3 s), G0-38 (concurrency and the refused port, about 2 s), G0-44 (five recoveries, about 2 s) and G0-46 (throwaway roles, about 2 s) |
+| Global setup: guard, rebuild (drop schemas, three migrations) | under 5 s locally; 5–15 s hosted | About 60 statements, plus the connection set-up |
+| G0-03 – G0-51 (Vitest, one file at a time) | about 1 min locally; 2–4 min hosted | Mostly round trips. The slowest tests are G0-13 (30 events, two workers, about 5 s), G0-14 (latches, two cycles, about 3 s), G0-38 (concurrency and the refused port, about 2 s), G0-44 (five recoveries, about 2 s) and G0-46 (throwaway roles, about 2 s) |
 | G0-01 (command: check, build, bundle runs, string search) | 1–2 min | `tsc` twice, then the Vite and esbuild builds |
-| G0-02 (command: full Playwright suite) | about 40 min | The existing suite |
+| G0-02 (command: full Playwright suite) | about 40 min | The existing suite (laptop only) |
+| **Replit gate overhead (RC3-03):** fetch, worktree, `npm ci --prefer-offline` | about 30–90 s with a warm npm cache; 2–4 min cold | Installing `node_modules` in `/tmp`; Playwright's browsers are not downloaded by `npm ci` |
+| **Replit gate run:** `npm test` (`unit`, `db`, `gate`) | about 1–2 min | `helium` is in the same container network, so round trips are close to local ones |
+| **Connections a full gate run opens (RC3-02)** | roughly 60–150, each with one self-check | About 50 test files, each building at most an app pool, a worker pool and an owner client, plus the throwaway-role and two-worker tests. That is under 0.2 s of self-check time locally |
 
 The full Playwright suite runs **only at implementation commits 3 and 9** (§11) and at the gate (G0-02). All other commits run `npm run check`, `npm run build` and `npm test`.
 
@@ -1877,12 +2076,13 @@ Phase 0 replaces no prototype engine. The client's `eventBusEngine.ts` and `acti
 | `server/routes.ts` | Empty `registerRoutes` | Deleted; `createApiApp` plus `server/modules/registry.ts` | S-01 |
 | `server/storage.ts` | In-memory `MemStorage` of `users` | Deleted. Unused, and users belong to the Identity module (Phase 2) | BACKEND_DATA_ARCHITECTURE.md, Aggregate Roots |
 | `shared/schema.ts` | `public.users` table (username, plaintext `password` column) | Deleted, so no migration can ever create it. The `@shared` alias stays in `tsconfig.json` and `vite.config.ts`, which is harmless and may hold shared DTOs in Track F | §3.1.1 (nothing in `public`); D-02 identity model |
-| `drizzle.config.ts` | `DATABASE_URL`, `shared/schema.ts` | `DATABASE_MIGRATION_URL`; platform and module schema files; `schemaFilter` | §3.5, §3.6 |
+| `drizzle.config.ts` | `DATABASE_URL`, `shared/schema.ts` | `LEDGER_MIGRATION_DATABASE_URL`; platform and module schema files; `schemaFilter` | §3.5, §3.6 |
 | `package.json` scripts | `db:push` | `db:push` removed. Added: `db:generate`, `db:migrate`, `dev:worker`, `start:worker`, `test` (runs `test:unit`, `test:db`, `test:gate` in that order), `test:unit`, `test:db`, `test:gate`. `check` becomes `tsc && tsc -p tsconfig.test.json`. `dev`, `dev:client`, `build`, `start` are unchanged | D-14 |
 | `package.json` dependencies | — | Added `jose`, `pino`, `pg-connection-string` (already installed with `pg`; declared directly because the test-database guard uses it, §4.6); dev: `vitest`, `supertest`, `@types/supertest`, `@types/pg`. Unchanged: `passport`, `passport-local`, `express-session`, `memorystore`, `connect-pg-simple` and their types (removed in Phase 2), and `drizzle-zod` (unused after `shared/schema.ts` goes; removal is not needed for Phase 0) | D-14 |
 | `script/build.ts` | One esbuild entry, `server/index.ts` → `dist/index.cjs` | Adds `server/worker.ts` → `dist/worker.cjs`. Adds `jose` to the bundle allowlist, because `jose` v6 is ESM-only and the output is CommonJS; bundling avoids depending on the host Node's `require(esm)` support. `pino` stays external | S-14; D-14 |
 | `server/static.ts`, `server/vite.ts` | Frontend serving | Unchanged; mounted last (PS-02 step 5) | D-13 |
 | `.gitignore` | — | Adds `.env*` with the exception `!.env.example`, and `client/.env*` with the exception `!client/.env.example` | §4.6 (R2-14, R3-17) |
+| `.replit` (repository root) | "Project" workflow runs "Start application" only | Adds the "Start worker" workflow, which waits for `/health`, to the parallel "Project" workflow (§2.5, RP-06; Phase 0 commit 8). The deployment section is unchanged; the project is not published until Phase 9 (OQ-19) | RP-06 |
 | New files | — | `.env.example`, `vitest.config.ts` (projects `unit`, `db`, `gate` with explicit includes under `server/` only, so Playwright specs under `tests/` are never collected; §9.1), `tsconfig.test.json`, `server/worker.ts`, `server/platform/**`, `server/modules/registry.ts`, `migrations/**` | §4.8, §11 |
 
 ### 10.3 Deliberate differences from the architecture documents
@@ -1894,7 +2094,8 @@ Phase 0 replaces no prototype engine. The client's `eventBusEngine.ts` and `acti
 | T-2 adds `event_id`, `event_version`, `actor_id`, `source_object_*`, `occurred_at`, `next_attempt_at`, `locked_at`, `locked_by`, `delivered_subscribers`, `last_error`, `dead_lettered_at` | BACKEND_EVENT_ARCHITECTURE.md, Event Outbox Record Structure | The envelope must be stored to be delivered (Event Payload Standard). The rest are needed for the claim lock, backoff, dead letter (BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Worker Resilience) and per-subscriber delivery (§4.5) |
 | T-3 adds `event_version`, `source_module` | Event Log Table | The event log is "queryable by … module" (BACKEND_EVENT_ARCHITECTURE.md, Audit Log vs Event Log) |
 | Five outbox statuses instead of three | Event Outbox Record Structure | Reconciled with BACKEND_INFRASTRUCTURE_ARCHITECTURE.md (`processing`, `dead_lettered`) (§4.5, OQ-08) |
-| Four database roles (owner, `NOLOGIN` group `ledger_runtime`, `ledger_app`, `ledger_worker`); column-level `INSERT` grants; owner-proof immutability triggers; a per-connection role self-check; variables `DATABASE_MIGRATION_URL(_TEST)` and `DATABASE_WORKER_URL(_TEST)`; the worker uses `DATABASE_WORKER_URL`, not `DATABASE_URL` | BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Required environment variables and Audit Table Permissions; D-12 | The grants hold only if no runtime process is the owner; the API must not change delivery state; under D-17 the worker must never hold API-only privileges; the owner's DML must not rewrite history (§3.5; R2-B1, R2-05, R2-09, R2-10; OQ-03) |
+| Database variables are `LEDGER_APP_DATABASE_URL`, `LEDGER_WORKER_DATABASE_URL` and `LEDGER_MIGRATION_DATABASE_URL` (each with `_TEST`), instead of the documents' `DATABASE_URL` and `DATABASE_URL_TEST`. Runtime code never reads `DATABASE_URL` or `PG*`, and v0.5's production refusal of an owner URL is replaced by "never read, never connect" | BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Required environment variables; D-12 | Replit injects a superuser `DATABASE_URL` and the `PG*` variables (RP-01, RP-02, RP-03) |
+| Four database roles (owner, `NOLOGIN` group `ledger_runtime`, `ledger_app`, `ledger_worker`); column-level `INSERT` grants; owner-proof immutability triggers; a per-connection role self-check; variables `LEDGER_MIGRATION_DATABASE_URL(_TEST)` and `LEDGER_WORKER_DATABASE_URL(_TEST)`; the worker uses `LEDGER_WORKER_DATABASE_URL`, not `LEDGER_APP_DATABASE_URL` | BACKEND_INFRASTRUCTURE_ARCHITECTURE.md, Required environment variables and Audit Table Permissions; D-12 | The grants hold only if no runtime process is the owner; the API must not change delivery state; under D-17 the worker must never hold API-only privileges; the owner's DML must not rewrite history (§3.5; R2-B1, R2-05, R2-09, R2-10; OQ-03) |
 | Token claims add `iss` and `aud` | BACKEND_AUTH_ARCHITECTURE.md, Access Token Claims, Portal Token Claims | Platform and portal tokens must never be accepted in each other's place (§4.3) |
 | Status 413 `PAYLOAD_TOO_LARGE`; 415 `UNSUPPORTED_MEDIA_TYPE`; `BAD_REQUEST` / `CLIENT_ERROR`; 503 `BACKEND_NOT_CONFIGURED`; 401 `TOKEN_EXPIRED` | BACKEND_API_ARCHITECTURE.md, HTTP Status Code Mapping | The 1 MB body cap (API Security Standards); fixed responses for parser errors whose messages quote input (R2-13); frontend-only mode (§4.6); token refresh from Phase 2 |
 | Worker correlation field `runId`, not `jobId` | BACKEND_OBSERVABILITY_ARCHITECTURE.md, Log Correlation | Avoids confusion with job attribution (`job_id`) (OQ-15) |
@@ -1930,18 +2131,22 @@ This is a map of guarantees already specified elsewhere in this document. It add
 | Commit | Guarantee | Specified in | Proved by |
 |---|---|---|---|
 | 1 | No Redis; Vitest collects only `server/**`; `drizzle-kit push` removed; `.env*` and `client/.env*` ignored | §2.3, §9.1, §10.2 | G0-42, G0-01 |
+| 2 | Only `server/platform/config/` reads `process.env`; loaders read only their listed `LEDGER_*` and other variables, never `DATABASE_URL`, `PG*` or migration variables; `NODE_ENV` read through the literal expression | §4.6, §4.8 rule 13 (RP-01, RP-02) | G0-36(j), G0-40 |
+| 2 | Complete URLs; explicit `pg.Pool` settings with no `connectionString`; `PGOPTIONS` refused; TLS fails closed in production | §4.6 (RP-03, RB2-03) | G0-51, G0-36(l), G0-36(m), G0-39(o) |
+| 2 | Owner variables scrubbed after loading; no `.env` loaded on Replit; rule 13 enforced by allowlist | §4.6, §4.8 (RB2-01, RB2-02, RB2-04) | G0-36(n), G0-36(o), G0-40 |
 | 2 | Fail fast in production and on partial configuration; frontend-only mode otherwise; empty counts as absent; no secret in `VITE_` names or `client/.env*` | §4.6 | G0-36, G0-37 |
 | 2 | Built bundles always run as production and never read `.env` | §4.6 | G0-01 |
-| 2 | The test-database guard parses with `pg-connection-string`, uses an allowlist and refuses before connecting | §4.6 | G0-39 |
+| 2 | The test-database guard parses with `pg-connection-string`, uses an allowlist, refuses incomplete URLs and the `heliumdb` name, and refuses before connecting | §4.6 (RP-01, RP-03) | G0-39, G0-39(o)–(p) |
 | 2 | Errors are always logged safely: the allowlist serializer and the nested hook | §4.7 | G0-27, G0-28 |
 | 3 | Pipeline order: `/health`, `/api`, `/portal/v1` first, the frontend last; JSON parser and error handler scoped to the API | PS-04 | G0-35, G0-37, G0-02 |
 | 3 | Error envelope with fixed messages; nothing echoed; security headers; no `X-Powered-By`; no CORS | PS-07, §6.2, §6.3 | G0-30 |
 | 3 | One request line per request, with a route template and never a raw path; server-generated request IDs | PS-05, PS-06 | G0-27, G0-29 |
-| 3 | **Playwright suite run with no `.env`** | §11 | G0-02 |
+| 3 | **Playwright suite run in frontend-only mode** (`.env` moved aside; `/health` reports `frontend_only`) | §11.2 | G0-02 |
 | 4 | Tables, constraints and indexes exactly as T-1 to T-3 | §3.2–§3.4 | G0-26, review of the generated SQL |
 | 4 | Four roles; column-level grants; no app/worker membership; PUBLIC defaults revoked | §3.5 | G0-20 – G0-25 |
 | 4 | Owner-proof immutability triggers | §3.5 | G0-45 |
-| 4 | `withClient` self-check on first use: role, memberships, effective privileges, and test database under Vitest | §3.5, §4.6 | G0-46, G0-39(m)–(n) |
+| 4 | Global setup drops leftover throwaway roles, then the rebuild drops only non-system schemas the owner owns (superuser owner) | §4.6 (RP-04, RB2-06) | G0-39(q), G0-46(f) |
+| 4 | `withClient` self-check on first use: role, memberships, effective privileges, the URL's database, and the test database under Vitest | §3.5, §4.6 | G0-46, G0-39(m)–(n) |
 | 5 | Poisoning; closed units; no nesting; no savepoints | §4.4, PS-12 | G0-03 – G0-07 |
 | 5 | Genuine, frozen, expiring contexts; private causation actor | §4.1 | G0-08, G0-18, G0-19 |
 | 5 | Writers take company, actor and causation from the context; explicit-column inserts; strict inputs | PS-13, PS-14 | G0-05, G0-19, G0-20, G0-22 |
@@ -1956,36 +2161,51 @@ This is a map of guarantees already specified elsewhere in this document. It add
 | 8 | Heartbeat and `locked_by` fencing on every worker write | PS-18 | G0-14 |
 | 8 | Retry, backoff and dead letter; stale recovery counts as an attempt and keeps `delivered_subscribers` | PS-19, PS-20 | G0-15, G0-16, G0-44 |
 | 8 | Delivery with tenant context and causation; idempotent redelivery | PS-18, §4.5 | G0-09 – G0-12, G0-17, G0-18 |
+| 8 | `.replit` "Start worker" workflow in the parallel "Project" workflow, waiting for `/health` | §2.5 (RP-06) | Review of the TOML; manual run in the Replit workspace by the PM |
 | 9 | Public surface exports no tables, pool, `createSystemContext` or `toCompanyId` | §4.8 | G0-43 |
-| 9 | Boundary rules 1–12 | §4.8 | G0-40 |
+| 9 | Boundary rules 1–13 and the migration lint pass on the real tree. The scanner is the test engineer's; the implementer's code and migrations must satisfy it | §4.8, §3.6 (RB2-01, RB2-05) | G0-40 |
 | 9 | No test code in the bundles | rule 1a | G0-01 |
-| 9 | **Playwright suite run with no `.env`** | §11 | G0-02 |
+| 9 | **Playwright suite run in frontend-only mode** (`.env` moved aside; `/health` reports `frontend_only`) | §11.2 | G0-02 |
 
-**Running the Playwright suite.** The full suite takes about 40 minutes (§9.13). It runs only at commits 3 and 9 and at the gate. All other commits run `npm run check`, `npm run build` and `npm test`.
+**Running the Playwright suite.** The full suite takes about 40 minutes (§9.13). It runs only at commits 3 and 9 and at the gate, always in frontend-only mode: with `.env` moved aside in an implementer's worktree, or in the PM's integration worktree, which has none (§11.2, G0-02). All other commits run `npm run check`, `npm run build` and `npm test`.
 
 ### 11.2 Commits
 
-**Prerequisites (owner or PM, before commit 4):**
-- the role SQL from §3.5, run on the development and test databases;
-- a local `.env` with every variable in §4.6, including the three test URLs.
+**Prerequisites (owner or PM, before commit 4)** — on both hosts these are already done (§2.5), except where stated:
+- the role SQL from §3.5, run on the development and test databases: done on the local mirror; done on Replit **except the role passwords**, which the owner sets with `\password` before the first Replit gate run;
+- for the implementer, a worktree `.env` for the **local mirror** with every variable in §4.6, including the three `_TEST` URLs. It is copied from the PM's credentials file and points at `127.0.0.1:55432`;
+- for the PM's phase gate on Replit, the three `_TEST` URLs in **Replit Secrets** (§9.1, RP-05).
 
 Commits 1–3 need no database.
 
-After **every** commit the engineer runs `npm run check`, `npm run build` and `npm test`, and reports. Commits that change what the frontend sees (3 and 9) also run the Playwright suite with no `.env` (G0-02).
+After **every** commit the engineer runs `npm run check`, `npm run build` and `npm test`, and reports. Commits that change what the frontend sees (3 and 9) also run the Playwright suite in frontend-only mode (G0-02).
+
+**Running Playwright from an implementer worktree (RA1-02).** The implementer's worktree holds the mirror `.env` by design, which would start the API in full mode. For the Playwright run only:
+1. `mv .env .env.mirror` — `.env*` is git-ignored, and the loader reads only `.env`.
+2. Check that `printenv | grep -E '^(LEDGER_|JWT_|PORTAL_JWT_SECRET)'` prints nothing.
+3. Start `npm run dev`, and confirm `/health` reports `frontend_only`.
+4. Run the suite.
+5. `mv .env.mirror .env`.
+
+No flag disables the backend (§4.6). The report states that `/health` showed `frontend_only`.
 
 The test engineer writes the gate tests in parallel. The implementer runs them only once they are merged into `backend` and pulled. Every implementation commit must pass `npm run check` and `npm test` with **no** file from `server/tests/` present: `vitest.config.ts` references nothing there, the `gate` project passes with no tests, and the global setup lives in `server/platform/testing/` (§9.1). If something on the implementer's branch would need a test-engineer file, the plan is wrong — report it.
 
 | # | Commit | Contents | Unit tests next to the code |
 |---|---|---|---|
 | 1 | `platform: tooling, scripts and test configuration` | Dependencies and scripts (§10.2). `vitest.config.ts` with the `unit` project only; `db` and `gate` are added in commit 4, when their global setup exists. Also `tsconfig.test.json`, `.env.example`, `.gitignore`, and the removal of `drizzle-kit push` | Vitest runs with `passWithNoTests` |
-| 2 | `platform: configuration, modes, logger and error serializer` | `config/env.ts` (§4.6 modes and rules); `config/test-database.ts` (PS-22); `context/request-context.ts`; `logging/logger.ts`; `logging/error-serializer.ts` (the §4.7 allowlist table) | Every row of the serializer table, including a real `22P02` error object and a wrapped error carrying `params`; every mode-table row; every guard rule |
+| 2 | `platform: configuration, modes, logger and error serializer` | `config/env.ts` (§4.6 modes and rules), including — for the Replit amendment — the `LEDGER_*` variables (RP-01), `parseDatabaseUrl` with complete-URL checks and production fail-closed TLS (RP-03, RB2-03), the `PGOPTIONS` refusal, `scrubOwnerVariables()` (RB2-02), skipping `.env` when `REPL_ID` or `REPLIT_DEPLOYMENT` is set (RB2-04), and all `process.env` reads moved here from `server/index.ts` (rule 13, RB2-01); `config/test-database.ts` (PS-22), with incomplete-URL refusal and the `heliumdb` / `DATABASE_URL` / `PGDATABASE` name check (RP-01, RP-03); `context/request-context.ts`; `logging/logger.ts`; `logging/error-serializer.ts` (the §4.7 allowlist table) | Every row of the serializer table, including a real `22P02` error object and a wrapped error carrying `params`; every mode-table row; every guard rule |
 | 3 | `platform: HTTP pipeline, errors and frontend-only mode` | `errors/*`; `http/request-id.ts`, `http/request-logger.ts`, `http/not-found.ts`, `http/app.ts` (`createApiApp`, both modes), `http/health.ts` (frontend-only branch); `server/index.ts` rewritten (Replit logger removed); `server/routes.ts`, `server/storage.ts` and `shared/schema.ts` deleted; `server/modules/registry.ts` (empty) | Supertest: the pipeline order, envelope shapes, frontend-only responses, marker-free logs for the PS-07 cases. **Plus Playwright with no `.env`** |
-| 4 | `platform: database client, platform tables and grant migration` | `db/client.ts` (one pool per role); `db/schema/audit.ts`, `db/schema/intelligence.ts` (T-1 to T-3, exactly §3.2–§3.4); `drizzle.config.ts`; `migrations/0000_platform_tables.sql` (generated) and `migrations/0001_platform_grants.sql` (custom); `db/migrate.ts`. `testing/global-setup.ts` and `testing/index.ts` (guard, then rebuild; per-role clients). `vitest.config.ts` gains the `db` and `gate` projects (§9.1) | `*.db.test.ts`: migrate on the test database; a smoke insert as `ledger_app`; the generated SQL reviewed against §3. `npm test` passes with `server/tests/` absent |
+| 4 | `platform: database client, platform tables and grant migration` | `db/client.ts` (one pool per role, each from an explicit settings object, never `connectionString` (RP-03); `withClient` self-check including memberships, effective privileges and `current_database()`); `db/schema/audit.ts`, `db/schema/intelligence.ts` (T-1 to T-3, exactly §3.2–§3.4); `drizzle.config.ts`; `migrations/0000_platform_tables.sql` (generated) and `migrations/0001_platform_grants.sql` (custom); `db/migrate.ts`. `testing/global-setup.ts` and `testing/index.ts` (guard; leftover `gate_probe_%` / `gate_extra_%` role cleanup (RB2-06); then the rebuild with its system-schema exclusion (RP-04); per-role clients). `vitest.config.ts` gains the `db` and `gate` projects (§9.1) | `*.db.test.ts`: migrate on the test database; a smoke insert as `ledger_app`; the generated SQL reviewed against §3. `npm test` passes with `server/tests/` absent |
 | 5 | `platform: unit of work, audit writer, outbox writer, tenant scoping` | `db/unit-of-work.ts`; `audit/audit-writer.ts`; `events/outbox-writer.ts`; `db/tenant-scope.ts`; execution contexts (WeakSet membership, deep freeze, expiry, private causation slot — §4.1), `server/platform/system/index.ts`, `tenantValues`, the savepoint-refusing `tx` wrapper, `app.company_id`, explicit-column inserts, the audit and event catalogue checks | Poisoning, closed-unit and nesting rules; strict input schemas; that context values win over caller values |
 | 6 | `platform: JWT utilities and token middleware` | `auth/keys.ts`, `auth/jwt.ts`, `auth/tenant-context.ts` (PS-10, PS-11); `/api/v1` and `/portal/v1` mounted in full mode; health full-mode branch | Every case in G0-32 and G0-33 at unit level; sign/verify round trip; refusal to sign invalid claims |
 | 7 | `platform: module registry, subscriber registry and port registry` | `ModuleRegistration` (§4.8: namespaces, `publicRoutes`, catalogues, `requiresPorts` / `providesPorts`); `humanOnly` port wrapper; `events/subscriber-registry.ts`; port registry with start-up validation; `ModuleDeps` with `contextOf`, `runInTransaction`, `logger` | Every check in PS-15 and PS-16 |
-| 8 | `platform: outbox worker and worker process` | `events/outbox-worker.ts` (PS-17 to PS-20, with `runOnce`, `start`, `stop` and the heartbeat, built from step functions so that `server/platform/testing/` can decorate them with the test-only hooks, §9.1). The commit report includes the `EXPLAIN` of the claim against 10 000 due rows (PS-17); `server/worker.ts`; second esbuild entry and the `jose` allowlist entry; `dev:worker`, `start:worker` | Claim, per-subscriber fencing, finish, failure and backoff arithmetic, stale recovery, two concurrent workers |
-| 9 | `platform: public surface and final verification` | `server/platform/index.ts` reviewed against §4 (no table objects, no pool; `testing/` not exported); dead code removed; nothing else | Full `npm test`, `npm run check`, `npm run build`, G0-01's bundle check, **Playwright with no `.env`** |
+| 8 | `platform: outbox worker and worker process` | **`.replit` (repository root):** the "Start worker" workflow and its task in "Project", exactly as in §2.5 RP-06. `events/outbox-worker.ts` (PS-17 to PS-20, with `runOnce`, `start`, `stop` and the heartbeat, built from step functions so that `server/platform/testing/` can decorate them with the test-only hooks, §9.1). The commit report includes the `EXPLAIN` of the claim against 10 000 due rows (PS-17); `server/worker.ts`; second esbuild entry and the `jose` allowlist entry; `dev:worker`, `start:worker` | Claim, per-subscriber fencing, finish, failure and backoff arithmetic, stale recovery, two concurrent workers |
+| 9 | `platform: public surface and final verification` | `server/platform/index.ts` reviewed against §4 (no table objects, no pool; `testing/` not exported); dead code removed; nothing else | Full `npm test`, `npm run check`, `npm run build`, G0-01's bundle check, **Playwright in frontend-only mode (`.env` moved aside)** |
+
+**Who builds what in the Replit amendment (RC3-04).**
+- The **platform engineer** builds everything in the commits above, including the global-setup cleanup of leftover throwaway roles and the `.replit` workflow (commit 8).
+- The **test engineer** builds the boundary scanner's rule-13 allowlist and migration lint (G0-40), and G0-46's throwaway roles, created with `VALID UNTIL` and `CONNECTION LIMIT 2` in its test code (`server/tests/`).
 
 Any change the engineer finds necessary outside this plan or this specification is reported, not made (roster, Working rules).
 
@@ -1996,20 +2216,21 @@ Any change the engineer finds necessary outside this plan or this specification 
 | ID | Question | Where | Recommendation |
 |---|---|---|---|
 | OQ-01 | FileStorage in Phase 0 or Phase 4? | §1.2 | **Closed — PM ruling, October 20, 2026: Phase 4 per the roadmap.** `server/platform/storage/` is reserved |
-| OQ-02 | Portal token algorithm. The sources give "a separate key" (D-14) and name it `PORTAL_JWT_SECRET`; this specification reads that as HS256 | §4.3 | Confirm HS256 with `PORTAL_JWT_SECRET`. If you prefer asymmetric portal keys, the change is ES256 with `PORTAL_JWT_PRIVATE_KEY` / `PORTAL_JWT_PUBLIC_KEY`, contained in `server/platform/auth/` |
-| OQ-03 | Four database roles (owner, `ledger_runtime`, `ledger_app`, `ledger_worker`) and four variables not named in D-12 (`DATABASE_MIGRATION_URL`, `DATABASE_MIGRATION_URL_TEST`, `DATABASE_WORKER_URL`, `DATABASE_WORKER_URL_TEST`), plus a one-off owner SQL step on each database server. That step includes revoking PUBLIC's `CONNECT` and setting passwords without plain text | §3.5, §4.6 | Approve. Without separate roles, gate item 5, outbox integrity and D-17's "API only" rule would hold only in application code. Production uses its own database server or project, or distinct role names, because roles are cluster-wide |
-| OQ-04 | Who adds the `company_id` foreign keys to the three platform tables once `tenant.companies` exists | §3.1.7 | Make it a platform-engineer job inside Phase 1 (the tables are platform-owned), merged after the tenant schema |
+| OQ-02 | Portal token algorithm. The sources give "a separate key" (D-14) and name it `PORTAL_JWT_SECRET`; this specification reads that as HS256 | §4.3 | **Closed — approved by the owner, October 21, 2026.** HS256 with `PORTAL_JWT_SECRET` for the portal token |
+| OQ-03 | Four database roles (owner, `ledger_runtime`, `ledger_app`, `ledger_worker`) and the migration and worker variables not named in D-12, plus a one-off owner SQL step on each database server (revoking PUBLIC's `CONNECT`, setting passwords without plain text) | §3.5, §4.6 | **Closed — approved by the owner, October 21, 2026.** Four roles and the owner SQL step as recommended. The variables are named with the `LEDGER_` prefix (RP-01, §2.5): `LEDGER_MIGRATION_DATABASE_URL[_TEST]`, `LEDGER_WORKER_DATABASE_URL[_TEST]` and `LEDGER_APP_DATABASE_URL[_TEST]`. Production uses its own database server or project, or distinct role names, because roles are cluster-wide |
+| OQ-04 | Who adds the `company_id` foreign keys to the three platform tables once `tenant.companies` exists | §3.1.7 | **Closed — approved by the owner, October 21, 2026.** Make it a platform-engineer job inside Phase 1 (the tables are platform-owned), merged after the tenant schema |
 | OQ-05 | Who enforces `job_id` on financially relevant audit entries? | §4.4 | **Closed — PM review round 2 (R2-16).** Modules declare their audit entry and event types with a `jobRequired` flag; `append()` and `record()` refuse an unregistered type or a missing `jobId` |
-| OQ-06 | No event ordering guarantee across retries or workers | §4.5 | Confirm. Subscribers must not rely on order; any phase that needs ordering states it in its specification |
-| OQ-07 | Event payloads carry identifiers and operational metadata, never financial amounts. Payloads are copied into the event log, which holds no sensitive fields and is readable by both runtime roles, so amounts there could later reach a worker-facing surface | §3.4, §7.3, §4.10 | Confirm as a rule for every later specification (Invariant 26) |
-| OQ-08 | Outbox status names (`pending`, `processing`, `failed`, `delivered`, `dead_lettered`), and "max 5 retries" read as five attempts in total with delays of 1, 2, 4 and 8 s | §4.5 | Confirm |
+| OQ-06 | No event ordering guarantee across retries or workers | §4.5 | **Closed — approved by the owner, October 21, 2026.** Subscribers must not rely on order; any phase that needs ordering states it in its specification |
+| OQ-07 | Event payloads carry identifiers and operational metadata, never financial amounts. Payloads are copied into the event log, which holds no sensitive fields and is readable by both runtime roles, so amounts there could later reach a worker-facing surface | §3.4, §7.3, §4.10 | **Closed — approved by the owner, October 21, 2026.** A rule for every later specification (Invariant 26) |
+| OQ-08 | Outbox status names (`pending`, `processing`, `failed`, `delivered`, `dead_lettered`), and "max 5 retries" read as five attempts in total with delays of 1, 2, 4 and 8 s | §4.5 | **Closed — approved by the owner, October 21, 2026.** As recommended: those five statuses, and five attempts in total with 1, 2, 4 and 8 s between them |
 | OQ-09 | Should stale-lock recovery count as a failed attempt? | §4.5, PS-20 | **Closed — PM ruling, October 20, 2026: yes.** A recovery counts as a failed attempt (same count, backoff and dead letter), so an event that crashes the worker dead-letters after five crashes |
-| OQ-10 | No phase builds the requeue of dead-lettered events, or the outbox archival after 7 days (BACKEND_DATA_ARCHITECTURE.md, Event Outbox Table) | §1.2, §4.5 | Add both to Phase 9, following the §4.5 rules (R2-17): only `dead_lettered` rows can be requeued; a requeue never clears `delivered_subscribers` and is audited with the operator's identity; `delivered` rows are never requeued; archival removes only `delivered` rows, as a maintenance role with no other privilege. Until then, dead letters stay visible in the table |
-| OQ-11 | No phase lists the audit query service or `/api/v1/audit/` | §1.2, §3.2, §3.4 | Assign it to Phase 7, alongside the Event Monitor. That phase also adds the audit and event-log read indexes deferred from Phase 0 (R3-02), with `CREATE INDEX CONCURRENTLY` |
-| OQ-12 | A token stays valid for up to 15 minutes after its tenant is suspended, because the middleware does not check tenant status | PS-10, §4.10 | Close it in Phase 2 (§4.10). Phase 1 provides a tenant-status lookup; the token middleware checks it on each request, with a short cache. Session revocation then covers refresh |
-| OQ-13 | Frontend-only mode: outside production, with no backend variables, the API serves the frontend and answers `/api` and `/portal/v1` with 503. Production and partial configurations fail fast | §4.6 | Approve. It keeps D-13's promise that frontend work and the Playwright suite need no database |
-| OQ-14 | The actor role for the D-15 provisioning script (a platform administrator outside the tenant model) | §3.2, §4.10 | Decide in the Phase 1 specification. Until then the script writes as `system` with no causation. Either way, it records the operator's identity in the audit entry's `metadata` and connects as `ledger_app` (§4.10) |
-| OQ-15 | Worker log correlation field named `runId` rather than the document's `jobId` | §4.7 | Confirm `runId` |
+| OQ-10 | No phase builds the requeue of dead-lettered events, or the outbox archival after 7 days (BACKEND_DATA_ARCHITECTURE.md, Event Outbox Table) | §1.2, §4.5 | **Closed — approved by the owner, October 21, 2026.** Add both to Phase 9, following the §4.5 rules (R2-17): only `dead_lettered` rows can be requeued; a requeue never clears `delivered_subscribers` and is audited with the operator's identity; `delivered` rows are never requeued; archival removes only `delivered` rows, as a maintenance role with no other privilege. Until then, dead letters stay visible in the table |
+| OQ-11 | No phase lists the audit query service or `/api/v1/audit/` | §1.2, §3.2, §3.4 | **Closed — approved by the owner, October 21, 2026.** Assign it to Phase 7, alongside the Event Monitor. That phase also adds the audit and event-log read indexes deferred from Phase 0 (R3-02), with `CREATE INDEX CONCURRENTLY` |
+| OQ-12 | A token stays valid for up to 15 minutes after its tenant is suspended, because the middleware does not check tenant status | PS-10, §4.10 | **Closed — approved by the owner, October 21, 2026.** Close it in Phase 2 (§4.10). Phase 1 provides a tenant-status lookup; the token middleware checks it on each request, with a short cache. Session revocation then covers refresh |
+| OQ-13 | Frontend-only mode: outside production, with no backend variables, the API serves the frontend and answers `/api` and `/portal/v1` with 503. Production and partial configurations fail fast | §4.6 | **Closed — approved by the owner, October 21, 2026.** Frontend-only mode as specified in §4.6. It keeps D-13's promise that frontend work and the Playwright suite need no database |
+| OQ-14 | The actor role for the D-15 provisioning script (a platform administrator outside the tenant model) | §3.2, §4.10 | **Closed — approved by the owner, October 21, 2026.** Decide in the Phase 1 specification. Until then the script writes as `system` with no causation. Either way, it records the operator's identity in the audit entry's `metadata` and connects as `ledger_app` (§4.10) |
+| OQ-15 | Worker log correlation field named `runId` rather than the document's `jobId` | §4.7 | **Closed — approved by the owner, October 21, 2026.** `runId` |
 | OQ-16 | Approval → financial record: one transaction or a subscriber | §4.9 | **Decided as D-17** (merged into `backend` @ 9500bca): one transaction, with dependency inversion through an `ApprovalEffectsPort`. §4.9 and PS-16 now cite it and map each of its requirements to the port mechanism (review round 1, R1-01). Removed from the open list |
-| OQ-17 | A shared pagination helper (cursor encode/decode, `limit` 1–200 default 50, response shape) is not in the roadmap's Phase 0 list | §6.5 | Add it to the platform — by PM ruling in Phase 0, or as a platform change before the first list endpoint (Phase 1) — so every module paginates the same way |
-| OQ-18 | BACKEND_DATA_ARCHITECTURE.md says "Row-level security prevents any write except INSERT" on the audit table; RLS is Phase 9 | §1.2, §3.5 | Confirm that column and table grants satisfy the guarantee until Phase 9 |
+| OQ-17 | A shared pagination helper (cursor encode/decode, `limit` 1–200 default 50, response shape) is not in the roadmap's Phase 0 list | §6.5 | **Closed — approved by the owner, October 21, 2026.** The pagination helper is added in Phase 1's platform work, before the first list endpoint, so every module paginates the same way |
+| OQ-18 | BACKEND_DATA_ARCHITECTURE.md says "Row-level security prevents any write except INSERT" on the audit table; RLS is Phase 9 | §1.2, §3.5 | **Closed — approved by the owner, October 21, 2026.** Column and table grants satisfy the guarantee until Phase 9 |
+| OQ-19 | Once Phase 0 is merged into `main`, the Replit project's `autoscale` deployment (`npm run start`) runs in production mode. It refuses to start unless the deployment's Secrets hold `LEDGER_APP_DATABASE_URL` (for the production database's `ledger_app`), `JWT_PRIVATE_KEY`, `JWT_PUBLIC_KEY` and `PORTAL_JWT_SECRET` (§4.6) | §2.5 (RP-07), §4.6 | **Closed — PM ruling, October 21, 2026, under the owner's standing instruction to use the recommendations.** The "The-Ledger-main" Replit project is **not published (deployed)** until its deployment Secrets hold the four backend variables and the production database has the roles and grants (§4.10, Phase 9). Merging `backend` into `main` is not blocked by this: the workspace run button uses `npm run dev`, which falls back to frontend-only mode when no backend variables are set |
