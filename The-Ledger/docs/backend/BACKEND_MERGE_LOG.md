@@ -73,6 +73,7 @@ Commits checked
 | # | SHA | Message | PM verdict | Notes |
 |---|---|---|---|---|
 | 1 | 17a5767 | docs(backend): Phase 1 spec sections 1-4 (scope, sources, data model, domain model) | Accepted, continue (with notes for commit 2) | Notes: lifecycle row lock must be FOR NO KEY UPDATE (FOR UPDATE would block every tenant FK check); INV-1 wording vs plans exception; FK checks need no REFERENCES grant; enforce 'tenant-cli' literal location (INV-11 forgery path); audit entry for configuration change records previous/new values per Audit Doctrine, events field names only; OQ1-11 decided by PM — job D adds companies A/B fixture helper and updates Phase 0 gate fixtures, job C merges only after that and with the Phase 0 gate suite green; updated_by FK as Phase 2 obligation |
+| 2 | 0f477c0 | docs(backend): Phase 1 spec v0.2 - use cases, API, events, audit; PM review points 1-7 | Accepted, continue (with notes for commit 3) | Points 1–7 applied. Notes: now() is transaction start, so statusChangedAt cannot order lifecycle events — add companies.lifecycle_version (+1 per transition, trigger-enforced) and order by it; one trim-before-validate/store/compare rule for all text inputs; Phase 7 obligation on showing script operator/hostAccount/reason to the tenant CEO; G1 race, staleness, fail-closed, forged-cursor, padded no-op and 403-before-400 cases required in §9 |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
