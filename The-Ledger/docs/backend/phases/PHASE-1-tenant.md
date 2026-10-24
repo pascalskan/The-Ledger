@@ -1,6 +1,6 @@
 # THE LEDGER — PHASE 1 SPECIFICATION — TENANT MODULE
 
-Version: 0.1 — DRAFT, commit 1 of 3 (sections 1–4). Sections 5–12 are written in commits 2 and 3.
+Version: 0.2 — DRAFT, commit 2 of 3 (sections 1–8). Sections 9–12 are written in commit 3. v0.2 also applies PM review points 1–7 on v0.1 (change log below).
 Status: **DRAFT — for PM review. Not yet submitted to the owner checkpoint.**
 Date: October 2026
 Author: `backend-architect`
@@ -18,6 +18,13 @@ This specification follows the Phase Specification Template in `BACKEND_AGENT_RO
 - `UC-nn` — use cases (section 5)
 - `G1-nn` — gate tests (section 9)
 - `OQ1-nn` — open questions for the owner checkpoint (section 12). Phase 0's questions are always written "Phase 0 OQ-nn" in this document.
+
+**Change log**
+
+| Version | Changes |
+|---|---|
+| 0.1 | Sections 1–4 |
+| 0.2 | PM review of v0.1: (1) lock mode is `FOR NO KEY UPDATE` / `FOR SHARE`, not `FOR UPDATE` (§4.2); (2) INV-1 reworded, pointing to the INV-12 exception; (3) FK checks run as the table owner, no `REFERENCES` grant, `SELECT` through `ledger_runtime` unchanged (§3.7); (4) INV-11 enforcement: scan and subscriber-context test (§4.3); (5) audit entries keep previous and new values; INV-13 narrowed to events and secrets (§4.3, §8); (6) OQ1-11 closed: job D1 fixture helper before job C, C accepted only with the Phase 0 gate green (§1.5, §3.7); (7) `updated_by` foreign key is a Phase 2 obligation (§4.6). Sections 5–8 added |
 
 **Two things to know before reading.**
 1. **Nobody can sign in during Phase 1.** Identity (users, login, refresh) is Phase 2. Every CEO route in this phase is therefore exercised only in gate tests, with tokens signed by the platform's own `signPlatformToken` (Phase 0 PS-09). Phase 1 trusts the `role` claim in such a token for its CEO-only checks. That is acceptable only because no real token can exist yet. Phase 2 must re-load the role from `identity` on these paths (Phase 0 §4.10; OQ1-13).
@@ -44,7 +51,7 @@ Items S1-01 to S1-10 are the roadmap's Phase 1 "Includes" list, in order. S1-11 
 | S1-09 | `company_id` foreign key convention every later schema follows | Convention in §3.1; the three Phase 0 platform tables get the foreign keys in PA-04 |
 | S1-10 | Phase 1 gate: suspended and terminated tenants cannot be used by any later module; no in-tenant user, including the CEO, can change tenant lifecycle | §1.3, §9 |
 | S1-11 | **Phase 0 OQ-04 (approved):** `company_id` foreign keys on `audit.audit_entries`, `intelligence.event_outbox`, `intelligence.event_log` | **PA-04**, a separate platform-engineer job, merged after the tenant schema exists |
-| S1-12 | **Phase 0 OQ-17 (approved):** the shared pagination helper | **PA-01**, in the same platform job as PA-04 (§5.4) |
+| S1-12 | **Phase 0 OQ-17 (approved):** the shared pagination helper | **PA-01**, in Phase 1's platform work (Phase 0 OQ-17: "before the first list endpoint"). It is built in platform job A, not job C, because it has no dependency on the tenant schema; the PM may merge A and C into one job (§5.5) |
 | S1-13 | **Phase 0 OQ-12 (approved):** a per-request tenant-status check in the token middleware, through a tenant port, cached for a few seconds | **PA-02** (platform hook and middleware check) and UC-08 `ResolveTenantStatus` (the tenant module's implementation) (§5) |
 | S1-14 | **Phase 0 OQ-14 (approved):** decide the actor identity of the D-15 script | Decided in §4.4: actor role `system`, fixed component `tenant-cli`, no causation, operator identity in audit `metadata`, connection as `ledger_app` |
 
@@ -55,7 +62,7 @@ Items S1-01 to S1-10 are the roadmap's Phase 1 "Includes" list, in order. S1-11 
 | PA-01 | `server/platform/http/pagination.ts` — the pagination helper (Phase 0 OQ-17) | Every module paginates the same way from its first list endpoint | Platform job A |
 | PA-02 | A platform tenant-status port token and the status check in PS-10 and PS-11, with a short in-process cache and its configuration variable (Phase 0 OQ-12) | Closes the suspension window; gives the gate its enforcement point | Platform job A |
 | PA-03 | A script bootstrap in `server/platform/system/`: `loadScriptConfig` and a runtime opener that connects as `ledger_app` with the §3.5 self-check. The `tenant` entry in `package.json`. `'tenant'` added to `drizzle.config.ts`'s `schemaFilter` | Phase 0 defines `createSystemContext` and `runInTransactionAs` but no way for a script to read configuration or obtain a pool (OQ1-09) | Platform job A |
-| PA-04 | A custom migration adding `FOREIGN KEY (company_id) REFERENCES tenant.companies(company_id) ON DELETE RESTRICT` to the three platform tables (Phase 0 §3.1.7) | Phase 0 OQ-04 | Platform job B, after the tenant schema is merged |
+| PA-04 | A custom migration adding `FOREIGN KEY (company_id) REFERENCES tenant.companies(company_id) ON DELETE RESTRICT` to the three platform tables (Phase 0 §3.1.7) | Phase 0 OQ-04 | Platform job C, after the tenant schema and the fixture change are merged (§1.5) |
 | PA-05 | Configuration variable `TENANT_STATUS_CACHE_MS` in `loadApiConfig` | PA-02's cache lifetime | Platform job A |
 
 ### 1.2 Excluded
@@ -113,14 +120,14 @@ New obligations that Phase 1 places on later phases are in §4.6.
 
 ### 1.5 How Phase 1 is delivered
 
-Four jobs, in this order of dependency (the commit plans are in §11):
+Four jobs, in this order of dependency (merge order: A, then B and D1, then C, then D2 with B's module; the commit plans are in §11):
 
 | Job | Agent | Depends on |
 |---|---|---|
 | A — platform: PA-01, PA-02, PA-03, PA-05 | `backend-platform-engineer` | Phase 0 merged |
 | B — tenant module, migrations and script | `backend-module-engineer` | A (the port token and the script bootstrap) |
-| C — platform: PA-04 | `backend-platform-engineer` | B's tenant schema merged |
-| D — gate tests | `backend-test-engineer` | This specification; runs in parallel with A and B |
+| C — platform: PA-04 | `backend-platform-engineer` | B's tenant schema merged **and** D's fixture change (companies A/B helper; Phase 0 gate fixtures updated) merged. Acceptance: the full Phase 0 gate suite is green with the foreign keys in place |
+| D — gate tests, in two steps | `backend-test-engineer` | **D1** (fixture helper and Phase 0 fixture update) needs only this specification and the tenant schema's table names; it must be merged before C. **D2** (the G1 tests) runs in parallel with A and B |
 
 ---
 
@@ -347,7 +354,8 @@ ALTER TABLE intelligence.event_log  ADD CONSTRAINT event_log_company_id_fkey
 - **Safe because the tables are empty where it matters.** Phase 0 §3.1.7: Phase 0 writes rows only into the test database, which is rebuilt on every run, and the development database holds none. The migration does not use `NOT VALID`. If it fails on a development database that has stray rows, the engineer stops and reports (they must not delete audit rows).
 - **No new index.** The check on insert is a primary-key lookup; deletes of companies never happen.
 - **It does not alter the append-only triggers or grants.** Adding a constraint touches no audit row.
-- **Effect on the Phase 0 gate tests.** Every Phase 0 gate test that writes an audit, outbox or event-log row for company A or B now needs those companies to exist. That is a test-support change, listed as OQ1-11 and in job D.
+- **Effect on the Phase 0 gate tests — decided (PM direction; closes OQ1-11).** Every Phase 0 gate test that writes an audit, outbox or event-log row for company A or B needs those companies to exist. Job D (test engineer) adds a support helper in `server/tests/support/` that inserts companies A and B (and a demo company where a test needs one), each with its subscription and configuration, through the owner client, and changes the Phase 0 gate fixtures to call it. Only fixture set-up changes; no Phase 0 assertion is edited. **Job C is merged only after that fixture change is on `backend`, and C's acceptance requires the full Phase 0 gate suite to be green with the foreign keys in place** (§1.5).
+- **FK checks run as the table owner.** PostgreSQL runs referential-integrity checks with the privileges of the owner of the table that holds the constraint, so neither `ledger_app` nor `ledger_worker` needs a `REFERENCES` grant or any new privilege on `tenant.companies`. The existing `SELECT` on the tenant tables through `ledger_runtime` is unchanged by PA-04, and the Phase 0 role self-check (§3.5) is unaffected.
 - **Order inside a transaction.** The checks are immediate. A use case that creates a company and writes its audit entry and event in one transaction must insert the company row first, then the configuration and subscription, then the audit entry, then the outbox event (UC-01).
 
 ### 3.8 Migration files
@@ -428,7 +436,7 @@ Source: BACKEND_MULTITENANCY_ARCHITECTURE.md, Tenant Lifecycle; roadmap Phase 1 
 
 Rules:
 - **Any other pair is refused**, including repeating a state (`active → active`, `suspended → suspended`) and `active → active` as a "reactivate". The use case writes nothing: no row change, no audit entry, no event. A repeated command is therefore visible to the operator as an error, not hidden as success.
-- **The company row is locked** (`SELECT … FOR UPDATE` through `tenantWhere`) before the guard is read, so two concurrent commands serialise: the second sees the state the first left. Without the lock, `suspend` and `terminate` racing could both pass their guards.
+- **The company row is locked with `FOR NO KEY UPDATE`** (not `FOR UPDATE`) before the guard is read, so two concurrent commands serialise: the second sees the state the first left. Without the lock, `suspend` and `terminate` racing could both pass their guards. **Why `NO KEY UPDATE`:** every insert into a child table (the tenant tables, `audit.audit_entries`, `intelligence.event_outbox`, `intelligence.event_log` after PA-04, and every later module's tables) runs a foreign-key check that takes `FOR KEY SHARE` on the parent `tenant.companies` row. `FOR UPDATE` conflicts with `KEY SHARE`, so a lifecycle transaction holding it would block every concurrent write for that tenant. `FOR NO KEY UPDATE` conflicts with other lifecycle commands (and with `FOR SHARE`, below) but not with `KEY SHARE`, and `company_id` never changes, so nothing is lost. **It is expressible with Phase 0's helpers:** `tenantWhere(companies, ctx, …)` supplies only the `WHERE` condition; the tenant repository (infrastructure layer, which may import `drizzle-orm`) appends Drizzle's `.for('no key update')` to the select, and the same for `FOR SHARE`. No platform addition is needed, and nothing falls back to `FOR UPDATE`. `ledger_app` holds the column `UPDATE` grants on `companies` that PostgreSQL requires for any `FOR …` lock clause. **Lock rules for every tenant write use case:** UC-02 … UC-04 lock the `companies` row `FOR NO KEY UPDATE`; UC-05 locks `companies` `FOR SHARE` (so a concurrent lifecycle command and a plan change serialise, while FK checks still pass) then `subscriptions` `FOR NO KEY UPDATE`; UC-06 does the same with `configurations`. The status port (UC-08) and the read use cases take no lock.
 - **Suspension is reversible; termination is not.** A terminated company's configuration and plan cannot change (INV-9 via the use cases).
 - **What a non-`active` status means to other modules:** the platform refuses its requests (PA-02), `assertTenantActive` throws, and `getTenantContext` reports the status. Data is retained (INV-9).
 
@@ -440,7 +448,7 @@ Each is proved by at least one gate test (§9).
 
 | ID | Invariant | Source |
 |---|---|---|
-| INV-1 | Every row in every schema carries a `company_id` that is a foreign key to `tenant.companies`; a row for a company that does not exist cannot be written, by any role | BACKEND_MULTITENANCY_ARCHITECTURE.md, Tenant Ownership; Phase 0 §3.1.7; Invariant 24 ("company context is enforced at every data query") |
+| INV-1 | Every table that holds tenant data, in every schema, carries a `company_id` that is a foreign key to `tenant.companies`; a row for a company that does not exist cannot be written, by any role. The exceptions are the global reference table `tenant.plans` (INV-12) and test-only fixture tables in `gate_test` | BACKEND_MULTITENANCY_ARCHITECTURE.md, Tenant Ownership; Phase 0 §3.1.7; Invariant 24 ("company context is enforced at every data query") |
 | INV-2 | A company is in exactly one of `active`, `suspended`, `terminated`; only the four transitions of §4.2 exist; `terminated` is terminal | Multitenancy, Tenant Lifecycle; roadmap Phase 1 |
 | INV-3 | Provisioning, suspension, reactivation, termination and plan change are not available to any in-tenant user, including the CEO | Multitenancy, Tenant Lifecycle ("not accessible to any in-tenant user including the CEO"); D-15; roadmap gate |
 | INV-4 | The demo flag is set once, at provisioning, and never changes. A demo company cannot become a real one or the reverse. Every query of every domain is scoped to one `company_id`, so demo data cannot enter a real company's context | Invariant 24; roadmap ("demo company flag"); every domain document's demo-isolation invariant |
@@ -450,9 +458,9 @@ Each is proved by at least one gate test (§9).
 | INV-8 | Only a `ceo` user, and only for the company in the token, can read or update that company's configuration, and only while the company is `active` | D-15; BACKEND_API_ARCHITECTURE.md namespace row; canonical context, Role Model |
 | INV-9 | Tenant rows are never deleted. Termination retains every row | D-05; Phase 0 §3.1.9; canonical context, Audit Doctrine (permanent trail) |
 | INV-10 | `default_currency` is set at provisioning and not changed by any use case in v1 | OQ1-04 (financial integrity: later phases will hold approved amounts in this currency) |
-| INV-11 | Lifecycle and plan commands are run only as the platform administrator: a `system` actor with component `tenant-cli` and no causation. A user, a portal user, and any other system actor (including a subscriber) is refused with nothing written | D-15; OQ-14 decision (§4.4); Phase 0 §4.1 |
+| INV-11 | Lifecycle and plan commands are run only as the platform administrator: a `system` actor with component `tenant-cli` and no causation. A user, a portal user, and any other system actor (including a subscriber) is refused with nothing written. **Enforcement:** the check is only as strong as who can call `createSystemContext` with that string (Phase 0 rule 11 keeps it out of `server/modules/**`). Two gate tests close the path (§9): a scan asserting the literal `'tenant-cli'` appears only in `server/scripts/tenant.ts` and `server/modules/tenant/`, and a test asserting that a context built by the worker for a subscriber can never carry that component | D-15; OQ-14 decision (§4.4); Phase 0 §4.1, rule 11 |
 | INV-12 | A plan can be assigned only if it exists and is active. `plans` is the one tenant-module table without `company_id`; it is global reference data that no runtime role can write | Service Architecture (`getPlan`); §3.1.4 |
-| INV-13 | Audit entries and event payloads of the tenant module carry no secret, no free text supplied by the CEO, and no contact detail in an event; event payloads hold identifiers, status or plan codes and field names | Phase 0 OQ-07; Event Architecture, Audit Log vs Event Log |
+| INV-13 | **Event payloads** carry no secret, no free text supplied by the CEO or the operator and no contact detail: only identifiers, status or plan codes and field names. **Audit entries** carry no secret or credential, but do carry previous and new values of changed configuration fields, as the Audit Doctrine requires (§8). Application logs carry neither | Phase 0 OQ-07 (event payloads); canonical context, Audit Doctrine; Event Architecture, Audit Log vs Event Log |
 
 ### 4.4 Actors and authority (OQ-14 decided here)
 
@@ -537,8 +545,306 @@ server/scripts/
 | Phase 2 | Re-load the role and active status of the user from `identity` on the tenant configuration paths (UC-05 is script-only; UC-06 and UC-07 are CEO routes) instead of trusting the token (OQ1-13) |
 | Phase 2 | Decide how the initial CEO is identified for the `TenantProvisioned` subscriber (OQ1-06) |
 | Every phase with subscribers that create or change business records | Start the subscriber with `assertTenantActive(uow)`, unless its job is to handle the lifecycle event itself. A subscriber that must keep working for a suspended tenant says so in its specification (OQ1-12) |
+| Phase 2 | `tenant.configurations.updated_by` has no foreign key because `identity.users` does not exist yet. Add `REFERENCES identity.users(user_id)` in Phase 2's migration, or record in Phase 2's specification why a user reference is deliberately unenforced |
 | Every phase | Do not read `tenant.*` tables directly. Use `getTenantContext`, `getPlan` and `assertTenantActive` |
 
 ---
 
-*Sections 5 to 12 follow in commits 2 and 3.*
+## 5. USE CASES
+
+Every use case takes the caller's `UnitOfWork` as its first argument. The **caller opens the transaction**: the tenant router calls `deps.runInTransaction(ctx, uow => useCase(uow, input))`; the script calls `runInTransactionAs('tenant', ctx, uow => useCase(uow, input))` (Phase 0 §4.4, §4.8); a later module's own unit is passed straight in for the read-only queries (§4.9, "direct call, same transaction"). A use case never opens a transaction and never nests (Phase 0 `NestedUnitOfWorkError`). Transaction rules follow BACKEND_DATA_ARCHITECTURE.md, Transaction Boundaries: the state change, its audit entry and its outbox event commit together or not at all. A failed `append` or `record` poisons the unit (Phase 0 §4.4), so a use case that catches the error still rolls back.
+
+Service grouping follows the roadmap: `TenantProvisioningService` (UC-01), `TenantLifecycleService` (UC-02 … UC-04), `TenantConfigurationService` (UC-05 … UC-07, UC-09 … UC-11), and the status port (UC-08).
+
+### 5.1 Summary
+
+| ID | Use case | Called by | Authority | Writes | Audit entry | Event |
+|---|---|---|---|---|---|---|
+| UC-01 | `ProvisionTenant` | script `provision` | Platform administrator | company, configuration, subscription | `tenant_provisioned` | `TenantProvisioned` |
+| UC-02 | `SuspendTenant` | script `suspend` | Platform administrator | `companies` | `tenant_suspended` | `TenantSuspended` |
+| UC-03 | `ReactivateTenant` | script `reactivate` | Platform administrator | `companies` | `tenant_reactivated` | `TenantReactivated` |
+| UC-04 | `TerminateTenant` | script `terminate` | Platform administrator | `companies` | `tenant_terminated` | `TenantTerminated` |
+| UC-05 | `ChangeTenantPlan` | script `change-plan` | Platform administrator | `subscriptions` | `tenant_plan_changed` | `TenantPlanChanged` |
+| UC-06 | `UpdateTenantConfiguration` | `PATCH /api/v1/tenant/configuration` | CEO, own company | `configurations` | `tenant_configuration_updated` | `TenantConfigurationUpdated` |
+| UC-07 | `GetTenantConfiguration` | `GET /api/v1/tenant/configuration` | CEO, own company | — | — | — |
+| UC-08 | `ResolveTenantStatus` | the platform token middleware (PA-02), through the status port | The platform (system) | — | — | — |
+| UC-09 | `GetTenantContext` | any module | Any context of the company | — | — | — |
+| UC-10 | `GetPlan` | any module | Any context of the company | — | — | — |
+| UC-11 | `AssertTenantActive` | any module | Any context of the company | — | — | — |
+| UC-12 | `ShowTenant` | script `show` | Platform administrator | — | — | — |
+
+### 5.2 Authority checks (shared)
+
+Both checks run first in the use case, before any SQL, and again in the router for UC-06 and UC-07 (defence in depth). A failure writes nothing and raises `NotAuthorisedError`.
+
+- **`assertPlatformAdministrator(ctx)`** — `ctx.actor.kind === 'system'` **and** `ctx.actor.component === 'tenant-cli'` **and** `ctx.causation === null` (INV-11). A user (any role), a portal user, a subscriber, the status-port context (`component = 'platform.tenantStatus'`) and any other system actor fail.
+- **`assertCeoOfOwnCompany(ctx)`** — `ctx.actor.kind === 'user'` **and** `ctx.actor.role === 'ceo'` **and** `ctx.causation === null`. There is no company parameter anywhere in UC-06 and UC-07: the company is `ctx.companyId`, from the token (INV-8). `portal_user` fails. Phase 1 trusts the token's role (opening note; OQ1-13).
+
+### 5.3 Use case specifications
+
+**UC-01 — ProvisionTenant** (Multitenancy, Tenant Provisioning Model step 1)
+- *Input:* `name` (CompanyName), `planCode` (PlanCode), `defaultCurrency` (CurrencyCode), `isDemo` (boolean, default `false`), `operator` (OperatorIdentity, command `provision`). The new `companyId` is `ctx.companyId`: the script generates a UUID and builds the context from it, so the context exists before the row does.
+- *Authority:* `assertPlatformAdministrator`.
+- *Checks:* values valid; the plan with that code exists and is active (`PlanNotFoundError`, `PlanNotAssignableError`); no company with that id exists (cannot happen with a fresh UUID; a primary-key collision is a 500).
+- *Writes, in this order* (the foreign keys are immediate): (1) `companies` — `company_id`, `name`, `is_demo` through `tenantValues`; `status` defaults to `active`. (2) `configurations` — `company_id`, `legal_name` = `name`, `default_currency`; other fields `NULL`. (3) `subscriptions` — `company_id`, `plan_id`. (4) audit `tenant_provisioned`. (5) event `TenantProvisioned`.
+- *Transaction:* one. Any failure, including the audit or event write, leaves no company, no configuration, no subscription, no outbox row (INV-5, INV-6).
+- *Returns:* `{ companyId, status: 'active', planCode, isDemo }`.
+- *Does not:* create a user. The initial CEO is a Phase 2 matter (OQ1-06); until then a provisioned tenant has no one who can sign in.
+
+**UC-02 / UC-03 / UC-04 — SuspendTenant, ReactivateTenant, TerminateTenant**
+- *Input:* `reason` (LifecycleReason), `operator` (OperatorIdentity); UC-04 also `confirmCompanyId`.
+- *Authority:* `assertPlatformAdministrator`.
+- *Checks, in order:* (1) UC-04: `confirmCompanyId === ctx.companyId`, else `ConfirmationMismatchError`. (2) Lock the company row with `FOR NO KEY UPDATE` through `tenantWhere` (§4.2); absent → `TenantNotFoundError`. (3) The transition is one of the four in §4.2, else `InvalidTenantTransitionError` carrying the current status.
+- *Writes:* update `status`, `status_changed_at = now()`, `updated_at = now()`, and for UC-04 `terminated_at = now()`; audit entry; outbox event.
+- *Transaction:* one. A failed guard writes nothing, not even an audit entry (a refused command is not a state change; it is reported to the operator and logged, §8).
+- *Concurrency:* two commands for the same company serialise on the row lock; the loser re-reads the new status and is refused (G1).
+- *Returns:* `{ companyId, previousStatus, status }`.
+
+**UC-05 — ChangeTenantPlan** (script `change-plan`; `TenantPlanChanged`; OQ1-02)
+- *Input:* `planCode`, `reason`, `operator`.
+- *Authority:* `assertPlatformAdministrator`.
+- *Checks:* lock `companies` `FOR SHARE`: absent → `TenantNotFoundError`; `terminated` → `TenantNotActiveError`. A suspended tenant's plan may change. Lock `subscriptions` `FOR NO KEY UPDATE`. The target plan exists and is active; it differs from the current plan (`SamePlanError`).
+- *Writes:* `plan_id`, `plan_changed_at = now()`, `updated_at = now()`; audit; event.
+- *Transaction:* one.
+
+**UC-06 — UpdateTenantConfiguration** (Multitenancy, Provisioning step 5)
+- *Input:* a non-empty set of `legalName`, `address`, `contactEmail`, `contactPhone`, `website`. Nullable fields take `null` to clear a value. An empty or whitespace-only string is invalid, not "clear".
+- *Authority:* `assertCeoOfOwnCompany`.
+- *Checks:* lock `companies` `FOR SHARE`; status must be `active` (`TenantNotActiveError`) — this re-check under a lock is what makes the PA-02 cache window harmless for writes: a suspension that commits first is seen here, and a suspension that starts later waits for this transaction. Lock the `configurations` row `FOR NO KEY UPDATE`. Compare each submitted field with the stored value.
+- *No change:* if every submitted value equals the stored one, the use case returns the current configuration and writes **nothing**: no row change, no `updated_at` move, no audit entry, no event.
+- *Writes:* the changed columns, `updated_by = ctx.actor.userId`, `updated_at = now()`; audit entry with previous and new values of the changed fields (§8); event with the changed field names only (§7).
+- *Transaction:* one. Concurrent edits serialise on the row lock: a second edit sees the first's values as its `previousValue`, so no audit entry quotes a value that was never stored.
+- *Cannot change:* `status`, `isDemo`, `companyId`, `planCode`, `defaultCurrency` (not inputs of this use case at all).
+
+**UC-07 — GetTenantConfiguration:** `assertCeoOfOwnCompany`; read `companies` and `configurations` for `ctx.companyId` without locks; `TenantNotActiveError` if the company is not `active`. No audit entry (it is not a financial or approval action; BACKEND_OBSERVABILITY_ARCHITECTURE.md, What Triggers an Audit Entry).
+
+**UC-08 — ResolveTenantStatus** (the port behind PA-02, Phase 0 OQ-12)
+- *Contract:* `getStatus(uow): Promise<'active' | 'suspended' | 'terminated' | null>` — the status of `uow.context.companyId`, or `null` if no such company. One `SELECT status` by primary key; no lock, no audit, no event. The port is not `humanOnly` (the platform calls it with a system context). Its implementation is `application/ports/tenant-status.impl.ts`, reachable only through `bind` (Phase 0 rule 12).
+- *Caller:* the platform opens a short unit with `createSystemContext(companyId, 'platform.tenantStatus')`, calls the port, and closes it (PA-02). Modules do not call this port.
+
+**UC-09 — GetTenantContext, UC-10 — GetPlan, UC-11 — AssertTenantActive:** read the company (with its configuration and plan for UC-09, its plan for UC-10) for `ctx.companyId` through `tenantWhere`; no lock; no writes. UC-11 reads only the status and throws `TenantNotActiveError` (status `suspended` or `terminated`) or `TenantNotFoundError`. They are the non-HTTP half of the gate (§1.3): a later module's subscriber or use case that must not run for an inactive tenant calls UC-11 first.
+
+**UC-12 — ShowTenant** (script `show`, read only): `assertPlatformAdministrator`; reads company id, name, status, `is_demo`, `status_changed_at`, `terminated_at`, plan code. Never prints configuration details. No audit entry. Added so an operator can confirm the effect of a command and recover after a lost output (OQ1-15).
+
+### 5.4 The script (D-15, Phase 0 OQ-14)
+
+`npm run tenant -- <command> [options]` runs `server/scripts/tenant.ts`, owned by the module engineer. The `tenant` entry in `package.json` is added by the platform engineer (PA-03, OQ1-09). In Phase 1 it runs with `tsx` from a Replit Shell or a laptop terminal; a bundled form for production is a Phase 9 question (OQ1-17).
+
+| Command | Options (all `--name value`) | Use case |
+|---|---|---|
+| `provision` | `--operator`, `--name`, `--plan`, `--currency`, optional `--demo` (flag; absent means a real company) | UC-01 |
+| `suspend` | `--operator`, `--company`, `--reason` | UC-02 |
+| `reactivate` | `--operator`, `--company`, `--reason` | UC-03 |
+| `terminate` | `--operator`, `--company`, `--reason`, `--confirm` (must repeat the company id) | UC-04 |
+| `change-plan` | `--operator`, `--company`, `--plan`, `--reason` | UC-05 |
+| `show` | `--company` | UC-12 |
+
+**Behaviour**
+1. Arguments are read with Node's `util.parseArgs` in strict mode (unknown options are errors). Every value is validated by the domain value objects through the use case; the script itself contains no business rule and no SQL.
+2. `OperatorIdentity` = `--operator` (required for every command except `show`), `hostAccount` from `os.userInfo().username`, `scriptRunId` from `crypto.randomUUID()`, and the command name. `--operator` is self-declared (§4.4).
+3. The script obtains configuration and a pool through PA-03 (`loadScriptConfig`, the runtime opener). It reads **only** `LEDGER_APP_DATABASE_URL` (plus `NODE_ENV`, `LOG_LEVEL`). It does not read the owner URL, `DATABASE_URL`, the `PG*` variables, or the JWT keys. If `LEDGER_APP_DATABASE_URL` is missing it exits 2 and does not fall back to anything. The first connection runs the Phase 0 §3.5 self-check; a connection that is not `ledger_app` is refused.
+4. For `provision` the script generates the company id first and prints it (`{"outcome":"started","command":"provision","companyId":"…","scriptRunId":"…"}`) **before** opening the transaction, so the id is known even if the process dies after the commit. `show` then reveals whether the company exists.
+5. The context is `createSystemContext(companyId, 'tenant-cli')`; the work runs in `runInTransactionAs('tenant', ctx, …)`.
+6. **Output:** one JSON line on stdout for success (`{"outcome":"ok",…}` with `companyId`, `status`, `scriptRunId`), one JSON line on stderr for a refusal or failure (`{"outcome":"refused"|"failed","code":"…","message":"…"}`). Messages are fixed British-English sentences containing no argument values. Nothing printed or logged contains the database URL, a password, the company name, the reason text or the operator-supplied values other than the company id (INV-13).
+7. **Exit codes:** `0` done · `1` usage or validation error (nothing written) · `2` configuration, connection or role-check failure (nothing written) · `3` the use case refused (unknown company, invalid transition, unknown or inactive plan, same plan, confirmation mismatch, not authorised) · `4` unexpected error.
+8. **Retrying.** Provisioning is not idempotent: running it twice creates two companies. Every other lifecycle command is safe to repeat: the second run is refused with exit 3 and writes nothing.
+
+### 5.5 PA-01 — the pagination helper (Phase 0 OQ-17)
+
+Phase 1 has no list endpoint. The helper is built and tested on its own (§9) so that Phase 2 onward paginate identically. It lives in `server/platform/http/pagination.ts` and is exported from `server/platform/index.ts`.
+
+| Function | Behaviour |
+|---|---|
+| `parsePageQuery(query)` | Reads `limit` and `cursor` from a query object. `limit`: a base-10 integer string, 1–200, default 50. Anything else (0, 201, negative, decimal, empty, non-numeric, repeated) throws `ValidationError` with details `{ limit: ["The limit must be a whole number from 1 to 200."] }` — **rejected, not clamped**. `cursor`: optional string of at most 1 024 characters |
+| `encodeCursor(key)` | `key` is a flat object of at most 8 string, number, boolean or null values (the last row's sort key, for example `{ createdAt, id }`). Returns the base64url encoding of its JSON, without padding |
+| `decodeCursor(cursor, schema)` | Accepts base64url or standard base64, with or without padding; parses the JSON; refuses anything that is not a flat object (nesting, arrays, `__proto__`, `constructor`, `prototype` keys); then applies the **calling endpoint's strict Zod schema**. Any failure throws `ValidationError` with details `{ cursor: ["The cursor is not valid."] }`. It never echoes the cursor and never throws a 500 |
+| `buildPage(rows, limit, keyOf)` | The caller queries `limit + 1` rows in a total order. `buildPage` returns `{ data: rows.slice(0, limit), pagination: { nextCursor, hasMore, limit } }`. `hasMore` is true only if an extra row came back; `nextCursor` is the encoded key of the last returned row, or `null` when `hasMore` is false |
+
+Rules for every later list endpoint, stated here so they are reviewed once:
+- The sort key must be total, for example `(created_at, id)`; a non-total key produces skipped or repeated rows.
+- A cursor carries sort keys only. It is **not** a credential and is never trusted for tenancy: the repository applies `tenantWhere` to every page regardless of the cursor's content (G1 attacks a forged cursor).
+- Cursors are never logged (query strings are not logged, Phase 0 §4.7) and never signed in v1.
+- The response shape is exactly the one in BACKEND_API_ARCHITECTURE.md, Pagination Strategy. The base64url alphabet differs from the document's example only by being URL-safe, so a cursor needs no percent-encoding (OQ1-14).
+
+### 5.6 PA-02 — the tenant-status check in the token middleware (Phase 0 OQ-12)
+
+This is a platform addition; the platform engineer designs the code. Phase 1 fixes the behaviour, which the gate tests (§9) assert.
+
+1. **Where.** In PS-10 (`/api/v1`) and PS-11 (`/portal/v1`), **after** the token has been verified (so a forged or expired token never causes a database read) and **before** the execution context is built and any module router runs. Public routes are not covered; they never had a context (Phase 2 login must check for itself, §4.6).
+2. **Lookup.** The platform declares the port token `platform.tenantStatus` (`definePort`, exported from the platform index). The tenant module binds it (`providesPorts`). The platform may not import the module (rule 8); it receives the implementation through the port registry. On a cache miss the platform opens a unit under `createSystemContext(claims.company_id, 'platform.tenantStatus')`, calls `getStatus(uow)` (UC-08), and closes it.
+3. **Cache.** In-process, per API process, keyed by `company_id`. Lifetime `TENANT_STATUS_CACHE_MS` (PA-05): integer 0–60 000, default 5 000, `0` disables caching. At most 10 000 entries; the oldest is evicted first. Concurrent misses for one company share a single lookup. A failed lookup is never cached. A "no such company" answer is cached for the same lifetime. **Staleness bound:** a suspension, reactivation or termination made by the script (a different process) is seen by a running API within `TENANT_STATUS_CACHE_MS`. The bound is stated in the opening of every gate test that depends on it.
+4. **Decision.**
+
+| Looked-up status | Response | Handler runs? |
+|---|---|---|
+| `active` | continue | yes |
+| `suspended` | `403 TENANT_SUSPENDED`, "This account is suspended." | no |
+| `terminated` | `403 TENANT_TERMINATED`, "This account has been closed." | no |
+| no company (`null`) | `401 UNAUTHENTICATED` (a validly signed token that names nothing is treated as invalid; BACKEND_AUTH_ARCHITECTURE.md says 403 for a suspended account, not for a missing one) | no |
+| lookup failed | `500 INTERNAL_ERROR` — **fail closed**; the request is never let through | no |
+
+5. **Nothing else changes.** Token verification, claims, header handling and the other 401 paths are as in Phase 0. The two new error codes join the platform table of Phase 0 §6.3.
+6. **The worker is untouched.** The outbox worker never checks tenant status, so `TenantSuspended` and every other event is delivered for a suspended tenant (Phase 2's revocation subscriber depends on it).
+7. **Start-up.** In full mode the API refuses to start if no module provides the port, and names the port in one `FATAL` line, like any unwired port (PS-16). Frontend-only mode has no tokens and no check. How Phase 0's PS-16 rules (which describe ports that modules require) are extended to a port the platform requires is OQ1-08.
+
+### 5.7 PA-03 and PA-05 — script bootstrap and configuration variable
+
+- **PA-03.** In `server/platform/system/`: `loadScriptConfig(env)` and a runtime opener that returns `{ runInTransactionAs, dbRole, logger, close }` bound to a `ledger_app` pool built with the same explicit-settings rule as every pool (Phase 0 RP-03), with the self-check run through `withClient`, `scrubOwnerVariables()` called after loading, and `close()` ending the pool so the process exits. `package.json` gains `"tenant"`; `drizzle.config.ts` gains `'tenant'` in `schemaFilter`. These are root configuration, hence the platform engineer's (Folder Ownership).
+- **PA-05.** `TENANT_STATUS_CACHE_MS` is read by `loadApiConfig` only: an optional integer, 0–60 000, default 5 000. Anything else is a `ConfigError` naming the variable. The worker and the script do not read it.
+
+---
+
+## 6. API
+
+### 6.1 Routes
+
+D-15: `/api/v1/tenant/` exposes only the signed-in CEO's own company configuration. There is **no** route to provision, suspend, reactivate, terminate or change a plan, and no route with a company identifier. Every other method and path answers `404 NOT_FOUND` through Phase 0's not-found handler (there is no 405 in Phase 0's code table).
+
+| Method | Path | Auth | Roles | Request | Responses |
+|---|---|---|---|---|---|
+| `GET` | `/api/v1/tenant/configuration` | platform token; tenant status check (PA-02) | `ceo` | none | `200` configuration · `401` · `403` (`FORBIDDEN`, `TENANT_SUSPENDED`, `TENANT_TERMINATED`) |
+| `PATCH` | `/api/v1/tenant/configuration` | same | `ceo` | JSON, §6.2 | `200` configuration · `400` · `401` · `403` |
+
+The namespace `/tenant` belongs to the tenant module (Phase 0 §4.8). The module has no public route and no portal router; a portal token on these paths fails verification with `401`. The routes have **no path parameters** (Phase 0 §4.7 path convention), and no query parameters: unknown query parameters are ignored and never reach the use case.
+
+### 6.2 Schemas
+
+Success body, status `200` for both methods (single-resource envelope `{ "data": … }`, OQ1-14):
+
+```json
+{ "data": {
+    "companyId": "uuid",
+    "legalName": "string",
+    "address": "string | null",
+    "contactEmail": "string | null",
+    "contactPhone": "string | null",
+    "website": "string | null",
+    "defaultCurrency": "GBP",
+    "isDemo": false,
+    "updatedAt": "ISO 8601 UTC"
+} }
+```
+
+`isDemo` and `defaultCurrency` are read-only. The response carries no status (a request that reaches the handler is for an `active` tenant), no plan, and no subscription data.
+
+`PATCH` request: a **strict** Zod object with at least one of the following. An unknown key (`status`, `isDemo`, `companyId`, `defaultCurrency`, `planCode`, `featureFlags`, anything) is `400 VALIDATION_ERROR`; the response may name the field path, never a value.
+
+| Field | Rule |
+|---|---|
+| `legalName` | string, 1–200 after trimming, no control characters; cannot be `null` |
+| `address` | string 1–500, no control characters; or `null` |
+| `contactEmail` | string ≤ 254, one `@`, a dot in the domain, no whitespace; or `null` |
+| `contactPhone` | string ≤ 40 of digits, `+ ( ) . / -` and spaces; or `null` |
+| `website` | string ≤ 300 starting `http://` or `https://`, no whitespace; or `null` |
+
+Zod checks shape and the field rules above; the domain value objects apply the same rules again, so no rule exists only in Zod (and the script, which has no Zod layer, gets the same checks). Empty body, `{}` and a body with only unchanged values are different cases: `{}` is `400`; a body of unchanged values is `200` with the current data and no write (UC-06).
+
+### 6.3 Order of checks, errors and status codes
+
+Order: JSON parsing (Phase 0) → token (401) → tenant status (403/401/500, PA-02) → **role** (`FORBIDDEN`) → body validation (400) → use case. A PM or worker sending an invalid body therefore gets `403`, never `400`: validation errors are not shown to a role that may not use the route.
+
+| Status | Code | When |
+|---|---|---|
+| 200 | — | Read, update, or no-op update |
+| 400 | `VALIDATION_ERROR` | Body shape or a field rule; unknown key; empty object |
+| 400 | `MALFORMED_JSON`, `PAYLOAD_TOO_LARGE` (413) | Phase 0 |
+| 401 | `UNAUTHENTICATED`, `TOKEN_EXPIRED` | Phase 0; also a signed token for no company (PA-02) |
+| 403 | `FORBIDDEN` | The role is not `ceo` (PM, worker); `NotAuthorisedError` |
+| 403 | `TENANT_SUSPENDED`, `TENANT_TERMINATED` | PA-02; also the use case's own re-check (`TenantNotActiveError`) |
+| 404 | `NOT_FOUND` | Any other route or method; `TenantNotFoundError` inside a use case |
+| 500 | `INTERNAL_ERROR` | Lookup failure (fail closed), any unexpected error |
+
+Domain errors map as: `NotAuthorisedError` → 403 `FORBIDDEN`; `TenantNotActiveError` → 403 `TENANT_SUSPENDED` or `TENANT_TERMINATED` by its status; `TenantNotFoundError` → 404; `InvalidValueError` → 400 `VALIDATION_ERROR` with the field path. The lifecycle errors (`InvalidTenantTransitionError`, `PlanNotFoundError`, `PlanNotAssignableError`, `SamePlanError`, `ConfirmationMismatchError`) are reachable only from the script and need no HTTP mapping. Messages are British English, fixed, and contain no input value.
+
+Headers, the error envelope and logging follow Phase 0 §6.2–§6.3 and §4.7: the request line names the route template only; the legal name, address, email, phone and website are never logged.
+
+Not in Phase 1: rate limiting and `Idempotency-Key` (Phase 9; `PATCH` is idempotent by construction), OpenAPI (Phase 9).
+
+---
+
+## 7. EVENTS
+
+### 7.1 Produced
+
+All six are produced by the `tenant` module (`source_module = 'tenant'`), written by `uow.events.record` in the same transaction as the state change, with `jobRequired: false` (none is financially relevant). The envelope is Phase 0 §4.5; `actorId` is `NULL` for the script and the CEO's user id for UC-06. Payloads hold identifiers, status or plan codes, field names and one timestamp; no free text, no contact detail, no name, no financial amount (INV-13, Phase 0 OQ-07).
+
+| Event | Written by | `sourceObjectType` / `sourceObjectId` | Payload (exactly these keys) | Planned consumers (BACKEND_EVENT_ARCHITECTURE.md) |
+|---|---|---|---|---|
+| `TenantProvisioned` | UC-01 | `Company` / `company_id` | `companyId`, `isDemo`, `planCode` | Identity (create the initial CEO; Phase 2), Intelligence (audit; Phase 7) |
+| `TenantSuspended` | UC-02 | `Company` / `company_id` | `companyId`, `previousStatus` (`active`), `statusChangedAt` | Identity (revoke all sessions), Intelligence (alert) |
+| `TenantReactivated` | UC-03 | `Company` / `company_id` | `companyId`, `previousStatus` (`suspended`), `statusChangedAt` | Identity (restore access), Intelligence (audit) |
+| `TenantTerminated` | UC-04 | `Company` / `company_id` | `companyId`, `previousStatus` (`active` or `suspended`), `statusChangedAt` | Identity (revoke all sessions), Intelligence (audit) |
+| `TenantConfigurationUpdated` | UC-06 | `TenantConfiguration` / `company_id` | `companyId`, `changedFields` (a non-empty array of the field names `legalName`, `address`, `contactEmail`, `contactPhone`, `website`) | Intelligence (audit) |
+| `TenantPlanChanged` | UC-05 | `Subscription` / `subscription_id` | `companyId`, `previousPlanCode`, `newPlanCode` | Intelligence (audit) |
+
+### 7.2 Consumed
+
+**None** (BACKEND_DOMAIN_ARCHITECTURE.md, Tenant Context: "Consumes Events: None"). Phase 1 registers no subscriber. The consumers above are later phases; tenants provisioned in Phase 1 therefore reach no subscriber at all (OQ1-06).
+
+### 7.3 Rules for the consumers
+
+- **Idempotency key:** `eventId` (the default, Phase 0 §7.3). Identity's `TenantProvisioned` subscriber should instead key on `companyId` (one initial CEO per company); Phase 2 names it.
+- **Order is not guaranteed** (Phase 0 OQ-06). A suspension and a reactivation made close together can be delivered in either order. `statusChangedAt` lets a subscriber ignore a stale event, and a subscriber that restores or revokes sessions should act on the company's **current** status (`getTenantContext`) rather than on the event type alone.
+- **Delivery does not depend on tenant status.** Events for suspended and terminated tenants are delivered like any other (§5.6 item 6).
+- Event payloads are copied verbatim into the permanent event log, which both runtime roles can read; the payload rule above is why `TenantConfigurationUpdated` names fields and never values.
+
+---
+
+## 8. AUDIT ENTRIES
+
+### 8.1 Entry types
+
+All six are owned by the `tenant` module, `jobRequired: false`, written by `uow.audit.append` in the same transaction as the state change. The names follow the domain convention (`<object>_<past participle>`) and mirror the event names. **No frozen document lists tenant entry types** (`DOMAIN_MODEL_SUMMARY.md`, Audit Entry Types by Domain, has none); the authority is the roadmap's "with audit entries", and the names are OQ1-05. The consumer "Intelligence (audit)" in the event catalogue is a Phase 7 read model, not a substitute for the transactional entry.
+
+| Entry type | Use case | `source_object_type` / `id` | `destination_object_*` | `previous_value` | `new_value` |
+|---|---|---|---|---|---|
+| `tenant_provisioned` | UC-01 | `Company` / `company_id` | none | `NULL` | `{ name, status: "active", isDemo, planCode, defaultCurrency }` |
+| `tenant_suspended` | UC-02 | `Company` / `company_id` | none | `{ status: "active" }` | `{ status: "suspended" }` |
+| `tenant_reactivated` | UC-03 | `Company` / `company_id` | none | `{ status: "suspended" }` | `{ status: "active" }` |
+| `tenant_terminated` | UC-04 | `Company` / `company_id` | none | `{ status: <previous> }` | `{ status: "terminated" }` |
+| `tenant_plan_changed` | UC-05 | `Subscription` / `subscription_id` | none | `{ planCode: <previous> }` | `{ planCode: <new> }` |
+| `tenant_configuration_updated` | UC-06 | `TenantConfiguration` / `company_id` | none | the **previous values of the changed fields only** | the **new values of the changed fields only** |
+
+For every entry: `job_id`, `site_id`, `client_id` and `external_reference` are `NULL`; `company_id` is the tenant concerned (from the context); `occurred_at`, `audit_id`, `sequence_no` come from the database; `metadata.requestId` or `runId` is added by `AuditWriter` (Phase 0 §8.2).
+
+### 8.2 Who is recorded, and the metadata
+
+| Written by | `actor_id` | `actor_role` | `causation_*` | `metadata` (besides `requestId`/`runId`) |
+|---|---|---|---|---|
+| The script (UC-01 … UC-05) | `NULL` | `system` | `NULL` | `operator`, `hostAccount`, `scriptRunId`, `command`; and `reason` for UC-02 … UC-05 (OQ-14, §4.4) |
+| The CEO (UC-06) | the CEO's user id | `ceo` | `NULL` | `changedFields` (the same names as the event) |
+
+`reason` is free text supplied by the operator. It is recorded in the audit entry, which is internal and permanent, and **never** in an event, a log line or the script's output.
+
+### 8.3 Decision: previous and new values in `tenant_configuration_updated` (PM review point 5)
+
+The Audit Doctrine requires previous value and new value (canonical context; DOMAIN_MODEL_SUMMARY.md, Audit Requirements). The entry therefore records the changed fields with their old and new values, for example `previous_value = {"address": "1 High St"}`, `new_value = {"address": "2 Low Rd"}`. This is allowed because Phase 0 OQ-07 restricts event payloads, not audit entries; the audit table is internal, visible only to the CEO (BACKEND_MULTITENANCY_ARCHITECTURE.md, Audit Visibility Boundaries) and is where values belong (Phase 0 §8.2: "the audit log is where financial values belong"). The event carries field names only. Both are bounded (a legal name is at most 200 characters, the five fields together under 1.5 KB), far below the 64 KB limit.
+
+### 8.4 What is not audited
+
+| Occurrence | Recorded as | Why |
+|---|---|---|
+| A refused command (invalid transition, unknown plan, confirmation mismatch, not authorised) | Script stderr line and exit code 3; the request line for HTTP | No state changed. Refused attempts that change nothing are not audit entries (Phase 0 §8.1 treats 401s the same way) |
+| Reads: UC-07, UC-08, UC-09 … UC-12, the per-request status lookup | Not recorded | No state change; no financial data is read |
+| A no-change `PATCH` | Not recorded | Nothing changed (UC-06) |
+| Seeding or changing plans | The migration journal | Platform administration outside any tenant, as Phase 0 treats migrations |
+
+### 8.5 Catalogue registration
+
+```ts
+auditEntryTypes: [
+  { type: 'tenant_provisioned', jobRequired: false }, { type: 'tenant_suspended', jobRequired: false },
+  { type: 'tenant_reactivated', jobRequired: false }, { type: 'tenant_terminated', jobRequired: false },
+  { type: 'tenant_plan_changed', jobRequired: false }, { type: 'tenant_configuration_updated', jobRequired: false } ],
+producesEvents: [
+  { type: 'TenantProvisioned', jobRequired: false }, { type: 'TenantSuspended', jobRequired: false },
+  { type: 'TenantReactivated', jobRequired: false }, { type: 'TenantTerminated', jobRequired: false },
+  { type: 'TenantConfigurationUpdated', jobRequired: false }, { type: 'TenantPlanChanged', jobRequired: false } ]
+```
+
+Because the types are owned by `tenant` (Phase 0 R3-10), no other module's unit can write any of them (G1).
+
+---
+
+*Sections 9 to 12 follow in commit 3.*
+
