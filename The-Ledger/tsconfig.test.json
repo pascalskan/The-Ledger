@@ -1,0 +1,10 @@
+{
+  // Typechecks the backend together with its tests (the base tsconfig excludes
+  // **/*.test.ts). Run by `npm run check` after the base `tsc` (Phase 0 spec §10.2).
+  "extends": "./tsconfig.json",
+  "include": ["server/**/*.ts", "shared/**/*", "vitest.config.ts"],
+  "exclude": ["node_modules", "build", "dist"],
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo.test"
+  }
+}

@@ -10,3 +10,10 @@ vite.config.ts.*
 playwright-report/
 test-results/
 .playwright-mcp/
+
+# Environment files hold secrets; only the examples are committed
+# (Phase 0 spec §4.6, R2-14, R3-17).
+.env*
+!.env.example
+client/.env*
+!client/.env.example
