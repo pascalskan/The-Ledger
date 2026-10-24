@@ -88,6 +88,7 @@ Handover (October 24, 2026): the first instance stopped at a usage limit on Octo
 Commits checked
 | # | SHA | Message | PM verdict | Notes |
 |---|---|---|---|---|
+| 1 | 535a668 | platform: tooling, scripts and test configuration | Accepted, continue | Leftover work reviewed and kept; npm ci clean; check covers tests; unit project only, nothing from server/tests referenced; .env.example fails validation by design. Scripts that need later files deferred to commits 4 and 8 (accepted). |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
@@ -104,6 +105,7 @@ Handover (October 24, 2026): the first instance stopped at a usage limit on Octo
 Commits checked
 | # | SHA | Message | PM verdict | Notes |
 |---|---|---|---|---|
+| 1 | 42d8f23 | tests(phase-0): support primitives and gate_test fixtures | Accepted, continue | Leftover files kept; test-env.ts fixed to parse (not load) .env so the gate never pollutes process.env; gate_test fixtures idempotent with api_only granted to ledger_app only. PM RULING (agent question): spec §4.8 rule 13 applies to non-test files only; test files = *.test.ts and server/tests/** (rule 1a definition), exemption checked by path; server/platform/testing/** is platform code and reads config only via server/platform/config/. Platform engineer notified. To be folded into the spec at its next amendment. |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
