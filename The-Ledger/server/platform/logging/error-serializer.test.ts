@@ -146,6 +146,11 @@ describe("body-parser and Express client errors", () => {
     expect(out).toEqual({ status: 400 });
   });
 
+  it("the router's URIError for an undecodable path parameter: status only (R3-14)", () => {
+    const error = Object.assign(new URIError(`Failed to decode param '${MARK}'`), { status: 400, statusCode: 400 });
+    expect(serialized(error)).toEqual({ status: 400 });
+  });
+
   it("a 5xx or non-exposed error is not treated as a client error", () => {
     const error = Object.assign(new Error("boom"), { status: 500, expose: false });
     expect(serialized(error).message).toBe("boom");

@@ -270,6 +270,14 @@ function prelude(env: Env, options: LoadOptions): Prelude {
   return { nodeEnv, warnings, issues, logLevel };
 }
 
+/**
+ * The pool's ssl object is exactly { rejectUnauthorized: true, servername } (spec §4.6),
+ * so a custom CA in the URL is not used. Say so, so nobody expects it to be.
+ */
+function sslrootcertWarning(variable: string): string {
+  return `${variable}: sslrootcert is not used; the server certificate is verified with the system CA store`;
+}
+
 // --- JWT keys and portal secret --------------------------------------------
 
 function normalisePem(text: string): string {
@@ -394,6 +402,8 @@ export function loadApiConfig(env: Env = process.env, options: LoadOptions = {})
   });
   if (!databaseResult.ok) {
     issues.push({ variable: "LEDGER_APP_DATABASE_URL", problem: databaseResult.problem });
+  } else if (databaseResult.sslrootcertIgnored) {
+    warnings.push(sslrootcertWarning("LEDGER_APP_DATABASE_URL"));
   }
 
   const privateText = value(env, "JWT_PRIVATE_KEY")!;
@@ -454,8 +464,12 @@ export function loadWorkerConfig(env: Env = process.env, options: LoadOptions = 
       production: nodeEnv === "production",
       applicationName: "ledger-worker",
     });
-    if (result.ok) database = result.settings;
-    else issues.push({ variable: "LEDGER_WORKER_DATABASE_URL", problem: result.problem });
+    if (result.ok) {
+      database = result.settings;
+      if (result.sslrootcertIgnored) warnings.push(sslrootcertWarning("LEDGER_WORKER_DATABASE_URL"));
+    } else {
+      issues.push({ variable: "LEDGER_WORKER_DATABASE_URL", problem: result.problem });
+    }
   }
 
   const problem = "must be a positive integer";
@@ -497,6 +511,8 @@ export function loadMigrationConfig(
   });
   if (!result.ok) {
     issues.push({ variable: "LEDGER_MIGRATION_DATABASE_URL", problem: result.problem });
+  } else if (result.sslrootcertIgnored) {
+    warnings.push(sslrootcertWarning("LEDGER_MIGRATION_DATABASE_URL"));
   }
   if (issues.length > 0 || !result.ok) fail(issues);
   return Object.freeze({

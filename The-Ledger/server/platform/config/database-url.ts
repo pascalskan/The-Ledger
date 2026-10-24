@@ -50,7 +50,12 @@ export interface ParseDatabaseUrlOptions {
 }
 
 export type DatabaseUrlResult =
-  | { readonly ok: true; readonly settings: PoolSettings }
+  | {
+      readonly ok: true;
+      readonly settings: PoolSettings;
+      /** True when the URL carries sslrootcert, which the pool settings deliberately do not use. */
+      readonly sslrootcertIgnored: boolean;
+    }
   | { readonly ok: false; readonly problem: string };
 
 /**
@@ -130,6 +135,7 @@ export function inspectDatabaseUrl(
 
   return {
     ok: true,
+    sslrootcertIgnored: url.searchParams.has("sslrootcert"),
     settings: Object.freeze({
       host,
       port,

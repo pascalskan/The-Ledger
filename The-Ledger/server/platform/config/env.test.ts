@@ -142,6 +142,19 @@ describe("API start-up modes (§4.6 mode table)", () => {
     expect(blank.mode).toBe("frontend_only");
   });
 
+  it("warns, naming the variable only, when sslrootcert is present (it is not passed to the pool)", () => {
+    const config = loadApiConfig(
+      backend({ LEDGER_APP_DATABASE_URL: `${appUrl}?sslrootcert=${MARKER}.pem` }),
+      options(),
+    );
+    expect(config.warnings).toHaveLength(1);
+    expect(config.warnings[0]).toContain("LEDGER_APP_DATABASE_URL");
+    expect(config.warnings[0]).not.toContain(MARKER);
+    const worker = loadWorkerConfig({ LEDGER_WORKER_DATABASE_URL: `${workerUrl}?sslrootcert=x.pem` }, options());
+    expect(worker.warnings[0]).toContain("LEDGER_WORKER_DATABASE_URL");
+    expect(loadApiConfig(backend(), options()).warnings).toEqual([]);
+  });
+
   it("returns a frozen object", () => {
     const config = loadApiConfig(backend(), options());
     expect(Object.isFrozen(config)).toBe(true);

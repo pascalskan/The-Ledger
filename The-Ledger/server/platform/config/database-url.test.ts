@@ -71,6 +71,13 @@ describe("parseDatabaseUrl (RP-03)", () => {
     }
   });
 
+  it("flags sslrootcert as ignored, so the loaders can warn", () => {
+    const withCert = inspectDatabaseUrl("postgresql://u:p@h/db?sslrootcert=ca.pem");
+    expect(withCert.ok && withCert.sslrootcertIgnored).toBe(true);
+    const without = inspectDatabaseUrl("postgresql://u:p@h/db");
+    expect(without.ok && without.sslrootcertIgnored).toBe(false);
+  });
+
   it("accepts the allowlisted query parameters", () => {
     const result = inspectDatabaseUrl(
       "postgresql://u:p@h/db?sslmode=disable&application_name=x&channel_binding=prefer&sslrootcert=ca.pem",

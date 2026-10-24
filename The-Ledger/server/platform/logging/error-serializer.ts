@@ -54,11 +54,17 @@ function isJsonParseError(error: Error): boolean {
   return (error as { type?: unknown }).type === "entity.parse.failed";
 }
 
-/** http-errors style: `expose === true` and a status from 400 to 499 (Express and its parsers). */
+/**
+ * http-errors style: `expose === true` and a status from 400 to 499 (Express and its
+ * parsers). The router's URIError for a path parameter that cannot be URL-decoded
+ * (R3-14) has a 400 status but no `expose`, and its message quotes the parameter, so
+ * it is treated the same way.
+ */
 function isExposedClientError(error: Error): boolean {
   const source = error as unknown as { expose?: unknown; status?: unknown; statusCode?: unknown };
   const status = typeof source.status === "number" ? source.status : source.statusCode;
-  return source.expose === true && typeof status === "number" && status >= 400 && status <= 499;
+  if (typeof status !== "number" || status < 400 || status > 499) return false;
+  return source.expose === true || error instanceof URIError;
 }
 
 function serialize(error: Error, level: number): SafeError {
