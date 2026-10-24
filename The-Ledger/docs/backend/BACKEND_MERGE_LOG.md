@@ -91,6 +91,7 @@ Commits checked
 | # | SHA | Message | PM verdict | Notes |
 |---|---|---|---|---|
 | 1 | 535a668 | platform: tooling, scripts and test configuration | Accepted, continue | Leftover work reviewed and kept; npm ci clean; check covers tests; unit project only, nothing from server/tests referenced; .env.example fails validation by design. Scripts that need later files deferred to commits 4 and 8 (accepted). |
+| 2 | bf35351 | platform: configuration, modes, logger and error serializer | Accepted, continue | PM re-ran: check passes, 137/137 unit tests; no process.env outside platform/config in non-test files; TLS fail-closed per RB2-03. Rulings: loadApiConfig stays synchronous using node:crypto key checks (jose in commit 6 with a same-keys test); build.ts client .env scan kept in commit 2; AppError early ok; WARN when sslrootcert is present (commit 3/4); startup LOG_LEVEL fix in commit 3. Test engineer told the config interfaces |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
