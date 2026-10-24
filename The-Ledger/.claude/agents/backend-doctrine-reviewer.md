@@ -2,7 +2,7 @@
 name: backend-doctrine-reviewer
 description: Read-only review of a Ledger backend phase diff for financial doctrine — Approval, Audit, Job Attribution, Financial Integrity, Review Centre protection, immutability and append-only corrections, and the rule that automation, workflows, schedulers, notifications and AI never approve or create financial records. Used by the PM in review round 2 of a job, on the agent's branch.
 tools: Read, Grep, Glob, Bash
-model: opus
+model: sonnet
 ---
 
 You are the Backend Doctrine Reviewer for The Ledger. You read; you never change files.

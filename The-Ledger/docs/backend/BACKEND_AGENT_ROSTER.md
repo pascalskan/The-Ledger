@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND AGENT ROSTER
 
-Version: 1.1
+Version: 1.2
 Status: ACTIVE — owner direction, October 20, 2026
 Date: October 20, 2026
 Authority: Backend Programme Planning
@@ -12,6 +12,7 @@ Authority: Backend Programme Planning
 | Version | Date | Changes |
 |---|---|---|
 | 1.0 | October 20, 2026 | Draft roster, phase pipeline, folder ownership, shared rules |
+| 1.2 | October 24, 2026 | Owner direction: every subagent runs on Sonnet; the PM's advisor runs on Opus |
 | 1.1 | October 20, 2026 | Owner direction: the main session is the Project Manager and the "theoretical GitHub"; every agent works on its own branch and runs each commit through the PM; minimum three review rounds per job; related agents are notified after each merge; all real work lives on the GitHub branch `backend` |
 
 ---
@@ -58,13 +59,13 @@ The theoretical GitHub is local git, run by the PM. Nothing in it is pushed exce
 | Agent | Role | Writes to (on its own branch) | Model |
 |---|---|---|---|
 | Project Manager (main session) | Assigns jobs, reviews every commit, runs the review rounds, merges, notifies, talks to the owner, pushes | merge log, handoffs, development state | session model |
-| `backend-architect` | Turns a roadmap phase and the frozen domains into a phase specification | `docs/backend/phases/` | opus |
-| `backend-platform-engineer` | Phase 0, Phase 9 and any cross-cutting platform change | `server/platform/`, `server/index.ts`, `server/worker.ts`, `server/modules/registry.ts`, root config, platform migrations | session model |
-| `backend-module-engineer` | One module end to end (domain, application, infrastructure, API); one instance per module | `server/modules/<module>/`, its migrations, one registry line | session model |
-| `backend-test-engineer` | Gate tests from the specification, independently of the implementation | `server/tests/` | session model |
-| `backend-doctrine-reviewer` | Read-only doctrine review the PM uses in review round 2 | nothing | opus |
-| `backend-security-reviewer` | Read-only security review the PM uses in review round 2 | nothing | opus |
-| `frontend-integration-engineer` | Track F: one frontend page group from mock data to the API | `client/` | session model |
+| `backend-architect` | Turns a roadmap phase and the frozen domains into a phase specification | `docs/backend/phases/` | sonnet |
+| `backend-platform-engineer` | Phase 0, Phase 9 and any cross-cutting platform change | `server/platform/`, `server/index.ts`, `server/worker.ts`, `server/modules/registry.ts`, root config, platform migrations | sonnet |
+| `backend-module-engineer` | One module end to end (domain, application, infrastructure, API); one instance per module | `server/modules/<module>/`, its migrations, one registry line | sonnet |
+| `backend-test-engineer` | Gate tests from the specification, independently of the implementation | `server/tests/` | sonnet |
+| `backend-doctrine-reviewer` | Read-only doctrine review the PM uses in review round 2 | nothing | sonnet |
+| `backend-security-reviewer` | Read-only security review the PM uses in review round 2 | nothing | sonnet |
+| `frontend-integration-engineer` | Track F: one frontend page group from mock data to the API | `client/` | sonnet |
 
 The commercial documents domain session (D-07) is not an agent job. Defining a domain is an owner conversation; the PM runs it with the owner.
 
