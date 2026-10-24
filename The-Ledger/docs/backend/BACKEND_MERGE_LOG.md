@@ -18,7 +18,7 @@ Only the PM edits this file.
 
 | Job | Phase | Agent | Branch | Status | Merge SHA |
 |---|---|---|---|---|---|
-| phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | Open | — |
+| phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | In review | — |
 | phase-0-platform | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0 | Open | — |
 | phase-0-gate-tests | 0 Infrastructure | backend-test-engineer | agent/backend-test-engineer/phase-0 | Open | — |
 | phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Merged | 99746d9 |
@@ -61,7 +61,7 @@ Follow-ups: <anything deferred, with owner>
 
 ## ENTRIES
 
-### phase-1-spec — backend-architect (new instance) — Open
+### phase-1-spec — backend-architect (new instance) — In review
 
 Phase: 1 Tenant Module
 Branch: agent/backend-architect/phase-1-spec   (from backend @ 359fa02)
@@ -74,6 +74,7 @@ Commits checked
 |---|---|---|---|---|
 | 1 | 17a5767 | docs(backend): Phase 1 spec sections 1-4 (scope, sources, data model, domain model) | Accepted, continue (with notes for commit 2) | Notes: lifecycle row lock must be FOR NO KEY UPDATE (FOR UPDATE would block every tenant FK check); INV-1 wording vs plans exception; FK checks need no REFERENCES grant; enforce 'tenant-cli' literal location (INV-11 forgery path); audit entry for configuration change records previous/new values per Audit Doctrine, events field names only; OQ1-11 decided by PM — job D adds companies A/B fixture helper and updates Phase 0 gate fixtures, job C merges only after that and with the Phase 0 gate suite green; updated_by FK as Phase 2 obligation |
 | 2 | 0f477c0 | docs(backend): Phase 1 spec v0.2 - use cases, API, events, audit; PM review points 1-7 | Accepted, continue (with notes for commit 3) | Points 1–7 applied. Notes: now() is transaction start, so statusChangedAt cannot order lifecycle events — add companies.lifecycle_version (+1 per transition, trigger-enforced) and order by it; one trim-before-validate/store/compare rule for all text inputs; Phase 7 obligation on showing script operator/hostAccount/reason to the tenant CEO; G1 race, staleness, fail-closed, forged-cursor, padded no-op and 403-before-400 cases required in §9 |
+| 3 | d416622 | docs(backend): Phase 1 spec v0.3 - gate tests, prototype differences, commit plans, open questions | Accepted — job complete, review rounds start | Commit-2 notes applied: lifecycle_version (+1, trigger-enforced) orders lifecycle events; clock_timestamp() after lock; one trim rule; Phase 7 operator-metadata obligation; G1-01…G1-72 incl. the eight required race/edge cases. Jobs A → B → D1 → C → D2 |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
