@@ -72,6 +72,7 @@ Handover (October 24, 2026): the first instance stopped at a usage limit on Octo
 Commits checked
 | # | SHA | Message | PM verdict | Notes |
 |---|---|---|---|---|
+| 1 | 17a5767 | docs(backend): Phase 1 spec sections 1-4 (scope, sources, data model, domain model) | Accepted, continue (with notes for commit 2) | Notes: lifecycle row lock must be FOR NO KEY UPDATE (FOR UPDATE would block every tenant FK check); INV-1 wording vs plans exception; FK checks need no REFERENCES grant; enforce 'tenant-cli' literal location (INV-11 forgery path); audit entry for configuration change records previous/new values per Audit Doctrine, events field names only; OQ1-11 decided by PM — job D adds companies A/B fixture helper and updates Phase 0 gate fixtures, job C merges only after that and with the Phase 0 gate suite green; updated_by FK as Phase 2 obligation |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
@@ -106,6 +107,7 @@ Commits checked
 | # | SHA | Message | PM verdict | Notes |
 |---|---|---|---|---|
 | 1 | 42d8f23 | tests(phase-0): support primitives and gate_test fixtures | Accepted, continue | Leftover files kept; test-env.ts fixed to parse (not load) .env so the gate never pollutes process.env; gate_test fixtures idempotent with api_only granted to ledger_app only. PM RULING (agent question): spec §4.8 rule 13 applies to non-test files only; test files = *.test.ts and server/tests/** (rule 1a definition), exemption checked by path; server/platform/testing/** is platform code and reads config only via server/platform/config/. Platform engineer notified. To be folded into the spec at its next amendment. |
+| 2 | d39cac8 | tests(phase-0): boundary scanner, migration lint and G0-40 fixture tree | Accepted, continue | TypeScript-parser scanner for rules 1, 1a, 2–6, 8–13 and the migration lint; 57 planted sources and 18 SQL fixtures, 50/50 expected violations, controls clean. PM rulings: report the most specific rule only (precedence 12, 11, 1a, 10, 8, 6, 5, 4, 3, 2, 9, 1, 13); ALTER USER refused like ALTER ROLE (spec note at next amendment); no test exemption for rules 2, 8, 12; add a fixture for a module file importing the registry. Real-tree scan red until platform commit 3 moves server/index.ts env reads into config |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
