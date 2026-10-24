@@ -79,6 +79,7 @@ Commits checked
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
+| 1 | Correctness (independent Sonnet reviewer; PM-verified, PG claims tested on local 16.14) | 3 blockers (Drizzle inserts vs column grants; script has no catalogue; Phase 0 gate red after job A), 6 majors (TRUNCATE trigger/SQLSTATE, terminal state in shared fixtures, FK convention vs rule 7, no test catches FOR UPDATE, in-process scrub, job sequencing), 11 minors (incl. locale-dependent [[:cntrl:]]). PM decisions: sql-template inserts; opener takes [tenantModule]; new job D0 stub port lands with A; later-module FKs by custom migration plus generic catalogue gate test | pending | — |
 
 ### phase-0-platform — backend-platform-engineer — Open
 
