@@ -2,6 +2,36 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import {
+  API_BACKEND_VARIABLES,
+  loadApiConfig,
+  scrubOwnerVariables,
+} from "./platform/config";
+import { ConfigError } from "./platform/errors/config-error";
+import { createLogger } from "./platform/logging/logger";
+
+// Phase 0 commit 2: configuration is loaded (and validated) before anything
+// listens, and the owner's variables are removed from the process. The rest of
+// this file is rewritten in commit 3. Import rule 13: the environment is read only inside platform/config.
+const startupLogger = createLogger({ service: "api" });
+let config: ReturnType<typeof loadApiConfig>;
+try {
+  config = loadApiConfig();
+} catch (error) {
+  if (error instanceof ConfigError) {
+    startupLogger.fatal({ variables: error.variables }, error.message);
+    process.exit(1);
+  }
+  throw error;
+}
+scrubOwnerVariables();
+for (const warning of config.warnings) startupLogger.warn(warning);
+if (config.mode === "frontend_only") {
+  startupLogger.warn(
+    { variables: API_BACKEND_VARIABLES },
+    "Backend not configured: running in frontend-only mode",
+  );
+}
 
 const app = express();
 const httpServer = createServer(app);
@@ -78,7 +108,7 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (process.env.NODE_ENV === "production") {
+  if (config.nodeEnv === "production") {
     serveStatic(app);
   } else {
     const { setupVite } = await import("./vite");
@@ -89,7 +119,7 @@ app.use((req, res, next) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-const port = parseInt(process.env.PORT || "5000", 10);
+const port = config.port;
 
 httpServer.listen(port, () => {
   log(`serving on port ${port}`);
