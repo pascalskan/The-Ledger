@@ -100,7 +100,10 @@ async function verifyToken<T>(
     });
     payload = result.payload as Record<string, unknown>;
   } catch (error) {
-    if (error instanceof errors.JWTExpired) throw new TokenExpiredError();
+    // Only a token whose `exp` has passed is "expired", which the frontend answers by refreshing.
+    // jose also reports a token older than maxTokenAge as JWTExpired (claim "iat"): that one is
+    // a token this platform never signs (lifetime over 15 minutes), so it is simply invalid.
+    if (error instanceof errors.JWTExpired && error.claim === "exp") throw new TokenExpiredError();
     throw new TokenInvalidError();
   }
   checkTiming(payload);

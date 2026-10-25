@@ -204,6 +204,24 @@ describe("platform token verification (G0-32)", () => {
     expect(claims).not.toHaveProperty("sid");
   });
 
+  it("(m6) a 30-minute token issued 20 minutes ago is invalid, not expired: it is older than the 15-minute maximum age", async () => {
+    const token = await craft({ iat: now() - 20 * 60, exp: now() - 20 * 60 + 30 * 60 });
+    const error = await rejection(verifyPlatformToken(token, auth.platform));
+    expect(error).toBeInstanceOf(TokenInvalidError);
+    expect(error).not.toBeInstanceOf(TokenExpiredError);
+    // ... while a normal token whose exp has passed is still "expired"
+    const expired = await craft({ iat: now() - 1000, exp: now() - 100 });
+    expect(await rejection(verifyPlatformToken(expired, auth.platform))).toBeInstanceOf(TokenExpiredError);
+    // the same for portal tokens
+    const portal = await new SignJWT({ company_id: company, client_id: client, role: "client", iat: now() - 1200, exp: now() + 600 })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuer("the-ledger")
+      .setAudience("ledger-portal")
+      .setSubject(portalClaims.sub)
+      .sign(auth.portal);
+    expect(await rejection(verifyPortalToken(portal, auth.portal))).toBeInstanceOf(TokenInvalidError);
+  });
+
   it("garbage and malformed tokens are TokenInvalidError", async () => {
     for (const bad of ["", "x", "a.b", "a.b.c", "a.b.c.d", "eyJ.eyJ.sig"]) {
       expect(await rejection(verifyPlatformToken(bad, auth.platform))).toBeInstanceOf(TokenInvalidError);
