@@ -12,6 +12,7 @@ import type { UnitOfWorkRunner } from "../db/unit-of-work";
 import { ConfigError } from "../errors/config-error";
 import { createOutboxWorker, newInstanceId, type OutboxWorker } from "../events/outbox-worker";
 import { createLogger } from "../logging/logger";
+import { installCrashHandlers, type RegisterCrashHandlers } from "./crash-handlers";
 import { buildRegistries, type Registries } from "../registry/build-registries";
 import { RegistryError } from "../registry/registry-error";
 import type { ModuleRegistration } from "../registry/types";
@@ -38,6 +39,8 @@ export interface StartWorkerOptions {
   readonly logger?: Logger;
   /** Default: the process-wide `installDefaultRunner`. */
   readonly installRunner?: (runner: UnitOfWorkRunner) => void;
+  /** Default: the real process events. Injectable so the handlers can be invoked in a test. */
+  readonly registerCrashHandlers?: RegisterCrashHandlers;
   /** Default true: handle SIGINT and SIGTERM. */
   readonly handleSignals?: boolean;
   /** Default: `process.once` for SIGINT and SIGTERM. Injectable so the shutdown path can be tested in-process. */
@@ -72,6 +75,7 @@ export async function startWorker(options: StartWorkerOptions): Promise<RunningW
   scrubOwnerVariables(options.env as Record<string, string | undefined> | undefined);
 
   const logger = options.logger ?? createLogger({ service: "worker", level: config.logLevel });
+  installCrashHandlers(logger, exit, options.registerCrashHandlers);
   for (const warning of config.warnings) logger.warn(warning);
 
   let pool: DbPool | undefined;

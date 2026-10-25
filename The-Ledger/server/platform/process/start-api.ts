@@ -15,6 +15,7 @@ import type { UnitOfWorkRunner } from "../db/unit-of-work";
 import { ConfigError } from "../errors/config-error";
 import { createApiApp } from "../http/app";
 import { createLogger } from "../logging/logger";
+import { installCrashHandlers, type RegisterCrashHandlers } from "./crash-handlers";
 import { buildRegistries, type Registries } from "../registry/build-registries";
 import { RegistryError } from "../registry/registry-error";
 import type { ModuleRegistration } from "../registry/types";
@@ -46,6 +47,8 @@ export interface StartApiOptions {
   readonly mountFrontend?: (app: Express, server: Server, config: ApiConfig) => Promise<void> | void;
   /** Default: the process-wide `installDefaultRunner`. */
   readonly installRunner?: (runner: UnitOfWorkRunner) => void;
+  /** Default: the real process events. Injectable so the handlers can be invoked in a test. */
+  readonly registerCrashHandlers?: RegisterCrashHandlers;
   /** Default true. */
   readonly listen?: boolean;
   /** Default: the configured port. 0 picks a free one. */
@@ -80,6 +83,7 @@ export async function startApi(options: StartApiOptions): Promise<RunningApi | u
   scrubOwnerVariables(options.env as Record<string, string | undefined> | undefined);
 
   const logger = options.logger ?? createLogger({ service: "api", level: config.logLevel });
+  installCrashHandlers(logger, exit, options.registerCrashHandlers);
   for (const warning of config.warnings) logger.warn(warning);
 
   let db: DbPool | undefined;
