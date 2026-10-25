@@ -80,6 +80,9 @@ describe("the check statement failing (no database needed)", () => {
     const release = vi.fn();
     const client = {
       query: vi.fn().mockRejectedValue(Object.assign(new Error("denied"), { code })),
+      // withClient listens for 'error' while a client is checked out
+      on: vi.fn(),
+      off: vi.fn(),
       release,
     };
     vi.spyOn(pg, "Pool").mockImplementation(function () {
