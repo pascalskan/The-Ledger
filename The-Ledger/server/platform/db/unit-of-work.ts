@@ -7,6 +7,7 @@ import { EMPTY_CATALOGUE, type TypeCatalogue } from "../audit/catalogue";
 import {
   assertLiveContext,
   expireContext,
+  isUuid,
   type ExecutionContext,
 } from "../context/execution-context";
 import {
@@ -267,6 +268,7 @@ export function createUnitOfWorkRunner(options: UnitOfWorkRunnerOptions): UnitOf
   ): Promise<T> {
     // Checks before the transaction opens: no SQL, and no connection, if any fails.
     assertLiveContext(context);
+    if (!isUuid(context.companyId)) throw new ForgedContextError("The execution context's company ID is not a UUID");
     const active = activeUnit.getStore();
     if (active !== undefined && !active.closed) throw new NestedUnitOfWorkError();
 
@@ -281,13 +283,15 @@ export function createUnitOfWorkRunner(options: UnitOfWorkRunnerOptions): UnitOf
       };
       let committed = false;
       try {
-        await rawClient.query("BEGIN ISOLATION LEVEL READ COMMITTED");
-        // One statement sets the tenant AND captures the transaction's identity for the pre-COMMIT check.
-        const began = await rawClient.query<{ started: string }>(
-          "SELECT set_config('app.company_id', $1, true), transaction_timestamp()::text AS started",
-          [context.companyId],
-        );
-        const startedAt = began.rows[0]?.started;
+        // ONE simple-protocol round trip opens the transaction, sets the tenant and captures the
+        // transaction's identity for the pre-COMMIT check. The company ID is inlined (a simple
+        // query takes no parameters) after the strict UUID check above, so it cannot carry SQL.
+        // Phase 1's lock_timeout joins this same statement through
+        // set_config('lock_timeout', ..., true).
+        const opened = (await rawClient.query(
+          `BEGIN ISOLATION LEVEL READ COMMITTED; SELECT set_config('app.company_id', '${context.companyId}', true), transaction_timestamp()::text AS started`,
+        )) as unknown as ReadonlyArray<pg.QueryResult<{ started: string }>>;
+        const startedAt = opened[1]?.rows[0]?.started;
         const tx = createTransactionHandle(state);
         const uow = createView(state, module, tx);
 

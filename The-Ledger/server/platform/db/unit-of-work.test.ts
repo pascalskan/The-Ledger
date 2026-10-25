@@ -12,13 +12,17 @@ function fakePool(rollbackFails: boolean) {
   const statements: string[] = [];
   let company: unknown;
   const client = {
-    query: vi.fn(async (text: string, values?: unknown[]) => {
+    query: vi.fn(async (text: string) => {
       statements.push(text);
       if (/^ROLLBACK/.test(text) && rollbackFails) throw new Error("connection lost");
-      // the unit's identity statement and its pre-COMMIT integrity check
+      // the unit's opening statement (BEGIN and the identity SELECT in one simple query: two results)
+      // and its pre-COMMIT integrity check
       if (text.includes("set_config")) {
-        company = values?.[0];
-        return { command: "SELECT", rows: [{ started: "T1" }], rowCount: 1 };
+        company = /set_config\('app.company_id', '([^']+)'/.exec(text)?.[1];
+        return [
+          { command: "BEGIN", rows: [], rowCount: null },
+          { command: "SELECT", rows: [{ started: "T1" }], rowCount: 1 },
+        ];
       }
       if (text.includes("transaction_timestamp")) {
         return { command: "SELECT", rows: [{ started: "T1", role: "ledger_app", company }], rowCount: 1 };
@@ -87,7 +91,7 @@ describe("a unit whose ROLLBACK fails", () => {
   it("issues no ROLLBACK after a successful COMMIT", async () => {
     const { pool, statements } = fakePool(false);
     await createUnitOfWorkRunner({ pool }).forModule("alpha")(ctx(), async () => "ok");
-    expect(statements.map((s) => s.split(" ")[0])).toEqual(["BEGIN", "SELECT", "SELECT", "COMMIT"]);
+    expect(statements.map((s) => s.split(" ")[0])).toEqual(["BEGIN", "SELECT", "COMMIT"]);
   });
 });
 
@@ -96,11 +100,14 @@ describe("the pre-COMMIT integrity check (fake connection)", () => {
     const statements: string[] = [];
     let company: unknown;
     const client = {
-      query: vi.fn(async (text: string, values?: unknown[]) => {
+      query: vi.fn(async (text: string) => {
         statements.push(text.trim().split(/\s+/)[0]!);
         if (text.includes("set_config")) {
-          company = values?.[0];
-          return { command: "SELECT", rows: [{ started: "T1" }], rowCount: 1 };
+          company = /set_config\('app.company_id', '([^']+)'/.exec(text)?.[1];
+          return [
+            { command: "BEGIN", rows: [], rowCount: null },
+            { command: "SELECT", rows: [{ started: "T1" }], rowCount: 1 },
+          ];
         }
         if (text.includes("transaction_timestamp")) {
           if (check.error) throw Object.assign(new Error("failed"), check.error);

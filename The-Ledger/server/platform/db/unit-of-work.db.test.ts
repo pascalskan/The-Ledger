@@ -594,14 +594,16 @@ describe("no nesting, no savepoints (G0-07)", () => {
     await expect(later!()).resolves.toBe("second");
   });
 
-  it("uses exactly one transaction: BEGIN, set_config, the work, COMMIT", async () => {
+  it("uses exactly one transaction: one opening statement, the work, the integrity check, COMMIT", async () => {
     const { pool, statements } = loggingPool(pools.app);
     await createUnitOfWorkRunner({ pool, auditCatalogue, eventCatalogue }).forModule("alpha")(userContext(), (uow) => uow.audit.append(validEntry()));
     const kinds = statements.map((s) => s.trim().split(/\s+/)[0]!.toUpperCase());
-    // BEGIN; set_config + transaction identity; the write; the pre-COMMIT integrity check; COMMIT
-    expect(kinds).toEqual(["BEGIN", "SELECT", "INSERT", "SELECT", "COMMIT"]);
+    // Three platform round trips per unit (review round 3, minor 4): BEGIN + set_config + transaction
+    // identity in one simple query; the pre-COMMIT integrity check; COMMIT. The work (one INSERT) is between.
+    expect(kinds).toEqual(["BEGIN", "INSERT", "SELECT", "COMMIT"]);
     expect(statements[0]).toContain("READ COMMITTED");
-    expect(statements[1]).toContain("set_config('app.company_id'");
+    expect(statements[0]).toContain("set_config('app.company_id'");
+    expect(statements[0]).toContain("transaction_timestamp()");
   });
 });
 
