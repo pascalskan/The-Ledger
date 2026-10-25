@@ -18,7 +18,7 @@ import {
   UnitOfWorkClosedError,
 } from "../errors/platform-errors";
 import { createOutboxWriter, type OutboxWriter } from "../events/outbox-writer";
-import { DESTROY_CLIENT, type DbPool } from "./client";
+import { markForClientDestruction, type DbPool } from "./client";
 import type { UnitPoison, UnitState } from "./unit-state";
 
 // PS-12, Phase 0 spec §4.4: the Unit of Work.
@@ -211,22 +211,8 @@ export function createUnitOfWorkRunner(options: UnitOfWorkRunnerOptions): UnitOf
           try {
             await rawClient.query("ROLLBACK");
           } catch {
-            // The connection is in an unknown state: it must not return to the pool. Mark the
-            // error so withClient destroys the client; a primitive or a frozen error cannot
-            // carry the mark, so it is wrapped (the original stays as the cause).
-            const markable =
-              typeof error === "object" && error !== null && Object.isExtensible(error)
-                ? (error as Record<symbol, unknown>)
-                : undefined;
-            if (markable !== undefined) {
-              markable[DESTROY_CLIENT] = true;
-            } else {
-              const wrapped = new Error("The unit of work failed and could not be rolled back", {
-                cause: error,
-              });
-              (wrapped as unknown as Record<symbol, unknown>)[DESTROY_CLIENT] = true;
-              toThrow = wrapped;
-            }
+            // The connection is in an unknown state: it must not return to the pool.
+            toThrow = markForClientDestruction(error);
           }
         }
         throw toThrow;

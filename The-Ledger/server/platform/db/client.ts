@@ -163,6 +163,41 @@ function refuseNonTestDatabaseUnderVitest(settings: PoolSettings): void {
   }
 }
 
+/**
+ * pg-pool removes its idle 'error' listener when it hands a client out, and `withClient` is the
+ * only holder of a checked-out client. Without a listener of its own, a connection loss or a
+ * backend FATAL while a unit runs would be an uncaught exception that kills the process. This
+ * listens for the duration of the checkout, logs a WARN (the role and the serializer's safe
+ * form of the error), and remembers the failure so the client is destroyed on release instead
+ * of going back to the pool. The in-flight query rejects by itself.
+ */
+function watchClient(client: pg.PoolClient, logger: Logger, role: string) {
+  let failure: Error | undefined;
+  const onError = (error: Error) => {
+    failure ??= error;
+    logger.warn({ err: error, role }, "Database client failed while checked out");
+  };
+  client.on("error", onError);
+  return {
+    failure: () => failure,
+    stop: () => void client.off("error", onError),
+  };
+}
+
+/**
+ * Marks an error so `withClient` destroys the client it was thrown from. A primitive or a
+ * frozen error cannot carry the mark, so it is wrapped (the original stays as the cause).
+ */
+export function markForClientDestruction(error: unknown): unknown {
+  if (typeof error === "object" && error !== null && Object.isExtensible(error)) {
+    (error as Record<symbol, unknown>)[DESTROY_CLIENT] = true;
+    return error;
+  }
+  const wrapped = new Error("The operation failed and left the connection in an unknown state", { cause: error });
+  (wrapped as unknown as Record<symbol, unknown>)[DESTROY_CLIENT] = true;
+  return wrapped;
+}
+
 function attachPoolErrorLogging(pool: pg.Pool, logger: Logger, role: string): void {
   // An idle client can fail (for example when the server restarts). Without a listener the
   // process would crash on the unhandled 'error' event.
@@ -221,6 +256,7 @@ export function createRuntimePool(options: CreateRuntimePoolOptions): DbPool {
     role: expectedRole,
     async withClient<T>(fn: (client: pg.PoolClient) => Promise<T>): Promise<T> {
       const client = await pool.connect();
+      const watch = watchClient(client, logger, expectedRole);
       let refusal: Error | undefined;
       if (!verified.has(client)) {
         try {
@@ -232,6 +268,7 @@ export function createRuntimePool(options: CreateRuntimePoolOptions): DbPool {
       }
       if (refusal !== undefined) {
         // release(err) destroys the client instead of returning it to the pool.
+        watch.stop();
         client.release(refusal);
         if (refusal instanceof RuntimeRoleError) {
           logger.error(
@@ -255,7 +292,9 @@ export function createRuntimePool(options: CreateRuntimePoolOptions): DbPool {
         if (shouldDestroy(error)) destroy = error as Error;
         throw error;
       } finally {
-        client.release(destroy);
+        // A client that reported an error while checked out is never returned to the pool.
+        watch.stop();
+        client.release(destroy ?? watch.failure());
       }
     },
     end: () => pool.end(),
@@ -280,6 +319,7 @@ export function createOwnerPool(options: CreatePoolOptions): DbPool {
     role: settings.user,
     async withClient<T>(fn: (client: pg.PoolClient) => Promise<T>): Promise<T> {
       const client = await pool.connect();
+      const watch = watchClient(client, logger, settings.user);
       if (!checked.has(client)) {
         try {
           const result = await client.query<{ db: string }>("SELECT current_database()::text AS db");
@@ -290,6 +330,7 @@ export function createOwnerPool(options: CreatePoolOptions): DbPool {
           }
           checked.add(client);
         } catch (error) {
+          watch.stop();
           client.release(error instanceof Error ? error : new Error("database check failed"));
           throw error;
         }
@@ -301,7 +342,8 @@ export function createOwnerPool(options: CreatePoolOptions): DbPool {
         if (shouldDestroy(error)) destroy = error as Error;
         throw error;
       } finally {
-        client.release(destroy);
+        watch.stop();
+        client.release(destroy ?? watch.failure());
       }
     },
     end: () => pool.end(),
