@@ -194,15 +194,17 @@ function variableNamesIn(file: string): string[] {
   }
   const names: string[] = [];
   for (const line of text.split(/\r?\n/)) {
-    const match = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/.exec(line);
+    // dotenv-style names can contain dots and dashes, and `NAME: value` is accepted by some loaders
+    const match = /^\s*(?:export\s+)?([\w.-]+)\s*[=:]/.exec(line);
     if (match?.[1]) names.push(match[1]);
   }
   return names;
 }
 
 const BACKEND_NAME =
-  /^(LEDGER_|PG[A-Z]|OUTBOX_)|^(JWT_PRIVATE_KEY|JWT_PUBLIC_KEY|PORTAL_JWT_SECRET|DATABASE_URL)$/;
-const SECRET_LOOKING = /DATABASE|JWT|SECRET|KEY|PASSWORD|TOKEN/;
+  /^(LEDGER_|PG[A-Z]|OUTBOX_)|^(JWT_PRIVATE_KEY|JWT_PUBLIC_KEY|PORTAL_JWT_SECRET|DATABASE_URL)$/i;
+// Case-insensitive: "VITE_jwt_secret" is exposed to the browser exactly like "VITE_JWT_SECRET".
+const SECRET_LOOKING = /DATABASE|JWT|SECRET|KEY|PASSWORD|TOKEN/i;
 
 /** A VITE_ name that looks like a secret would be exposed to the browser bundle (R2-14). */
 function isForbiddenViteName(name: string): boolean {
@@ -226,6 +228,18 @@ export function scanClientEnvFiles(appDir: string = process.cwd()): ConfigIssue[
     }
   }
   return issues;
+}
+
+/**
+ * The VITE_ variables in an environment whose names look like secrets. `vite build` inlines every
+ * VITE_ variable of the BUILD process's environment into the browser bundle, so script/build.ts
+ * checks the real environment here (names only, never values) before it builds. The read of
+ * `process.env` stays in this folder (import rule 13).
+ */
+export function scanEnvironmentForViteSecrets(env: Env = process.env): ConfigIssue[] {
+  return Object.keys(env)
+    .filter(isForbiddenViteName)
+    .map((variable) => ({ variable, problem: "must not be set when building: VITE_ variables are inlined into the browser bundle" }));
 }
 
 // --- shared prelude --------------------------------------------------------

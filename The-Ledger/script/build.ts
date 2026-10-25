@@ -2,7 +2,7 @@ import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
 import { rm, readFile } from "fs/promises";
 import { ConfigError } from "../server/platform/errors/config-error";
-import { scanClientEnvFiles } from "../server/platform/config/env";
+import { scanClientEnvFiles, scanEnvironmentForViteSecrets } from "../server/platform/config/env";
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -37,9 +37,10 @@ const allowlist = [
 
 async function buildAll() {
   // Vite inlines client/.env.production into the bundle at build time, so no
-  // backend variable or secret-looking VITE_ name may be defined in client/.env*
-  // (Phase 0 spec section 4.6, R3-17). Names only are read.
-  const clientEnvIssues = scanClientEnvFiles();
+  // backend variable or secret-looking VITE_ name may be defined in client/.env*, and the
+  // build's own environment is inlined too, so none may be set there (Phase 0 spec section 4.6,
+  // R3-17). Names only are read.
+  const clientEnvIssues = [...scanClientEnvFiles(), ...scanEnvironmentForViteSecrets()];
   if (clientEnvIssues.length > 0) throw new ConfigError(clientEnvIssues);
 
   await rm("dist", { recursive: true, force: true });
