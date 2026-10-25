@@ -198,6 +198,47 @@ export function markForClientDestruction(error: unknown): unknown {
   return wrapped;
 }
 
+export interface TransactionOptions {
+  /** The opening statement(s). Default "BEGIN". The raw result is passed to the work. */
+  readonly open?: string;
+  /** Runs after the work and before COMMIT. Throwing rolls the transaction back. */
+  readonly beforeCommit?: () => Promise<void>;
+  /** Runs after COMMIT has returned. Throwing here does NOT roll back (the transaction has ended). */
+  readonly afterCommit?: (result: pg.QueryResult) => void;
+}
+
+/**
+ * Runs `work` in one transaction on `client`: the opening statement, the work, `beforeCommit`,
+ * COMMIT; any failure before COMMIT returns sends ROLLBACK. When ROLLBACK itself fails the
+ * connection is in an unknown state, so the ORIGINAL error is rethrown marked for destruction
+ * (`withClient` then discards the client rather than returning it to the pool). Destroy-on-failure
+ * lives here, once, for the unit of work and the outbox worker (review round 3, minor 6).
+ */
+export async function withTransaction<T>(
+  client: pg.PoolClient,
+  work: (opened: unknown) => Promise<T>,
+  options: TransactionOptions = {},
+): Promise<T> {
+  let committed = false;
+  try {
+    const opened: unknown = await client.query(options.open ?? "BEGIN");
+    const value = await work(opened);
+    await options.beforeCommit?.();
+    const result = await client.query("COMMIT");
+    committed = true;
+    options.afterCommit?.(result);
+    return value;
+  } catch (error) {
+    if (committed) throw error;
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      throw markForClientDestruction(error);
+    }
+    throw error;
+  }
+}
+
 function attachPoolErrorLogging(pool: pg.Pool, logger: Logger, role: string): void {
   // An idle client can fail (for example when the server restarts). Without a listener the
   // process would crash on the unhandled 'error' event.

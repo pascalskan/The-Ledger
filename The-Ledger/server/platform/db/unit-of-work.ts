@@ -21,7 +21,7 @@ import {
   UnitOfWorkIntegrityError,
 } from "../errors/platform-errors";
 import { createOutboxWriter, type OutboxWriter } from "../events/outbox-writer";
-import { markForClientDestruction, type DbPool } from "./client";
+import { markForClientDestruction, withTransaction, type DbPool } from "./client";
 import { poisonUnit, type UnitPoison, type UnitState } from "./unit-state";
 import { assertNoTransactionControl } from "./statement-guard";
 
@@ -281,84 +281,78 @@ export function createUnitOfWorkRunner(options: UnitOfWorkRunnerOptions): UnitOf
         closed: false,
         poison: undefined,
       };
-      let committed = false;
-      try {
-        // ONE simple-protocol round trip opens the transaction, sets the tenant and captures the
-        // transaction's identity for the pre-COMMIT check. The company ID is inlined (a simple
-        // query takes no parameters) after the strict UUID check above, so it cannot carry SQL.
-        // Phase 1's lock_timeout joins this same statement through
-        // set_config('lock_timeout', ..., true).
-        const opened = (await rawClient.query(
-          `BEGIN ISOLATION LEVEL READ COMMITTED; SELECT set_config('app.company_id', '${context.companyId}', true), transaction_timestamp()::text AS started`,
-        )) as unknown as ReadonlyArray<pg.QueryResult<{ started: string }>>;
-        const startedAt = opened[1]?.rows[0]?.started;
-        const tx = createTransactionHandle(state);
-        const uow = createView(state, module, tx);
+      // The transaction identity captured by the opening statement, handed to the integrity check.
+      const identity: { startedAt?: string | undefined } = {};
+      return withTransaction(
+        rawClient,
+        async (opened) => {
+          const startedAt = (opened as ReadonlyArray<pg.QueryResult<{ started: string }>>)[1]?.rows[0]?.started;
+          const tx = createTransactionHandle(state);
+          const uow = createView(state, module, tx);
 
-        let value: T;
-        try {
-          value = await activeUnit.run(state, () => work(uow));
-        } finally {
-          // The unit ends the moment the work settles, on success AND on failure, BEFORE the
-          // COMMIT or ROLLBACK is sent. Until then a late or un-awaited append, record or tx call
-          // (a timer, a stray Promise.all) would pass every closed check during that round trip
-          // and run in autocommit once the transaction ends - an audit row for rolled-back work.
-          // The platform's own COMMIT and ROLLBACK go through rawClient, not the guarded client.
-          state.closed = true;
-        }
-
-        if (state.poison !== undefined) throw poisonError(state.poison);
-
-        // Pre-COMMIT integrity check (one statement): it is still the SAME transaction, run by the
-        // pool's role, for this company. A COMMIT, ROLLBACK, BEGIN, SET ROLE or set_config issued
-        // through the unit by any route changes at least one of these.
-        let check: { rows: { started: string; role: string; company: string | null }[] };
-        try {
-          check = await rawClient.query(
-            "SELECT transaction_timestamp()::text AS started, current_user::text AS role, current_setting('app.company_id', true) AS company",
-          );
-        } catch (error) {
-          // 25P02: an earlier statement failed and the work caught the error. The transaction is
-          // aborted and could only ever roll back; say so (the same as a COMMIT that reports ROLLBACK).
-          if ((error as { code?: unknown }).code === "25P02") throw new UnitOfWorkAbortedError({ cause: error });
-          throw error;
-        }
-        const seen = check.rows[0];
-        const changed =
-          seen === undefined || startedAt === undefined || seen.started !== startedAt
-            ? "the transaction changed"
-            : seen.role !== pool.role
-              ? "the database role changed"
-              : seen.company !== context.companyId
-                ? "the company setting changed"
-                : undefined;
-        if (changed !== undefined) {
-          logger?.error({ condition: changed, module }, "Unit of work integrity check failed; the connection is destroyed");
-          // Rolled back by the catch below if the connection is still in a transaction; destroyed either way.
-          throw markForClientDestruction(new UnitOfWorkIntegrityError(changed));
-        }
-
-        const result = await rawClient.query("COMMIT");
-        committed = true;
-        // COMMIT of a transaction the database has already aborted reports ROLLBACK without
-        // raising an error (an earlier failed statement was caught by the work).
-        if (result.command === "ROLLBACK") throw new UnitOfWorkAbortedError();
-        return value;
-      } catch (error) {
-        let toThrow: unknown = error;
-        if (!committed) {
+          let value: T;
           try {
-            await rawClient.query("ROLLBACK");
-          } catch {
-            // The connection is in an unknown state: it must not return to the pool.
-            toThrow = markForClientDestruction(error);
+            value = await activeUnit.run(state, () => work(uow));
+          } finally {
+            // The unit ends the moment the work settles, on success AND on failure, BEFORE the
+            // COMMIT or ROLLBACK is sent. Until then a late or un-awaited append, record or tx call
+            // (a timer, a stray Promise.all) would pass every closed check during that round trip
+            // and run in autocommit once the transaction ends - an audit row for rolled-back work.
+            // The platform's own COMMIT and ROLLBACK go through rawClient, not the guarded client.
+            state.closed = true;
           }
-        }
-        throw toThrow;
-      } finally {
+          if (state.poison !== undefined) throw poisonError(state.poison);
+          identity.startedAt = startedAt;
+          return value;
+        },
+        {
+          // ONE simple-protocol round trip opens the transaction, sets the tenant and captures the
+          // transaction identity for the pre-COMMIT check. The company ID is inlined (a simple
+          // query takes no parameters) after the strict UUID check above, so it cannot carry SQL.
+          // Phase 1's lock_timeout joins this same statement through
+          // set_config('lock_timeout', ..., true).
+          open: `BEGIN ISOLATION LEVEL READ COMMITTED; SELECT set_config('app.company_id', '${context.companyId}', true), transaction_timestamp()::text AS started`,
+          // Pre-COMMIT integrity check (one statement): it is still the SAME transaction, run by the
+          // pool role, for this company. A COMMIT, ROLLBACK, BEGIN, SET ROLE or set_config issued
+          // through the unit by any route changes at least one of these.
+          beforeCommit: async () => {
+            let check: { rows: { started: string; role: string; company: string | null }[] };
+            try {
+              check = await rawClient.query(
+                "SELECT transaction_timestamp()::text AS started, current_user::text AS role, current_setting('app.company_id', true) AS company",
+              );
+            } catch (error) {
+              // 25P02: an earlier statement failed and the work caught the error. The transaction is
+              // aborted and could only ever roll back; say so (the same as a COMMIT that reports ROLLBACK).
+              if ((error as { code?: unknown }).code === "25P02") throw new UnitOfWorkAbortedError({ cause: error });
+              throw error;
+            }
+            const seen = check.rows[0];
+            const startedAt = identity.startedAt;
+            const changed =
+              seen === undefined || startedAt === undefined || seen.started !== startedAt
+                ? "the transaction changed"
+                : seen.role !== pool.role
+                  ? "the database role changed"
+                  : seen.company !== context.companyId
+                    ? "the company setting changed"
+                    : undefined;
+            if (changed !== undefined) {
+              logger?.error({ condition: changed, module }, "Unit of work integrity check failed; the connection is destroyed");
+              // Rolled back by withTransaction if the connection is still in a transaction; destroyed either way.
+              throw markForClientDestruction(new UnitOfWorkIntegrityError(changed));
+            }
+          },
+          // COMMIT of a transaction the database has already aborted reports ROLLBACK without
+          // raising an error (an earlier failed statement was caught by the work).
+          afterCommit: (result) => {
+            if (result.command === "ROLLBACK") throw new UnitOfWorkAbortedError();
+          },
+        },
+      ).finally(() => {
         state.closed = true;
         if (runOptions.expireContextWhenClosed === true) expireContext(context);
-      }
+      });
     });
   }
 

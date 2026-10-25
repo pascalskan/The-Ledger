@@ -6,7 +6,7 @@ import type { Logger } from "pino";
 import type { OutboxSettings } from "../config";
 import { runWithLogContext } from "../context/request-context";
 import { createExecutionContext, toCompanyId } from "../context/execution-context";
-import { markForClientDestruction, RuntimeRoleError, type DbPool } from "../db/client";
+import { RuntimeRoleError, withTransaction, type DbPool } from "../db/client";
 import type { UnitOfWorkRunner } from "../db/unit-of-work";
 import { LockLostError } from "../errors/platform-errors";
 import { isErrorObject, safeError } from "../logging/error-serializer";
@@ -269,9 +269,8 @@ export function createOutboxSteps(deps: OutboxWorkerDeps): OutboxSteps {
     },
 
     async finish(row) {
-      await pool.withClient(async (client) => {
-        await client.query("BEGIN");
-        try {
+      await pool.withClient((client) =>
+        withTransaction(client, async () => {
           // Copied from the outbox row, in the database, while this worker still holds it.
           await client.query(
             `INSERT INTO intelligence.event_log
@@ -293,17 +292,8 @@ export function createOutboxSteps(deps: OutboxWorkerDeps): OutboxSteps {
             [row.outbox_id, instanceId],
           );
           if (delivered.rowCount !== 1) throw new LockLostError();
-          await client.query("COMMIT");
-        } catch (error) {
-          try {
-            await client.query("ROLLBACK");
-          } catch {
-            // The connection is in an unknown state: destroy it, and still report the ORIGINAL error.
-            throw markForClientDestruction(error);
-          }
-          throw error;
-        }
-      });
+        }),
+      );
     },
 
     async release(rows) {
