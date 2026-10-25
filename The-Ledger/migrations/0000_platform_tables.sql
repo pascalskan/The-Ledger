@@ -1,0 +1,95 @@
+CREATE SCHEMA "audit";
+--> statement-breakpoint
+CREATE SCHEMA "intelligence";
+--> statement-breakpoint
+CREATE TABLE "audit"."audit_entries" (
+	"audit_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"sequence_no" bigint GENERATED ALWAYS AS IDENTITY (sequence name "audit"."audit_entries_sequence_no_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1),
+	"company_id" uuid NOT NULL,
+	"entry_type" text NOT NULL,
+	"actor_id" uuid,
+	"actor_role" text NOT NULL,
+	"occurred_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"source_object_type" text NOT NULL,
+	"source_object_id" uuid NOT NULL,
+	"destination_object_type" text,
+	"destination_object_id" uuid,
+	"job_id" uuid,
+	"site_id" uuid,
+	"client_id" uuid,
+	"previous_value" jsonb,
+	"new_value" jsonb,
+	"external_reference" text,
+	"metadata" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"causation_event_id" uuid,
+	"causation_actor_id" uuid,
+	CONSTRAINT "audit_entries_entry_type_format" CHECK (entry_type ~ '^[a-z][a-z0-9_]{2,99}$'),
+	CONSTRAINT "audit_entries_actor_role_values" CHECK (actor_role IN ('ceo','pm','worker','client','system')),
+	CONSTRAINT "audit_entries_system_actor_has_no_id" CHECK ((actor_role = 'system') = (actor_id IS NULL)),
+	CONSTRAINT "audit_entries_source_object_type_length" CHECK (length(source_object_type) BETWEEN 1 AND 100),
+	CONSTRAINT "audit_entries_destination_pair" CHECK ((destination_object_type IS NULL) = (destination_object_id IS NULL)),
+	CONSTRAINT "audit_entries_causation_event_is_system" CHECK (causation_event_id IS NULL OR actor_role = 'system'),
+	CONSTRAINT "audit_entries_causation_actor_needs_event" CHECK (causation_actor_id IS NULL OR causation_event_id IS NOT NULL)
+);
+--> statement-breakpoint
+CREATE TABLE "intelligence"."event_log" (
+	"event_log_id" uuid DEFAULT gen_random_uuid() NOT NULL,
+	"event_id" uuid NOT NULL,
+	"event_type" text NOT NULL,
+	"event_version" text NOT NULL,
+	"source_module" text NOT NULL,
+	"company_id" uuid NOT NULL,
+	"actor_id" uuid,
+	"source_object_type" text NOT NULL,
+	"source_object_id" uuid NOT NULL,
+	"payload" jsonb NOT NULL,
+	"job_id" uuid,
+	"causation_event_id" uuid,
+	"causation_actor_id" uuid,
+	"occurred_at" timestamp with time zone NOT NULL,
+	"logged_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "event_log_pkey" PRIMARY KEY("event_id"),
+	CONSTRAINT "event_log_causation_event_is_system" CHECK (causation_event_id IS NULL OR actor_id IS NULL),
+	CONSTRAINT "event_log_causation_actor_needs_event" CHECK (causation_actor_id IS NULL OR causation_event_id IS NOT NULL)
+);
+--> statement-breakpoint
+CREATE TABLE "intelligence"."event_outbox" (
+	"outbox_id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"event_id" uuid NOT NULL,
+	"event_type" text NOT NULL,
+	"event_version" text DEFAULT '1.0' NOT NULL,
+	"source_module" text NOT NULL,
+	"company_id" uuid NOT NULL,
+	"actor_id" uuid,
+	"source_object_type" text NOT NULL,
+	"source_object_id" uuid NOT NULL,
+	"payload" jsonb NOT NULL,
+	"job_id" uuid,
+	"causation_event_id" uuid,
+	"causation_actor_id" uuid,
+	"occurred_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"status" text DEFAULT 'pending' NOT NULL,
+	"retry_count" integer DEFAULT 0 NOT NULL,
+	"next_attempt_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"locked_at" timestamp with time zone,
+	"locked_by" text,
+	"delivered_subscribers" text[] DEFAULT '{}'::text[] NOT NULL,
+	"last_error" text,
+	"delivered_at" timestamp with time zone,
+	"dead_lettered_at" timestamp with time zone,
+	CONSTRAINT "event_outbox_event_id_key" UNIQUE("event_id"),
+	CONSTRAINT "event_outbox_event_type_format" CHECK (event_type ~ '^[A-Z][A-Za-z0-9]{2,99}$'),
+	CONSTRAINT "event_outbox_source_module_format" CHECK (source_module ~ '^[a-z][a-z_]{1,49}$'),
+	CONSTRAINT "event_outbox_payload_is_object" CHECK (jsonb_typeof(payload) = 'object'),
+	CONSTRAINT "event_outbox_status_values" CHECK (status IN ('pending','processing','failed','delivered','dead_lettered')),
+	CONSTRAINT "event_outbox_retry_count_not_negative" CHECK (retry_count >= 0),
+	CONSTRAINT "event_outbox_lock_matches_status" CHECK ((status = 'processing') = (locked_at IS NOT NULL AND locked_by IS NOT NULL)),
+	CONSTRAINT "event_outbox_delivered_has_time" CHECK (status <> 'delivered' OR delivered_at IS NOT NULL),
+	CONSTRAINT "event_outbox_dead_lettered_has_time" CHECK (status <> 'dead_lettered' OR dead_lettered_at IS NOT NULL),
+	CONSTRAINT "event_outbox_causation_event_is_system" CHECK (causation_event_id IS NULL OR actor_id IS NULL),
+	CONSTRAINT "event_outbox_causation_actor_needs_event" CHECK (causation_actor_id IS NULL OR causation_event_id IS NOT NULL)
+);
+--> statement-breakpoint
+CREATE INDEX "event_outbox_ready_idx" ON "intelligence"."event_outbox" USING btree ("next_attempt_at","created_at") WHERE status IN ('pending','failed');--> statement-breakpoint
+CREATE INDEX "event_outbox_processing_idx" ON "intelligence"."event_outbox" USING btree ("locked_at") WHERE status = 'processing';

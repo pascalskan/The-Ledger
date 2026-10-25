@@ -9,8 +9,12 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc && tsc -p tsconfig.test.json",
-    "test": "npm run test:unit",
-    "test:unit": "vitest run --project unit"
+    "test": "npm run test:unit && npm run test:db && npm run test:gate",
+    "test:unit": "vitest run --project unit",
+    "test:db": "vitest run --project db",
+    "test:gate": "vitest run --project gate",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx server/platform/db/migrate.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

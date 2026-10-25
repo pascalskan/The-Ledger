@@ -7,7 +7,7 @@ import { isErrorObject, isSafeError, safeError } from "./error-serializer";
 // no pino-pretty. Level is an upper-case label, `timestamp` is ISO 8601 and the
 // message key is `message` (BACKEND_OBSERVABILITY_ARCHITECTURE.md, Log Structure).
 
-export type Service = "api" | "worker";
+export type Service = "api" | "worker" | "migrate";
 
 /** Containers deeper than this are replaced, so nothing below the walk is logged unexamined (R3-13). */
 const MAX_WALK_DEPTH = 3;
