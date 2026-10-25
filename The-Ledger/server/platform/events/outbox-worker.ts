@@ -6,7 +6,7 @@ import type { Logger } from "pino";
 import type { OutboxSettings } from "../config";
 import { runWithLogContext } from "../context/request-context";
 import { createExecutionContext, toCompanyId } from "../context/execution-context";
-import type { DbPool } from "../db/client";
+import { markForClientDestruction, RuntimeRoleError, type DbPool } from "../db/client";
 import type { UnitOfWorkRunner } from "../db/unit-of-work";
 import { LockLostError } from "../errors/platform-errors";
 import { isErrorObject, safeError } from "../logging/error-serializer";
@@ -105,6 +105,24 @@ export function summarizeError(error: unknown): string {
   const code = safe.code ?? safe.pgCode ?? safe.type;
   const parts = [safe.name, code, safe.message].filter((part): part is string => typeof part === "string" && part !== "");
   return parts.join(": ");
+}
+
+const INFRASTRUCTURE_CODES = new Set(["57P01", "57P02", "57P03", "ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EPIPE"]);
+const INFRASTRUCTURE_MESSAGES = /^(Connection terminated|timeout exceeded when trying to connect|Client has encountered a connection error|Cannot use a pool after calling end)/;
+
+/**
+ * True when a failure is the database or the network, not the subscriber: a refused role check,
+ * a connection-class SQLSTATE (class 08, 57P01/57P02/57P03), a socket error, or a pool timeout -
+ * on the error itself or on its cause chain (three levels). Such a failure is never counted as
+ * a subscriber's failed attempt: a ~15 second database failover must not dead-letter events.
+ */
+export function isInfrastructureError(error: unknown, depth = 0): boolean {
+  if (error instanceof RuntimeRoleError) return true;
+  if (typeof error !== "object" || error === null) return false;
+  const { code, message } = error as { code?: unknown; message?: unknown };
+  if (typeof code === "string" && (code.startsWith("08") || INFRASTRUCTURE_CODES.has(code))) return true;
+  if (typeof message === "string" && INFRASTRUCTURE_MESSAGES.test(message)) return true;
+  return depth < 3 && "cause" in error && isInfrastructureError((error as { cause?: unknown }).cause, depth + 1);
 }
 
 function envelopeOf(row: OutboxRow): EventEnvelope {
@@ -271,7 +289,12 @@ export function createOutboxSteps(deps: OutboxWorkerDeps): OutboxSteps {
           if (delivered.rowCount !== 1) throw new LockLostError();
           await client.query("COMMIT");
         } catch (error) {
-          await client.query("ROLLBACK");
+          try {
+            await client.query("ROLLBACK");
+          } catch {
+            // The connection is in an unknown state: destroy it, and still report the ORIGINAL error.
+            throw markForClientDestruction(error);
+          }
           throw error;
         }
       });
@@ -334,7 +357,11 @@ export function createOutboxWorkerFromSteps(
   steps: OutboxSteps,
 ): OutboxWorker {
   const { subscribers, settings, logger } = deps;
-  let stopping = false;
+  // A stop was requested and has not yet taken effect: the loop ends, and a batch in hand hands
+  // its unstarted rows back. It is reset once the loop has ended, or - with no loop - when the
+  // run in flight has finished, so a later runOnce() works.
+  let stopRequested = false;
+  let inRun = 0;
   let loop: Promise<void> | undefined;
   let wake: AbortController | undefined;
 
@@ -361,6 +388,9 @@ export function createOutboxWorkerFromSteps(
           logger.warn({ eventId: row.event_id, eventType: row.event_type, companyId: row.company_id, subscriber: entry.subscriber.name }, "Claim lost during delivery; stopping this event");
           return;
         }
+        // A database or network failure is not the subscriber's fault: do not count an attempt.
+        // runOnce hands this row and the rest back, and the loop waits a poll interval.
+        if (isInfrastructureError(error)) throw error;
         failures.push({ subscriber: entry.subscriber.name, error });
         logger.warn(
           { err: error, eventId: row.event_id, eventType: row.event_type, companyId: row.company_id, subscriber: entry.subscriber.name, attempt: row.retry_count + 1 },
@@ -389,21 +419,40 @@ export function createOutboxWorkerFromSteps(
   }
 
   async function runOnce(): Promise<{ claimed: number }> {
-    await steps.recover();
-    const rows = await steps.claim();
-    for (const [index, row] of rows.entries()) {
-      if (stopping) {
-        await steps.release(rows.slice(index));
-        break;
+    inRun++;
+    try {
+      await steps.recover();
+      const rows = await steps.claim();
+      let index = 0;
+      try {
+        for (; index < rows.length; index++) {
+          if (stopRequested) {
+            await steps.release(rows.slice(index));
+            index = rows.length;
+            break;
+          }
+          const row = rows[index]!;
+          const runId = randomUUID();
+          await runWithLogContext({ runId, companyId: row.company_id }, () => deliver(row, runId));
+        }
+      } catch (error) {
+        // Whatever went wrong, the claimed rows must not stay locked (the heartbeat would keep them
+        // locked for ever): hand back the row in hand and the rest, unchanged and without counting an
+        // attempt, then let the loop log the failure and wait.
+        await steps.release(rows.slice(index)).catch((releaseError: unknown) => {
+          logger.error({ err: releaseError }, "Could not hand claimed rows back after a failure; the stale-lock recovery will");
+        });
+        throw error;
       }
-      const runId = randomUUID();
-      await runWithLogContext({ runId, companyId: row.company_id }, () => deliver(row, runId));
+      return { claimed: rows.length };
+    } finally {
+      inRun--;
+      if (inRun === 0 && loop === undefined) stopRequested = false;
     }
-    return { claimed: rows.length };
   }
 
   async function run(): Promise<void> {
-    while (!stopping) {
+    while (!stopRequested) {
       let wait = true;
       try {
         const { claimed } = await runOnce();
@@ -412,7 +461,7 @@ export function createOutboxWorkerFromSteps(
       } catch (error) {
         logger.error({ err: error }, "The outbox worker loop failed; it will carry on");
       }
-      if (stopping || !wait) continue;
+      if (stopRequested || !wait) continue;
       wake = new AbortController();
       await sleep(settings.pollIntervalMs, undefined, { signal: wake.signal }).catch(() => undefined);
     }
@@ -423,14 +472,18 @@ export function createOutboxWorkerFromSteps(
     runOnce,
     start() {
       if (loop !== undefined) return;
-      stopping = false;
+      stopRequested = false;
       loop = run();
     },
     async stop() {
-      stopping = true;
+      if (loop === undefined && inRun === 0) return; // nothing is running
+      stopRequested = true;
       wake?.abort();
-      await loop;
-      loop = undefined;
+      if (loop !== undefined) {
+        await loop;
+        loop = undefined;
+        stopRequested = false;
+      }
     },
   };
 }

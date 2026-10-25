@@ -6,7 +6,10 @@ import {
   buildRegistries,
   createExecutionContext,
   createLogger,
+  createOutboxSteps,
   createOutboxWorker,
+  createOutboxWorkerFromSteps,
+  RuntimeRoleError,
   createTestPools,
   toCompanyId,
   type DbPool,
@@ -583,5 +586,206 @@ describe("the loop", () => {
     const failed = records().find((r) => r.message === "Subscriber failed");
     expect(failed).toMatchObject({ eventId, eventType: "AlphaRecorded", companyId: company, subscriber: "alpha.first", attempt: 1 });
     expect(failed!.runId).toBeDefined();
+  });
+});
+
+/** Three committed events, oldest first. */
+async function commitThree(): Promise<[string, string, string]> {
+  const ids: string[] = [];
+  for (let i = 0; i < 3; i++) {
+    ids.push(await commitEvent());
+    await sleep(5);
+  }
+  return ids as [string, string, string];
+}
+const callsFor = (subscriber: string, eventId: string) =>
+  calls.filter((c) => c.subscriber === subscriber && c.eventId === eventId).length;
+
+describe("a failure in the middle of a batch (review M2)", () => {
+  function expectHandedBack(row: Record<string, any>, deliveredSubscribers: string[]) {
+    expect(["pending", "failed"]).toContain(row.status);
+    expect(row).toMatchObject({ locked_at: null, locked_by: null, retry_count: 0 });
+    expect([...row.delivered_subscribers].sort()).toEqual([...deliveredSubscribers].sort());
+  }
+
+  it("finish throws once: the row in hand and the rest are claimable again, nothing is counted, and every subscriber runs exactly once overall", async () => {
+    const [e1, e2, e3] = await commitThree();
+    let exploded = false;
+    const worker = makeWorker({
+      settings: { batchSize: 3 },
+      hooks: {
+        beforeFinish: (row) => {
+          if (row.event_id === e2 && !exploded) {
+            exploded = true;
+            throw new Error("finish exploded");
+          }
+        },
+      },
+    });
+    await expect(worker.runOnce()).rejects.toThrow("finish exploded");
+
+    expect((await rowOf(e1)).status).toBe("delivered");
+    expectHandedBack(await rowOf(e2), ["alpha.first", "alpha.second"]); // both had committed
+    expectHandedBack(await rowOf(e3), []);
+
+    await worker.runOnce(); // a later run delivers the rest
+    for (const id of [e1, e2, e3]) {
+      expect((await rowOf(id)).status).toBe("delivered");
+      expect(await logRows(id)).toHaveLength(1);
+      expect(callsFor("alpha.first", id)).toBe(1);
+      expect(callsFor("alpha.second", id)).toBe(1);
+    }
+  });
+
+  it("fail throws once: the row in hand keeps what its subscribers committed and the failure is not counted", async () => {
+    const [e1, e2, e3] = await commitThree();
+    let secondFailed = false;
+    behaviour["alpha.second"] = async (event) => {
+      if (event.eventId === e2 && !secondFailed) {
+        secondFailed = true;
+        throw new Error("a real subscriber failure");
+      }
+    };
+    const deps = { pool: pools.worker, runner: registries.runner, subscribers: registries.subscribers, settings: { ...fast, batchSize: 3 }, logger };
+    const steps = createOutboxSteps(deps);
+    let exploded = false;
+    const worker = createOutboxWorkerFromSteps(deps, {
+      ...steps,
+      fail: async (row, failures) => {
+        if (!exploded) {
+          exploded = true;
+          throw new Error("fail exploded");
+        }
+        return steps.fail(row, failures);
+      },
+    });
+    running.push(worker);
+    await expect(worker.runOnce()).rejects.toThrow("fail exploded");
+
+    expect((await rowOf(e1)).status).toBe("delivered");
+    expectHandedBack(await rowOf(e2), ["alpha.first"]); // first committed, second failed: not counted
+    expectHandedBack(await rowOf(e3), []);
+
+    await worker.runOnce();
+    for (const id of [e1, e2, e3]) expect((await rowOf(id)).status).toBe("delivered");
+    expect((await rowOf(e2)).retry_count).toBe(0);
+    expect(callsFor("alpha.first", e2)).toBe(1); // skipped on the later run
+    expect(callsFor("alpha.second", e2)).toBe(2); // the failed call, then the successful one
+    expect(callsFor("alpha.first", e3)).toBe(1);
+  });
+
+  it("a problem handing the rows back is logged, and the ORIGINAL error is the one thrown", async () => {
+    const [, e2] = await commitThree();
+    const deps = { pool: pools.worker, runner: registries.runner, subscribers: registries.subscribers, settings: { ...fast, batchSize: 3 }, logger };
+    const steps = createOutboxSteps(deps);
+    const worker = createOutboxWorkerFromSteps(deps, {
+      ...steps,
+      finish: async (row) => {
+        if (row.event_id === e2) throw new Error("finish exploded");
+        return steps.finish(row);
+      },
+      release: async () => {
+        throw new Error("release exploded");
+      },
+    });
+    running.push(worker);
+    await expect(worker.runOnce()).rejects.toThrow("finish exploded");
+    expect(records().some((r) => r.level === "ERROR" && r.message.startsWith("Could not hand claimed rows back"))).toBe(true);
+  });
+});
+
+describe("infrastructure failures are not subscriber failures (review M2, combined ruling)", () => {
+  const infrastructure: [string, () => Error][] = [
+    ["a connection-class SQLSTATE (08006)", () => Object.assign(new Error("connection failure"), { code: "08006" })],
+    ["an admin shutdown (57P01)", () => Object.assign(new Error("terminating connection"), { code: "57P01" })],
+    ["a crash shutdown (57P02)", () => Object.assign(new Error("crash"), { code: "57P02" })],
+    ["cannot connect now (57P03)", () => Object.assign(new Error("starting up"), { code: "57P03" })],
+    ["ECONNRESET", () => Object.assign(new Error("read ECONNRESET"), { code: "ECONNRESET" })],
+    ["ECONNREFUSED", () => Object.assign(new Error("connect ECONNREFUSED"), { code: "ECONNREFUSED" })],
+    ["ETIMEDOUT", () => Object.assign(new Error("connect ETIMEDOUT"), { code: "ETIMEDOUT" })],
+    ["pg's Connection terminated unexpectedly", () => new Error("Connection terminated unexpectedly")],
+    ["a refused role check", () => new RuntimeRoleError("platform tables missing", "ledger_worker")],
+    ["an infrastructure error wrapped as a cause", () => new Error("wrapper", { cause: Object.assign(new Error("inner"), { code: "57P01" }) })],
+  ];
+
+  it.each(infrastructure)("%s: the rows are handed back without counting an attempt, and the error reaches the loop", async (_label, make) => {
+    const [e1, e2, e3] = await commitThree();
+    let thrown = false;
+    behaviour["alpha.second"] = async (event) => {
+      if (event.eventId === e2 && !thrown) {
+        thrown = true;
+        throw make();
+      }
+    };
+    const worker = makeWorker({ settings: { batchSize: 3 } });
+    await expect(worker.runOnce()).rejects.toBeDefined();
+    const row2 = await rowOf(e2);
+    expect(["pending", "failed"]).toContain(row2.status);
+    expect(row2).toMatchObject({ retry_count: 0, locked_by: null, last_error: null });
+    expect(row2.delivered_subscribers).toEqual(["alpha.first"]);
+    expect(["pending", "failed"]).toContain((await rowOf(e3)).status);
+    expect((await rowOf(e3)).retry_count).toBe(0);
+
+    await worker.runOnce();
+    for (const id of [e1, e2, e3]) expect((await rowOf(id)).status).toBe("delivered");
+    expect((await rowOf(e2)).retry_count).toBe(0);
+  });
+
+  it.each([
+    ["a unique violation (23505)", () => Object.assign(new Error("duplicate"), { code: "23505" })],
+    ["a data exception (22P02)", () => Object.assign(new Error("bad uuid"), { code: "22P02" })],
+    ["0A000, which is not class 08", () => Object.assign(new Error("nope"), { code: "0A000" })],
+    ["a plain error", () => new Error("boom")],
+    ["an unrelated code", () => Object.assign(new Error("x"), { code: "ENOENT" })],
+  ])("control: %s IS a subscriber failure and counts an attempt", async (_label, make) => {
+    const eventId = await commitEvent();
+    behaviour["alpha.first"] = async () => {
+      throw make();
+    };
+    await makeWorker().runOnce();
+    expect(await rowOf(eventId)).toMatchObject({ status: "failed", retry_count: 1 });
+  });
+});
+
+describe("stop() leaves a worker that works again (review m5)", () => {
+  it("after a loop is stopped, runOnce() delivers (it does not hand every row back)", async () => {
+    const worker = makeWorker();
+    worker.start();
+    await sleep(60);
+    await worker.stop();
+    const eventId = await commitEvent();
+    expect(await worker.runOnce()).toEqual({ claimed: 1 });
+    expect((await rowOf(eventId)).status).toBe("delivered");
+  });
+
+  it("stop() on an idle worker is a no-op", async () => {
+    const worker = makeWorker();
+    await worker.stop();
+    const eventId = await commitEvent();
+    await worker.runOnce();
+    expect((await rowOf(eventId)).status).toBe("delivered");
+  });
+
+  it("a stop requested during a manual run affects that run only", async () => {
+    const [e1, e2] = await commitThree();
+    const worker = makeWorker({ settings: { batchSize: 3 } });
+    behaviour["alpha.first"] = async (event) => {
+      if (event.eventId === e1) void worker.stop();
+    };
+    await worker.runOnce();
+    expect((await rowOf(e1)).status).toBe("delivered");
+    expect(["pending", "failed"]).toContain((await rowOf(e2)).status);
+    await worker.runOnce();
+    expect((await rowOf(e2)).status).toBe("delivered");
+  });
+
+  it("start() after stop() runs again", async () => {
+    const worker = makeWorker();
+    worker.start();
+    await worker.stop();
+    worker.start();
+    const eventId = await commitEvent();
+    for (let i = 0; i < 100 && (await rowOf(eventId)).status !== "delivered"; i++) await sleep(20);
+    expect((await rowOf(eventId)).status).toBe("delivered");
   });
 });
