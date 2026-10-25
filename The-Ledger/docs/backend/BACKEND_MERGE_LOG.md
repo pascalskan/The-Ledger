@@ -19,7 +19,7 @@ Only the PM edits this file.
 | Job | Phase | Agent | Branch | Status | Merge SHA |
 |---|---|---|---|---|---|
 | phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | Merged — approved by owner Oct 25, 2026 | f3a4ef1 |
-| phase-0-platform | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0 | Open | — |
+| phase-0-platform | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0 | In review | — |
 | phase-0-gate-tests | 0 Infrastructure | backend-test-engineer | agent/backend-test-engineer/phase-0 | Open | — |
 | phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Merged | 99746d9 |
 | phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | Merged — approved by owner Oct 21, 2026 | 5768030 |
@@ -88,7 +88,7 @@ Review rounds
 
 
 Merged into backend at f3a4ef1 (October 25, 2026) after three review rounds. Owner approval (October 25, 2026): the owner approved the Phase 1 Tenant specification v0.6 and all PM-recommended answers to OQ1-01 … OQ1-18 as written. Applied: spec status APPROVED; roster v1.3 (OQ1-18 script imports and PM-directed sibling-branch merges; agent definitions updated). Next: open jobs A, D0, B, D1, C, D2 once Phase 0 is merged into backend.
-### phase-0-platform — backend-platform-engineer — Open
+### phase-0-platform — backend-platform-engineer — In review
 
 Phase: 0 Infrastructure Foundation
 Branch: agent/backend-platform-engineer/phase-0   (from backend @ 359fa02)
@@ -107,12 +107,15 @@ Commits checked
 | 6 | a703658 | platform: JWT utilities and token middleware | Accepted, continue | PM re-ran: check clean; unit 340/340, db 100/100; algorithm pinned, maxTokenAge 15m, clockTolerance 0. Closes the /health 503 and no-token 404 interim states; commit-5 hardening done (install-once). Rulings: createApiApp gains `auth` (async key import) — deviation from PS-02, accepted; runner reset made structural in commit 7 (holder unexported, reset throws unless isVitest); production exit on unmigrated DB is correct — runbook note 'db:migrate before start'. Commit 7 must install the runner with registry catalogues |
 | 7 | c14f0c2 | platform: module registry, subscriber registry and port registry | Accepted, continue | PM re-ran: check clean; unit 399/399, db 113/113; no process.env outside config. All interim states closed; runner carries registry catalogues; reset structural (throws outside Vitest). Rulings: `__` namespaces allowed only under Vitest (spec note at next amendment); entry-point seam approved for commit 8 (startApi/startWorker in platform taking modules, injected exit, spawned smoke tests); modules/registry.ts is the composition root, repointed to platform/index.ts in commit 9 |
 | 8 | f9e746c | platform: outbox worker and worker process | Accepted, continue | PM re-ran: check clean; unit 410/410, db 142/142; no process.env outside config. .replit diff matches RP-06; claim EXPLAIN uses event_outbox_ready_idx with LockRows/Limit, no sort (R3-01). Entry-point seam (startApi/startWorker) with in-process G0-41(i). Rulings: single-process spawn accepted, PM checks for orphans on Replit; SIGTERM test skipIf(win32) so the Linux gate covers it; G0-41(i) API case runs in full mode (tell test engineer); commit-9 Playwright check may use the junctioned Chromium, authoritative G0-02 is the PM's with the matching browser after owner OK |
+| 9 | c24d6e7 | platform: public surface and final verification | Accepted — job complete, review rounds start | server/platform/index.ts surface with allowlist test (14 values, 26 types; no tables, pools, system or testing exports); registry.ts repointed; G0-43 keys; shutdown tests (SIGTERM Linux-only) |
+| 9a | 836cfde | platform: make two commit-9 tests prove what they claim | Accepted | Test files only. PM re-ran final tree: check clean; unit 420/420; db 143 pass + 1 skipped (Linux SIGTERM); gate 0 files. Frontend-only Playwright on chromium 1223: 970/979, 9 cold-load flakes pass at 1 worker (979/979). Rule: server/platform/process/ name kept — the scanner flags the identifier, not string literals; G0-40 confirms after the pull |
 
 October 25, 2026: with the owner's permission, the PM ran `npx playwright install chromium` (Playwright 1.60.0): chromium-1223 and chromium_headless_shell-1223 are now installed in the default ms-playwright folder. Commit 9's check and the G0-02 sign-off run use the expected browser; the junction workaround is retired.
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
+| 1 | Correctness (independent Sonnet reviewer) | in progress | — | — |
 
 ### phase-0-gate-tests — backend-test-engineer — Open
 
