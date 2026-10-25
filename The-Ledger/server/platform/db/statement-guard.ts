@@ -14,7 +14,10 @@ import { UnitOfWorkIntegrityError } from "../errors/platform-errors";
 // rejects such text anyway).
 
 const IDENTIFIER_CHARACTER = /[\w$\u0080-￿]/;
-const DOLLAR_TAG = /\$(?:[A-Za-z_\u0080-￿][\w\u0080-￿]*)?\$/y;
+/** Characters that can start a token; everything else is copied in runs. */
+const TOKEN_START = /[-/'"$]/;
+const ORDINARY_RUN = /[^-/'"$]+/y;
+const DOLLAR_TAG =/\$(?:[A-Za-z_\u0080-￿][\w\u0080-￿]*)?\$/y;
 
 /**
  * The statement with comments removed, each string or dollar-quoted body replaced by `''`, and
@@ -93,9 +96,14 @@ function strip(text: string): string {
         i = end === -1 ? length : end + tag.length;
         out.push("''");
       }
-    } else {
-      out.push(c);
+    } else if (TOKEN_START.test(c)) {
+      out.push(c); // a lone -, /, or $ that starts no token
       i++;
+    } else {
+      ORDINARY_RUN.lastIndex = i;
+      const run = ORDINARY_RUN.exec(text)![0];
+      out.push(run);
+      i += run.length;
     }
   }
   return out.join("");

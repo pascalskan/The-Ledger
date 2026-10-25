@@ -68,14 +68,20 @@ describe("assertNoTransactionControl", () => {
   });
 
   describe("linear time", () => {
+    // The best of three runs: load slows a run down, never speeds it up, and a quadratic scan of
+    // these inputs takes minutes, so the bound only has to separate linear from quadratic.
     const timed = (text: string) => {
-      const start = performance.now();
-      try {
-        assertNoTransactionControl(text);
-      } catch {
-        // refused is fine: only the time matters here
+      let best = Infinity;
+      for (let run = 0; run < 3; run++) {
+        const start = performance.now();
+        try {
+          assertNoTransactionControl(text);
+        } catch {
+          // refused is fine: only the time matters here
+        }
+        best = Math.min(best, performance.now() - start);
       }
-      return performance.now() - start;
+      return best;
     };
 
     it.each([
@@ -89,7 +95,7 @@ describe("assertNoTransactionControl", () => {
       ["a 1M-character statement", "select 1 " + "a".repeat(1_000_000)],
       ["200k semicolon-space pairs", "; ".repeat(200_000)],
     ])("%s", (_label, text) => {
-      expect(timed(text)).toBeLessThan(500);
+      expect(timed(text)).toBeLessThan(5000);
     });
   });
 });
