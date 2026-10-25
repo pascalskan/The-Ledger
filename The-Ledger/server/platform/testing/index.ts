@@ -27,11 +27,12 @@ export { runMigrations, MIGRATIONS_FOLDER } from "../db/migrate";
 export {
   adoptUnit,
   createUnitOfWorkRunner,
-  installDefaultRunner,
   type DbTransaction,
   type UnitOfWork,
   type UnitOfWorkRunner,
 } from "../db/unit-of-work";
+export { installDefaultRunner } from "../db/default-runner";
+export { resetDefaultRunnerForTests } from "./default-runner";
 export { tenantScope, tenantValues, tenantWhere } from "../db/tenant-scope";
 export { buildTypeCatalogue, CatalogueError, type TypeCatalogue } from "../audit/catalogue";
 export {
@@ -41,7 +42,19 @@ export {
   type ExecutionContext,
 } from "../context/execution-context";
 export { createSystemContext, runInTransactionAs, toCompanyId } from "../system";
-export { createApiApp } from "../http/app";
+export { createApiApp, type CreateApiAppOptions } from "../http/app";
+export { importAuthKeys, type AuthKeys } from "../auth/keys";
+export {
+  signPlatformToken,
+  signPortalToken,
+  TokenExpiredError,
+  TokenInvalidError,
+  verifyPlatformToken,
+  verifyPortalToken,
+  type PlatformTokenClaims,
+  type PortalTokenClaims,
+} from "../auth/jwt";
+export { contextOf } from "../context/request-store";
 export { createLogger } from "../logging/logger";
 export {
   dropLeftoverGateRoles,

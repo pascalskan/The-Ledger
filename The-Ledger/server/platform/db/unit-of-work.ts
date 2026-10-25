@@ -237,19 +237,3 @@ export function createUnitOfWorkRunner(options: UnitOfWorkRunnerOptions): UnitOf
     forModule: (module) => (context, work) => run(module, context, work),
   };
 }
-
-// --- process-wide runner for scripts (server/platform/system) ----------------
-
-let defaultRunner: UnitOfWorkRunner | undefined;
-
-/** Installed once by a process entry point or script, for `runInTransactionAs`. */
-export function installDefaultRunner(runner: UnitOfWorkRunner | undefined): void {
-  defaultRunner = runner;
-}
-
-export function requireDefaultRunner(): UnitOfWorkRunner {
-  if (defaultRunner === undefined) {
-    throw new Error("No unit of work runner is installed in this process");
-  }
-  return defaultRunner;
-}

@@ -25,16 +25,21 @@ describe("migrations on the test database", () => {
     expect(after[0]).toEqual({ n: 3 });
   });
 
-  it("creates the audit and intelligence schemas and nothing in public", async () => {
+  it("creates exactly the audit and intelligence schemas (plus drizzle's journal) and nothing in public", async () => {
     const schemas = await rows<{ nspname: string }>(
       `SELECT nspname FROM pg_namespace
-        WHERE nspname NOT LIKE 'pg\\_%' AND nspname <> 'information_schema'
+        WHERE nspname NOT LIKE 'pg\_%' AND nspname <> 'information_schema'
         ORDER BY nspname`,
     );
-    // Other db test files may create their own throwaway schemas (for example uow_probe).
-    expect(schemas.map((s) => s.nspname)).toEqual(
-      expect.arrayContaining(["audit", "drizzle", "intelligence", "public"]),
-    );
+    // Other db test files create their own throwaway schemas (test files run in no fixed
+    // order); each is named here, so any OTHER schema the platform owns is still a failure.
+    const knownTestSchemas = ["uow_probe"];
+    expect(schemas.map((s) => s.nspname).filter((name) => !knownTestSchemas.includes(name))).toEqual([
+      "audit",
+      "drizzle",
+      "intelligence",
+      "public",
+    ]);
     const inPublic = await rows(
       `SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
         WHERE n.nspname = 'public' AND c.relkind IN ('r','v','m','S','f','p')`,

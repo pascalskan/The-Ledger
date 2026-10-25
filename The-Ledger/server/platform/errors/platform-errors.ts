@@ -102,3 +102,11 @@ export class TenantMismatchError extends Error {
     this.name = "TenantMismatchError";
   }
 }
+
+/** `contextOf(req)` was called on a request with no authenticated context, for example in a public route (§4.8). */
+export class MissingRequestContextError extends Error {
+  constructor(message = "The request has no authenticated execution context") {
+    super(message);
+    this.name = "MissingRequestContextError";
+  }
+}

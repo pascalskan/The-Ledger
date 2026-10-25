@@ -4,6 +4,8 @@ import type { Express } from "express";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { loadApiConfig } from "../config/env";
+import { importAuthKeys } from "../auth/keys";
+import type { DbPool } from "../db/client";
 import { createLogger } from "../logging/logger";
 import { createApiApp } from "./app";
 
@@ -24,7 +26,7 @@ function frontendOnlyConfig() {
   return loadApiConfig({ NODE_ENV: "development" }, options);
 }
 
-function fullConfig() {
+function makeFullConfig() {
   const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
   return loadApiConfig(
     {
@@ -38,11 +40,26 @@ function fullConfig() {
   );
 }
 
+const sharedFullConfig = makeFullConfig();
+const fullAuth = await importAuthKeys(sharedFullConfig as Extract<typeof sharedFullConfig, { mode: "full" }>);
+const fullConfig = () => sharedFullConfig;
+
+/** A pool that always answers SELECT 1: the health check only needs it to succeed. */
+const healthyPool: DbPool = {
+  role: "ledger_app",
+  end: async () => undefined,
+  withClient: async () => ({}) as never,
+};
+
 /** The app with a sentinel standing in for frontend serving, mounted last as PS-02 does. */
 function build(config: ReturnType<typeof loadApiConfig>) {
   const out = capture();
   const logger = createLogger({ service: "api", level: "debug", destination: out.destination });
-  const app: Express = createApiApp({ config, logger });
+  const app: Express = createApiApp({
+    config,
+    logger,
+    ...(config.mode === "full" ? { db: healthyPool, auth: fullAuth } : {}),
+  });
   app.use((req, res) => {
     res.status(200).type("html").send(`<html>frontend ${req.method}</html>`);
   });
@@ -108,14 +125,31 @@ describe("frontend-only mode (G0-37, G0-30)", () => {
 });
 
 describe("full mode pipeline (G0-35, G0-30)", () => {
-  it("unmatched API and portal paths give 404 NOT_FOUND envelopes, never HTML", async () => {
+  it("unmatched paths outside the token-protected prefixes give 404 NOT_FOUND envelopes, never HTML", async () => {
     const { app } = build(fullConfig());
-    for (const path of ["/api/v1/nothing", "/api/foo", "/api", "/api/v2/x", "/portal/v1/nothing"]) {
+    for (const path of ["/api/foo", "/api", "/api/v2/x", "/api/v1x/y"]) {
       const res = await request(app).get(path);
       expect(res.status, path).toBe(404);
       expect(res.body.error, path).toMatchObject({ code: "NOT_FOUND", message: "The requested resource was not found." });
       expect(res.headers["content-type"]).toContain("application/json");
     }
+  });
+
+  it("/api/v1 and /portal/v1 need a token: 401 envelopes, never HTML (token paths are covered in auth/tenant-context.test.ts)", async () => {
+    const { app } = build(fullConfig());
+    for (const path of ["/api/v1/nothing", "/portal/v1/nothing"]) {
+      const res = await request(app).get(path);
+      expect(res.status, path).toBe(401);
+      expect(res.body.error.code).toBe("UNAUTHENTICATED");
+      expect(res.headers["www-authenticate"]).toBeDefined();
+    }
+  });
+
+  it("/health answers 200 {status: ok, mode: full} with a healthy pool", async () => {
+    const { app } = build(fullConfig());
+    const res = await request(app).get("/health");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ status: "ok", mode: "full" });
   });
 
   it("parses JSON on /api/v1 and /portal/v1 only, reporting malformed JSON as 400 MALFORMED_JSON", async () => {
@@ -140,7 +174,8 @@ describe("full mode pipeline (G0-35, G0-30)", () => {
   it("accepts no form bodies: urlencoded is not parsed", async () => {
     const { app } = build(fullConfig());
     const res = await request(app).post("/api/v1/x").type("form").send({ a: "1" });
-    expect(res.status).toBe(404);
+    // no body parser touched it, and with no token the request stops at authentication
+    expect(res.status).toBe(401);
   });
 
   it("does not log a start-up WARN in full mode", () => {
@@ -219,7 +254,7 @@ describe("request IDs and the request line (G0-29)", () => {
       expect(typeof line.requestId).toBe("string");
       expect(typeof line.durationMs).toBe("number");
       expect(line.route).toBe("<unmatched>");
-      expect(line.statusCode).toBe(404);
+      expect(line.statusCode).toBe(401);
       expect(line).not.toHaveProperty("companyId");
     }
     expect(lines.map((l) => l.method)).toEqual(["GET", "POST", "GET"]);

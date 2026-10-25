@@ -1,6 +1,9 @@
 import express, { type Express, type RequestHandler } from "express";
 import type { Logger } from "pino";
+import { createPlatformAuth, createPortalAuth } from "../auth/tenant-context";
+import type { AuthKeys } from "../auth/keys";
 import { API_BACKEND_VARIABLES, type ApiConfig } from "../config/env";
+import type { DbPool } from "../db/client";
 import { sendErrorEnvelope } from "../errors/error-envelope";
 import { createErrorHandler } from "../errors/error-handler";
 import { createHealthHandler } from "./health";
@@ -12,6 +15,10 @@ import { securityHeaders } from "./security-headers";
 export interface CreateApiAppOptions {
   readonly config: ApiConfig;
   readonly logger: Logger;
+  /** The `ledger_app` pool. Required in full mode; unused (and never opened) in frontend-only mode. */
+  readonly db?: DbPool;
+  /** The imported token keys. Required in full mode. */
+  readonly auth?: AuthKeys;
 }
 
 // JSON only, 1 MB (BACKEND_API_ARCHITECTURE.md, API Security Standards). Mounted on
@@ -28,16 +35,16 @@ const NOT_CONFIGURED: RequestHandler = (_req, res) => {
  *
  *   1. request ID and context     2. request logger
  *   3. GET /health
- *   4. /api/v1       parser, [public routes, platform-token auth, module routers], not-found, errors
+ *   4. /api/v1       parser, [public routes], platform-token auth, [module routers], not-found, errors
  *   5. /api          anything else under /api: not-found (or 503 in frontend-only mode)
- *   6. /portal/v1    parser, [public routes, portal-token auth, module routers], not-found, errors
+ *   6. /portal/v1    parser, [public routes], portal-token auth, [module routers], not-found, errors
  *   7. everything else falls through to the caller's frontend handlers
  *
- * The bracketed parts are added by later Phase 0 commits (6 and 7). It is a function
+ * The bracketed parts are added by commit 7 (module registry). It is a function
  * so that gate tests can build the same app. It opens no socket and, in
  * frontend-only mode, no database connection.
  */
-export function createApiApp({ config, logger }: CreateApiAppOptions): Express {
+export function createApiApp({ config, logger, db, auth }: CreateApiAppOptions): Express {
   const app = express();
   app.disable("x-powered-by"); // for the whole app, frontend included
   // trust proxy stays false: Phase 0 reads no client address or protocol (RP-07).
@@ -45,7 +52,7 @@ export function createApiApp({ config, logger }: CreateApiAppOptions): Express {
   app.use(requestId);
   app.use(requestLogger(logger));
 
-  app.get("/health", securityHeaders, createHealthHandler(config, logger));
+  app.get("/health", securityHeaders, createHealthHandler(config, logger, db));
 
   const errorHandler = createErrorHandler(logger);
 
@@ -60,8 +67,23 @@ export function createApiApp({ config, logger }: CreateApiAppOptions): Express {
   }
 
   // Full mode.
-  app.use("/api/v1", securityHeaders, jsonBodyParser, notFoundHandler, errorHandler);
+  if (auth === undefined) throw new Error("Full mode needs the imported token keys");
+  app.use(
+    "/api/v1",
+    securityHeaders,
+    jsonBodyParser,
+    createPlatformAuth(auth),
+    notFoundHandler,
+    errorHandler,
+  );
   app.use("/api", securityHeaders, notFoundHandler, errorHandler);
-  app.use("/portal/v1", securityHeaders, jsonBodyParser, notFoundHandler, errorHandler);
+  app.use(
+    "/portal/v1",
+    securityHeaders,
+    jsonBodyParser,
+    createPortalAuth(auth),
+    notFoundHandler,
+    errorHandler,
+  );
   return app;
 }

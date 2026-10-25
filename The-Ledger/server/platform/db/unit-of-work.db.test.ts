@@ -12,6 +12,7 @@ import {
   createUnitOfWorkRunner,
   expireContext,
   installDefaultRunner,
+  resetDefaultRunnerForTests,
   runInTransactionAs,
   tenantValues,
   tenantWhere,
@@ -198,6 +199,34 @@ describe("commit", () => {
       causation_actor_id: null,
       payload: { id: "x" },
     });
+  });
+
+  it("stores a top-level null previous/new value as SQL NULL, but keeps a null member inside an object", async () => {
+    const [nullId, objectId] = await alpha()(userContext(), async (uow) => [
+      await uow.audit.append({ ...validEntry(), previousValue: null, newValue: null }),
+      await uow.audit.append({
+        ...validEntry(),
+        previousValue: { address: "1 High Street", phone: "01234" },
+        newValue: { address: null, phone: "01234" },
+      }),
+    ]);
+    const rows = await pools.owner.withClient(
+      async (c) =>
+        (
+          await c.query(
+            "SELECT audit_id, previous_value, new_value, previous_value IS NULL AS prev_is_null, new_value IS NULL AS new_is_null FROM audit.audit_entries WHERE audit_id = ANY($1)",
+            [[nullId, objectId]],
+          )
+        ).rows,
+    );
+    const byId = Object.fromEntries(rows.map((r) => [r.audit_id, r]));
+    // "the value was null" and "no value given" are stored alike: SQL NULL
+    expect(byId[nullId!]).toMatchObject({ prev_is_null: true, new_is_null: true });
+    // a value cleared inside an object stays a JSON null member
+    expect(byId[objectId!].previous_value).toEqual({ address: "1 High Street", phone: "01234" });
+    expect(byId[objectId!].new_value).toEqual({ address: null, phone: "01234" });
+    expect(byId[objectId!].new_is_null).toBe(false);
+    expect(Object.keys(byId[objectId!].new_value)).toContain("address");
   });
 
   it("returns the work's value, and the audit actor columns follow the actor kind", async () => {
@@ -667,7 +696,7 @@ describe("scripts: createSystemContext and runInTransactionAs", () => {
       const row = await pools.owner.withClient(async (c) => (await c.query("SELECT actor_role, actor_id, causation_event_id FROM audit.audit_entries WHERE audit_id = $1", [id])).rows[0]);
       expect(row).toEqual({ actor_role: "system", actor_id: null, causation_event_id: null });
     } finally {
-      installDefaultRunner(undefined);
+      resetDefaultRunnerForTests();
     }
     await expect(runInTransactionAs("alpha", createSystemContext(companyA, "x"), async () => 1)).rejects.toThrow(/No unit of work runner/);
   });

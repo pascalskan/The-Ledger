@@ -3,10 +3,8 @@ import {
   toCompanyId,
   type ExecutionContext,
 } from "../context/execution-context";
-import {
-  requireDefaultRunner,
-  type UnitOfWork,
-} from "../db/unit-of-work";
+import { requireDefaultRunner } from "../db/default-runner";
+import type { UnitOfWork } from "../db/unit-of-work";
 
 // Phase 0 spec §4.1 and §4.8 (import rule 11, R2-03): the only place `createSystemContext`,
 // `toCompanyId` and `runInTransactionAs` are exported from. It may be imported only from
