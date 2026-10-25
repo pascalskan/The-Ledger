@@ -1,6 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
-import { PgDialect } from "drizzle-orm/pg-core";
 import type pg from "pg";
 import type { Logger } from "pino";
 import { createAuditWriter, type AuditWriter } from "../audit/audit-writer";
@@ -173,8 +172,6 @@ function refuseTransactionControl(unit: UnitState, text: string): void {
 
 export { assertNoTransactionControl };
 
-const dialect = new PgDialect();
-
 const ALLOWED_TX_MEMBERS = [
   "select",
   "selectDistinct",
@@ -182,6 +179,7 @@ const ALLOWED_TX_MEMBERS = [
   "insert",
   "update",
   "delete",
+  "execute",
   "with",
   "$with",
   "$count",
@@ -191,19 +189,14 @@ const ALLOWED_TX_MEMBERS = [
 function createTransactionHandle(state: UnitState): DbTransaction {
   const database = drizzle(state.client) as unknown as Record<string, (...args: unknown[]) => unknown>;
   const facade: Record<string, unknown> = {};
+  // Every statement, execute included, is checked once, in the guarded client that all of them
+  // pass through (guardClient), which also poisons the unit on a refusal.
   for (const member of ALLOWED_TX_MEMBERS) {
     facade[member] = (...args: unknown[]) => {
       if (state.closed) throw new UnitOfWorkClosedError();
       return database[member]!(...args);
     };
   }
-  facade.execute = (query: unknown) => {
-    if (state.closed) throw new UnitOfWorkClosedError();
-    const text =
-      typeof query === "string" ? query : dialect.sqlToQuery((query as { getSQL(): never }).getSQL()).sql;
-    refuseTransactionControl(state, text);
-    return database.execute!(query);
-  };
   // Drizzle's transaction() issues a savepoint when called inside a transaction.
   facade.transaction = async () => {
     throw new NestedUnitOfWorkError();
