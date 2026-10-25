@@ -1,7 +1,7 @@
 # THE LEDGER — PHASE 1 SPECIFICATION — TENANT MODULE
 
-Version: 0.6 — DRAFT. Complete (sections 1–12); review rounds 1, 2 and 3 applied; for the owner checkpoint after PM acceptance.
-Status: **DRAFT — review round 3 applied; awaiting PM acceptance, then the owner checkpoint.**
+Version: 0.6 — Complete (sections 1–12); review rounds 1, 2 and 3 applied.
+Status: **APPROVED by the owner, October 25, 2026, with all recommended answers to OQ1-01 … OQ1-18 as written.** PM-accepted and merged into `backend` at f3a4ef1.
 Date: October 2026
 Author: `backend-architect`
 Branch: `agent/backend-architect/phase-1-spec` (from `backend` @ 7cf8b58)

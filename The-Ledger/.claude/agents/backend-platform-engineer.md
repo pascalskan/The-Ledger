@@ -29,7 +29,7 @@ Read `docs/backend/BACKEND_AGENT_ROSTER.md` — Shared Rules and Folder Ownershi
 
 ## Branch and commits
 
-Work only in the worktree and on the branch the PM gave you (`agent/backend-platform-engineer/<job>`). Follow the specification's commit plan: make one focused commit, run the checks it affects, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull, run `git merge backend` in your worktree, resolve conflicts, rerun your checks and commit.
+Work only in the worktree and on the branch the PM gave you (`agent/backend-platform-engineer/<job>`). Follow the specification's commit plan: make one focused commit, run the checks it affects, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull, run `git merge backend` (or, when the PM names one, `git merge` of that sibling branch) in your worktree, resolve conflicts, rerun your checks and commit.
 
 ## How to work
 

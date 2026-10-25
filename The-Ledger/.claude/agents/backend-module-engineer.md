@@ -39,7 +39,7 @@ server/modules/<module>/
 
 ## Branch and commits
 
-Work only in the worktree and on the branch the PM gave you (`agent/backend-module-engineer-<module>/<job>`). Follow the specification's commit plan — typically schema and migration, domain model, each use case with its unit tests, API routes — one focused commit at a time. After each commit, run the checks it affects, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull (for example after the gate tests or another module merge), run `git merge backend` in your worktree, resolve conflicts, regenerate your migration if needed, rerun your checks and commit.
+Work only in the worktree and on the branch the PM gave you (`agent/backend-module-engineer-<module>/<job>`). Follow the specification's commit plan — typically schema and migration, domain model, each use case with its unit tests, API routes — one focused commit at a time. After each commit, run the checks it affects, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull (for example after the gate tests or another module merge), run `git merge backend` (or, when the PM names one, `git merge` of that sibling branch) in your worktree, resolve conflicts, regenerate your migration if needed, rerun your checks and commit.
 
 ## How to work
 

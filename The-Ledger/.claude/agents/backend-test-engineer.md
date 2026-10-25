@@ -26,7 +26,7 @@ Read `docs/backend/BACKEND_AGENT_ROSTER.md` — Shared Rules and Folder Ownershi
 
 ## Branch and commits
 
-Work only in the worktree and on the branch the PM gave you (`agent/backend-test-engineer/<job>`). Commit in focused steps (test support and fixtures first, then gate tests grouped by area), one commit at a time. After each commit, run the tests it adds, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull, run `git merge backend` in your worktree and rerun your tests.
+Work only in the worktree and on the branch the PM gave you (`agent/backend-test-engineer/<job>`). Commit in focused steps (test support and fixtures first, then gate tests grouped by area), one commit at a time. After each commit, run the tests it adds, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull, run `git merge backend` (or, when the PM names one, `git merge` of that sibling branch) in your worktree and rerun your tests.
 
 ## How to work
 

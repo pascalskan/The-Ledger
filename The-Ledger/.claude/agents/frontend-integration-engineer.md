@@ -17,7 +17,7 @@ Read `docs/backend/BACKEND_AGENT_ROSTER.md` — Shared Rules and Folder Ownershi
 
 ## Branch and commits
 
-Work only in the worktree and on the branch the PM gave you (`agent/frontend-integration-engineer/<page-group>`). One focused commit at a time (API client and hooks, then one page at a time). After each commit, run the checks it affects, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull, run `git merge backend` in your worktree and rerun your checks. Answer every PM review round with fix commits or evidence.
+Work only in the worktree and on the branch the PM gave you (`agent/frontend-integration-engineer/<page-group>`). One focused commit at a time (API client and hooks, then one page at a time). After each commit, run the checks it affects, stop and report to the PM, and continue only on "accepted, continue". Never push, merge into `backend`, rebase or switch branches. When the PM asks you to pull, run `git merge backend` (or, when the PM names one, `git merge` of that sibling branch) in your worktree and rerun your checks. Answer every PM review round with fix commits or evidence.
 
 ## How to work
 

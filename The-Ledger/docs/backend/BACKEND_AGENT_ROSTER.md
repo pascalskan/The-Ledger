@@ -1,6 +1,6 @@
 # THE LEDGER — BACKEND AGENT ROSTER
 
-Version: 1.2
+Version: 1.3
 Status: ACTIVE — owner direction, October 20, 2026
 Date: October 20, 2026
 Authority: Backend Programme Planning
@@ -12,6 +12,7 @@ Authority: Backend Programme Planning
 | Version | Date | Changes |
 |---|---|---|
 | 1.0 | October 20, 2026 | Draft roster, phase pipeline, folder ownership, shared rules |
+| 1.3 | October 25, 2026 | Owner approval of Phase 1 OQ1-18: scripts may import `server/platform/index.ts` and one named `admin.ts` per module where a specification defines it; the PM may tell an agent to merge a named sibling branch as well as `backend` |
 | 1.2 | October 24, 2026 | Owner direction: every subagent runs on Sonnet; the PM's advisor runs on Opus |
 | 1.1 | October 20, 2026 | Owner direction: the main session is the Project Manager and the "theoretical GitHub"; every agent works on its own branch and runs each commit through the PM; minimum three review rounds per job; related agents are notified after each merge; all real work lives on the GitHub branch `backend` |
 
@@ -106,7 +107,7 @@ Every job — a specification, a module, a set of gate tests, a Track F page gro
 - Agents commit only on their own branch, in their own worktree. They never push, merge into `backend`, rebase, reset shared history, switch branches or touch another agent's branch.
 - Commit messages: `<area>: <what changed>` on the first line, then why, then `Spec: <spec path> §<section>`.
 - After each commit the agent stops and reports the SHA, what it did, and the checks it ran. It continues only when the PM says "accepted, continue".
-- "Pull from main" means `git merge backend` inside the agent's own worktree, done only when the PM asks.
+- "Pull from main" means `git merge backend` inside the agent's own worktree, done only when the PM asks. Where a phase specification sequences jobs that way (for example Phase 1 §1.5), the PM may also tell an agent to merge a named sibling branch (`git merge agent/<agent>/<job>`); the agent merges only the branch the PM names.
 
 ### The three review rounds (minimum)
 
@@ -187,7 +188,7 @@ A notification says: what merged (merge SHA), the public surface that changed (m
 | `server/modules/<module>/**` | module engineer for that module | others import only from `server/modules/<module>/index.ts` |
 | `server/modules/registry.ts` | platform engineer (creates it) | each module engineer adds one registration line |
 | `server/index.ts`, `server/worker.ts` | platform engineer | — |
-| `server/scripts/**` | the module engineer whose phase specification names the script (for example Phase 1 provisioning → the tenant module engineer) | scripts import only `server/platform/system/` and module `index.ts` files; they connect as a runtime role, never the owner |
+| `server/scripts/**` | the module engineer whose phase specification names the script (for example Phase 1 provisioning → the tenant module engineer) | scripts import only Node built-ins, `server/platform/index.ts`, `server/platform/system/`, module `index.ts` files, and one named `admin.ts` per module where a phase specification defines it (Phase 1: `server/modules/tenant/admin.ts`, imported only by `server/scripts/tenant.ts`); never `server/modules/registry.ts`; they connect as a runtime role, never the owner |
 | `server/tests/gate/**`, `server/tests/support/**` | test engineer | implementers read only |
 | `server/**/*.test.ts` next to source | the implementer of that source | — |
 | `migrations/**` | whoever owns the schema being migrated | generated with `drizzle-kit generate`, never hand-edited after commit |

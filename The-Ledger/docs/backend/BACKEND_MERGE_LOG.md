@@ -18,7 +18,7 @@ Only the PM edits this file.
 
 | Job | Phase | Agent | Branch | Status | Merge SHA |
 |---|---|---|---|---|---|
-| phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | Merged — awaiting owner approval | f3a4ef1 |
+| phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | Merged — approved by owner Oct 25, 2026 | f3a4ef1 |
 | phase-0-platform | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0 | Open | — |
 | phase-0-gate-tests | 0 Infrastructure | backend-test-engineer | agent/backend-test-engineer/phase-0 | Open | — |
 | phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Merged | 99746d9 |
@@ -61,7 +61,7 @@ Follow-ups: <anything deferred, with owner>
 
 ## ENTRIES
 
-### phase-1-spec — backend-architect (new instance) — Merged (awaiting owner approval)
+### phase-1-spec — backend-architect (new instance) — Merged (approved by owner)
 
 Phase: 1 Tenant Module
 Branch: agent/backend-architect/phase-1-spec   (from backend @ 359fa02)
@@ -87,7 +87,7 @@ Review rounds
 | 3 | Efficiency and quality (independent Sonnet reviewer) | 6 majors (A/D0 circular per-commit checks; B4 uses types registered in B5; oversized commits; script imports vs roster; rule 13 in the wrapper; OQ1-08 vs PA-06), 16 minors, 7 nits. PM decisions: A4a → D0a → A4b/c with PM-directed sibling-branch merge; catalogue in B4; split A2/A3/A4/B2/B4; keep admin.ts and amend roster (OQ1-18); loadCliEnvironment; 2 s status-lookup deadline; PA-06 memo/skip/rate-limit; joined getTenantContext; lock_timeout + 503 SERVICE_BUSY on UC-06; latches instead of sleeps; suite-wide log-marker hook | 211c8ba (v0.6): all 29 fixed, none disputed; 77 gate tests (G1-69 retired into G1-24), FB and SC tables; six jobs with stepwise A/D0 checks | Passed (PM checked: every cited G1 ID defined, no stray characters, all 12 sections present) |
 
 
-Merged into backend at f3a4ef1 (October 25, 2026) after three review rounds. Next: owner approval of the specification and its owner-facing open questions (OQ1-01, OQ1-04, OQ1-06, OQ1-07, OQ1-18 and the rest of §12). After approval: the PM amends the roster (OQ1-18: script imports; PM may direct a merge of a named sibling branch) and opens jobs A, D0, B, D1, C, D2 once Phase 0 is merged.
+Merged into backend at f3a4ef1 (October 25, 2026) after three review rounds. Owner approval (October 25, 2026): the owner approved the Phase 1 Tenant specification v0.6 and all PM-recommended answers to OQ1-01 … OQ1-18 as written. Applied: spec status APPROVED; roster v1.3 (OQ1-18 script imports and PM-directed sibling-branch merges; agent definitions updated). Next: open jobs A, D0, B, D1, C, D2 once Phase 0 is merged into backend.
 ### phase-0-platform — backend-platform-engineer — Open
 
 Phase: 0 Infrastructure Foundation
