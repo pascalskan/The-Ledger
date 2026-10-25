@@ -1,6 +1,7 @@
 import { types } from "node:util";
 import { ZodError } from "zod";
 import { AppError } from "../errors/app-error";
+import { redactUrlCredentials } from "./redact";
 
 // Phase 0 spec §4.7: the error serializer. It works from an ALLOWLIST: only the
 // fields named in the spec's table are ever logged. Anything that can quote
@@ -121,12 +122,13 @@ function serialize(error: Error, level: number): SafeError {
     });
   }
 
-  // 7. Any other error: the only row whose message is logged as written.
+  // 7. Any other error: the only row whose message is logged as written (URL credentials removed).
   const out: Record<string, unknown> = { name: error.name };
   const code = (error as { code?: unknown }).code;
   if (typeof code === "string") out.code = code;
-  out.message = typeof error.message === "string" ? error.message : "";
-  if (typeof error.stack === "string") out.stack = error.stack;
+  // Credentials in a URL the error quotes ("could not reach postgres://u:pw@h/db") are removed.
+  out.message = typeof error.message === "string" ? redactUrlCredentials(error.message) : "";
+  if (typeof error.stack === "string") out.stack = redactUrlCredentials(error.stack);
   const cause = serializeCause(error, level);
   if (cause !== undefined) out.cause = cause;
   return mark(out);

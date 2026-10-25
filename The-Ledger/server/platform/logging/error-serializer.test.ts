@@ -227,6 +227,23 @@ describe("any other error", () => {
     expect(textOf(out)).toContain("PostgreSQL error 22P02");
   });
 
+  it("(review round 3, minor 7) removes URL credentials from the message and the stack, and from a cause", () => {
+    const message = `could not reach postgres://u:${MARK}@h/db`;
+    const out = serialized(new Error(message, { cause: new Error(`inner postgres://v:${MARK}@h2/db`) })) as {
+      message: string;
+      stack: string;
+      cause: { message: string; stack: string };
+    };
+    expect(out.message).toBe("could not reach postgres://[redacted]@h/db");
+    expect(out.stack).toContain("postgres://[redacted]@h/db");
+    expect(out.cause.message).toBe("inner postgres://[redacted]@h2/db");
+    expect(textOf(out)).not.toContain(MARK);
+  });
+
+  it("leaves a message without credentials as it was", () => {
+    expect(serialized(new Error("see https://example.com/a?b=1")).message).toBe("see https://example.com/a?b=1");
+  });
+
   it("does not follow a cause that is not an error", () => {
     const out = serialized(new Error("outer", { cause: { secret: MARK } }));
     expect(textOf(out)).not.toContain(MARK);

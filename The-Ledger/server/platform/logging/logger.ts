@@ -2,6 +2,9 @@ import pino, { type DestinationStream, type Logger, type LoggerOptions } from "p
 import type { LogLevel } from "../config/env";
 import { getLogContext } from "../context/request-context";
 import { isErrorObject, isSafeError, safeError } from "./error-serializer";
+import { redactUrlCredentials } from "./redact";
+
+export { redactUrlCredentials };
 
 // Phase 0 spec §4.7. One pino logger per process: JSON to stdout, no transports,
 // no pino-pretty. Level is an upper-case label, `timestamp` is ISO 8601 and the
@@ -17,24 +20,6 @@ export type Service = "api" | "worker" | "migrate";
 /** Containers deeper than this are replaced, so nothing below the walk is logged unexamined (R3-13). */
 const MAX_WALK_DEPTH = 3;
 const DEPTH_LIMIT = "[depth limit]";
-
-/**
- * `scheme://user:password@host` -> `scheme://[redacted]@host`, anywhere in a string.
- *  - a scheme is tried only where a run of scheme characters begins (the lookbehind), so a long
- *    run is scanned once, not once per position inside it;
- *  - the user class excludes ":" and the password class excludes "@", "/", "?" and "#", so the
- *    two never overlap, and a scan cannot run past the next "/" - the match is linear (review
- *    round 3: the earlier pattern was quadratic).
- * The scheme may start with any scheme character, so text glued to a scheme ("pid12postgres://")
- * still has its credentials removed.
- */
-const URL_CREDENTIALS = /(?<![a-z0-9+.-])([a-z0-9+.-]+:\/\/)[^\s/?#@:]*:[^\s/?#@]*@/gi;
-
-export function redactUrlCredentials(text: string): string {
-  // Cheap exit: most strings carry no URL, and a long token or hash should cost one scan.
-  if (!text.includes("://")) return text;
-  return text.replace(URL_CREDENTIALS, "$1[redacted]@");
-}
 
 function hasToJSON(value: object): value is { toJSON(): unknown } {
   return typeof (value as { toJSON?: unknown }).toJSON === "function";
