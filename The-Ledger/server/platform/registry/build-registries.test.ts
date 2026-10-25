@@ -416,6 +416,42 @@ describe("ports (PS-16, G0-41 c to h, p)", () => {
     ).not.toThrow();
   });
 
+  it("(m1) a look-alike token - same name, humanOnly false - is refused, in the worker and in the API", () => {
+    const humanProvider: ModuleRegistration = {
+      name: "beta",
+      providesPorts: [bind(secret, () => ({ approve: async () => undefined }))],
+    };
+    const lookAlike = { name: "alpha.secret", humanOnly: false } as unknown as PortToken<never>;
+    const worker = alpha({
+      requiresPorts: [secret],
+      subscribers: (deps) => {
+        deps.ports.get(lookAlike);
+        return [];
+      },
+    });
+    expectRegistryError(() => build([worker, humanProvider], "worker"), '"alpha.secret"', "not the registered one");
+    const api = alpha({
+      requiresPorts: [secret],
+      apiRouters: {
+        "/__alpha": (deps) => {
+          deps.ports.get(lookAlike);
+          return router();
+        },
+      },
+    });
+    expectRegistryError(() => build([api, humanProvider], "api"), '"alpha.secret"', "not the registered one");
+    // a frozen copy of the real token is a look-alike too (identity, not shape)
+    const copy = { ...secret } as PortToken<never>;
+    const copied = alpha({
+      requiresPorts: [secret],
+      subscribers: (deps) => {
+        deps.ports.get(copy);
+        return [];
+      },
+    });
+    expectRegistryError(() => build([copied, humanProvider], "worker"), "not the registered one");
+  });
+
   it("a correct wiring hands the requiring module the provider's frozen implementation", () => {
     let got: PingPort | undefined;
     build([

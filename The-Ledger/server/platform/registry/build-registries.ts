@@ -257,7 +257,15 @@ export function buildRegistries(options: BuildRegistriesOptions): Registries {
             `Module "${module.name}" asked for the port "${token.name}", which is not in its requiresPorts`,
           );
         }
-        if (options.process === "worker" && token.humanOnly) {
+        // Decide from the REGISTERED token, never from the caller's object: a look-alike with the
+        // same name but humanOnly false must not get a human-only port, and is refused outright.
+        const registered = plan.provided.get(token.name)!.binding.token;
+        if (token !== registered) {
+          throw new RegistryError(
+            `Module "${module.name}" asked for the port "${token.name}" with a token that is not the registered one`,
+          );
+        }
+        if (options.process === "worker" && registered.humanOnly) {
           throw new RegistryError(
             `Module "${module.name}" asked for the human-only port "${token.name}" in the worker; subscribers cannot hold it`,
           );
