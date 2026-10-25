@@ -18,7 +18,7 @@ Only the PM edits this file.
 
 | Job | Phase | Agent | Branch | Status | Merge SHA |
 |---|---|---|---|---|---|
-| phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | In review | — |
+| phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | Merged — awaiting owner approval | f3a4ef1 |
 | phase-0-platform | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0 | Open | — |
 | phase-0-gate-tests | 0 Infrastructure | backend-test-engineer | agent/backend-test-engineer/phase-0 | Open | — |
 | phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Merged | 99746d9 |
@@ -61,7 +61,7 @@ Follow-ups: <anything deferred, with owner>
 
 ## ENTRIES
 
-### phase-1-spec — backend-architect (new instance) — In review
+### phase-1-spec — backend-architect (new instance) — Merged (awaiting owner approval)
 
 Phase: 1 Tenant Module
 Branch: agent/backend-architect/phase-1-spec   (from backend @ 359fa02)
@@ -75,14 +75,19 @@ Commits checked
 | 1 | 17a5767 | docs(backend): Phase 1 spec sections 1-4 (scope, sources, data model, domain model) | Accepted, continue (with notes for commit 2) | Notes: lifecycle row lock must be FOR NO KEY UPDATE (FOR UPDATE would block every tenant FK check); INV-1 wording vs plans exception; FK checks need no REFERENCES grant; enforce 'tenant-cli' literal location (INV-11 forgery path); audit entry for configuration change records previous/new values per Audit Doctrine, events field names only; OQ1-11 decided by PM — job D adds companies A/B fixture helper and updates Phase 0 gate fixtures, job C merges only after that and with the Phase 0 gate suite green; updated_by FK as Phase 2 obligation |
 | 2 | 0f477c0 | docs(backend): Phase 1 spec v0.2 - use cases, API, events, audit; PM review points 1-7 | Accepted, continue (with notes for commit 3) | Points 1–7 applied. Notes: now() is transaction start, so statusChangedAt cannot order lifecycle events — add companies.lifecycle_version (+1 per transition, trigger-enforced) and order by it; one trim-before-validate/store/compare rule for all text inputs; Phase 7 obligation on showing script operator/hostAccount/reason to the tenant CEO; G1 race, staleness, fail-closed, forged-cursor, padded no-op and 403-before-400 cases required in §9 |
 | 3 | d416622 | docs(backend): Phase 1 spec v0.3 - gate tests, prototype differences, commit plans, open questions | Accepted — job complete, review rounds start | Commit-2 notes applied: lifecycle_version (+1, trigger-enforced) orders lifecycle events; clock_timestamp() after lock; one trim rule; Phase 7 operator-metadata obligation; G1-01…G1-72 incl. the eight required race/edge cases. Jobs A → B → D1 → C → D2 |
+| 4 | 0ebcaff | docs(backend): Phase 1 spec v0.4 - review round 1 (correctness) | Round 1 answer | See review rounds |
+| 5 | 7cac8fc | docs(backend): Phase 1 spec v0.5 - review round 2 (security and doctrine) | Round 2 answer | See review rounds |
+| 6 | 211c8ba | docs(backend): Phase 1 spec v0.6 - review round 3 (efficiency and quality) | Round 3 answer | See review rounds |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
 | 1 | Correctness (independent Sonnet reviewer; PM-verified, PG claims tested on local 16.14) | 3 blockers (Drizzle inserts vs column grants; script has no catalogue; Phase 0 gate red after job A), 6 majors (TRUNCATE trigger/SQLSTATE, terminal state in shared fixtures, FK convention vs rule 7, no test catches FOR UPDATE, in-process scrub, job sequencing), 11 minors (incl. locale-dependent [[:cntrl:]]). PM decisions: sql-template inserts; opener takes [tenantModule]; new job D0 stub port lands with A; later-module FKs by custom migration plus generic catalogue gate test | 0ebcaff (v0.4): all 20 fixed, none disputed; G1-73…G1-76 added; six jobs A, D0, B, D1, C, D2 | Passed (PM re-checked: locale-independent character class verified on PG 16.14; no stray control characters in the file) |
 | 2 | Security and doctrine (independent Sonnet reviewer) | 0 blockers, 4 majors (non-HTTP tenant enforcement by convention; regex DoS from 1 MB body; operator metadata in tenant-visible audit; script keeps JWT/worker secrets), 12 minors. PM decisions: PA-06 required subscriber tenantStatusPolicy ('active_only'|'any', no default) enforced by the worker; length-before-pattern; metadata.platformAdmin reserved key with Phase 7 redaction gate; script env allowlist; admin functions in tenant/admin.ts with branded script contexts; worker column-level SELECT on configurations; retention triggers; ISO 4217 list; lock_timeout 5 s | 7cac8fc (v0.5): all 16 fixed, none disputed; PA-06 (§5.8), G1-77 added; job A gains A5 | Passed (PM checked structure intact after the agent's §5.8 reinsertion) |
-| 3 | Efficiency and quality (independent Sonnet reviewer) | 6 majors (A/D0 circular per-commit checks; B4 uses types registered in B5; oversized commits; script imports vs roster; rule 13 in the wrapper; OQ1-08 vs PA-06), 16 minors, 7 nits. PM decisions: A4a → D0a → A4b/c with PM-directed sibling-branch merge; catalogue in B4; split A2/A3/A4/B2/B4; keep admin.ts and amend roster (OQ1-18); loadCliEnvironment; 2 s status-lookup deadline; PA-06 memo/skip/rate-limit; joined getTenantContext; lock_timeout + 503 SERVICE_BUSY on UC-06; latches instead of sleeps; suite-wide log-marker hook | pending | — |
+| 3 | Efficiency and quality (independent Sonnet reviewer) | 6 majors (A/D0 circular per-commit checks; B4 uses types registered in B5; oversized commits; script imports vs roster; rule 13 in the wrapper; OQ1-08 vs PA-06), 16 minors, 7 nits. PM decisions: A4a → D0a → A4b/c with PM-directed sibling-branch merge; catalogue in B4; split A2/A3/A4/B2/B4; keep admin.ts and amend roster (OQ1-18); loadCliEnvironment; 2 s status-lookup deadline; PA-06 memo/skip/rate-limit; joined getTenantContext; lock_timeout + 503 SERVICE_BUSY on UC-06; latches instead of sleeps; suite-wide log-marker hook | 211c8ba (v0.6): all 29 fixed, none disputed; 77 gate tests (G1-69 retired into G1-24), FB and SC tables; six jobs with stepwise A/D0 checks | Passed (PM checked: every cited G1 ID defined, no stray characters, all 12 sections present) |
 
+
+Merged into backend at f3a4ef1 (October 25, 2026) after three review rounds. Next: owner approval of the specification and its owner-facing open questions (OQ1-01, OQ1-04, OQ1-06, OQ1-07, OQ1-18 and the rest of §12). After approval: the PM amends the roster (OQ1-18: script imports; PM may direct a merge of a named sibling branch) and opens jobs A, D0, B, D1, C, D2 once Phase 0 is merged.
 ### phase-0-platform — backend-platform-engineer — Open
 
 Phase: 0 Infrastructure Foundation
