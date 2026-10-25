@@ -1,6 +1,6 @@
 // The base class for errors that are meant to reach the client (Phase 0 spec
-// §4.7, §6.3). The platform subclasses (ValidationError, NotFoundError, ...) and
-// the global error handler arrive in commit 3.
+// §4.7, §6.3). The platform subclasses (ValidationError, NotFoundError, ...) are below;
+// the global error handler is errors/error-handler.ts.
 //
 // `safeMessage` is written for the user and contains no input values.
 // `details` goes to the client in the error envelope and is never logged.

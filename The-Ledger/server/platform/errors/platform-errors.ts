@@ -71,7 +71,7 @@ export class OutboxWriteFailedError extends Error {
   }
 }
 
-/** A `humanOnly` port was called without a human actor (PS-16). Arrives with the port registry. */
+/** A `humanOnly` port was called without a human actor, or a port was called outside a live unit (PS-16). */
 export class HumanActorRequiredError extends Error {
   constructor(message = "This operation requires a human actor", options?: { cause?: unknown }) {
     super(message, options);

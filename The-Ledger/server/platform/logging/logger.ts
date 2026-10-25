@@ -94,7 +94,11 @@ export function buildLoggerOptions(service: Service, level: LogLevel = "info"): 
       // Child loggers (modules get one) carry bindings: examined by the same walk.
       bindings: makeLoggedObjectSafe,
     },
-    serializers: { err: safeError, error: safeError },
+    // pino installs its own `err` serializer unless one is given, and that one would rewrite the
+    // safe object formatters.log produces (it adds fields and re-reads message and stack). Ours
+    // leaves a safe object alone. No other key needs one: formatters.log makes an Error safe
+    // wherever it sits.
+    serializers: { err: safeError },
     mixin: () => {
       const context = getLogContext();
       const fields: Record<string, string> = {};

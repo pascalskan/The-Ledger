@@ -69,6 +69,9 @@ const portalClaimsSchema = z
 export type PlatformTokenClaims = z.infer<typeof platformClaimsSchema>;
 export type PortalTokenClaims = z.infer<typeof portalClaimsSchema>;
 
+// jose has already checked iss and aud. This parse is kept because jose also accepts an array `aud`
+// that merely contains the expected audience; this platform signs a single string, so a token whose
+// aud is anything else (an array included) is refused.
 const registered = z.object({
   iss: z.literal(TOKEN_ISSUER),
   aud: z.string(),

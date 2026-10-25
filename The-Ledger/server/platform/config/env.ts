@@ -60,7 +60,7 @@ export interface FullApiConfig extends BaseConfig {
   readonly port: number;
   /** Settings for the `ledger_app` pool. */
   readonly database: PoolSettings;
-  /** Normalised PEM text; commit 6 imports these with jose. */
+  /** Normalised PEM text; auth/keys.ts imports these with jose. */
   readonly jwt: { readonly privateKeyPem: string; readonly publicKeyPem: string };
   /** The decoded portal-token secret (at least 32 bytes). */
   readonly portalSecret: Uint8Array;
