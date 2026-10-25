@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createExecutionContext, toCompanyId } from "../context/execution-context";
 import { createLogger } from "../logging/logger";
 import { DESTROY_CLIENT, type DbPool } from "./client";
-import { assertNoTransactionControl, createUnitOfWorkRunner } from "./unit-of-work";
+import { createUnitOfWorkRunner } from "./unit-of-work";
 
 // The unit of work's handling of a connection it cannot clean up, without a database.
 
@@ -88,31 +88,6 @@ describe("a unit whose ROLLBACK fails", () => {
     const { pool, statements } = fakePool(false);
     await createUnitOfWorkRunner({ pool }).forModule("alpha")(ctx(), async () => "ok");
     expect(statements.map((s) => s.split(" ")[0])).toEqual(["BEGIN", "SELECT", "SELECT", "COMMIT"]);
-  });
-});
-
-describe("assertNoTransactionControl", () => {
-  const refused = [
-    "COMMIT", "commit;", "ROLLBACK", "BEGIN", "START TRANSACTION", "END", "ABORT", "SAVEPOINT s", "RELEASE s",
-    "SET ROLE x", "SET LOCAL a = 1", "RESET ROLE", "DISCARD ALL", "PREPARE p AS SELECT 1", "EXECUTE p", "DEALLOCATE p",
-    "DO $$ BEGIN END $$", "CALL f()", "LOAD 'x'", "SELECT set_config('a','b',true)", "SELECT SET_CONFIG ('a','b',false)",
-    "SELECT 1; COMMIT", "SELECT 1;\n  rollback", "/* c */ COMMIT", "-- c\nCOMMIT", "(COMMIT)", "\t\nBegin",
-    "SELECT pg_catalog.set_config('a','b',true)", "select\nset_config\n('a','b',true)",
-  ];
-  const allowed = [
-    "SELECT 1", "SELECT * FROM t WHERE a = $1", "INSERT INTO t (a) VALUES ($1) RETURNING a",
-    "UPDATE t SET a = $1 WHERE b = $2", "DELETE FROM t WHERE a = $1", "WITH x AS (SELECT 1) SELECT * FROM x",
-    "SELECT 'COMMIT' AS word", "SELECT 'it''s; COMMIT' AS word", "SELECT $$ROLLBACK; SET ROLE x$$ AS body",
-    "SELECT $tag$COMMIT$tag$", "-- COMMIT\nSELECT 1", "/* SET ROLE */ SELECT 1", "SELECT a AS \"commit\" FROM t",
-    "INSERT INTO t (a) VALUES ('set_config(')", "SELECT current_setting('app.company_id', true)",
-    "UPDATE t SET commit_count = commit_count + 1", "SELECT 1;", "",
-  ];
-
-  it.each(refused)("refuses %j", (text) => {
-    expect(() => assertNoTransactionControl(text)).toThrow(expect.objectContaining({ name: "UnitOfWorkIntegrityError" }));
-  });
-  it.each(allowed)("allows %j", (text) => {
-    expect(() => assertNoTransactionControl(text)).not.toThrow();
   });
 });
 

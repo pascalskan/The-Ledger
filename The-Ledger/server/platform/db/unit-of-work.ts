@@ -23,6 +23,7 @@ import {
 import { createOutboxWriter, type OutboxWriter } from "../events/outbox-writer";
 import { markForClientDestruction, type DbPool } from "./client";
 import { poisonUnit, type UnitPoison, type UnitState } from "./unit-state";
+import { assertNoTransactionControl } from "./statement-guard";
 
 // PS-12, Phase 0 spec §4.4: the Unit of Work.
 //
@@ -102,6 +103,9 @@ const activeUnit = new AsyncLocalStorage<UnitState>();
 /** Views are mapped back to their shared state, for `adoptUnit`. */
 const viewStates = new WeakMap<object, { state: UnitState; tx: DbTransaction }>();
 
+/** The stand-in prototype of the guarded client: it is not a pg Client or Pool, and has no methods. */
+class GuardedClient {}
+
 /**
  * The client the unit's SQL runs on, seen through a proxy that exposes ONE thing: `query`.
  * After the unit closes, `query` throws UnitOfWorkClosedError, so a stale reference can never
@@ -111,18 +115,31 @@ const viewStates = new WeakMap<object, { state: UnitState; tx: DbTransaction }>(
  * inside this transaction), no `end`, and no `password`, `connectionParameters` or
  * `connection`. The platform's own BEGIN, COMMIT and ROLLBACK use the raw client.
  */
-/** The stand-in prototype of the guarded client: it is not a pg Client or Pool, and has no methods. */
-class GuardedClient {}
-
 function guardClient(client: pg.PoolClient, state: () => UnitState): pg.PoolClient {
   const query = (...args: unknown[]) => {
     const unit = state();
     if (unit.closed) throw new UnitOfWorkClosedError();
     // The same statement check as tx.execute: a module that reaches this function through a query
-    // builder's private session gets no further than the facade.
+    // builder's private session gets no further than the facade. A query config is copied once,
+    // so what is checked is what is sent (a getter cannot answer differently the second time);
+    // an object that brings its own `submit` (a pg Submittable) writes to the connection itself
+    // and is refused, and so is a config whose text is not a string.
     const first = args[0];
-    const text = typeof first === "string" ? first : (first as { text?: unknown } | null)?.text;
-    if (typeof text === "string") refuseTransactionControl(unit, text);
+    if (typeof first === "string") {
+      refuseTransactionControl(unit, first);
+    } else if (typeof first === "object" && first !== null) {
+      if (typeof (first as { submit?: unknown }).submit === "function") {
+        refuseUnit(unit, new UnitOfWorkIntegrityError("a query object with its own submit is not allowed inside a unit of work"));
+      }
+      const config = { ...(first as Record<string, unknown>) };
+      if (typeof config.text !== "string") {
+        refuseUnit(unit, new UnitOfWorkIntegrityError("a query without a text string is not allowed inside a unit of work"));
+      }
+      refuseTransactionControl(unit, config.text as string);
+      args[0] = config;
+    } else {
+      refuseUnit(unit, new UnitOfWorkIntegrityError("a query must be a string or a config object"));
+    }
     return (client.query as (...a: unknown[]) => unknown)(...args);
   };
   return new Proxy(client, {
@@ -138,43 +155,23 @@ function guardClient(client: pg.PoolClient, state: () => UnitState): pg.PoolClie
   });
 }
 
-const TRANSACTION_CONTROL =
-  /^(begin|start|commit|end|rollback|abort|savepoint|release|prepare|execute|deallocate|set|reset|discard|do|call|load)$/i;
-
-/**
- * Statements that change the transaction or the session are refused before they are sent: a
- * COMMIT or ROLLBACK issued through the unit would end the transaction behind the platform's
- * back, and the module's earlier writes would then persist even if the audit write fails; SET
- * ROLE or set_config would change who the unit runs as, or whose company it is. The check reads
- * the statement text only (comments and quoted strings removed). It is a first line of defence:
- * the pre-COMMIT integrity check is the one that cannot be bypassed.
- */
-export function assertNoTransactionControl(text: string): void {
-  const stripped = text
-    .replace(/\/\*[\s\S]*?\*\//g, " ")
-    .replace(/--[^\n]*/g, " ")
-    .replace(/\$([A-Za-z_]\w*)?\$[\s\S]*?\$\1\$/g, "''")
-    .replace(/'(?:[^']|'')*'/g, "''");
-  if (/\bset_config\s*\(/i.test(stripped)) {
-    throw new UnitOfWorkIntegrityError("set_config is not allowed inside a unit of work");
-  }
-  for (const statement of stripped.split(";")) {
-    const first = /^[\s(]*([A-Za-z_]+)/.exec(statement)?.[1];
-    if (first !== undefined && TRANSACTION_CONTROL.test(first)) {
-      throw new UnitOfWorkIntegrityError(`${first.toUpperCase()} is not allowed inside a unit of work`);
-    }
-  }
+/** Poisons the unit, so that even a swallowed refusal cannot commit, and throws. */
+function refuseUnit(unit: UnitState, error: UnitOfWorkIntegrityError): never {
+  poisonUnit(unit, "integrity", error);
+  throw error;
 }
 
-/** Refuses transaction-control SQL, and poisons the unit so that even a swallowed refusal cannot commit. */
+/** Refuses transaction-control SQL (see statement-guard.ts). */
 function refuseTransactionControl(unit: UnitState, text: string): void {
   try {
     assertNoTransactionControl(text);
   } catch (error) {
-    if (error instanceof UnitOfWorkIntegrityError) poisonUnit(unit, "integrity", error);
+    if (error instanceof UnitOfWorkIntegrityError) refuseUnit(unit, error);
     throw error;
   }
 }
+
+export { assertNoTransactionControl };
 
 const dialect = new PgDialect();
 

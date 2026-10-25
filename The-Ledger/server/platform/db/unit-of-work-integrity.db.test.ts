@@ -129,6 +129,34 @@ describe("statements that change the transaction or session are refused (with th
     },
   );
 
+  it("review round 3: the client behind a builder refuses a Submittable, a config without a text string, and a getter that changes its answer", async () => {
+    type Querier = { query(q: unknown): Promise<unknown> };
+    const attempts: Array<[string, (calls: { n: number }) => unknown]> = [
+      ["a Submittable", () => ({ text: "SELECT 1", submit: () => undefined })],
+      ["a config without text", () => ({ name: "x" })],
+      ["a config whose text is an object", () => ({ text: { toString: () => "COMMIT" } })],
+      ["a text getter that answers differently the second time", (calls) => ({ get text() { return calls.n++ === 0 ? "SELECT 1" : "COMMIT"; } })],
+      ["a number", () => 42],
+    ];
+    for (const [label, make] of attempts) {
+      const marker = randomUUID();
+      const calls = { n: 0 };
+      const outcome = alpha()(context(), async (uow) => {
+        await insertProbe(uow, marker);
+        const client = (uow.tx.select() as unknown as { session: { client: Querier } }).session.client;
+        await client.query(make(calls));
+      });
+      if (label.startsWith("a text getter")) {
+        // the text is read once: the copy sent is the SELECT that was checked, so the unit commits normally
+        await expect(outcome, label).resolves.toBeUndefined();
+        expect(await persisted(marker)).toBe(1);
+      } else {
+        await expect(outcome, label).rejects.toMatchObject({ name: "UnitOfWorkIntegrityError" });
+        expect(await persisted(marker), label).toBe(0);
+      }
+    }
+  });
+
   it("review probe 5: a raw COMMIT, then a failing audit write - nothing persists", async () => {
     const marker = randomUUID();
     await expect(
