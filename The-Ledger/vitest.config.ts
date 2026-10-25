@@ -32,6 +32,9 @@ export default defineConfig({
         test: {
           name: "unit",
           environment: "node",
+          // Several unit tests start a real node process (tsx, the build script); on a busy
+          // machine that takes longer than the 5 s default.
+          testTimeout: 30_000,
           include: ["server/**/*.test.ts"],
           exclude: ["server/**/*.db.test.ts", "server/tests/**", "**/node_modules/**"],
         },
