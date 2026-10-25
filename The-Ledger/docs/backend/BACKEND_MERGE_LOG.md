@@ -80,7 +80,7 @@ Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
 | 1 | Correctness (independent Sonnet reviewer; PM-verified, PG claims tested on local 16.14) | 3 blockers (Drizzle inserts vs column grants; script has no catalogue; Phase 0 gate red after job A), 6 majors (TRUNCATE trigger/SQLSTATE, terminal state in shared fixtures, FK convention vs rule 7, no test catches FOR UPDATE, in-process scrub, job sequencing), 11 minors (incl. locale-dependent [[:cntrl:]]). PM decisions: sql-template inserts; opener takes [tenantModule]; new job D0 stub port lands with A; later-module FKs by custom migration plus generic catalogue gate test | 0ebcaff (v0.4): all 20 fixed, none disputed; G1-73…G1-76 added; six jobs A, D0, B, D1, C, D2 | Passed (PM re-checked: locale-independent character class verified on PG 16.14; no stray control characters in the file) |
-| 2 | Security and doctrine (independent Sonnet reviewer) | in progress | — | — |
+| 2 | Security and doctrine (independent Sonnet reviewer) | 0 blockers, 4 majors (non-HTTP tenant enforcement by convention; regex DoS from 1 MB body; operator metadata in tenant-visible audit; script keeps JWT/worker secrets), 12 minors. PM decisions: PA-06 required subscriber tenantStatusPolicy ('active_only'|'any', no default) enforced by the worker; length-before-pattern; metadata.platformAdmin reserved key with Phase 7 redaction gate; script env allowlist; admin functions in tenant/admin.ts with branded script contexts; worker column-level SELECT on configurations; retention triggers; ISO 4217 list; lock_timeout 5 s | pending | — |
 
 ### phase-0-platform — backend-platform-engineer — Open
 
