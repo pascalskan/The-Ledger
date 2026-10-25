@@ -217,3 +217,97 @@ describe("errors are always logged safely (R2-13, R3-13)", () => {
     expect(payload.nested.list[0]).toBe(error);
   });
 });
+
+describe("errors and credentials are made safe on every path of a log call (review round 2, M3)", () => {
+  const SECRET = "pw-secret-77";
+  const leaky = () =>
+    Object.assign(new pg.DatabaseError(`invalid input syntax for type uuid: "${MARK}"`, 100, "error"), {
+      severity: "ERROR",
+      code: "22P02",
+      detail: `Key (value)=(${MARK}) detail`,
+      where: `PL/pgSQL where ${MARK}`,
+      hint: `hint ${MARK}`,
+      internalQuery: `select ${MARK}`,
+    });
+
+  function logged(run: (logger: pino.Logger) => void) {
+    const out = capture();
+    const logger = createLogger({ service: "api", level: "debug", destination: out.destination });
+    run(logger);
+    return out.lines.join("\n");
+  }
+  const expectClean = (text: string) => {
+    expect(text).not.toContain(MARK);
+    expect(text).not.toContain(SECRET);
+    for (const key of ['"detail"', '"where"', '"hint"', '"internalQuery"']) expect(text).not.toContain(key);
+  };
+
+  it("an Error as the second argument: logger.error({ a: 1 }, err)", () => {
+    const text = logged((l) => l.error({ a: 1 }, leaky() as never));
+    expectClean(text);
+    expect(JSON.parse(text).message).toBe("PostgreSQL error 22P02");
+  });
+
+  it("an Error as the message of a logger.error(err, err2)", () => {
+    expectClean(logged((l) => (l.error as (a: unknown, b: unknown) => void)(leaky(), leaky())));
+  });
+
+  it.each(["%o", "%O", "%j", "%s", "%d", "%i", "%f"])("a format argument (%s) that is a pg DatabaseError", (placeholder) => {
+    expectClean(logged((l) => (l.error as (...a: unknown[]) => void)(`failed ${placeholder}`, leaky())));
+    expectClean(logged((l) => l.error({ ctx: 1 }, `failed ${placeholder}`, leaky())));
+  });
+
+  it("an Error nested in a format argument, and several format arguments", () => {
+    expectClean(logged((l) => l.warn("a %o and %j and %s", { wrapped: { failure: leaky() } }, [leaky()], "plain")));
+  });
+
+  it("child bindings: logger.child({ x: err }), also nested and in an array", () => {
+    expectClean(logged((l) => l.child({ x: leaky() }).info("hello")));
+    expectClean(logged((l) => l.child({ nested: { errors: [leaky()] } }).info("hello")));
+    expectClean(logged((l) => l.child({ module: "alpha" }).child({ failure: leaky() }).error("again")));
+  });
+
+  it("a toJSON that wraps an error, at the top and nested", () => {
+    expectClean(logged((l) => l.info({ value: { toJSON: () => ({ failure: leaky() }) } }, "m")));
+    expectClean(logged((l) => l.info({ value: { toJSON: () => leaky() } }, "m")));
+    expectClean(logged((l) => l.info({ list: [{ toJSON: () => ({ deep: { failure: leaky() } }) }] }, "m")));
+  });
+
+  it("a toJSON that throws or returns itself does not break logging", () => {
+    const loop: { toJSON(): unknown } = { toJSON: () => loop };
+    const text = logged((l) => l.info({ boom: { toJSON: () => { throw new Error("no"); } }, loop }, "m"));
+    expect(JSON.parse(text).boom).toBe("[unserializable]");
+    expect(JSON.parse(text).loop).toBe("[depth limit]");
+  });
+
+  it("dates still serialise as ISO strings", () => {
+    const text = logged((l) => l.info({ when: new Date("2026-10-24T00:00:00.000Z") }, "m"));
+    expect(JSON.parse(text).when).toBe("2026-10-24T00:00:00.000Z");
+  });
+
+  it("URL objects and strings with credentials lose user:password: as a value, a message, a format argument, a binding", () => {
+    const url = `postgresql://ledger_app:${SECRET}@db.example.com:5432/ledger`;
+    expectClean(logged((l) => l.info({ target: new URL(url) }, "m")));
+    expectClean(logged((l) => l.info({ target: url, nested: { urls: [url] } }, "m")));
+    expectClean(logged((l) => l.info(`connecting to ${url} now`)));
+    expectClean(logged((l) => l.info({ a: 1 }, `connecting to ${url} now`)));
+    expectClean(logged((l) => l.info("connecting to %s", url)));
+    expectClean(logged((l) => l.info("connecting to %o", { url: new URL(url) })));
+    expectClean(logged((l) => l.child({ url }).info("m")));
+    const text = logged((l) => l.info({ target: url }, "m"));
+    expect(JSON.parse(text).target).toBe("postgresql://[redacted]@db.example.com:5432/ledger");
+  });
+
+  it("URLs without credentials, and ordinary text, are left alone", () => {
+    const text = logged((l) => l.info({ site: "https://example.com/a?b=1", mail: "a@b.c", note: "left: right" }, "see https://example.com/x"));
+    const record = JSON.parse(text);
+    expect(record).toMatchObject({ site: "https://example.com/a?b=1", mail: "a@b.c", note: "left: right", message: "see https://example.com/x" });
+  });
+
+  it("an Error under any key of the logged object is still safe, and the caller's object is not mutated", () => {
+    const failure = leaky();
+    const payload = { a: { b: [failure] } };
+    expectClean(logged((l) => l.warn(payload, "m")));
+    expect(payload.a.b[0]).toBe(failure);
+  });
+});
