@@ -115,7 +115,8 @@ October 25, 2026: with the owner's permission, the PM ran `npx playwright instal
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
-| 1 | Correctness (independent Sonnet reviewer; PM verified both majors in code) | 0 blockers; 2 majors (checked-out pg client has no 'error' listener → process crash on connection loss; mid-batch throw leaves claimed rows locked and heartbeated forever); 6 minors (humanOnly by caller token; uow.tx.$client leak; production exit on refusal; finish ROLLBACK failure; stop() flag; maxTokenAge → TOKEN_EXPIRED). PM rulings: connection-class/RuntimeRoleError in a subscriber = loop-level failure, release without counting; m3 kept as §3.5 says (exit 1 in production), runbook covers db:migrate; release-on-stop ratified as a deviation | pending | — |
+| 1 | Correctness (independent Sonnet reviewer; PM verified both majors in code) | 0 blockers; 2 majors (checked-out pg client has no 'error' listener → process crash on connection loss; mid-batch throw leaves claimed rows locked and heartbeated forever); 6 minors (humanOnly by caller token; uow.tx.$client leak; production exit on refusal; finish ROLLBACK failure; stop() flag; maxTokenAge → TOKEN_EXPIRED). PM rulings: connection-class/RuntimeRoleError in a subscriber = loop-level failure, release without counting; m3 kept as §3.5 says (exit 1 in production), runbook covers db:migrate; release-on-stop ratified as a deviation | 7aebe86 (+eda3633 test fix), 7f72656, d8b8ba1, f62887c, f57c192: all fixed with tests (M1 regression test fails on the old code); m3 acknowledged | Passed (PM re-ran f57c192: check clean; unit 451/451; db 173 + 1 skipped) |
+| 2 | Security and doctrine (independent Sonnet reviewer) | in progress | — | — |
 
 ### phase-0-gate-tests — backend-test-engineer — Open
 
