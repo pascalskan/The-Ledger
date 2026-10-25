@@ -24,6 +24,23 @@ export {
 } from "../config";
 export { createOwnerPool, createRuntimePool, RuntimeRoleError, type DbPool } from "../db/client";
 export { runMigrations, MIGRATIONS_FOLDER } from "../db/migrate";
+export {
+  adoptUnit,
+  createUnitOfWorkRunner,
+  installDefaultRunner,
+  type DbTransaction,
+  type UnitOfWork,
+  type UnitOfWorkRunner,
+} from "../db/unit-of-work";
+export { tenantScope, tenantValues, tenantWhere } from "../db/tenant-scope";
+export { buildTypeCatalogue, CatalogueError, type TypeCatalogue } from "../audit/catalogue";
+export {
+  createExecutionContext,
+  expireContext,
+  type Actor,
+  type ExecutionContext,
+} from "../context/execution-context";
+export { createSystemContext, runInTransactionAs, toCompanyId } from "../system";
 export { createApiApp } from "../http/app";
 export { createLogger } from "../logging/logger";
 export {

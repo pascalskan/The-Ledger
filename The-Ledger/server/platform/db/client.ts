@@ -15,6 +15,17 @@ import { TestDatabaseGuardError } from "../config/test-database";
 // (node-postgres does not await `pool.on('connect')` handlers, so a check attached
 // there could run after the caller's first query). Modules have no pool at all.
 
+/**
+ * An error carrying this symbol tells `withClient` to destroy the client instead of returning
+ * it to the pool. The unit of work sets it when it cannot leave the connection in a known
+ * state, for example when ROLLBACK itself fails.
+ */
+export const DESTROY_CLIENT = Symbol.for("ledger.destroyClient");
+
+function shouldDestroy(error: unknown): boolean {
+  return typeof error === "object" && error !== null && (error as Record<symbol, unknown>)[DESTROY_CLIENT] === true;
+}
+
 export type RuntimeRoleName = "ledger_app" | "ledger_worker";
 
 /** What the runtime role self-check refused, in words that name the failed condition. */
@@ -239,10 +250,14 @@ export function createRuntimePool(options: CreateRuntimePoolOptions): DbPool {
         }
         throw refusal;
       }
+      let destroy: Error | undefined;
       try {
         return await fn(client);
+      } catch (error) {
+        if (shouldDestroy(error)) destroy = error as Error;
+        throw error;
       } finally {
-        client.release();
+        client.release(destroy);
       }
     },
     end: () => pool.end(),
@@ -281,10 +296,14 @@ export function createOwnerPool(options: CreatePoolOptions): DbPool {
           throw error;
         }
       }
+      let destroy: Error | undefined;
       try {
         return await fn(client);
+      } catch (error) {
+        if (shouldDestroy(error)) destroy = error as Error;
+        throw error;
       } finally {
-        client.release();
+        client.release(destroy);
       }
     },
     end: () => pool.end(),
