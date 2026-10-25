@@ -72,3 +72,34 @@ describe("route templates in the request line", () => {
     });
   });
 });
+
+describe("paths are matched the way Express matches them (review round 2, minor 5)", () => {
+  it.each(["/API/V1/jobs/x", "/Api/v1/nothing", "/api/V1/x/", "/PORTAL/V1/x", "/portal/V1", "/API", "/api/"])(
+    "%s gets a request line",
+    async (path) => {
+      const { app, records } = build();
+      await request(app).get(path);
+      expect(records().filter((r) => r.message === "request")).toHaveLength(1);
+    },
+  );
+
+  it("/HEALTH and /health/ are logged at DEBUG like /health, if they are served", async () => {
+    const lines: string[] = [];
+    const logger = createLogger({ service: "api", level: "debug", destination: { write: (c: string) => void lines.push(c) } });
+    const app = express();
+    app.use(requestId);
+    app.use(requestLogger(logger));
+    app.get("/health", (_req, res) => void res.json({ ok: true }));
+    await request(app).get("/HEALTH");
+    await request(app).get("/health/");
+    const records = lines.map((l) => JSON.parse(l) as Record<string, any>);
+    expect(records).toHaveLength(2);
+    expect(records.every((r) => r.level === "DEBUG" && r.route === "/health")).toBe(true);
+  });
+
+  it("frontend paths that merely look similar are still not logged", async () => {
+    const { app, records } = build();
+    for (const path of ["/apiary", "/healthy", "/portal", "/portal/projects", "/portalv1", "/api-docs"]) await request(app).get(path);
+    expect(records().filter((r) => r.message === "request")).toEqual([]);
+  });
+});

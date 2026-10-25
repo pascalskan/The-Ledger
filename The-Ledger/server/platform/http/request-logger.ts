@@ -7,6 +7,15 @@ import { routeTemplate } from "./route-template";
 const LOGGED_PREFIXES = ["/api/", "/portal/v1/"];
 const LOGGED_EXACT = ["/api", "/portal/v1", "/health"];
 
+/**
+ * Express routes case-insensitively and ignores a trailing slash (its defaults), so `/API/V1/x`
+ * and `/health/` reach the same handlers as `/api/v1/x` and `/health`. The decision to log is made
+ * the same way, or those requests would be served without a request line.
+ */
+function normalise(path: string): string {
+  return path.toLowerCase().replace(/\/+$/, "") || "/";
+}
+
 function isLoggedPath(path: string): boolean {
   return LOGGED_EXACT.includes(path) || LOGGED_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
@@ -21,8 +30,9 @@ function isLoggedPath(path: string): boolean {
 export function requestLogger(logger: Logger): RequestHandler {
   return (req, res, next) => {
     // Decided now, from the pathname alone: req.path is relative to the mount point later.
-    if (!isLoggedPath(req.path)) return next();
-    const isHealth = req.path === "/health";
+    const path = normalise(req.path);
+    if (!isLoggedPath(path)) return next();
+    const isHealth = path === "/health";
     const started = process.hrtime.bigint();
     const context = logContextOf(req);
 
