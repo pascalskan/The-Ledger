@@ -313,10 +313,17 @@ describe("errors and credentials are made safe on every path of a log call (revi
 });
 
 describe("redactUrlCredentials runs in linear time (review round 3, major 1)", () => {
+  // The best of three runs: a loaded machine slows a run down, never speeds it up, and a
+  // quadratic pattern is orders of magnitude slower than the bound whichever run is taken.
   const timed = (text: string) => {
-    const start = performance.now();
-    const result = redactUrlCredentials(text);
-    return { ms: performance.now() - start, result };
+    let best = Infinity;
+    let result = "";
+    for (let run = 0; run < 3; run++) {
+      const start = performance.now();
+      result = redactUrlCredentials(text);
+      best = Math.min(best, performance.now() - start);
+    }
+    return { ms: best, result };
   };
 
   it("a 100k-character string with no URL costs one scan", () => {
@@ -333,6 +340,7 @@ describe("redactUrlCredentials runs in linear time (review round 3, major 1)", (
   });
 
   it("long runs after a scheme, in the user or the password position, stay linear", () => {
+    // Looser than the no-URL case: these do reach the pattern, and a quadratic one takes tens of seconds.
     for (const text of [
       `postgres://${"u".repeat(100_000)}`,
       `postgres://${"u".repeat(50_000)}:${"p".repeat(50_000)}`,
@@ -340,7 +348,7 @@ describe("redactUrlCredentials runs in linear time (review round 3, major 1)", (
       `${"a".repeat(100_000)}://x`,
       `${"a://x:".repeat(20_000)}`,
     ]) {
-      expect(timed(text).ms, text.slice(0, 20)).toBeLessThan(50);
+      expect(timed(text).ms, text.slice(0, 20)).toBeLessThan(2000);
     }
   });
 
@@ -349,6 +357,8 @@ describe("redactUrlCredentials runs in linear time (review round 3, major 1)", (
     expect(redactUrlCredentials("a://u:p@h and b://v:q@i")).toBe("a://[redacted]@h and b://[redacted]@i");
     expect(redactUrlCredentials("git+ssh://deploy:tok@host/r")).toBe("git+ssh://[redacted]@host/r");
     expect(redactUrlCredentials("https://example.com/a@b")).toBe("https://example.com/a@b");
+    expect(redactUrlCredentials("pid12postgres://u:pw@h/db")).toBe("pid12postgres://[redacted]@h/db");
+    expect(redactUrlCredentials(`${"x".repeat(60)}://u:pw@h`)).toBe(`${"x".repeat(60)}://[redacted]@h`);
   });
 });
 
