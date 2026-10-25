@@ -106,6 +106,10 @@ function createTransactionHandle(client: pg.PoolClient, isClosed: () => boolean)
       if (isClosed() && typeof property === "string" && property !== "then") {
         throw new UnitOfWorkClosedError();
       }
+      // The raw client and the session that holds it are not part of the handle: with them a
+      // module could issue COMMIT, ROLLBACK or SET ROLE itself (import rule 10 forbids it
+      // statically; this makes it impossible at run time too).
+      if (property === "$client" || property === "session") return undefined;
       if (property === "transaction") {
         // Drizzle's transaction() issues a savepoint when called inside a transaction.
         return async () => {

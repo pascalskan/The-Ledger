@@ -229,6 +229,20 @@ describe("commit", () => {
     expect(Object.keys(byId[objectId!].new_value)).toContain("address");
   });
 
+  it("(m2) uow.tx exposes neither the raw client nor its session, at run time or in the type", async () => {
+    await alpha()(userContext(), async (uow) => {
+      // @ts-expect-error $client is not part of DbTransaction
+      expect(uow.tx.$client).toBeUndefined();
+      // @ts-expect-error session is not part of DbTransaction
+      expect(uow.tx.session).toBeUndefined();
+      expect("$client" in uow.tx && (uow.tx as Record<string, unknown>).$client !== undefined).toBe(false);
+      // ... and the handle still works for everything a repository does
+      const result = await uow.tx.execute(sql`SELECT 1 AS one`);
+      expect(result.rows[0]).toEqual({ one: 1 });
+      expect(await uow.tx.select().from(probeState).limit(1)).toBeInstanceOf(Array);
+    });
+  });
+
   it("(G0-43) uow.audit has exactly one method, append, and uow.events exactly one, record", async () => {
     await alpha()(userContext(), async (uow) => {
       expect(Object.keys(uow.audit)).toEqual(["append"]);
