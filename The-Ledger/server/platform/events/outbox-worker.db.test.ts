@@ -225,6 +225,63 @@ describe("delivery (PS-18)", () => {
     expect(payloads[0]).not.toBe(payloads[1]);
   });
 
+  /** Records every statement the worker pool runs while `fn` does, as the first word (or two) of each. */
+  async function statementsDuring(fn: () => Promise<void>): Promise<string[]> {
+    const seen: string[] = [];
+    const original = pools.worker.withClient.bind(pools.worker);
+    (pools.worker as { withClient: DbPool["withClient"] }).withClient = (work) =>
+      original((client) =>
+        work(
+          new Proxy(client, {
+            get: (target, property, receiver) => {
+              if (property !== "query") return Reflect.get(target, property, receiver);
+              return (...args: unknown[]) => {
+                const first = args[0];
+                const text = typeof first === "string" ? first : String((first as { text?: unknown }).text);
+                seen.push(text.trim().replace(/\s+/g, " ").split(" ").slice(0, 2).join(" ").toUpperCase());
+                return (target.query as (...a: unknown[]) => unknown)(...args);
+              };
+            },
+          }),
+        ),
+      );
+    try {
+      await fn();
+    } finally {
+      (pools.worker as { withClient: DbPool["withClient"] }).withClient = original;
+    }
+    return seen;
+  }
+
+  it("(review round 3, minor 5) one event with two subscribers costs 16 statements a cycle (18 before): one refresh answers 'do I still hold it', and the last heartbeat is skipped", async () => {
+    await commitEvent();
+    const worker = makeWorker();
+    const statements = await statementsDuring(async () => void (await worker.runOnce()));
+    const refresh = "UPDATE INTELLIGENCE.EVENT_OUTBOX";
+    const unit = ["BEGIN ISOLATION", refresh /* marks the subscriber done */, "SELECT TRANSACTION_TIMESTAMP()::TEXT", "COMMIT"];
+    expect(statements).toEqual([
+      refresh, // recover
+      refresh, // claim
+      refresh, // refreshHeld: still ours? and the batch's locks
+      ...unit,
+      refresh, // heartbeat after the first subscriber
+      ...unit, // no heartbeat after the last: this is the only row held
+      "BEGIN", "INSERT INTO", refresh, "COMMIT", // finish
+    ]);
+    expect(statements).toHaveLength(16);
+  });
+
+  it("the heartbeat after the last subscriber stays while another claimed row waits", async () => {
+    await commitEvent();
+    await commitEvent();
+    const worker = makeWorker();
+    const statements = await statementsDuring(async () => void (await worker.runOnce()));
+    const refreshes = statements.filter((s) => s === "UPDATE INTELLIGENCE.EVENT_OUTBOX").length;
+    // recover + claim, one refresh per row, a "done" mark per subscriber (4), heartbeats (row 1: both,
+    // row 2: the first only) and one finish per row = 13
+    expect(refreshes).toBe(2 + 2 + 4 + 3 + 2);
+  });
+
   it("an event with no subscribers is delivered at once and logged", async () => {
     const eventId = await commitEvent({ type: "AlphaChained" });
     behaviour = {};

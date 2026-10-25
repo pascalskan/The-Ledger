@@ -66,10 +66,12 @@ export interface OutboxSteps {
   recover(): Promise<void>;
   /** PS-17. */
   claim(): Promise<OutboxRow[]>;
-  /** PS-18 step 0, first half: does this worker still hold the row? Refreshes its lock. */
-  startRow(row: OutboxRow): Promise<boolean>;
-  /** PS-18 step 0, second half and after each subscriber: refresh every row this worker holds. */
-  refreshHeld(): Promise<void>;
+  /**
+   * PS-18 step 0 and the heartbeat after each subscriber: refreshes the lock of every row this
+   * worker holds and returns their outbox IDs, so the first call also answers "do I still hold
+   * this row?" (review round 3, minor 5: one statement where there were two).
+   */
+  refreshHeld(): Promise<readonly string[]>;
   /** PS-18 step 2: one subscriber, in its own unit of work. Throws LockLostError if the claim was lost. */
   runSubscriber(row: OutboxRow, entry: RegisteredSubscriber, runId: string): Promise<void>;
   /** PS-18 step 3. Throws LockLostError if the claim was lost (and rolls back). */
@@ -225,23 +227,14 @@ export function createOutboxSteps(deps: OutboxWorkerDeps): OutboxSteps {
       );
     },
 
-    async startRow(row) {
-      const result = await pool.withClient((client) =>
-        client.query(
-          "UPDATE intelligence.event_outbox SET locked_at = now() WHERE outbox_id = $1 AND status = 'processing' AND locked_by = $2",
-          [row.outbox_id, instanceId],
-        ),
-      );
-      return result.rowCount === 1;
-    },
-
     async refreshHeld() {
-      await pool.withClient((client) =>
-        client.query(
-          "UPDATE intelligence.event_outbox SET locked_at = now() WHERE status = 'processing' AND locked_by = $1",
+      const result = await pool.withClient((client) =>
+        client.query<{ outbox_id: string }>(
+          "UPDATE intelligence.event_outbox SET locked_at = now() WHERE status = 'processing' AND locked_by = $1 RETURNING outbox_id",
           [instanceId],
         ),
       );
+      return result.rows.map((held) => held.outbox_id);
     },
 
     async runSubscriber(row, entry, runId) {
@@ -379,12 +372,12 @@ export function createOutboxWorkerFromSteps(
   let wake: AbortController | undefined;
 
   async function deliver(row: OutboxRow, runId: string): Promise<void> {
-    // 0. Start the row: do we still hold it? Then refresh the whole batch's locks.
-    if (!(await steps.startRow(row))) {
+    // 0. Refresh the whole batch's locks; the answer says whether this row is still ours.
+    const held = await steps.refreshHeld();
+    if (!held.includes(row.outbox_id)) {
       logger.warn({ eventId: row.event_id, eventType: row.event_type }, "Claim lost before the event was handled; skipping it");
       return;
     }
-    await steps.refreshHeld();
 
     // 1. Prepare: the subscribers still to run.
     const done = new Set(row.delivered_subscribers);
@@ -392,7 +385,7 @@ export function createOutboxWorkerFromSteps(
 
     // 2. Call each subscriber in its own unit; a failing one does not hold back the others.
     const failures: SubscriberFailure[] = [];
-    for (const entry of pending) {
+    for (const [index, entry] of pending.entries()) {
       try {
         await steps.runSubscriber(row, entry, runId);
       } catch (error) {
@@ -411,8 +404,11 @@ export function createOutboxWorkerFromSteps(
         );
         continue;
       }
-      // Heartbeat after each subscriber commits (R3-04).
-      await steps.refreshHeld();
+      // Heartbeat after each subscriber commits (R3-04) - for the OTHER rows this worker holds.
+      // This row's own lock is refreshed by the subscriber's unit (it marks the subscriber done
+      // and sets locked_at) and by finish, so with no other row held, and nothing after the last
+      // subscriber but finish, the heartbeat has nobody to protect.
+      if (held.length > 1 || index < pending.length - 1) await steps.refreshHeld();
     }
 
     // 3. Finish, or 4. record the failed attempt.
