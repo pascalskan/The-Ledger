@@ -141,6 +141,11 @@ export function adoptUnit(uow: UnitOfWork, module: string): UnitOfWork {
   return createView(shared.state, module, shared.tx);
 }
 
+/** Platform-internal: the shared state of a unit, or undefined if `uow` was not created by the platform. */
+export function unitStateOf(uow: UnitOfWork): UnitState | undefined {
+  return viewStates.get(uow)?.state;
+}
+
 /** The error `runInTransaction` rejects with when the unit was poisoned but the work returned normally. */
 function poisonError(poison: UnitPoison): Error {
   switch (poison.kind) {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { installDefaultRunner, requireDefaultRunner } from "./default-runner";
+import { installDefaultRunner, requireDefaultRunner, resetDefaultRunner } from "./default-runner";
 import type { UnitOfWorkRunner } from "./unit-of-work";
 import { resetDefaultRunnerForTests } from "../testing/default-runner";
 
@@ -41,5 +41,27 @@ describe("the process-wide unit of work runner", () => {
     const second = runner();
     installDefaultRunner(second);
     expect(requireDefaultRunner()).toBe(second);
+  });
+});
+
+describe("the reset refuses to run outside Vitest", () => {
+  it("throws when the environment says it is not under Vitest, and keeps the runner", () => {
+    const first = runner();
+    installDefaultRunner(first);
+    expect(() => resetDefaultRunner({})).toThrow(/only be reset under Vitest/);
+    expect(() => resetDefaultRunner({ NODE_ENV: "production" })).toThrow(/only be reset under Vitest/);
+    expect(() => resetDefaultRunner({ VITEST: "" })).toThrow(/only be reset under Vitest/);
+    expect(requireDefaultRunner()).toBe(first);
+  });
+
+  it("clears it when the environment says it is under Vitest", () => {
+    installDefaultRunner(runner());
+    resetDefaultRunner({ VITEST: "true" });
+    expect(() => requireDefaultRunner()).toThrow(/No unit of work runner/);
+  });
+
+  it("the holder object is no longer exported", async () => {
+    const module = await import("./default-runner");
+    expect(Object.keys(module).sort()).toEqual(["installDefaultRunner", "requireDefaultRunner", "resetDefaultRunner"]);
   });
 });

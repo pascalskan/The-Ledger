@@ -10,8 +10,8 @@ import { createLogger } from "../logging/logger";
 
 // The test-only surface (import rule 1a, spec §9.1). Test files may import this; no
 // non-test file may, and it is never bundled. It reads configuration only through
-// server/platform/config/ (rule 13). Later commits add the worker factory with the
-// test-only hooks, buildRegistries and createSystemContext.
+// server/platform/config/ (rule 13). Commit 8 adds the worker factory with the
+// test-only hooks.
 
 export {
   assertTestDatabase,
@@ -55,6 +55,26 @@ export {
   type PortalTokenClaims,
 } from "../auth/jwt";
 export { contextOf } from "../context/request-store";
+export {
+  buildRegistries,
+  type BuildRegistriesOptions,
+  type ProcessKind,
+  type Registries,
+} from "../registry/build-registries";
+export { bind, definePort, type PortBinding, type PortToken, type Ports } from "../registry/ports";
+export { RegistryError } from "../registry/registry-error";
+export type {
+  Method,
+  ModuleDeps,
+  ModuleRegistration,
+  PublicRoute,
+} from "../registry/types";
+export {
+  createSubscriberRegistry,
+  type EventEnvelope,
+  type Subscriber,
+  type SubscriberRegistry,
+} from "../events/subscriber-registry";
 export { createLogger } from "../logging/logger";
 export {
   dropLeftoverGateRoles,

@@ -3,10 +3,12 @@ import { importAuthKeys, type AuthKeys } from "./platform/auth/keys";
 import { loadApiConfig, scrubOwnerVariables, type ApiConfig } from "./platform/config";
 import { createRuntimePool, type DbPool } from "./platform/db/client";
 import { installDefaultRunner } from "./platform/db/default-runner";
-import { createUnitOfWorkRunner } from "./platform/db/unit-of-work";
 import { ConfigError } from "./platform/errors/config-error";
 import { createApiApp } from "./platform/http/app";
 import { createLogger } from "./platform/logging/logger";
+import { buildRegistries, type Registries } from "./platform/registry/build-registries";
+import { RegistryError } from "./platform/registry/registry-error";
+import { modules } from "./modules/registry";
 import { serveStatic } from "./static";
 
 // API process entry (Phase 0 spec PS-02). Order:
@@ -39,6 +41,7 @@ for (const warning of config.warnings) logger.warn(warning);
 (async () => {
   let db: DbPool | undefined;
   let auth: AuthKeys | undefined;
+  let registries: Registries | undefined;
   if (config.mode === "full") {
     // The API does not connect at start-up: /health reports whether the database is reachable.
     db = createRuntimePool({
@@ -48,14 +51,26 @@ for (const warning of config.warnings) logger.warn(warning);
       exitOnRefusal: config.nodeEnv === "production",
     });
     auth = await importAuthKeys(config);
-    // Catalogues come from the module registry (commit 7); Phase 0 registers nothing.
-    installDefaultRunner(createUnitOfWorkRunner({ pool: db }));
+    // Check the namespaces, public routes and catalogues, and wire the ports. Any registry
+    // error stops the API with one FATAL line, before it listens (PS-02 step 3).
+    try {
+      registries = buildRegistries({ modules, process: "api", pool: db, logger, nodeEnv: config.nodeEnv });
+    } catch (error) {
+      if (error instanceof RegistryError) {
+        logger.fatal({ err: error }, error.message);
+        process.exit(1);
+      }
+      throw error;
+    }
+    // The process's single runner install, carrying the registry's catalogues.
+    installDefaultRunner(registries.runner);
   }
   const app = createApiApp({
     config,
     logger,
     ...(db === undefined ? {} : { db }),
     ...(auth === undefined ? {} : { auth }),
+    ...(registries === undefined ? {} : { registries }),
   });
   const httpServer = createServer(app);
 
