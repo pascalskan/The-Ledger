@@ -173,6 +173,58 @@ describe("delivery (PS-18)", () => {
     });
   });
 
+  it("(review round 2, minor 7) each subscriber gets its own deep-frozen copy: one cannot change what another sees or what is logged", async () => {
+    const outcomes: Record<string, unknown> = {};
+    const seenBySecond: unknown[] = [];
+    behaviour["alpha.first"] = async (event) => {
+      const payload = event.payload as Record<string, unknown>;
+      expect(Object.isFrozen(payload)).toBe(true);
+      expect(Object.isFrozen(event)).toBe(true);
+      outcomes.change = (() => {
+        try {
+          payload.note = "changed by first";
+          return "no error";
+        } catch (error) {
+          return (error as Error).name;
+        }
+      })();
+      outcomes.add = (() => {
+        try {
+          payload.extra = true;
+          return "no error";
+        } catch (error) {
+          return (error as Error).name;
+        }
+      })();
+      outcomes.delete = (() => {
+        try {
+          delete payload.id;
+          return "no error";
+        } catch (error) {
+          return (error as Error).name;
+        }
+      })();
+    };
+    behaviour["alpha.second"] = async (event) => void seenBySecond.push({ ...event.payload });
+    const eventId = await commitEvent({ payload: { id: "x", note: "original" } });
+    await makeWorker().runOnce();
+    expect(outcomes).toEqual({ change: "TypeError", add: "TypeError", delete: "TypeError" });
+    expect(seenBySecond).toEqual([{ id: "x", note: "original" }]);
+    expect((await logRows(eventId))[0]).toMatchObject({ payload: { id: "x", note: "original" } });
+    expect((await rowOf(eventId)).status).toBe("delivered");
+  });
+
+  it("two subscribers do not share the payload object", async () => {
+    const payloads: unknown[] = [];
+    behaviour["alpha.first"] = async (event) => void payloads.push(event.payload);
+    behaviour["alpha.second"] = async (event) => void payloads.push(event.payload);
+    await commitEvent({ payload: { id: "y" } });
+    await makeWorker().runOnce();
+    expect(payloads).toHaveLength(2);
+    expect(payloads[0]).toEqual(payloads[1]);
+    expect(payloads[0]).not.toBe(payloads[1]);
+  });
+
   it("an event with no subscribers is delivered at once and logged", async () => {
     const eventId = await commitEvent({ type: "AlphaChained" });
     behaviour = {};

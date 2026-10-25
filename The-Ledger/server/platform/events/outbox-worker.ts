@@ -125,8 +125,21 @@ export function isInfrastructureError(error: unknown, depth = 0): boolean {
   return depth < 3 && "cause" in error && isInfrastructureError((error as { cause?: unknown }).cause, depth + 1);
 }
 
+function deepFreeze<T>(value: T): T {
+  if (typeof value === "object" && value !== null && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const child of Object.values(value)) deepFreeze(child);
+  }
+  return value;
+}
+
+/**
+ * The envelope ONE subscriber receives (review round 2, minor 7). Each subscriber gets its own
+ * deep copy of the payload, deep-frozen: one subscriber cannot change what the next one sees, and
+ * cannot change what the worker itself writes to the event log.
+ */
 function envelopeOf(row: OutboxRow): EventEnvelope {
-  return {
+  return deepFreeze({
     eventId: row.event_id,
     eventType: row.event_type,
     eventVersion: row.event_version,
@@ -136,8 +149,8 @@ function envelopeOf(row: OutboxRow): EventEnvelope {
     sourceObjectId: row.source_object_id,
     sourceObjectType: row.source_object_type,
     jobId: row.job_id,
-    payload: row.payload,
-  };
+    payload: structuredClone(row.payload),
+  });
 }
 
 const CLAIM_SQL = `
