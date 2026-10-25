@@ -2,7 +2,7 @@ import type { ErrorRequestHandler } from "express";
 import type { Logger } from "pino";
 import { ZodError } from "zod";
 import { routeTemplate } from "../http/route-template";
-import { isErrorObject } from "../logging/error-serializer";
+import { exposedClientStatus, isErrorObject } from "../logging/error-serializer";
 import { AppError, UnauthenticatedError } from "./app-error";
 import { sendErrorEnvelope } from "./error-envelope";
 
@@ -50,16 +50,7 @@ function describe(error: unknown): Described {
     };
   }
   if (isErrorObject(error)) {
-    const source = error as unknown as {
-      type?: unknown;
-      status?: unknown;
-      statusCode?: unknown;
-      expose?: unknown;
-    };
-    const type = typeof source.type === "string" ? source.type : undefined;
-    const status = typeof source.status === "number" ? source.status : source.statusCode;
-    const clientStatus =
-      typeof status === "number" && status >= 400 && status <= 499 ? status : undefined;
+    const type = (error as { type?: unknown }).type;
 
     if (type === "entity.parse.failed") {
       return {
@@ -90,7 +81,8 @@ function describe(error: unknown): Described {
     }
     // Other client errors: http-errors style (expose === true), or the router's
     // URIError for a path parameter that cannot be URL-decoded (R3-14).
-    if (clientStatus !== undefined && (source.expose === true || error instanceof URIError)) {
+    const clientStatus = exposedClientStatus(error);
+    if (clientStatus !== undefined) {
       return {
         status: clientStatus,
         code: clientStatus === 400 ? "BAD_REQUEST" : "CLIENT_ERROR",

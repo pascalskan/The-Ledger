@@ -59,13 +59,14 @@ function isJsonParseError(error: Error): boolean {
  * http-errors style: `expose === true` and a status from 400 to 499 (Express and its
  * parsers). The router's URIError for a path parameter that cannot be URL-decoded
  * (R3-14) has a 400 status but no `expose`, and its message quotes the parameter, so
- * it is treated the same way.
+ * it is treated the same way. Returns the status, or undefined when `error` is not such an error
+ * (the error handler uses the same test, so the log and the response agree).
  */
-function isExposedClientError(error: Error): boolean {
+export function exposedClientStatus(error: Error): number | undefined {
   const source = error as unknown as { expose?: unknown; status?: unknown; statusCode?: unknown };
   const status = typeof source.status === "number" ? source.status : source.statusCode;
-  if (typeof status !== "number" || status < 400 || status > 499) return false;
-  return source.expose === true || error instanceof URIError;
+  if (typeof status !== "number" || status < 400 || status > 499) return undefined;
+  return source.expose === true || error instanceof URIError ? status : undefined;
 }
 
 function serialize(error: Error, level: number): SafeError {
@@ -99,11 +100,12 @@ function serialize(error: Error, level: number): SafeError {
   }
 
   // 4. Other client errors from Express or its parsers (the message can quote input).
-  if (isExposedClientError(error)) {
-    const source = error as unknown as { type?: unknown; status?: unknown; statusCode?: unknown };
+  const clientStatus = exposedClientStatus(error);
+  if (clientStatus !== undefined) {
+    const type = (error as { type?: unknown }).type;
     const out: Record<string, unknown> = {};
-    if (typeof source.type === "string") out.type = source.type;
-    out.status = typeof source.status === "number" ? source.status : source.statusCode;
+    if (typeof type === "string") out.type = type;
+    out.status = clientStatus;
     return mark(out);
   }
 

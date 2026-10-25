@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { actorColumns, readCausationActor } from "../context/execution-context";
-import { jsonObject, uuidString, type JsonValue } from "../db/json-input";
+import { jsonObject, toJsonParameter, uuidString, type JsonValue } from "../db/json-input";
+import { catalogueProblem } from "../audit/catalogue";
 import { poisonUnit, type UnitState } from "../db/unit-state";
 import {
   EventTypeError,
@@ -68,20 +69,9 @@ export function createOutboxWriter(state: UnitState, module: string): OutboxWrit
         }
         const event = parsed.data;
 
-        const registered = state.eventCatalogue.get(event.eventType);
-        let catalogueError: EventTypeError | undefined;
-        if (registered === undefined) {
-          catalogueError = new EventTypeError(
-            `The event type "${event.eventType}" is not registered in any module's catalogue`,
-          );
-        } else if (registered.owner !== module) {
-          catalogueError = new EventTypeError(
-            `The event type "${event.eventType}" is owned by module "${registered.owner}", not "${module}"`,
-          );
-        } else if (registered.jobRequired && event.jobId === undefined) {
-          catalogueError = new EventTypeError(`The event type "${event.eventType}" requires a jobId`);
-        }
-        if (catalogueError !== undefined) {
+        const problem = catalogueProblem(state.eventCatalogue, "event type", event.eventType, module, event.jobId !== undefined);
+        if (problem !== undefined) {
+          const catalogueError = new EventTypeError(problem);
           poisonUnit(state, "outbox", catalogueError);
           throw catalogueError;
         }
@@ -97,7 +87,7 @@ export function createOutboxWriter(state: UnitState, module: string): OutboxWrit
           event.sourceObjectType,
           event.sourceObjectId,
           event.jobId ?? null,
-          JSON.stringify(event.payload),
+          toJsonParameter(event.payload),
           context.causation?.eventId ?? null,
           readCausationActor(context),
         ]);

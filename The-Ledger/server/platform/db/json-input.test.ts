@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { isJsonValue, jsonObject, jsonValue, toJsonParameter } from "./json-input";
 
 describe("isJsonValue", () => {
@@ -59,3 +59,39 @@ describe("toJsonParameter", () => {
     expect(toJsonParameter("text")).toBe('"text"');
   });
 });
+
+describe("one serialisation per write (review round 3, minor 8)", () => {
+  it("the size check and the parameter share one JSON.stringify", () => {
+    const spy = vi.spyOn(JSON, "stringify");
+    try {
+      const value = { a: [1, 2, { b: "c" }] };
+      const parsed = jsonObject.parse(value);
+      const text = toJsonParameter(parsed);
+      expect(text).toBe('{"a":[1,2,{"b":"c"}]}');
+      expect(spy).toHaveBeenCalledTimes(1);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("an object reused and changed between writes is serialised afresh each time", () => {
+    const reused: { n: number } = { n: 1 };
+    expect(toJsonParameter(jsonObject.parse(reused))).toBe('{"n":1}');
+    reused.n = 2;
+    expect(toJsonParameter(jsonObject.parse(reused))).toBe('{"n":2}');
+    // validated but never used (a refused write), then changed and validated again
+    jsonObject.parse(reused);
+    reused.n = 3;
+    expect(toJsonParameter(jsonObject.parse(reused))).toBe('{"n":3}');
+  });
+
+  it("what was measured is what is stored, even if the object changes after the check", () => {
+    const value: { n: number } = { n: 1 };
+    const parsed = jsonObject.parse(value);
+    value.n = 99;
+    expect(toJsonParameter(parsed)).toBe('{"n":1}');
+    // the text was consumed: an unchecked second call serialises the object as it now is
+    expect(toJsonParameter(parsed)).toBe('{"n":99}');
+  });
+});
+

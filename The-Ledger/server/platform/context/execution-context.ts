@@ -3,6 +3,7 @@ import {
   ForgedContextError,
   MissingTenantContextError,
 } from "../errors/platform-errors";
+import { isUuid } from "./uuid";
 
 // Phase 0 spec §4.1: tenant context and actor.
 //
@@ -46,12 +47,6 @@ export interface ExecutionContext extends TenantContext {
   readonly requestId?: string;
   /** Worker runs. */
   readonly runId?: string;
-}
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function isUuid(value: unknown): value is string {
-  return typeof value === "string" && UUID_PATTERN.test(value);
 }
 
 /**

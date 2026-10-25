@@ -48,5 +48,24 @@ export function buildTypeCatalogue(
   return catalogue;
 }
 
+/**
+ * The check both writers make before writing a type: registered, owned by the writing module, and
+ * a job where the type requires one. Returns the message of the problem, or undefined when the
+ * write may go ahead; each writer wraps the message in its own error class.
+ */
+export function catalogueProblem(
+  catalogue: TypeCatalogue,
+  kind: "audit entry type" | "event type",
+  type: string,
+  module: string,
+  hasJob: boolean,
+): string | undefined {
+  const registered = catalogue.get(type);
+  if (registered === undefined) return `The ${kind} "${type}" is not registered in any module's catalogue`;
+  if (registered.owner !== module) return `The ${kind} "${type}" is owned by module "${registered.owner}", not "${module}"`;
+  if (registered.jobRequired && !hasJob) return `The ${kind} "${type}" requires a jobId`;
+  return undefined;
+}
+
 /** An empty catalogue, for processes and tests that register nothing. */
 export const EMPTY_CATALOGUE: TypeCatalogue = new Map();

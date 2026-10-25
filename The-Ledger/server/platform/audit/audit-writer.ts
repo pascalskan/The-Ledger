@@ -8,6 +8,7 @@ import {
   type JsonValue,
 } from "../db/json-input";
 import { poisonUnit, type UnitState } from "../db/unit-state";
+import { catalogueProblem } from "./catalogue";
 import {
   AuditEntryTypeError,
   AuditWriteFailedError,
@@ -95,22 +96,9 @@ export function createAuditWriter(state: UnitState, module: string): AuditWriter
         const entry = parsed.data;
 
         // Catalogue: registered, owned by this unit's module, and a jobId where required.
-        const registered = state.auditCatalogue.get(entry.entryType);
-        let catalogueError: AuditEntryTypeError | undefined;
-        if (registered === undefined) {
-          catalogueError = new AuditEntryTypeError(
-            `The audit entry type "${entry.entryType}" is not registered in any module's catalogue`,
-          );
-        } else if (registered.owner !== module) {
-          catalogueError = new AuditEntryTypeError(
-            `The audit entry type "${entry.entryType}" is owned by module "${registered.owner}", not "${module}"`,
-          );
-        } else if (registered.jobRequired && entry.jobId === undefined) {
-          catalogueError = new AuditEntryTypeError(
-            `The audit entry type "${entry.entryType}" requires a jobId`,
-          );
-        }
-        if (catalogueError !== undefined) {
+        const problem = catalogueProblem(state.auditCatalogue, "audit entry type", entry.entryType, module, entry.jobId !== undefined);
+        if (problem !== undefined) {
+          const catalogueError = new AuditEntryTypeError(problem);
           poisonUnit(state, "audit", catalogueError);
           throw catalogueError;
         }

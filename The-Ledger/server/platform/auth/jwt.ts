@@ -39,6 +39,8 @@ export class TokenInvalidError extends Error {
   }
 }
 
+// zod's own uuid check is kept here: the claims are parsed by zod object schemas, and it accepts the same
+// eight-four-four-four-twelve form as the platform's isUuid (context/uuid.ts).
 const uuid = z.string().uuid();
 
 // iat and exp are integers with 0 < exp - iat <= 900: a token minted by anything with a

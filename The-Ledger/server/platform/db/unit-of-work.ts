@@ -7,7 +7,6 @@ import { EMPTY_CATALOGUE, type TypeCatalogue } from "../audit/catalogue";
 import {
   assertLiveContext,
   expireContext,
-  isUuid,
   type ExecutionContext,
 } from "../context/execution-context";
 import {
@@ -21,6 +20,7 @@ import {
   UnitOfWorkIntegrityError,
 } from "../errors/platform-errors";
 import { createOutboxWriter, type OutboxWriter } from "../events/outbox-writer";
+import { isUuid } from "../context/uuid";
 import { markForClientDestruction, withTransaction, type DbPool } from "./client";
 import { poisonUnit, type UnitPoison, type UnitState } from "./unit-state";
 import { assertNoTransactionControl } from "./statement-guard";

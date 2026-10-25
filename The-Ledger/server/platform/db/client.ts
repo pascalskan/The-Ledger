@@ -239,6 +239,28 @@ export async function withTransaction<T>(
   }
 }
 
+/**
+ * The tail of every checkout: run `fn` on the client, then release it. A client that reported an
+ * error while checked out, or whose work failed in a way that marks it for destruction, is
+ * destroyed rather than returned to the pool.
+ */
+async function runOnClient<T>(
+  client: pg.PoolClient,
+  watch: { stop(): void; failure(): Error | undefined },
+  fn: (client: pg.PoolClient) => Promise<T>,
+): Promise<T> {
+  let destroy: Error | undefined;
+  try {
+    return await fn(client);
+  } catch (error) {
+    if (shouldDestroy(error)) destroy = error as Error;
+    throw error;
+  } finally {
+    watch.stop();
+    client.release(destroy ?? watch.failure());
+  }
+}
+
 function attachPoolErrorLogging(pool: pg.Pool, logger: Logger, role: string): void {
   // An idle client can fail (for example when the server restarts). Without a listener the
   // process would crash on the unhandled 'error' event.
@@ -326,17 +348,7 @@ export function createRuntimePool(options: CreateRuntimePoolOptions): DbPool {
         }
         throw refusal;
       }
-      let destroy: Error | undefined;
-      try {
-        return await fn(client);
-      } catch (error) {
-        if (shouldDestroy(error)) destroy = error as Error;
-        throw error;
-      } finally {
-        // A client that reported an error while checked out is never returned to the pool.
-        watch.stop();
-        client.release(destroy ?? watch.failure());
-      }
+      return runOnClient(client, watch, fn);
     },
     end: () => pool.end(),
   };
@@ -376,16 +388,7 @@ export function createOwnerPool(options: CreatePoolOptions): DbPool {
           throw error;
         }
       }
-      let destroy: Error | undefined;
-      try {
-        return await fn(client);
-      } catch (error) {
-        if (shouldDestroy(error)) destroy = error as Error;
-        throw error;
-      } finally {
-        watch.stop();
-        client.release(destroy ?? watch.failure());
-      }
+      return runOnClient(client, watch, fn);
     },
     end: () => pool.end(),
   };
