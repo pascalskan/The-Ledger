@@ -108,6 +108,8 @@ Commits checked
 | 7 | c14f0c2 | platform: module registry, subscriber registry and port registry | Accepted, continue | PM re-ran: check clean; unit 399/399, db 113/113; no process.env outside config. All interim states closed; runner carries registry catalogues; reset structural (throws outside Vitest). Rulings: `__` namespaces allowed only under Vitest (spec note at next amendment); entry-point seam approved for commit 8 (startApi/startWorker in platform taking modules, injected exit, spawned smoke tests); modules/registry.ts is the composition root, repointed to platform/index.ts in commit 9 |
 | 8 | f9e746c | platform: outbox worker and worker process | Accepted, continue | PM re-ran: check clean; unit 410/410, db 142/142; no process.env outside config. .replit diff matches RP-06; claim EXPLAIN uses event_outbox_ready_idx with LockRows/Limit, no sort (R3-01). Entry-point seam (startApi/startWorker) with in-process G0-41(i). Rulings: single-process spawn accepted, PM checks for orphans on Replit; SIGTERM test skipIf(win32) so the Linux gate covers it; G0-41(i) API case runs in full mode (tell test engineer); commit-9 Playwright check may use the junctioned Chromium, authoritative G0-02 is the PM's with the matching browser after owner OK |
 
+October 25, 2026: with the owner's permission, the PM ran `npx playwright install chromium` (Playwright 1.60.0): chromium-1223 and chromium_headless_shell-1223 are now installed in the default ms-playwright folder. Commit 9's check and the G0-02 sign-off run use the expected browser; the junction workaround is retired.
+
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
