@@ -109,8 +109,9 @@ describe("startApi", () => {
       expect(env[name], name).toBeUndefined();
     }
     expect(api!.config.mode).toBe("full");
-    // the API still serves with its keys in the configuration
-    expect((await request(api!.server).get("/health")).status).toBeLessThan(600);
+    // the API is up on its configuration alone: the authenticated surface answers 401, not 500
+    expect((await request(api!.server).get("/api/v1/x")).status).toBe(401);
+    expect(api!.config.mode === "full" && api!.config.jwt.privateKeyPem.includes("PRIVATE KEY")).toBe(true);
   });
 
   it("starts, installs the registry's runner once, mounts the frontend last and listens", async () => {
