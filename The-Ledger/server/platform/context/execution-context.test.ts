@@ -5,7 +5,6 @@ import {
   assertLiveContext,
   createExecutionContext,
   expireContext,
-  isContextExpired,
   isHumanActor,
   readCausationActor,
   toCompanyId,
@@ -120,7 +119,6 @@ describe("assertLiveContext", () => {
     const a = genuine();
     const b = genuine();
     expireContext(a);
-    expect(isContextExpired(a)).toBe(true);
     expect(() => assertLiveContext(a)).toThrow(expect.objectContaining({ name: "ContextExpiredError" }));
     expect(() => assertLiveContext(b)).not.toThrow();
   });

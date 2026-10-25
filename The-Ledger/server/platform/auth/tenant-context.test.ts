@@ -6,7 +6,7 @@ import { SignJWT } from "jose";
 import { beforeAll, describe, expect, it } from "vitest";
 import { loadApiConfig, type FullApiConfig } from "../config";
 import { contextOf } from "../context/request-store";
-import { isContextExpired, type ExecutionContext } from "../context/execution-context";
+import { assertLiveContext, type ExecutionContext } from "../context/execution-context";
 import { createErrorHandler } from "../errors/error-handler";
 import { createApiApp } from "../http/app";
 import { notFoundHandler } from "../http/not-found";
@@ -110,7 +110,7 @@ describe("platform-token middleware (PS-10)", () => {
     const { app, captured } = build();
     await request(app).get("/api/v1/__probe/late").set("Authorization", bearer(await platformToken()));
     expect(captured.context).toBeDefined();
-    expect(isContextExpired(captured.context!)).toBe(true);
+    expect(() => assertLiveContext(captured.context)).toThrow(expect.objectContaining({ name: "ContextExpiredError" }));
   });
 
   it("adds companyId and userId to the request line and to later log lines", async () => {

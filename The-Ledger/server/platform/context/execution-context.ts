@@ -151,10 +151,6 @@ export function expireContext(context: ExecutionContext): void {
   expired.add(context);
 }
 
-export function isContextExpired(context: ExecutionContext): boolean {
-  return expired.has(context);
-}
-
 /** Platform-private: read only by AuditWriter and OutboxWriter, to fill `causation_actor_id`. */
 export function readCausationActor(context: ExecutionContext): string | null {
   return causationActors.get(context) ?? null;

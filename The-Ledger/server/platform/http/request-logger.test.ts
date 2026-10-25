@@ -1,9 +1,8 @@
 import express, { Router } from "express";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { updateLogContext } from "../context/request-context";
 import { createLogger } from "../logging/logger";
-import { requestId } from "./request-id";
+import { logContextOf, requestId } from "./request-id";
 import { requestLogger } from "./request-logger";
 
 const MARK = "MARKER-c3d9f0";
@@ -23,8 +22,9 @@ function build() {
   const jobs = Router();
   jobs.get("/:jobId", (_req, res) => void res.json({ ok: true }));
   jobs.get("/:jobId/fail", (_req, _res, next) => next(new Error("failed")));
-  jobs.get("/:jobId/authenticated", (_req, res) => {
-    updateLogContext({ companyId: "company-1", userId: "user-1" });
+  jobs.get("/:jobId/authenticated", (req, res) => {
+    // what tenant-context does once the caller is known: it adds to the request's log context
+    Object.assign(logContextOf(req)!, { companyId: "company-1", userId: "user-1" });
     logger.info("handler line");
     res.json({ ok: true });
   });

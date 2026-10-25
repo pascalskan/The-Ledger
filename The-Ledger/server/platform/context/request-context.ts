@@ -16,7 +16,7 @@ const storage = new AsyncLocalStorage<LogContext>();
  * Runs `fn` inside a log context. The scope is entered with `run()` only, never
  * `enterWith()`, so a context cannot leak into later, unrelated async work
  * (spec §4.8). The store is mutable so that authentication middleware can add
- * `companyId` and `userId` once they are known (see `updateLogContext`).
+ * `companyId` and `userId` once they are known (tenant-context does, on the object it passes in).
  */
 export function runWithLogContext<T>(context: LogContext, fn: () => T): T {
   return storage.run(context, fn);
@@ -25,10 +25,4 @@ export function runWithLogContext<T>(context: LogContext, fn: () => T): T {
 /** The active log context, or undefined outside any request or run. */
 export function getLogContext(): Readonly<LogContext> | undefined {
   return storage.getStore();
-}
-
-/** Adds fields to the active log context. Does nothing outside a context. */
-export function updateLogContext(fields: Partial<LogContext>): void {
-  const store = storage.getStore();
-  if (store) Object.assign(store, fields);
 }

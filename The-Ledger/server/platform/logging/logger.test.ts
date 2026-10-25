@@ -1,7 +1,7 @@
 import pg from "pg";
 import pino from "pino";
 import { describe, expect, it } from "vitest";
-import { runWithLogContext, updateLogContext } from "../context/request-context";
+import { runWithLogContext } from "../context/request-context";
 import { buildLoggerOptions, createLogger, redactUrlCredentials } from "./logger";
 
 const MARK = "MARKER-9b2e47";
@@ -62,9 +62,11 @@ describe("log structure (BACKEND_OBSERVABILITY_ARCHITECTURE.md, Log Structure)",
     const out = capture();
     const logger = createLogger({ service: "api", destination: out.destination });
     logger.info("outside");
-    runWithLogContext({ requestId: "req-1" }, () => {
+    const request = { requestId: "req-1" };
+    runWithLogContext(request, () => {
       logger.info("before auth");
-      updateLogContext({ companyId: "company-1", userId: "user-1" });
+      // the store is the object that was passed in: tenant-context adds the caller to it
+      Object.assign(request, { companyId: "company-1", userId: "user-1" });
       logger.info("after auth");
     });
     runWithLogContext({ runId: "run-1" }, () => logger.info("worker"));
