@@ -18,10 +18,17 @@ export type Service = "api" | "worker" | "migrate";
 const MAX_WALK_DEPTH = 3;
 const DEPTH_LIMIT = "[depth limit]";
 
-/** `scheme://user:password@host` -> `scheme://[redacted]@host`, anywhere in a string. */
-const URL_CREDENTIALS = /([a-z][a-z0-9+.-]*:\/\/)[^\s/?#@]*:[^\s/?#@]*@/gi;
+/**
+ * `scheme://user:password@host` -> `scheme://[redacted]@host`, anywhere in a string.
+ *  - the scheme is bounded (a URL scheme is short), so no start position scans far;
+ *  - the user class excludes ":" and the password class excludes "@", "/", "?" and "#", so the
+ *    two never overlap and the match is linear (review round 3: the earlier pattern was quadratic).
+ */
+const URL_CREDENTIALS = /([a-z][a-z0-9+.-]{0,31}:\/\/)[^\s/?#@:]*:[^\s/?#@]*@/gi;
 
 export function redactUrlCredentials(text: string): string {
+  // Cheap exit: most strings carry no URL, and a long token or hash should cost one scan.
+  if (!text.includes("://")) return text;
   return text.replace(URL_CREDENTIALS, "$1[redacted]@");
 }
 

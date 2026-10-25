@@ -2,7 +2,7 @@ import pg from "pg";
 import pino from "pino";
 import { describe, expect, it } from "vitest";
 import { runWithLogContext, updateLogContext } from "../context/request-context";
-import { buildLoggerOptions, createLogger } from "./logger";
+import { buildLoggerOptions, createLogger, redactUrlCredentials } from "./logger";
 
 const MARK = "MARKER-9b2e47";
 
@@ -311,3 +311,44 @@ describe("errors and credentials are made safe on every path of a log call (revi
     expect(payload.a.b[0]).toBe(failure);
   });
 });
+
+describe("redactUrlCredentials runs in linear time (review round 3, major 1)", () => {
+  const timed = (text: string) => {
+    const start = performance.now();
+    const result = redactUrlCredentials(text);
+    return { ms: performance.now() - start, result };
+  };
+
+  it("a 100k-character string with no URL costs one scan", () => {
+    const { ms, result } = timed("a".repeat(100_000));
+    expect(result).toHaveLength(100_000);
+    expect(ms).toBeLessThan(50);
+  });
+
+  it("10k repetitions of a:// with no @ complete quickly and are unchanged", () => {
+    const text = "a://".repeat(10_000);
+    const { ms, result } = timed(text);
+    expect(result).toBe(text);
+    expect(ms).toBeLessThan(50);
+  });
+
+  it("long runs after a scheme, in the user or the password position, stay linear", () => {
+    for (const text of [
+      `postgres://${"u".repeat(100_000)}`,
+      `postgres://${"u".repeat(50_000)}:${"p".repeat(50_000)}`,
+      `postgres://${":".repeat(100_000)}`,
+      `${"a".repeat(100_000)}://x`,
+      `${"a://x:".repeat(20_000)}`,
+    ]) {
+      expect(timed(text).ms, text.slice(0, 20)).toBeLessThan(50);
+    }
+  });
+
+  it("still redacts: userinfo with a password, several URLs, a scheme with + and . characters", () => {
+    expect(redactUrlCredentials("x postgresql://u:pw@h:5432/db y")).toBe("x postgresql://[redacted]@h:5432/db y");
+    expect(redactUrlCredentials("a://u:p@h and b://v:q@i")).toBe("a://[redacted]@h and b://[redacted]@i");
+    expect(redactUrlCredentials("git+ssh://deploy:tok@host/r")).toBe("git+ssh://[redacted]@host/r");
+    expect(redactUrlCredentials("https://example.com/a@b")).toBe("https://example.com/a@b");
+  });
+});
+
