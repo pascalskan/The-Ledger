@@ -1,6 +1,7 @@
 import type { Logger } from "pino";
 import {
   loadWorkerConfig,
+  hardenEnvironment,
   scrubOwnerVariables,
   type Env,
   type LoadOptions,
@@ -73,6 +74,7 @@ export async function startWorker(options: StartWorkerOptions): Promise<RunningW
     throw error;
   }
   scrubOwnerVariables(options.env as Record<string, string | undefined> | undefined);
+  hardenEnvironment(options.env as Record<string, string | undefined> | undefined);
 
   const logger = options.logger ?? createLogger({ service: "worker", level: config.logLevel });
   installCrashHandlers(logger, exit, options.registerCrashHandlers);

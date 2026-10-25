@@ -4,6 +4,7 @@ import type { Logger } from "pino";
 import { importAuthKeys, type AuthKeys } from "../auth/keys";
 import {
   loadApiConfig,
+  hardenEnvironment,
   scrubOwnerVariables,
   type ApiConfig,
   type Env,
@@ -81,6 +82,7 @@ export async function startApi(options: StartApiOptions): Promise<RunningApi | u
     throw error;
   }
   scrubOwnerVariables(options.env as Record<string, string | undefined> | undefined);
+  hardenEnvironment(options.env as Record<string, string | undefined> | undefined);
 
   const logger = options.logger ?? createLogger({ service: "api", level: config.logLevel });
   installCrashHandlers(logger, exit, options.registerCrashHandlers);

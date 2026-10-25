@@ -538,6 +538,45 @@ export function loadMigrationConfig(
 }
 
 /**
+ * Every credential the API and the worker are configured from. Each process needs only what it
+ * has already read into its configuration, so after the loader returns it holds none of them in
+ * its environment: its own are consumed, the other role's are not its business.
+ *  - the API consumes LEDGER_APP_DATABASE_URL, JWT_PRIVATE_KEY, JWT_PUBLIC_KEY, PORTAL_JWT_SECRET
+ *    and has no use for LEDGER_WORKER_DATABASE_URL;
+ *  - the worker consumes LEDGER_WORKER_DATABASE_URL and has no use for the other four.
+ * The `_TEST` variants belong to the test-database guard and are credentials all the same.
+ */
+const RUNTIME_CREDENTIALS = [
+  "LEDGER_APP_DATABASE_URL",
+  "LEDGER_APP_DATABASE_URL_TEST",
+  "LEDGER_WORKER_DATABASE_URL",
+  "LEDGER_WORKER_DATABASE_URL_TEST",
+  "JWT_PRIVATE_KEY",
+  "JWT_PUBLIC_KEY",
+  "PORTAL_JWT_SECRET",
+] as const;
+
+/**
+ * Removes the runtime credentials from the running process (review round 2, minor 7), after the
+ * process has built its configuration from them. The entry points call this straight after
+ * scrubOwnerVariables, so a dependency that reads the environment, and every child process
+ * (grandchild included), cannot pick them up. Like scrubOwnerVariables it narrows accidental use
+ * only: it is not a defence against code running inside the process. Returns the names removed.
+ */
+export function hardenEnvironment(
+  env: Record<string, string | undefined> = process.env,
+): string[] {
+  const removed: string[] = [];
+  for (const name of RUNTIME_CREDENTIALS) {
+    if (env[name] !== undefined) {
+      delete env[name];
+      removed.push(name);
+    }
+  }
+  return removed;
+}
+
+/**
  * Removes the owner's credentials from the running process (RB2-02): DATABASE_URL,
  * every PG* variable, and both migration URLs. The entry points call this straight
  * after the loader returns, so a dependency that reads the environment, and every

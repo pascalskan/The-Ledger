@@ -88,7 +88,29 @@ describe("startApi", () => {
     expect(env.DATABASE_URL).toBeUndefined();
     expect(env.PGHOST).toBeUndefined();
     expect(env.LEDGER_MIGRATION_DATABASE_URL).toBeUndefined();
-    expect(env.LEDGER_APP_DATABASE_URL).toBeDefined();
+    expect(env.NODE_ENV).toBe("development");
+  });
+
+  it("(review round 2, minor 7) removes the credentials it has read and the worker's, keeping the configuration", async () => {
+    const env: Record<string, string | undefined> = fullEnv({ LEDGER_APP_DATABASE_URL_TEST: "a", LEDGER_WORKER_DATABASE_URL_TEST: "a" });
+    const { logger } = capture();
+    const api = await startApi({ modules: [], env, loadOptions, exit: vi.fn(), logger, installRunner: vi.fn(), listen: false });
+    expect(api).toBeDefined();
+    started.push(api!);
+    for (const name of [
+      "LEDGER_APP_DATABASE_URL",
+      "LEDGER_APP_DATABASE_URL_TEST",
+      "LEDGER_WORKER_DATABASE_URL",
+      "LEDGER_WORKER_DATABASE_URL_TEST",
+      "JWT_PRIVATE_KEY",
+      "JWT_PUBLIC_KEY",
+      "PORTAL_JWT_SECRET",
+    ]) {
+      expect(env[name], name).toBeUndefined();
+    }
+    expect(api!.config.mode).toBe("full");
+    // the API still serves with its keys in the configuration
+    expect((await request(api!.server).get("/health")).status).toBeLessThan(600);
   });
 
   it("starts, installs the registry's runner once, mounts the frontend last and listens", async () => {
@@ -173,6 +195,10 @@ describe("startWorker", () => {
     expect(worker).toBeDefined();
     expect(env.DATABASE_URL).toBeUndefined();
     expect(env.PGPASSWORD).toBeUndefined();
+    // review round 2, minor 7: the worker holds neither its own URL (read) nor the API's credentials
+    for (const name of ["LEDGER_APP_DATABASE_URL", "LEDGER_WORKER_DATABASE_URL", "JWT_PRIVATE_KEY", "JWT_PUBLIC_KEY", "PORTAL_JWT_SECRET"]) {
+      expect(env[name], name).toBeUndefined();
+    }
     expect(installRunner).toHaveBeenCalledWith(worker!.registries.runner);
     expect(worker!.worker.instanceId).toMatch(/^.+:\d+:[0-9a-f]{8}$/);
     await worker!.stop();

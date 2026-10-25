@@ -7,6 +7,7 @@ import { pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ConfigError } from "../errors/config-error";
 import {
+  hardenEnvironment,
   loadApiConfig,
   loadDotEnv,
   loadMigrationConfig,
@@ -564,6 +565,69 @@ describe("scrubOwnerVariables (RB2-02)", () => {
     const allSet = JSON.stringify(names.map(() => "set"));
     const noneSet = JSON.stringify(names.map(() => null));
     // Before scrubbing every name is present in the process and in a grandchild, so the test cannot pass vacuously.
+    expect(out.before).toEqual([allSet, allSet]);
+    expect(out.after).toEqual([noneSet, noneSet]);
+    expect(out.kept).toBe("kept");
+  });
+});
+
+describe("hardenEnvironment (review round 2, minor 7)", () => {
+  const names = [
+    "LEDGER_APP_DATABASE_URL",
+    "LEDGER_APP_DATABASE_URL_TEST",
+    "LEDGER_WORKER_DATABASE_URL",
+    "LEDGER_WORKER_DATABASE_URL_TEST",
+    "JWT_PRIVATE_KEY",
+    "JWT_PUBLIC_KEY",
+    "PORTAL_JWT_SECRET",
+  ];
+
+  it("removes the consumed and the other role's credentials and nothing else", () => {
+    const env: Record<string, string | undefined> = { NODE_ENV: "keep", PATH: "keep", PORT: "keep", LOG_LEVEL: "keep", DATABASE_URL: "not this helper's business" };
+    for (const name of names) env[name] = "a";
+    expect(hardenEnvironment(env).sort()).toEqual([...names].sort());
+    expect(env).toEqual({ NODE_ENV: "keep", PATH: "keep", PORT: "keep", LOG_LEVEL: "keep", DATABASE_URL: "not this helper's business" });
+    expect(hardenEnvironment(env)).toEqual([]);
+  });
+
+  it("the configuration built before the call keeps its values", () => {
+    const env: Record<string, string | undefined> = { ...backend() };
+    const config = loadApiConfig(env, options());
+    hardenEnvironment(env);
+    expect(env.JWT_PRIVATE_KEY).toBeUndefined();
+    expect(config.mode).toBe("full");
+    if (config.mode === "full") {
+      expect(config.jwt.privateKeyPem).toContain("PRIVATE KEY");
+      expect(config.database.user).toBe("ledger_app");
+      expect(config.portalSecret.length).toBeGreaterThanOrEqual(32);
+    }
+  });
+
+  it("a grandchild process no longer inherits any of them (extends G0-36o)", () => {
+    const report = `console.log(JSON.stringify(${JSON.stringify(names)}.map(n => process.env[n] === undefined ? null : 'set')))`;
+    const script = `
+      import { hardenEnvironment } from ${JSON.stringify(pathToFileURL(path.join(process.cwd(), "server/platform/config/env.ts")).href)};
+      import { execFileSync } from "node:child_process";
+      const names = ${JSON.stringify(names)};
+      const here = () => JSON.stringify(names.map(n => process.env[n] === undefined ? null : "set"));
+      const grandchild = () => execFileSync(process.execPath, ["-e", ${JSON.stringify(report)}], { encoding: "utf8" }).trim();
+      const before = [here(), grandchild()];
+      hardenEnvironment();
+      const after = [here(), grandchild()];
+      console.log(JSON.stringify({ before, after, kept: process.env.NODE_ENV }));
+    `;
+    const env: Record<string, string> = { PATH: process.env.PATH ?? "", NODE_ENV: "kept" };
+    if (process.env.SystemRoot) env.SystemRoot = process.env.SystemRoot;
+    for (const name of names) env[name] = MARKER;
+    const result = spawnSync(process.execPath, ["--import", "tsx", "--input-type=module", "-e", script], {
+      encoding: "utf8",
+      env,
+      cwd: process.cwd(),
+    });
+    expect(result.status, result.stderr).toBe(0);
+    const out = JSON.parse(result.stdout.trim().split("\n").pop()!) as { before: string[]; after: string[]; kept: string };
+    const allSet = JSON.stringify(names.map(() => "set"));
+    const noneSet = JSON.stringify(names.map(() => null));
     expect(out.before).toEqual([allSet, allSet]);
     expect(out.after).toEqual([noneSet, noneSet]);
     expect(out.kept).toBe("kept");
