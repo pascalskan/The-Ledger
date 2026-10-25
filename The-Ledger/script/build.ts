@@ -55,19 +55,23 @@ async function buildAll() {
   ];
   const externals = allDeps.filter((dep) => !allowlist.includes(dep));
 
-  await esbuild({
-    entryPoints: ["server/index.ts"],
-    platform: "node",
-    bundle: true,
-    format: "cjs",
-    outfile: "dist/index.cjs",
-    define: {
-      "process.env.NODE_ENV": '"production"',
-    },
-    minify: true,
-    external: externals,
-    logLevel: "info",
-  });
+  // Two bundles: the API and the worker. Both always run as production (the define below
+  // replaces the literal process.env.NODE_ENV expression in the config module, spec 4.6).
+  for (const entry of ["index", "worker"]) {
+    await esbuild({
+      entryPoints: [`server/${entry}.ts`],
+      platform: "node",
+      bundle: true,
+      format: "cjs",
+      outfile: `dist/${entry}.cjs`,
+      define: {
+        "process.env.NODE_ENV": '"production"',
+      },
+      minify: true,
+      external: externals,
+      logLevel: "info",
+    });
+  }
 }
 
 buildAll().catch((err) => {

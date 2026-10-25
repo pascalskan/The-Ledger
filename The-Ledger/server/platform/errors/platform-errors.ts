@@ -110,3 +110,11 @@ export class MissingRequestContextError extends Error {
     this.name = "MissingRequestContextError";
   }
 }
+
+/** The worker no longer holds an outbox row's lock: another worker owns it now (PS-18). */
+export class LockLostError extends Error {
+  constructor(message = "The outbox row is no longer locked by this worker") {
+    super(message);
+    this.name = "LockLostError";
+  }
+}

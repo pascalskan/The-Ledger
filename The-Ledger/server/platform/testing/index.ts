@@ -76,6 +76,17 @@ export {
   type SubscriberRegistry,
 } from "../events/subscriber-registry";
 export { createLogger } from "../logging/logger";
+export { createOutboxWorker, type OutboxWorkerHooks } from "./outbox-worker";
+export {
+  createOutboxSteps,
+  createOutboxWorkerFromSteps,
+  type OutboxRow,
+  type OutboxSteps,
+  type OutboxWorker,
+  type OutboxWorkerDeps,
+} from "../events/outbox-worker";
+export { startApi, type RunningApi, type StartApiOptions } from "../process/start-api";
+export { startWorker, type RunningWorker, type StartWorkerOptions } from "../process/start-worker";
 export {
   dropLeftoverGateRoles,
   listSchemasToDrop,

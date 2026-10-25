@@ -1,7 +1,7 @@
 import type { RequestHandler, Router } from "express";
 import type { Logger } from "pino";
 import { buildTypeCatalogue, CatalogueError, type TypeCatalogue } from "../audit/catalogue";
-import type { NodeEnv } from "../config";
+import { isVitest, type Env, type NodeEnv } from "../config";
 import { contextOf } from "../context/request-store";
 import type { DbPool } from "../db/client";
 import {
@@ -35,6 +35,8 @@ export interface BuildRegistriesOptions {
   readonly pool: DbPool;
   readonly logger: Logger;
   readonly nodeEnv: NodeEnv;
+  /** Default: the real process environment. Injectable so the Vitest-only rule can be tested. */
+  readonly env?: Env;
 }
 
 export interface MountedRouter {
@@ -66,10 +68,11 @@ export interface Registries {
 }
 
 const MODULE_NAME = /^[a-z][a-z_]{1,49}$/;
-// A single lower-case path segment (spec 4.8: ^/[a-z][a-z-]*$). A leading "__" is also allowed:
-// the gate tests' own probe modules use /__probe, /__alpha and /__beta (spec 9.9, G0-48), which
-// the pattern in 4.8 alone would refuse.
-const NAMESPACE = /^\/(?:__)?[a-z][a-z-]*$/;
+// A single lower-case path segment (spec 4.8: ^/[a-z][a-z-]*$). The gate tests' own probe modules
+// use /__probe, /__alpha and /__beta (spec 9.9, G0-48), which that pattern refuses, so a leading
+// "__" is accepted ONLY under Vitest: production modules never claim a "__" namespace.
+const NAMESPACE = /^\/[a-z][a-z-]*$/;
+const PROBE_NAMESPACE = /^\/(?:__)?[a-z][a-z-]*$/;
 const PUBLIC_PATH = /^(?:\/[A-Za-z0-9._~-]+)+$/;
 const METHODS: readonly string[] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 
@@ -105,13 +108,14 @@ function buildCatalogues(modules: readonly ModuleRegistration[]) {
 }
 
 /** Namespaces are single lower-case segments, and each belongs to one module per surface (R2-04). */
-function checkNamespaces(modules: readonly ModuleRegistration[]): void {
+function checkNamespaces(modules: readonly ModuleRegistration[], allowProbeNamespaces: boolean): void {
+  const pattern = allowProbeNamespaces ? PROBE_NAMESPACE : NAMESPACE;
   for (const surface of ["api", "portal"] as const) {
     const owners = new Map<string, string>();
     for (const module of modules) {
       const routers = surface === "api" ? module.apiRouters : module.portalRouters;
       for (const namespace of Object.keys(routers ?? {})) {
-        if (!NAMESPACE.test(namespace)) {
+        if (!pattern.test(namespace)) {
           throw new RegistryError(
             `Module "${module.name}" uses the ${surface} namespace "${namespace}", which must be a single lower-case path segment such as /jobs`,
           );
@@ -221,7 +225,7 @@ export function buildRegistries(options: BuildRegistriesOptions): Registries {
 
   checkModuleNames(modules);
   const catalogues = buildCatalogues(modules);
-  checkNamespaces(modules);
+  checkNamespaces(modules, isVitest(options.env));
   checkPublicRoutes(modules);
   const plan = planPorts(modules);
 

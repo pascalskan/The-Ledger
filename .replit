@@ -35,6 +35,10 @@ author = "agent"
 task = "workflow.run"
 args = "Start application"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start worker"
+
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
@@ -46,3 +50,11 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow]]
+name = "Start worker"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd The-Ledger && i=0; until node -e \"fetch('http://127.0.0.1:5000/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))\"; do if [ $((i % 15)) -eq 0 ]; then echo 'Start worker: waiting for the API at /health (still starting, or its database is unreachable)'; fi; i=$((i+1)); sleep 2; done; npm run dev:worker"

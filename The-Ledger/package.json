@@ -14,7 +14,9 @@
     "test:db": "vitest run --project db",
     "test:gate": "vitest run --project gate",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx server/platform/db/migrate.ts"
+    "db:migrate": "tsx server/platform/db/migrate.ts",
+    "dev:worker": "cross-env NODE_ENV=development tsx server/worker.ts",
+    "start:worker": "NODE_ENV=production node dist/worker.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

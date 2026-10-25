@@ -162,6 +162,17 @@ describe("namespaces and public routes (G0-41 j to m)", () => {
     },
   );
 
+  it("a leading __ namespace is accepted only under Vitest (production modules never claim one)", () => {
+    const probe = alpha({ apiRouters: { "/__x": router } });
+    const outside = () => buildRegistries({ modules: [probe], process: "api", pool, logger, nodeEnv: "production", env: {} });
+    expect(outside).toThrow(RegistryError);
+    expect(outside).toThrow(/single lower-case path segment/);
+    expect(() => buildRegistries({ modules: [probe], process: "api", pool, logger, nodeEnv: "production", env: { NODE_ENV: "production" } })).toThrow(RegistryError);
+    expect(() => buildRegistries({ modules: [probe], process: "api", pool, logger, nodeEnv: "test", env: { VITEST: "true" } })).not.toThrow();
+    // ... and a plain namespace is fine everywhere
+    expect(() => buildRegistries({ modules: [alpha({ apiRouters: { "/jobs": router } })], process: "api", pool, logger, nodeEnv: "production", env: {} })).not.toThrow();
+  });
+
   it("(l) a public route outside its module's namespaces, or on the other surface's namespaces", () => {
     const withRoute = (surface: "api" | "portal", path: string) =>
       alpha({
