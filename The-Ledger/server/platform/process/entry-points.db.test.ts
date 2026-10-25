@@ -159,9 +159,16 @@ describe("graceful shutdown of the real worker file", () => {
       expect(output).toContain('"message":"worker stopped"');
       const pools = createTestPools();
       try {
-        const open = await pools.owner.withClient(async (client) =>
-          (await client.query("SELECT count(*)::int AS n FROM pg_stat_activity WHERE application_name = 'ledger-worker' AND datname = current_database()")).rows[0].n,
-        );
+        // backends can linger for a moment after their client disconnects: poll briefly
+        const openConnections = () =>
+          pools.owner.withClient(async (client) =>
+            (await client.query("SELECT count(*)::int AS n FROM pg_stat_activity WHERE application_name = 'ledger-worker' AND datname = current_database()")).rows[0].n as number,
+          );
+        let open = await openConnections();
+        for (let attempt = 0; open !== 0 && attempt < 30; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          open = await openConnections();
+        }
         expect(open).toBe(0);
       } finally {
         await pools.end();

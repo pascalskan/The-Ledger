@@ -1,8 +1,9 @@
-import { generateKeyPairSync, randomBytes } from "node:crypto";
+import { generateKeyPairSync, randomBytes, randomUUID } from "node:crypto";
 import os from "node:os";
 import request from "supertest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createLogger } from "../logging/logger";
+import { createSystemContext } from "../system";
 import { bind, definePort } from "../registry/ports";
 import type { ModuleRegistration } from "../registry/types";
 import { startApi, type RunningApi } from "./start-api";
@@ -217,8 +218,10 @@ describe("startWorker", () => {
     await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0));
     expect(exit).toHaveBeenCalledTimes(1);
     expect(records().some((r) => r.message === "worker stopped")).toBe(true);
-    // the pool is closed: using it again is refused
-    await expect(worker!.registries.runner.forModule("alpha")({} as never, async () => 1)).rejects.toBeDefined();
+    // the pool is closed: a unit with a genuine context is refused by the ended pool (no connection is made)
+    await expect(
+      worker!.registries.runner.forModule("alpha")(createSystemContext(randomUUID(), "after-shutdown"), async () => 1),
+    ).rejects.toThrow(/after calling end/);
   });
 
   it("shutdown exits 1 if stopping fails", async () => {
