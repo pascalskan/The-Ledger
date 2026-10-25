@@ -233,6 +233,7 @@ export function buildRegistries(options: BuildRegistriesOptions): Registries {
     pool,
     auditCatalogue: catalogues.audit,
     eventCatalogue: catalogues.event,
+    logger,
   });
 
   let phase: Phase = "create";

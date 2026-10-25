@@ -6,7 +6,7 @@ import type { ExecutionContext } from "../context/execution-context";
 // transaction, one context and one poison flag; `adopt` creates another view of the SAME
 // state bound to another module (R3-10).
 
-export type PoisonKind = "audit" | "outbox" | "human";
+export type PoisonKind = "audit" | "outbox" | "human" | "integrity";
 
 export interface UnitPoison {
   readonly kind: PoisonKind;

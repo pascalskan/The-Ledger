@@ -118,3 +118,16 @@ export class LockLostError extends Error {
     this.name = "LockLostError";
   }
 }
+
+/**
+ * Something changed the unit's transaction or session behind the platform's back: a COMMIT,
+ * ROLLBACK, BEGIN, SET ROLE or set_config issued through the unit, or the company setting
+ * changed (spec 4.4). The unit is rolled back where possible, the connection destroyed, and
+ * this is raised. `condition` names what changed, never a value.
+ */
+export class UnitOfWorkIntegrityError extends Error {
+  constructor(condition: string, options?: { cause?: unknown }) {
+    super(`The unit of work failed its integrity check: ${condition}`, options);
+    this.name = "UnitOfWorkIntegrityError";
+  }
+}

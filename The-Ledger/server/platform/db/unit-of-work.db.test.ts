@@ -598,7 +598,8 @@ describe("no nesting, no savepoints (G0-07)", () => {
     const { pool, statements } = loggingPool(pools.app);
     await createUnitOfWorkRunner({ pool, auditCatalogue, eventCatalogue }).forModule("alpha")(userContext(), (uow) => uow.audit.append(validEntry()));
     const kinds = statements.map((s) => s.trim().split(/\s+/)[0]!.toUpperCase());
-    expect(kinds).toEqual(["BEGIN", "SELECT", "INSERT", "COMMIT"]);
+    // BEGIN; set_config + transaction identity; the write; the pre-COMMIT integrity check; COMMIT
+    expect(kinds).toEqual(["BEGIN", "SELECT", "INSERT", "SELECT", "COMMIT"]);
     expect(statements[0]).toContain("READ COMMITTED");
     expect(statements[1]).toContain("set_config('app.company_id'");
   });
