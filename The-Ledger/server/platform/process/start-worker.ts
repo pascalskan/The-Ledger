@@ -40,6 +40,8 @@ export interface StartWorkerOptions {
   readonly installRunner?: (runner: UnitOfWorkRunner) => void;
   /** Default true: handle SIGINT and SIGTERM. */
   readonly handleSignals?: boolean;
+  /** Default: `process.once` for SIGINT and SIGTERM. Injectable so the shutdown path can be tested in-process. */
+  readonly registerShutdown?: (shutdown: () => void) => void;
   /** Default true: start the polling loop. Tests that drive `runOnce()` themselves pass false. */
   readonly startLoop?: boolean;
 }
@@ -115,12 +117,17 @@ export async function startWorker(options: StartWorkerOptions): Promise<RunningW
     if (options.handleSignals !== false) {
       const shutdown = () => {
         void running.stop().then(
-          () => exit(0),
+          () => {
+            logger.info({ instanceId: worker.instanceId }, "worker stopped");
+            exit(0);
+          },
           () => exit(1),
         );
       };
-      process.once("SIGINT", shutdown);
-      process.once("SIGTERM", shutdown);
+      (options.registerShutdown ?? ((handler) => {
+        process.once("SIGINT", handler);
+        process.once("SIGTERM", handler);
+      }))(shutdown);
     }
     return running;
   } catch (error) {

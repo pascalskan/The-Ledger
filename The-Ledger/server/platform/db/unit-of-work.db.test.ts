@@ -229,6 +229,14 @@ describe("commit", () => {
     expect(Object.keys(byId[objectId!].new_value)).toContain("address");
   });
 
+  it("(G0-43) uow.audit has exactly one method, append, and uow.events exactly one, record", async () => {
+    await alpha()(userContext(), async (uow) => {
+      expect(Object.keys(uow.audit)).toEqual(["append"]);
+      expect(Object.keys(uow.events)).toEqual(["record"]);
+      expect(Object.isFrozen(uow)).toBe(true);
+    });
+  });
+
   it("returns the work's value, and the audit actor columns follow the actor kind", async () => {
     const portal = createExecutionContext({
       companyId: toCompanyId(companyA),

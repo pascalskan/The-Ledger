@@ -197,4 +197,46 @@ describe("startWorker", () => {
     expect(exit).toHaveBeenCalledWith(1);
     expect(records().find((r) => r.level === "FATAL")!.message).toContain("human-only");
   });
+
+  it("shutdown (SIGINT / SIGTERM): stops the loop, closes the pool, logs, and exits 0", async () => {
+    const { logger, records } = capture();
+    const exit = vi.fn();
+    let shutdown!: () => void;
+    const worker = await startWorker({
+      modules: [],
+      env: fullEnv(),
+      loadOptions,
+      exit,
+      logger,
+      installRunner: vi.fn(),
+      registerShutdown: (handler) => (shutdown = handler),
+      startLoop: false,
+    });
+    expect(worker).toBeDefined();
+    shutdown();
+    await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0));
+    expect(exit).toHaveBeenCalledTimes(1);
+    expect(records().some((r) => r.message === "worker stopped")).toBe(true);
+    // the pool is closed: using it again is refused
+    await expect(worker!.registries.runner.forModule("alpha")({} as never, async () => 1)).rejects.toBeDefined();
+  });
+
+  it("shutdown exits 1 if stopping fails", async () => {
+    const { logger } = capture();
+    const exit = vi.fn();
+    let shutdown!: () => void;
+    const worker = await startWorker({
+      modules: [],
+      env: fullEnv(),
+      loadOptions,
+      exit,
+      logger,
+      installRunner: vi.fn(),
+      registerShutdown: (handler) => (shutdown = handler),
+      startLoop: false,
+    });
+    vi.spyOn(worker!.worker, "stop").mockRejectedValue(new Error("stop failed"));
+    shutdown();
+    await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(1));
+  });
 });

@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
-import { testDatabase } from "../testing";
+import { createTestPools, testDatabase } from "../testing";
 
 // One spawned-process smoke test per entry point: the REAL server/index.ts and
 // server/worker.ts still start (or exit) as expected. They run with an empty working
@@ -131,4 +131,41 @@ describe("server/worker.ts", () => {
     expect(started!.instanceId).toMatch(/^.+:\d+:[0-9a-f]{8}$/);
     expect(outcome.output).not.toContain(worker.password);
   });
+});
+
+describe("graceful shutdown of the real worker file", () => {
+  // Covered on Linux only: Windows has no catchable SIGTERM for a child process. The same
+  // shutdown path is covered in-process, on every platform, by start.test.ts.
+  it.skipIf(process.platform === "win32")(
+    "SIGTERM: exit code 0, 'worker stopped' logged, and the worker's database connections are closed",
+    async () => {
+      const { worker } = testDatabase();
+      const url = `postgresql://${worker.user}:${encodeURIComponent(worker.password)}@${worker.host}:${worker.port}/${worker.database}`;
+      const child = spawn(process.execPath, ["--import", tsxLoader, path.join(root, "server/worker.ts")], {
+        cwd: os.tmpdir(),
+        env: { PATH: process.env.PATH ?? "", NODE_ENV: "development", LEDGER_WORKER_DATABASE_URL: url, OUTBOX_POLL_INTERVAL_MS: "100" },
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let output = "";
+      child.stdout.on("data", (chunk: Buffer) => (output += chunk.toString()));
+      child.stderr.on("data", (chunk: Buffer) => (output += chunk.toString()));
+      const exited = new Promise<number | null>((resolve) => child.on("exit", (code) => resolve(code)));
+      const deadline = Date.now() + 30_000;
+      while (!output.includes('"message":"worker started"') && Date.now() < deadline) await new Promise((r) => setTimeout(r, 100));
+      // let it poll, so a connection is open
+      await new Promise((r) => setTimeout(r, 500));
+      child.kill("SIGTERM");
+      expect(await exited).toBe(0);
+      expect(output).toContain('"message":"worker stopped"');
+      const pools = createTestPools();
+      try {
+        const open = await pools.owner.withClient(async (client) =>
+          (await client.query("SELECT count(*)::int AS n FROM pg_stat_activity WHERE application_name = 'ledger-worker' AND datname = current_database()")).rows[0].n,
+        );
+        expect(open).toBe(0);
+      } finally {
+        await pools.end();
+      }
+    },
+  );
 });

@@ -26,8 +26,6 @@ function shouldDestroy(error: unknown): boolean {
   return typeof error === "object" && error !== null && (error as Record<symbol, unknown>)[DESTROY_CLIENT] === true;
 }
 
-export type RuntimeRoleName = "ledger_app" | "ledger_worker";
-
 /** What the runtime role self-check refused, in words that name the failed condition. */
 export type RoleCheckFailure =
   | "platform tables missing"
