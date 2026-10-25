@@ -200,7 +200,17 @@ export function createUnitOfWorkRunner(options: UnitOfWorkRunnerOptions): UnitOf
         const tx = createTransactionHandle(state.client, () => state.closed);
         const uow = createView(state, module, tx);
 
-        const value = await activeUnit.run(state, () => work(uow));
+        let value: T;
+        try {
+          value = await activeUnit.run(state, () => work(uow));
+        } finally {
+          // The unit ends the moment the work settles, on success AND on failure, BEFORE the
+          // COMMIT or ROLLBACK is sent. Until then a late or un-awaited append, record or tx call
+          // (a timer, a stray Promise.all) would pass every closed check during that round trip
+          // and run in autocommit once the transaction ends - an audit row for rolled-back work.
+          // The platform's own COMMIT and ROLLBACK go through rawClient, not the guarded client.
+          state.closed = true;
+        }
 
         if (state.poison !== undefined) throw poisonError(state.poison);
         const result = await rawClient.query("COMMIT");

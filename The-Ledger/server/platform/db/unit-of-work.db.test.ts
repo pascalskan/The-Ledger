@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { setTimeout as sleep } from "node:timers/promises";
 import { eq, sql } from "drizzle-orm";
 import { pgSchema, text, uuid } from "drizzle-orm/pg-core";
 import type pg from "pg";
@@ -113,7 +114,7 @@ const validEvent = () => ({
 });
 
 /** Wraps a pool so every statement, and every connection checkout, is recorded. */
-function loggingPool(base: DbPool) {
+function loggingPool(base: DbPool, delay?: { matching: RegExp; ms: number }) {
   const statements: string[] = [];
   const checkouts = { count: 0 };
   const pool: DbPool = {
@@ -126,9 +127,12 @@ function loggingPool(base: DbPool) {
           new Proxy(client, {
             get(target, property) {
               if (property === "query") {
-                return (...args: unknown[]) => {
+                return async (...args: unknown[]) => {
                   const first = args[0];
-                  statements.push(typeof first === "string" ? first : String((first as { text?: string }).text));
+                  const text = typeof first === "string" ? first : String((first as { text?: string }).text);
+                  statements.push(text);
+                  // hold the statement back, to widen the window between "the work settled" and "the transaction ended"
+                  if (delay !== undefined && delay.matching.test(text)) await sleep(delay.ms);
                   return (target.query as (...a: unknown[]) => unknown)(...args);
                 };
               }
@@ -481,6 +485,72 @@ describe("closed units (G0-06)", () => {
       builder = uow.tx.select().from(probeState);
     });
     await expect(Promise.resolve(builder)).rejects.toMatchObject({ name: "UnitOfWorkClosedError" });
+  });
+});
+
+describe("a write after the work has settled is refused, even while COMMIT or ROLLBACK is in flight (review round 2, M1)", () => {
+  const validAudit = () => ({ entryType: "probe_entry", sourceObjectType: "probe", sourceObjectId: randomUUID() });
+
+  /** Runs a unit whose COMMIT/ROLLBACK is held back 80 ms, with a late caller at 10 ms. */
+  async function lateWrite(options: { fail: boolean; late: (uow: UnitOfWork) => Promise<unknown> }) {
+    const { pool, statements } = loggingPool(pools.app, { matching: /^(COMMIT|ROLLBACK)$/, ms: 80 });
+    const logged = createUnitOfWorkRunner({ pool, auditCatalogue, eventCatalogue }).forModule("alpha");
+    let lateOutcome!: Promise<unknown>;
+    const run = logged(userContext(), async (uow) => {
+      lateOutcome = sleep(10).then(() => options.late(uow));
+      lateOutcome.catch(() => undefined);
+      if (options.fail) throw new Error("the work failed");
+    });
+    if (options.fail) await expect(run).rejects.toThrow("the work failed");
+    else await run;
+    const outcome = await lateOutcome.then(() => "wrote", (error: Error) => error.name);
+    return { outcome, statements };
+  }
+
+  it.each([
+    ["the work throws", true],
+    ["the work succeeds", false],
+  ])("an un-awaited append from a timer, when %s, throws UnitOfWorkClosedError and issues no INSERT", async (_label, fail) => {
+    const { outcome, statements } = await lateWrite({ fail, late: (uow) => uow.audit.append(validAudit()) });
+    expect(outcome).toBe("UnitOfWorkClosedError");
+    expect(statements.some((s) => /INSERT/i.test(s))).toBe(false);
+  });
+
+  it.each([
+    ["the work throws", true],
+    ["the work succeeds", false],
+  ])("the same for record, when %s", async (_label, fail) => {
+    const { outcome, statements } = await lateWrite({
+      fail,
+      late: (uow) => uow.events.record({ eventType: "ProbeRecorded", sourceObjectType: "probe", sourceObjectId: randomUUID(), payload: {} }),
+    });
+    expect(outcome).toBe("UnitOfWorkClosedError");
+    expect(statements.some((s) => /INSERT/i.test(s))).toBe(false);
+  });
+
+  it.each([
+    ["the work throws", true],
+    ["the work succeeds", false],
+  ])("the same for tx, when %s", async (_label, fail) => {
+    const marker = randomUUID();
+    const { outcome, statements } = await lateWrite({
+      fail,
+      late: async (uow) => uow.tx.execute(sql`INSERT INTO uow_probe.probe_state (id, company_id, value) VALUES (${randomUUID()}, ${companyA}, ${marker})`),
+    });
+    expect(outcome).toBe("UnitOfWorkClosedError");
+    expect(statements.some((s) => /INSERT/i.test(s))).toBe(false);
+    expect(await pools.owner.withClient(async (c) => (await c.query("SELECT 1 FROM uow_probe.probe_state WHERE value = $1", [marker])).rowCount)).toBe(0);
+  });
+
+  it("no audit row or event for rolled-back work reaches the database", async () => {
+    const marker = randomUUID();
+    const { outcome } = await lateWrite({
+      fail: true,
+      late: (uow) => uow.audit.append({ ...validAudit(), sourceObjectId: marker }),
+    });
+    expect(outcome).toBe("UnitOfWorkClosedError");
+    await sleep(120);
+    expect(await pools.owner.withClient(async (c) => (await c.query("SELECT 1 FROM audit.audit_entries WHERE source_object_id = $1", [marker])).rowCount)).toBe(0);
   });
 });
 
