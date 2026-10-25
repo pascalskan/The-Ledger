@@ -115,7 +115,7 @@ October 25, 2026: with the owner's permission, the PM ran `npx playwright instal
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
-| 1 | Correctness (independent Sonnet reviewer) | in progress | — | — |
+| 1 | Correctness (independent Sonnet reviewer; PM verified both majors in code) | 0 blockers; 2 majors (checked-out pg client has no 'error' listener → process crash on connection loss; mid-batch throw leaves claimed rows locked and heartbeated forever); 6 minors (humanOnly by caller token; uow.tx.$client leak; production exit on refusal; finish ROLLBACK failure; stop() flag; maxTokenAge → TOKEN_EXPIRED). PM rulings: connection-class/RuntimeRoleError in a subscriber = loop-level failure, release without counting; m3 kept as §3.5 says (exit 1 in production), runbook covers db:migrate; release-on-stop ratified as a deviation | pending | — |
 
 ### phase-0-gate-tests — backend-test-engineer — Open
 
