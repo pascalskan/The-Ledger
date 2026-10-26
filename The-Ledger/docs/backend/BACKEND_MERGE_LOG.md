@@ -22,7 +22,7 @@ Only the PM edits this file.
 | phase-0-platform | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0 | Merged | 03af379 |
 | phase-0-fix-2 | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0-fix-2 | Merged | e8ca0fc |
 | phase-0-fix-1 | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0-fix-1 | Merged | fc9fa54 |
-| phase-0-gate-tests | 0 Infrastructure | backend-test-engineer | agent/backend-test-engineer/phase-0 | Open | — |
+| phase-0-gate-tests | 0 Infrastructure | backend-test-engineer | agent/backend-test-engineer/phase-0 | In review | — |
 | phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Merged | 99746d9 |
 | phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | Merged — approved by owner Oct 21, 2026 | 5768030 |
 
@@ -153,7 +153,7 @@ Review rounds (PM, inline — the change is ~70 lines): 1 correctness — deriva
 
 Merged into backend at fc9fa54 (October 26, 2026). Notified: backend-test-engineer (pull, make the G0-46(d) todo a real assertion).
 
-### phase-0-gate-tests — backend-test-engineer — Open
+### phase-0-gate-tests — backend-test-engineer — In review
 
 Phase: 0 Infrastructure Foundation
 Branch: agent/backend-test-engineer/phase-0   (from backend @ 359fa02)
@@ -178,10 +178,12 @@ Commits checked
 | 12 | c4aa3c0 | tests(phase-0): G0-20 to G0-26, G0-43, G0-45, G0-46 roles, grants, triggers, self-check | Accepted, continue | 106 tests; every role statement in BEGIN…ROLLBACK with SQLSTATE and privilege cross-checks; exact column sets; owner-proof triggers; throwaway roles. Mutation checks fail the right tests. G0-46(d) found a platform defect (refusal doesn't name the extra role, spec says it must) → fix job phase-0-fix-1; todo until merged. G0-45 rebuild substitute accepted. PM re-ran: gate 281 passed / 58 todo |
 | 13 | 403386f | tests(phase-0): G0-27 to G0-30 logging, error envelope and response headers | Accepted, continue (two fixes folded into next commit) | 23 tests with whole-line marker search; non-vacuity controls for (k), (g), (d); six mutation checks fail the right tests. PM verification first failed G0-18 and G0-46(b) because the fix job's run rebuilt ledger_test concurrently → PM created ledger_fix_test and ledger_pm_test on the local mirror (same roles and ACL); on ledger_pm_test only G0-46(c) fails — it hard-codes the database name 'ledger_test' (test bug; fix requested, plus a grep for other literals) |
 | 14 | 2f7e91d + 0c66572 + ba1defb | merge backend (fix-1); tests: G0-36/G0-51 loaders, G0-46(c) db name, G0-46(d) names the role; G0-37, G0-38, G0-39 | Accepted, continue | G0-46(c) now asserts the guarded db name; G0-46(d) real assertion after fix-1; config refusals, scrub across a grandchild, no libpq fallback (pg-spy), frontend-only mode, health dedup on a latch, guard wiring; ten mutation checks. G0-51(b2) found a second platform defect (missing host not named) → fix job phase-0-fix-2. PM re-ran on ledger_pm_test: 16 files, 369 passed, 2 todo |
+| 15 | 9de3e0f + b72b791 | merge backend (fix-2); tests: G0-41, G0-47, G0-49, G0-50, G0-19(f) port half, G0-51(b2) | Accepted — job complete, review rounds start | Probe ports (human-only and plain); registry failures in both processes incl. startApi/startWorker FATAL + exit 1; human-only port refusals with poisoning; tenant stamping and app.company_id; catalogue ownership and job attribution; seven mutation checks. Rulings: G0-41 subscriber checks asserted in the worker; G0-19(f) human-only port may raise HumanActorRequiredError. PM re-ran full npm test on ledger_pm_test: unit 671/671, db 200 + 1 skipped, gate 18 files 422/422, zero todo |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
 |---|---|---|---|---|
+| 1 | Correctness (independent Sonnet reviewer) | in progress | — | — |
 
 ### phase-0-replit — backend-architect — Merged
 
