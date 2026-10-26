@@ -20,6 +20,7 @@ Only the PM edits this file.
 |---|---|---|---|---|---|
 | phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | Merged — approved by owner Oct 25, 2026 | f3a4ef1 |
 | phase-0-platform | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0 | Merged | 03af379 |
+| phase-0-fix-1 | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0-fix-1 | Open | — |
 | phase-0-gate-tests | 0 Infrastructure | backend-test-engineer | agent/backend-test-engineer/phase-0 | Open | — |
 | phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Merged | 99746d9 |
 | phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | Merged — approved by owner Oct 21, 2026 | 5768030 |
@@ -121,6 +122,16 @@ Review rounds
 
 
 Merged into backend at 03af379 (October 26, 2026) after three review rounds; merged code is identical to 33ccefa outside docs. Notified: backend-test-engineer (pull instruction with all accumulated rulings and interfaces). Follow-ups for phase verification: a Vitest 'something prevents the main process from exiting' warning after the test run (open handle to find); the Linux-only SIGTERM test and orphan check run first on the Replit gate; runbook note 'npm run db:migrate before starting a production build'; fold into the Phase 0 spec at its next amendment: rule-13 test-file ruling, ALTER USER lint, `__` namespaces only under Vitest, G0-51 PGDATABASE, createApiApp auth, startApi/startWorker seam, release-on-stop, pre-COMMIT integrity check, multi-statement refusal.
+### phase-0-fix-1 — backend-platform-engineer — Open
+
+Phase: 0 Infrastructure Foundation (gate fix)
+Branch: agent/backend-platform-engineer/phase-0-fix-1   (from backend @ 3ec483e)
+Why: gate test G0-46(d) — the runtime-role refusal for unexpected memberships must name the extra role (spec §9, G0-46 row); the platform names only the connecting role.
+
+Commits checked
+| # | SHA | Message | PM verdict | Notes |
+|---|---|---|---|---|
+
 ### phase-0-gate-tests — backend-test-engineer — Open
 
 Phase: 0 Infrastructure Foundation
@@ -143,6 +154,7 @@ Commits checked
 | 9 | 99a4f73 | tests(phase-0): G0-03 to G0-08 audit atomicity and the Unit of Work | Accepted, continue | 39 tests read back as owner; G0-03 revoke/restore with control; G0-05 direct and swallowed; G0-07 no SAVEPOINT; G0-08 zero statements per refusal. PM re-ran: gate 102 passed / 92 todo; no platform defect. Next commit adds a per-file §3.5 grant check so a failed revoke restore is loud |
 | 10 | 9d1b0bf | tests(phase-0): G0-31 to G0-35 and G0-48 against the platform; grant check before every file | Accepted, continue | Token attack cases sent over Supertest with handler-never-ran, WWW-Authenticate and token-not-logged checks; surface swaps; API/frontend separation; namespaces, public routes, contextOf. assertGrantsIntact before every file. G0-48(e) reading confirmed (contextOf after leaving the async scope). PM re-ran: gate 138 passed / 56 todo; no platform defect |
 | 11 | 4c0cd97 | tests(phase-0): G0-09 to G0-19 and G0-44 outbox integrity and causation | Accepted, continue | Outbox delivery, idempotency, concurrency, fencing, heartbeat, backoff/dead letter, recovery, causation. Mutation checks (platform temporarily mutated, restored, nothing committed) fail the right tests. Rulings: G0-14(a2) added (W1 resumes while W2 holds the row — fences on locked_by; spec note at next amendment); 5 s base backoff + owner-set next_attempt_at for determinism. PM re-ran: gate 175 passed / 57 todo; platform files unchanged vs backend |
+| 12 | c4aa3c0 | tests(phase-0): G0-20 to G0-26, G0-43, G0-45, G0-46 roles, grants, triggers, self-check | Accepted, continue | 106 tests; every role statement in BEGIN…ROLLBACK with SQLSTATE and privilege cross-checks; exact column sets; owner-proof triggers; throwaway roles. Mutation checks fail the right tests. G0-46(d) found a platform defect (refusal doesn't name the extra role, spec says it must) → fix job phase-0-fix-1; todo until merged. G0-45 rebuild substitute accepted. PM re-ran: gate 281 passed / 58 todo |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
