@@ -59,6 +59,32 @@ export type DatabaseUrlResult =
   | { readonly ok: false; readonly problem: string };
 
 /**
+ * For a postgres:// or postgresql:// URL whose HOST is empty (nothing between the "@" and an optional
+ * ":port"), the parts it fails to state, in the order user, password, host, database. Undefined
+ * for anything else, which is then simply "not a valid URL". Reads only the shape of the text and
+ * returns fixed names, never a piece of the URL.
+ */
+function missingPartsOfUnparsableUrl(raw: string): string[] | undefined {
+  const match = /^postgres(?:ql)?:\/\/([^/?#]*)([^?#]*)/i.exec(raw);
+  if (match === null) return undefined;
+  const authority = match[1]!;
+  const at = authority.lastIndexOf("@");
+  const hostAndPort = authority.slice(at + 1);
+  if (!/^(?::.*)?$/.test(hostAndPort)) return undefined; // a host is present: some other fault
+  const userinfo = at === -1 ? "" : authority.slice(0, at);
+  const colon = userinfo.indexOf(":");
+  const user = colon === -1 ? userinfo : userinfo.slice(0, colon);
+  const password = colon === -1 ? "" : userinfo.slice(colon + 1);
+  const database = match[2]!.replace(/^\//, "");
+  const missing: string[] = [];
+  if (user === "") missing.push("user");
+  if (password === "") missing.push("password");
+  missing.push("host");
+  if (database === "") missing.push("database");
+  return missing;
+}
+
+/**
  * Parses a database URL without throwing. `problem` is a fixed phrase that never
  * contains any part of the URL, so it is safe to put in a ConfigError.
  */
@@ -74,8 +100,11 @@ export function inspectDatabaseUrl(
   try {
     url = new URL(raw);
   } catch {
-    // `user:pw@/db` (an empty host) is not a parsable URL; say what is missing.
-    return fail(/^[a-z]+:\/\/[^/?#]*@\//i.test(raw) ? "must state host explicitly" : "is not a valid URL");
+    // WHATWG parsing refuses credentials with an empty host (`u:p@/db`, `u:p@:5432/db`, `u:p@?x`):
+    // say which part is missing instead of "not a valid URL". Text that is not a URL at all keeps
+    // the parser's verdict.
+    const missing = missingPartsOfUnparsableUrl(raw);
+    return fail(missing === undefined ? "is not a valid URL" : `must state ${missing.join(", ")} explicitly`);
   }
   if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") {
     return fail("must be a postgres:// or postgresql:// URL");
