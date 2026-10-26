@@ -20,7 +20,7 @@ Only the PM edits this file.
 |---|---|---|---|---|---|
 | phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | Merged — approved by owner Oct 25, 2026 | f3a4ef1 |
 | phase-0-platform | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0 | Merged | 03af379 |
-| phase-0-fix-1 | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0-fix-1 | Open | — |
+| phase-0-fix-1 | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0-fix-1 | Merged | fc9fa54 |
 | phase-0-gate-tests | 0 Infrastructure | backend-test-engineer | agent/backend-test-engineer/phase-0 | Open | — |
 | phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Merged | 99746d9 |
 | phase-0-spec | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-spec | Merged — approved by owner Oct 21, 2026 | 5768030 |
@@ -122,7 +122,7 @@ Review rounds
 
 
 Merged into backend at 03af379 (October 26, 2026) after three review rounds; merged code is identical to 33ccefa outside docs. Notified: backend-test-engineer (pull instruction with all accumulated rulings and interfaces). Follow-ups for phase verification: a Vitest 'something prevents the main process from exiting' warning after the test run (open handle to find); the Linux-only SIGTERM test and orphan check run first on the Replit gate; runbook note 'npm run db:migrate before starting a production build'; fold into the Phase 0 spec at its next amendment: rule-13 test-file ruling, ALTER USER lint, `__` namespaces only under Vitest, G0-51 PGDATABASE, createApiApp auth, startApi/startWorker seam, release-on-stop, pre-COMMIT integrity check, multi-statement refusal.
-### phase-0-fix-1 — backend-platform-engineer — Open
+### phase-0-fix-1 — backend-platform-engineer — Merged
 
 Phase: 0 Infrastructure Foundation (gate fix)
 Branch: agent/backend-platform-engineer/phase-0-fix-1   (from backend @ 3ec483e)
@@ -131,6 +131,11 @@ Why: gate test G0-46(d) — the runtime-role refusal for unexpected memberships 
 Commits checked
 | # | SHA | Message | PM verdict | Notes |
 |---|---|---|---|---|
+| 1 | 814bfc8 | platform: name the unexpected role(s) in the self-check refusal (phase-0-fix-1, G0-46 d) | Accepted | RuntimeRoleError.unexpectedRoles (members other than ledger_runtime, sorted) in the message and the ERROR/FATAL line; role names only. Test fails on the old code. PM re-ran on ledger_pm_test: unit 651/651, db 200 + 1 skipped |
+
+Review rounds (PM, inline — the change is ~70 lines): 1 correctness — derivation from the existing member_of list, sort, only for the membership condition: pass. 2 security — role names only, no URL/password/host; pino JSON-escapes names: pass. 3 quality — test covers one and two extra roles, sort and absence of ledger_runtime: pass. Note to agent: never use git stash (the stash stack is shared across worktrees).
+
+Merged into backend at fc9fa54 (October 26, 2026). Notified: backend-test-engineer (pull, make the G0-46(d) todo a real assertion).
 
 ### phase-0-gate-tests — backend-test-engineer — Open
 
