@@ -20,7 +20,7 @@ Only the PM edits this file.
 |---|---|---|---|---|---|
 | phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | Merged — approved by owner Oct 25, 2026 | f3a4ef1 |
 | phase-0-platform | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0 | Merged | 03af379 |
-| phase-0-fix-2 | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0-fix-2 | Open | — |
+| phase-0-fix-2 | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0-fix-2 | Merged | e8ca0fc |
 | phase-0-fix-1 | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0-fix-1 | Merged | fc9fa54 |
 | phase-0-gate-tests | 0 Infrastructure | backend-test-engineer | agent/backend-test-engineer/phase-0 | Open | — |
 | phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Merged | 99746d9 |
@@ -123,7 +123,7 @@ Review rounds
 
 
 Merged into backend at 03af379 (October 26, 2026) after three review rounds; merged code is identical to 33ccefa outside docs. Notified: backend-test-engineer (pull instruction with all accumulated rulings and interfaces). Follow-ups for phase verification: a Vitest 'something prevents the main process from exiting' warning after the test run (open handle to find); the Linux-only SIGTERM test and orphan check run first on the Replit gate; runbook note 'npm run db:migrate before starting a production build'; fold into the Phase 0 spec at its next amendment: rule-13 test-file ruling, ALTER USER lint, `__` namespaces only under Vitest, G0-51 PGDATABASE, createApiApp auth, startApi/startWorker seam, release-on-stop, pre-COMMIT integrity check, multi-statement refusal.
-### phase-0-fix-2 — backend-platform-engineer — Open
+### phase-0-fix-2 — backend-platform-engineer — Merged
 
 Phase: 0 Infrastructure Foundation (gate fix)
 Branch: agent/backend-platform-engineer/phase-0-fix-2   (from backend @ f91d56f, in the fix-1 worktree)
@@ -132,6 +132,11 @@ Why: gate test G0-51(b2) — a database URL with no host must give a ConfigError
 Commits checked
 | # | SHA | Message | PM verdict | Notes |
 |---|---|---|---|---|
+| 1 | bd0c7d4 | platform: name the missing host when a database URL has none (phase-0-fix-2, G0-51 b) | Accepted | Empty-host postgres URLs name the missing parts by fixed names (user, password, host, database); not-a-URL text keeps "is not a valid URL"; no part of the URL in any message; linear regexes. 17 no-host forms tested; 13 fail on the old code (no stash used). PM re-ran on ledger_pm_test: unit 671/671, db 200 + 1 skipped |
+
+Review rounds (PM, inline — ~85 lines): 1 correctness — the shape parse covers parser-refused and parser-accepted forms; non-postgres schemes stay "not a valid URL" (intended): pass. 2 security — fixed names only, no URL text: pass. 3 quality — linear patterns, tests pin each phrase: pass.
+
+Merged into backend at e8ca0fc (October 26, 2026). Notified: backend-test-engineer (pull; make G0-51(b2) a real assertion).
 
 ### phase-0-fix-1 — backend-platform-engineer — Merged
 
