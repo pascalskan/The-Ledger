@@ -190,6 +190,45 @@ describe("effective memberships and privileges (G0-46 d, e)", () => {
     });
   });
 
+  it("(d) the refusal's message and ERROR log line name the unexpected role(s), sorted, and never a URL or password", async () => {
+    await withThrowawayRole(async (role, password, owner) => {
+      const extra = `gate_extra_${role.slice("gate_probe_".length)}`;
+      const run = async (expectedRoles: string[]) => {
+        const { lines, logger } = capture();
+        const pool = createRuntimePool({
+          settings: { ...testDatabase().app, user: role, password },
+          logger,
+          expectedRole: role,
+          max: 1,
+        });
+        try {
+          const error = (await pool.withClient(async () => 1).catch((e: unknown) => e)) as RuntimeRoleError;
+          expect(error).toBeInstanceOf(RuntimeRoleError);
+          expect(error.condition).toBe("unexpected memberships");
+          expect(error.role).toBe(role);
+          expect(error.unexpectedRoles).toEqual(expectedRoles);
+          expect(error.message).toContain("unexpected memberships");
+          expect(error.message).toContain(`role ${role}`);
+          for (const name of expectedRoles) expect(error.message).toContain(name);
+          // ledger_runtime is the expected membership: it is never named as unexpected
+          expect(error.message).not.toContain("ledger_runtime");
+          const logged = lines.map((l) => JSON.parse(l) as Record<string, any>).find((r) => r.level === "ERROR");
+          expect(logged).toMatchObject({ condition: "unexpected memberships", role, unexpectedRoles: expectedRoles });
+          const text = `${error.message} ${lines.join(" ")}`;
+          expect(text).not.toContain(password);
+          expect(text).not.toMatch(/postgres(ql)?:\/\//);
+        } finally {
+          await pool.end();
+        }
+      };
+
+      await owner.query(`GRANT ${extra} TO ${role}`);
+      await run([extra]);
+      await owner.query(`GRANT pg_write_all_data TO ${role}`);
+      await run([extra, "pg_write_all_data"]); // sorted
+    });
+  });
+
   it("refuses a login role that is not in ledger_runtime at all, naming the condition", async () => {
     await withThrowawayRole(async (role, password, owner) => {
       await owner.query(`REVOKE ledger_runtime FROM ${role}`);

@@ -45,12 +45,24 @@ export type RoleCheckFailure =
 export class RuntimeRoleError extends Error {
   readonly condition: RoleCheckFailure;
   readonly role: string;
+  /**
+   * For "unexpected memberships": the roles the connecting role is a member of other than
+   * ledger_runtime, sorted. Role names are not secrets; no URL or password is ever included.
+   */
+  readonly unexpectedRoles: readonly string[];
 
-  constructor(condition: RoleCheckFailure, role: string, detail?: string) {
-    super(`Database connection refused: ${condition} (role ${role})${detail ? `: ${detail}` : ""}`);
+  constructor(
+    condition: RoleCheckFailure,
+    role: string,
+    detail?: string,
+    unexpectedRoles: readonly string[] = [],
+  ) {
+    const extra = unexpectedRoles.length > 0 ? ` - unexpected role${unexpectedRoles.length > 1 ? "s" : ""}: ${unexpectedRoles.join(", ")}` : "";
+    super(`Database connection refused: ${condition} (role ${role})${extra}${detail ? `: ${detail}` : ""}`);
     this.name = "RuntimeRoleError";
     this.condition = condition;
     this.role = role;
+    this.unexpectedRoles = [...unexpectedRoles].sort();
   }
 }
 
@@ -82,6 +94,11 @@ interface RoleCheckRow {
   can_change_audit: boolean;
   can_rewrite_envelope: boolean;
   can_update_outbox: boolean;
+}
+
+/** The roles a connecting role is a member of other than ledger_runtime, sorted (for the refusal's message and log line). */
+export function unexpectedMemberships(row: Pick<RoleCheckRow, "member_of">): string[] {
+  return row.member_of.filter((name) => name !== "ledger_runtime").sort();
 }
 
 /** Applies the acceptance rules to the check's row. Returns the first failed condition, or undefined. */
@@ -310,8 +327,14 @@ export function createRuntimePool(options: CreateRuntimePoolOptions): DbPool {
             testDatabaseOnly,
           });
     if (failure !== undefined) {
-      // The role name only; never the URL, password or host.
-      throw new RuntimeRoleError(failure, row?.current_user ?? expectedRole);
+      // Role names only (the connecting role and, for a membership refusal, the unexpected ones);
+      // never the URL, password or host.
+      throw new RuntimeRoleError(
+        failure,
+        row?.current_user ?? expectedRole,
+        undefined,
+        failure === "unexpected memberships" && row !== undefined ? unexpectedMemberships(row) : [],
+      );
     }
   }
 
@@ -334,13 +357,14 @@ export function createRuntimePool(options: CreateRuntimePoolOptions): DbPool {
         watch.stop();
         client.release(refusal);
         if (refusal instanceof RuntimeRoleError) {
+          const named = refusal.unexpectedRoles.length > 0 ? { unexpectedRoles: refusal.unexpectedRoles } : {};
           logger.error(
-            { condition: refusal.condition, role: refusal.role },
+            { condition: refusal.condition, role: refusal.role, ...named },
             "Database connection refused by the runtime role self-check",
           );
           if (options.exitOnRefusal === true) {
             logger.fatal(
-              { condition: refusal.condition, role: refusal.role },
+              { condition: refusal.condition, role: refusal.role, ...named },
               "Refusing to run with an unexpected database role",
             );
             process.exit(1);
