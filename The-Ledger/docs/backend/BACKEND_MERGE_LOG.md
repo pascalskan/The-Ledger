@@ -20,6 +20,7 @@ Only the PM edits this file.
 |---|---|---|---|---|---|
 | phase-1-spec | 1 Tenant | backend-architect (new instance) | agent/backend-architect/phase-1-spec | Merged — approved by owner Oct 25, 2026 | f3a4ef1 |
 | phase-0-platform | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0 | Merged | 03af379 |
+| phase-0-fix-2 | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0-fix-2 | Open | — |
 | phase-0-fix-1 | 0 Infrastructure | backend-platform-engineer | agent/backend-platform-engineer/phase-0-fix-1 | Merged | fc9fa54 |
 | phase-0-gate-tests | 0 Infrastructure | backend-test-engineer | agent/backend-test-engineer/phase-0 | Open | — |
 | phase-0-replit | 0 Infrastructure | backend-architect | agent/backend-architect/phase-0-replit | Merged | 99746d9 |
@@ -122,6 +123,16 @@ Review rounds
 
 
 Merged into backend at 03af379 (October 26, 2026) after three review rounds; merged code is identical to 33ccefa outside docs. Notified: backend-test-engineer (pull instruction with all accumulated rulings and interfaces). Follow-ups for phase verification: a Vitest 'something prevents the main process from exiting' warning after the test run (open handle to find); the Linux-only SIGTERM test and orphan check run first on the Replit gate; runbook note 'npm run db:migrate before starting a production build'; fold into the Phase 0 spec at its next amendment: rule-13 test-file ruling, ALTER USER lint, `__` namespaces only under Vitest, G0-51 PGDATABASE, createApiApp auth, startApi/startWorker seam, release-on-stop, pre-COMMIT integrity check, multi-statement refusal.
+### phase-0-fix-2 — backend-platform-engineer — Open
+
+Phase: 0 Infrastructure Foundation (gate fix)
+Branch: agent/backend-platform-engineer/phase-0-fix-2   (from backend @ f91d56f, in the fix-1 worktree)
+Why: gate test G0-51(b2) — a database URL with no host must give a ConfigError naming the missing part (spec §9, G0-51 row); the platform says only "is not a valid URL".
+
+Commits checked
+| # | SHA | Message | PM verdict | Notes |
+|---|---|---|---|---|
+
 ### phase-0-fix-1 — backend-platform-engineer — Merged
 
 Phase: 0 Infrastructure Foundation (gate fix)
@@ -161,6 +172,7 @@ Commits checked
 | 11 | 4c0cd97 | tests(phase-0): G0-09 to G0-19 and G0-44 outbox integrity and causation | Accepted, continue | Outbox delivery, idempotency, concurrency, fencing, heartbeat, backoff/dead letter, recovery, causation. Mutation checks (platform temporarily mutated, restored, nothing committed) fail the right tests. Rulings: G0-14(a2) added (W1 resumes while W2 holds the row — fences on locked_by; spec note at next amendment); 5 s base backoff + owner-set next_attempt_at for determinism. PM re-ran: gate 175 passed / 57 todo; platform files unchanged vs backend |
 | 12 | c4aa3c0 | tests(phase-0): G0-20 to G0-26, G0-43, G0-45, G0-46 roles, grants, triggers, self-check | Accepted, continue | 106 tests; every role statement in BEGIN…ROLLBACK with SQLSTATE and privilege cross-checks; exact column sets; owner-proof triggers; throwaway roles. Mutation checks fail the right tests. G0-46(d) found a platform defect (refusal doesn't name the extra role, spec says it must) → fix job phase-0-fix-1; todo until merged. G0-45 rebuild substitute accepted. PM re-ran: gate 281 passed / 58 todo |
 | 13 | 403386f | tests(phase-0): G0-27 to G0-30 logging, error envelope and response headers | Accepted, continue (two fixes folded into next commit) | 23 tests with whole-line marker search; non-vacuity controls for (k), (g), (d); six mutation checks fail the right tests. PM verification first failed G0-18 and G0-46(b) because the fix job's run rebuilt ledger_test concurrently → PM created ledger_fix_test and ledger_pm_test on the local mirror (same roles and ACL); on ledger_pm_test only G0-46(c) fails — it hard-codes the database name 'ledger_test' (test bug; fix requested, plus a grep for other literals) |
+| 14 | 2f7e91d + 0c66572 + ba1defb | merge backend (fix-1); tests: G0-36/G0-51 loaders, G0-46(c) db name, G0-46(d) names the role; G0-37, G0-38, G0-39 | Accepted, continue | G0-46(c) now asserts the guarded db name; G0-46(d) real assertion after fix-1; config refusals, scrub across a grandchild, no libpq fallback (pg-spy), frontend-only mode, health dedup on a latch, guard wiring; ten mutation checks. G0-51(b2) found a second platform defect (missing host not named) → fix job phase-0-fix-2. PM re-ran on ledger_pm_test: 16 files, 369 passed, 2 todo |
 
 Review rounds
 | Round | Focus | Findings sent | Agent answer | Result |
