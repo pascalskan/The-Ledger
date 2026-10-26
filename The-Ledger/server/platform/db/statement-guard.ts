@@ -9,9 +9,10 @@ import { UnitOfWorkIntegrityError } from "../errors/platform-errors";
 // quote inside a quoted identifier are each seen for what they are (the earlier version made
 // separate replacement passes, and `select '--'; commit; select 1` slipped through). The pass is
 // a hand-written scanner rather than a regular expression because PostgreSQL block comments
-// NEST, which a regular expression cannot follow. It is linear: every character is read once,
-// and an unterminated comment, string or dollar-quote runs to the end of the text (PostgreSQL
-// rejects such text anyway).
+// NEST, which a regular expression cannot follow. It is linear: every character is read once.
+// E'...' strings take backslash escapes. Text that ends inside a string, quoted identifier,
+// dollar-quote or block comment is refused (PostgreSQL rejects it anyway), so a misreading of a
+// token can never hide a second statement.
 
 const IDENTIFIER_CHARACTER = /[\w$\u0080-￿]/;
 /** Characters that can start a token; everything else is copied in runs. */
@@ -20,9 +21,18 @@ const ORDINARY_RUN = /[^-/'"$]+/y;
 const DOLLAR_TAG =/\$(?:[A-Za-z_\u0080-￿][\w\u0080-￿]*)?\$/y;
 
 /**
+ * Real SQL never ends inside a string, a quoted identifier, a dollar-quote or a block comment
+ * (PostgreSQL rejects it), so text that does is refused outright. That makes any misreading of a
+ * token fail closed: a quote the scanner took for the start of a string cannot hide what follows.
+ */
+function unterminated(kind: string): UnitOfWorkIntegrityError {
+  return new UnitOfWorkIntegrityError(`an unterminated ${kind} is not allowed inside a unit of work`);
+}
+
+/**
  * The statement with comments removed, each string or dollar-quoted body replaced by `''`, and
  * each quoted identifier replaced by its name when that is a plain word (so `"set_config"(...)`
- * is still seen as a call) or by `_`.
+ * is still seen as a call) or by `_`. Throws UnitOfWorkIntegrityError for an unterminated token.
  */
 function strip(text: string): string {
   const out: string[] = [];
@@ -49,40 +59,64 @@ function strip(text: string): string {
           i++;
         }
       }
+      if (depth > 0) throw unterminated("block comment");
       out.push(" ");
     } else if (c === "'") {
+      // An E'...' (or e'...') string takes backslash escapes: ' is a quote INSIDE the string. E must
+      // stand alone, not end an identifier (`xE'a'` is the identifier xE and then a string).
+      const escapes = (text[i - 1] === "E" || text[i - 1] === "e") && (i < 2 || !IDENTIFIER_CHARACTER.test(text[i - 2]!));
       i++;
-      while (i < length) {
-        const end = text.indexOf("'", i);
-        if (end === -1) {
-          i = length;
-        } else if (text[end + 1] === "'") {
-          i = end + 2; // a doubled quote is inside the string
-          continue;
-        } else {
-          i = end + 1;
+      let closed = false;
+      if (escapes) {
+        while (i < length) {
+          const d = text[i];
+          if (d === "\\") {
+            i += 2; // a backslash escapes the next character
+          } else if (d === "'") {
+            if (text[i + 1] === "'") {
+              i += 2; // a doubled quote is inside the string
+            } else {
+              i++;
+              closed = true;
+              break;
+            }
+          } else {
+            i++;
+          }
         }
-        break;
+      } else {
+        while (i < length) {
+          const end = text.indexOf("'", i);
+          if (end === -1) break;
+          if (text[end + 1] === "'") {
+            i = end + 2; // a doubled quote is inside the string
+            continue;
+          }
+          i = end + 1;
+          closed = true;
+          break;
+        }
       }
+      if (!closed) throw unterminated("string");
       out.push("''");
     } else if (c === '"') {
       i++;
       let name = "";
+      let closed = false;
       while (i < length) {
         const end = text.indexOf('"', i);
-        if (end === -1) {
-          name += text.slice(i);
-          i = length;
-        } else if (text[end + 1] === '"') {
+        if (end === -1) break;
+        if (text[end + 1] === '"') {
           name += text.slice(i, end + 1);
           i = end + 2;
           continue;
-        } else {
-          name += text.slice(i, end);
-          i = end + 1;
         }
+        name += text.slice(i, end);
+        i = end + 1;
+        closed = true;
         break;
       }
+      if (!closed) throw unterminated("quoted identifier");
       out.push(/^\w+$/.test(name) ? name : "_");
     } else if (c === "$" && (i === 0 || !IDENTIFIER_CHARACTER.test(text[i - 1]!))) {
       // A dollar-quote cannot start inside an identifier (`x$a$` is one identifier).
@@ -93,7 +127,8 @@ function strip(text: string): string {
         i++;
       } else {
         const end = text.indexOf(tag, i + tag.length);
-        i = end === -1 ? length : end + tag.length;
+        if (end === -1) throw unterminated("dollar-quoted string");
+        i = end + tag.length;
         out.push("''");
       }
     } else if (TOKEN_START.test(c)) {

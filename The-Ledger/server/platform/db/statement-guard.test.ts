@@ -32,11 +32,26 @@ describe("assertNoTransactionControl", () => {
     // an identifier that merely contains a dollar sign does not start a dollar-quote
     "select 1 as x$a$; commit; select$a$",
     "select 1 as é$a$; commit; select$a$",
-    // an unterminated comment, string or quote is not a way to hide the rest
+    // E'...' strings take backslash escapes: \' is a quote INSIDE the string (round 3 follow-up)
+    "select E'\\''; commit",
+    "select e'\\\\'''; commit",
+    "select E'a\\'b'; set role x",
+    "select E'\\''; commit; select E'\\''",
+    "select 1 as xE'a'; commit; select 'b'",
+    // anything that ends inside a token is refused outright (fail closed), whatever it is
     "commit /*",
     "commit '",
     "commit \"",
     "commit $$",
+    "select 1 /* never closed",
+    "select 1 /* /* only the inner one closes */",
+    "select 'never closed",
+    "select \"never closed",
+    "select $tag$ never closed",
+    "select $tag$ closed by the wrong tag $other$",
+    "select E'never closed",
+    "select E'ends in an escape\\",
+    "select 'a'; select 'b",
   ];
   const allowed = [
     "SELECT 1", "SELECT * FROM t WHERE a = $1", "INSERT INTO t (a) VALUES ($1) RETURNING a",
@@ -58,6 +73,12 @@ describe("assertNoTransactionControl", () => {
     "select $$a;b$$",
     "select x$a$ from t where y = $1 and z = $2",
     "SELECT * FROM t WHERE a = $1 AND b = $2$",
+    // E strings
+    "select E'\\'' as q",
+    "select E'a\\\\b'",
+    "select e'it''s' as q",
+    "select E'\\\\' as q",
+    "select xE'a' from t",
   ];
 
   it.each(refused)("refuses %j", (text) => {
