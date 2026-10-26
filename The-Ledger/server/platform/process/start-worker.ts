@@ -87,6 +87,9 @@ export async function startWorker(options: StartWorkerOptions): Promise<RunningW
       logger,
       expectedRole: "ledger_worker",
       exitOnRefusal: config.nodeEnv === "production",
+      // The worker handles one event at a time and each step holds one connection, so two (one
+      // for a subscriber's unit, one for a step run beside it) are all it can use.
+      max: 2,
     });
     const registries = buildRegistries({
       modules: options.modules,
