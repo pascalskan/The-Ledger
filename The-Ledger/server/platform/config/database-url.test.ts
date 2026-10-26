@@ -45,6 +45,58 @@ describe("parseDatabaseUrl (RP-03)", () => {
     if (!result.ok) expect(result.problem).toContain(part);
   });
 
+  // G0-51(b): a URL the WHATWG parser refuses because the host is empty is reported by what is
+  // missing, not as "not a valid URL". The forms the parser accepts reach the later check.
+  it.each([
+    // refused by new URL(): credentials with an empty host
+    ["an empty host before a port", "postgresql://u:p@:5432/db", "must state host explicitly"],
+    ["an empty host before the path", "postgresql://u:p@/db", "must state host explicitly"],
+    ["an empty host before an empty port", "postgresql://u:p@:/db", "must state host explicitly"],
+    ["an empty host and a non-numeric port", "postgresql://u:p@:abc/db", "must state host explicitly"],
+    ["an empty host and no path", "postgresql://u:p@", "must state host, database explicitly"],
+    ["an empty host and only a query", "postgresql://u:p@?sslmode=require", "must state host, database explicitly"],
+    ["an empty host, a port and no path", "postgresql://u:p@:5432", "must state host, database explicitly"],
+    ["an empty host and only a fragment", "postgres://u:p@#x", "must state host, database explicitly"],
+    ["a port and nothing else before the path", "postgresql://:5432/db", "must state user, password, host explicitly"],
+    ["an empty authority with a separator", "postgresql://@/db", "must state user, password, host explicitly"],
+    ["a user, no password and no host", "postgresql://u@:5432/db", "must state password, host explicitly"],
+    ["a password, no user and no host", "postgresql://:p@:5432/db", "must state user, host explicitly"],
+    // accepted by new URL(): they reach the field check
+    ["no authority at all", "postgresql:///db", "must state user, password, host explicitly"],
+    ["no authority and a query", "postgresql:///db?sslmode=require", "must state user, password, host explicitly"],
+    ["nothing after the scheme", "postgresql://", "must state user, password, host, database explicitly"],
+    ["a scheme and a query only", "postgresql://?sslmode=require", "must state user, password, host, database explicitly"],
+    ["credentials in the path of an opaque form", "postgres:u:p@host/db", "must state user, password, host explicitly"],
+  ])("(G0-51 b) %s names the missing host: %s", (_label, url, problem) => {
+    const result = inspectDatabaseUrl(url);
+    expect(result).toEqual({ ok: false, problem });
+    expect(problem).not.toContain("not a valid URL");
+  });
+
+  it("(G0-51 b) the ConfigError names the variable and the missing host, and no part of the URL", () => {
+    try {
+      parseDatabaseUrl("LEDGER_APP_DATABASE_URL", "postgresql://MARKER-user:MARKER-pw@:5432/MARKER-db");
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConfigError);
+      expect((error as ConfigError).issues).toEqual([{ variable: "LEDGER_APP_DATABASE_URL", problem: "must state host explicitly" }]);
+      const text = JSON.stringify([(error as Error).message, (error as ConfigError).issues]);
+      expect(text).not.toContain("MARKER");
+    }
+  });
+
+  it("(G0-51 b) text that is not a URL, or is malformed with a host present, is still 'is not a valid URL'", () => {
+    for (const bad of ["not a url", "http://u:p@/db", "postgresql://u:p@[]/db", "mysql://u:p@:5432/db", "://u:p@:5432/db"]) {
+      expect(inspectDatabaseUrl(bad), bad).toEqual({ ok: false, problem: "is not a valid URL" });
+    }
+  });
+
+  it("(G0-51 b) control: a well-formed URL still passes, port and all", () => {
+    const result = inspectDatabaseUrl("postgresql://u:p@db.example.com:5432/ledger_test");
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.settings).toMatchObject({ host: "db.example.com", port: 5432, user: "u", database: "ledger_test" });
+  });
+
   it("never puts any part of the URL in the error", () => {
     try {
       parseDatabaseUrl("LEDGER_APP_DATABASE_URL", "postgresql://ledger_app@secret-host/MARKER-db");
