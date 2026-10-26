@@ -8,8 +8,8 @@ import { redactUrlCredentials } from "./redact";
 // input (a PostgreSQL message, a parser message, a Zod issue, bound parameters)
 // is never logged in its own words.
 //
-// Only the "any other error" kind has its message logged as written, so platform
-// code and modules must never put input values into an error message.
+// Only the "any other error" kind has its message logged as written (URL credentials
+// removed), so platform code and modules must never put input values into an error message.
 
 export type SafeError = Readonly<Record<string, unknown>>;
 

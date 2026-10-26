@@ -119,8 +119,8 @@ function guardClient(client: pg.PoolClient, state: () => UnitState): pg.PoolClie
   const query = (...args: unknown[]) => {
     const unit = state();
     if (unit.closed) throw new UnitOfWorkClosedError();
-    // The same statement check as tx.execute: a module that reaches this function through a query
-    // builder's private session gets no further than the facade. A query config is copied once,
+    // THE statement check, once, for every route to the connection (tx.execute, a query builder, a
+    // builder's private session): a refusal poisons the unit. A query config is copied once,
     // so what is checked is what is sent (a getter cannot answer differently the second time);
     // an object that brings its own `submit` (a pg Submittable) writes to the connection itself
     // and is refused, and so is a config whose text is not a string.
