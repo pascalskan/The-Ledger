@@ -549,7 +549,7 @@ describe("a write after the work has settled is refused, even while COMMIT or RO
       late: (uow) => uow.audit.append({ ...validAudit(), sourceObjectId: marker }),
     });
     expect(outcome).toBe("UnitOfWorkClosedError");
-    await sleep(120);
+    // lateWrite has awaited the whole unit, COMMIT/ROLLBACK included: nothing more can arrive
     expect(await pools.owner.withClient(async (c) => (await c.query("SELECT 1 FROM audit.audit_entries WHERE source_object_id = $1", [marker])).rowCount)).toBe(0);
   });
 });

@@ -95,15 +95,11 @@ describe("the client behind a query builder exposes only query", () => {
 });
 
 describe("statements that change the transaction or session are refused (with the unit poisoned)", () => {
-  const forbidden = [
-    "COMMIT", "commit", "  /* hello */ Commit ", "-- note\nCOMMIT", "END", "ABORT", "ROLLBACK", "BEGIN", "START TRANSACTION",
-    "SAVEPOINT a", "RELEASE SAVEPOINT a", "SET ROLE postgres", "SET LOCAL app.company_id = 'x'", "SET SESSION AUTHORIZATION postgres",
-    "RESET ROLE", "RESET ALL", "DISCARD ALL", "SELECT set_config('app.company_id', 'x', true)", "select SET_CONFIG ( 'role', 'postgres', true )",
-    "SELECT 1; COMMIT", "SELECT 1;\nSET ROLE postgres", "DO $$ BEGIN PERFORM 1; END $$", "CALL some_proc()", "PREPARE t AS SELECT 1",
-    "EXECUTE t", "DEALLOCATE t", "LOAD 'x'",
-  ];
+  // The full list of refused and allowed texts is owned by statement-guard.test.ts (no database).
+  // These cases prove the guard is wired in front of the connection, on both routes to it.
+  const representative = ["COMMIT", "SET ROLE postgres", "select '--'; commit; select 1"];
 
-  it.each(forbidden)("tx.execute(%j) throws UnitOfWorkIntegrityError before it is sent", async (statement) => {
+  it.each(representative)("tx.execute(%j) throws UnitOfWorkIntegrityError before it is sent", async (statement) => {
     const marker = randomUUID();
     await expect(
       alpha()(context(), async (uow) => {
@@ -114,7 +110,7 @@ describe("statements that change the transaction or session are refused (with th
     expect(await persisted(marker)).toBe(0);
   });
 
-  it.each(["COMMIT", "SET ROLE postgres", "SELECT set_config('role','postgres',true)", "ROLLBACK"])(
+  it.each(["COMMIT", "SELECT set_config('role','postgres',true)"])(
     "the same through the client behind a query builder: %s",
     async (statement) => {
       const marker = randomUUID();

@@ -130,6 +130,8 @@ const logRows = async (eventId: string) =>
   pools.owner.withClient(async (c) => (await c.query("SELECT * FROM intelligence.event_log WHERE event_id = $1", [eventId])).rows);
 const setRow = (eventId: string, assignments: string) =>
   pools.owner.withClient((c) => c.query(`UPDATE intelligence.event_outbox SET ${assignments} WHERE event_id = $1`, [eventId]));
+/** Makes a row waiting for its backoff due now, instead of sleeping until it is. */
+const makeDue = (eventId: string) => setRow(eventId, "next_attempt_at = now() - interval '1 second'");
 
 describe("delivery (PS-18)", () => {
   it("(G0-11) calls each subscriber once with the documented envelope, then writes the event log and marks delivered", async () => {
@@ -367,7 +369,7 @@ describe("failure, retry and dead letter (PS-19)", () => {
     const effects = async () => (await pools.owner.withClient((c) => c.query("SELECT subscriber FROM uow_probe.subscriber_effects WHERE effect_key = $1 ORDER BY 1", [eventId]))).rows.map((r) => r.subscriber);
     expect(await effects()).toEqual(["first"]); // second's rollback is observable
 
-    await sleep(60);
+    await makeDue(eventId);
     await worker.runOnce();
     row = await rowOf(eventId);
     expect(row.status).toBe("delivered");
@@ -393,7 +395,7 @@ describe("failure, retry and dead letter (PS-19)", () => {
       expect(row).toMatchObject({ status: "failed", retry_count: failure, locked_by: null });
       expect(row.next_attempt_at.getTime()).toBeGreaterThanOrEqual(before.getTime() + delay - 2);
       expect(row.next_attempt_at.getTime()).toBeLessThanOrEqual(after.getTime() + delay + 2);
-      await sleep(delay + 30);
+      await makeDue(eventId);
     }
     await worker.runOnce();
     const dead = await rowOf(eventId);
@@ -402,9 +404,10 @@ describe("failure, retry and dead letter (PS-19)", () => {
     expect(dead.last_error).toContain("alpha.first");
     expect(dead.last_error).not.toContain(MARK);
     expect(await logRows(eventId)).toEqual([]);
-    // never claimed again
-    await sleep(700);
+    // never claimed again: even with its next attempt long past, a dead-lettered row is not due
+    await makeDue(eventId);
     expect(await worker.runOnce()).toEqual({ claimed: 0 });
+    expect((await rowOf(eventId)).status).toBe("dead_lettered");
     expect(records().filter((r) => r.level === "ERROR")).toHaveLength(1);
     expect(loggedLines.join("\n")).not.toContain(MARK);
     expect(records().find((r) => r.level === "ERROR")).toMatchObject({ eventId, eventType: "AlphaRecorded", companyId: company, attempt: 5 });
@@ -457,7 +460,7 @@ describe("stale-lock recovery (PS-20, G0-44)", () => {
     expect(row.last_error).toContain("stale lock: ghost");
     expect(records().some((r) => r.level === "WARN" && r.message === "Recovered a stale lock" && r.eventId === eventId)).toBe(true);
     expect(calls).toEqual([]); // recovered this cycle, not delivered
-    await sleep(60);
+    await makeDue(eventId);
     await worker.runOnce();
     expect(calls.map((c) => c.subscriber)).toEqual(["alpha.second"]);
     row = await rowOf(eventId);
@@ -564,7 +567,7 @@ describe("fencing and the heartbeat (PS-18, G0-14)", () => {
     await setRow(eventId, "locked_at = now() - interval '10 minutes'");
     await w2.runOnce(); // W2 recovers the row (failed, retry_count = 1)
     expect((await rowOf(eventId)).retry_count).toBe(1);
-    await sleep(60);
+    await makeDue(eventId);
     await w2.runOnce(); // W2 claims and delivers it
     release();
     await w1Run;
@@ -689,7 +692,7 @@ describe("the loop", () => {
     const eventId = await commitEvent({ payload: { marker: MARK } });
     const worker = makeWorker();
     await worker.runOnce();
-    await sleep(60);
+    await makeDue(eventId);
     await worker.runOnce();
     expect(loggedLines.join("\n")).not.toContain(MARK);
     const failed = records().find((r) => r.message === "Subscriber failed");
